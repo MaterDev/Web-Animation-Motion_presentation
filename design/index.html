@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>design treatments — web animation &amp; motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hz-000: oklch(0.14 0.006 265);
+    --hz-050: oklch(0.18 0.006 265);
+    --hz-100: oklch(0.22 0.007 265);
+    --hz-200: oklch(0.28 0.008 265);
+    --hz-300: oklch(0.36 0.008 265);
+    --hz-400: oklch(0.48 0.008 265);
+    --hz-500: oklch(0.62 0.007 265);
+    --hz-600: oklch(0.75 0.005 265);
+    --hz-800: oklch(0.96 0.002 265);
+    --signal: oklch(0.62 0.24 27);
+    --sans: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    display: grid;
+    grid-template-columns: 264px 1fr;
+    background: var(--hz-000);
+    color: var(--hz-600);
+    font-family: var(--sans);
+    font-size: 14px;
+    overflow: hidden;
+  }
+
+  /* ── sidebar ─────────────────────────────────────────── */
+
+  .rail {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--hz-300);
+    background: var(--hz-050);
+    overflow: hidden;
+  }
+
+  .rail-head {
+    padding: 18px 18px 16px;
+    border-bottom: 1px solid var(--hz-300);
+  }
+
+  .rail-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--hz-400);
+    margin-bottom: 8px;
+  }
+
+  .rail-title {
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--hz-800);
+    line-height: 1.3;
+  }
+
+  .rail-sub {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--hz-400);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .rail-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--hz-400);
+    padding: 16px 18px 8px;
+  }
+
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0 10px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    align-items: baseline;
+    padding: 10px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--hz-500);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur, 160ms) var(--ease),
+                color 160ms var(--ease);
+  }
+
+  .item:hover { background: var(--hz-100); color: var(--hz-600); }
+
+  .item[aria-current='true'] {
+    background: var(--hz-200);
+    color: var(--hz-800);
+  }
+
+  .item-code {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hz-400);
+    letter-spacing: 0.04em;
+  }
+
+  .item[aria-current='true'] .item-code { color: var(--tint, var(--hz-600)); }
+
+  .item-name {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .item-note {
+    grid-column: 2;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hz-400);
+    margin-top: 3px;
+    line-height: 1.45;
+  }
+
+  .rail-foot {
+    border-top: 1px solid var(--hz-300);
+    padding: 12px 18px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hz-400);
+    line-height: 1.7;
+  }
+
+  .rail-foot kbd {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    background: var(--hz-100);
+    border: 1px solid var(--hz-300);
+    border-radius: 3px;
+    padding: 1px 4px;
+    color: var(--hz-500);
+  }
+
+  /* ── stage ───────────────────────────────────────────── */
+
+  .stage {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background:
+      radial-gradient(var(--hz-200) 0.5px, transparent 0.5px) 0 0 / 8px 8px,
+      var(--hz-000);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 16px;
+    height: 44px;
+    border-bottom: 1px solid var(--hz-300);
+    background: var(--hz-050);
+    flex: none;
+  }
+
+  .bar-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--hz-500);
+  }
+
+  .bar-spacer { flex: 1; }
+
+  .seg {
+    display: flex;
+    border: 1px solid var(--hz-300);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .seg button {
+    border: 0;
+    background: transparent;
+    color: var(--hz-500);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: background 160ms var(--ease), color 160ms var(--ease);
+  }
+
+  .seg button + button { border-left: 1px solid var(--hz-300); }
+  .seg button:hover { background: var(--hz-100); color: var(--hz-600); }
+  .seg button[aria-pressed='true'] { background: var(--hz-200); color: var(--hz-800); }
+
+  .btn {
+    border: 1px solid var(--hz-300);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--hz-500);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    padding: 5px 11px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 160ms var(--ease), color 160ms var(--ease);
+  }
+
+  .btn:hover { background: var(--hz-100); color: var(--hz-800); }
+
+  .frame-wrap {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .frame-wrap[data-w='fit'] { padding: 0; }
+  .frame-wrap:not([data-w='fit']) { padding: 20px; }
+
+  iframe {
+    border: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--hz-000);
+    display: block;
+  }
+
+  .frame-wrap:not([data-w='fit']) iframe {
+    border: 1px solid var(--hz-300);
+    border-radius: 6px;
+    box-shadow: 0 24px 60px oklch(0 0 0 / 0.5);
+    height: auto;
+    min-height: 100%;
+  }
+
+  .empty {
+    margin: auto;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--hz-400);
+    line-height: 1.8;
+    max-width: 400px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="rail" data-testid="treatment-rail">
+  <div class="rail-head">
+    <div class="rail-code">WAM-2026 / DESIGN</div>
+    <div class="rail-title">Design treatments</div>
+    <div class="rail-sub">Each treatment is a standalone file.<br>Fork one to iterate.</div>
+  </div>
+
+  <div class="rail-label">Treatments</div>
+  <ul class="list" id="list" data-testid="treatment-list"></ul>
+
+  <div class="rail-foot">
+    <kbd>1</kbd>–<kbd>9</kbd> switch &nbsp; <kbd>R</kbd> reload<br>
+    Add one: edit <span style="color:var(--hz-500)">TREATMENTS</span> in index.html
+  </div>
+</nav>
+
+<main class="stage">
+  <div class="bar">
+    <span class="bar-title" id="barTitle" data-testid="stage-title">—</span>
+    <span class="bar-spacer"></span>
+    <div class="seg" id="widths" data-testid="width-control">
+      <button data-w="fit" aria-pressed="true">FIT</button>
+      <button data-w="1920">1920</button>
+      <button data-w="1440">1440</button>
+      <button data-w="1280">1280</button>
+    </div>
+    <button class="btn" id="reload" data-testid="reload-button">RELOAD</button>
+    <a class="btn" id="popout" href="#" target="_blank" rel="noopener" data-testid="popout-link">OPEN ↗</a>
+  </div>
+
+  <div class="frame-wrap" id="wrap" data-w="fit">
+    <iframe id="frame" title="Design treatment preview" data-testid="treatment-frame"></iframe>
+  </div>
+</main>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   Treatment manifest.
+   To add an iteration: copy a file in treatments/, rename it,
+   then add one entry here. Nothing else needs to change.
+   ───────────────────────────────────────────────────────── */
+const TREATMENTS = [
+  {
+    code: 'T-01',
+    name: 'Instrument Housing',
+    note: 'Baseline from DESIGN.md',
+    file: 'treatments/01-instrument-housing.html',
+  },
+];
+
+const list     = document.getElementById('list');
+const frame    = document.getElementById('frame');
+const barTitle = document.getElementById('barTitle');
+const popout   = document.getElementById('popout');
+const wrap     = document.getElementById('wrap');
+
+let active = 0;
+
+function render() {
+  list.innerHTML = '';
+  TREATMENTS.forEach((t, i) => {
+    const li = document.createElement('li');
+    const b  = document.createElement('button');
+    b.className = 'item';
+    b.type = 'button';
+    b.setAttribute('aria-current', String(i === active));
+    b.setAttribute('data-testid', `treatment-item-${t.code.toLowerCase()}`);
+    b.innerHTML =
+      `<span class="item-code">${t.code}</span>` +
+      `<span class="item-name">${t.name}</span>` +
+      `<span class="item-note">${t.note}</span>`;
+    b.addEventListener('click', () => select(i));
+    li.appendChild(b);
+    list.appendChild(li);
+  });
+}
+
+function select(i) {
+  active = i;
+  const t = TREATMENTS[i];
+  frame.src = t.file;
+  barTitle.textContent = `${t.code} · ${t.name}`;
+  popout.href = t.file;
+  location.hash = t.code.toLowerCase();
+  render();
+}
+
+document.getElementById('reload').addEventListener('click', () => {
+  frame.src = frame.src;
+});
+
+document.getElementById('widths').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const w = btn.dataset.w;
+  wrap.dataset.w = w;
+  frame.style.width = w === 'fit' ? '100%' : w + 'px';
+  frame.style.maxWidth = w === 'fit' ? 'none' : '100%';
+  [...e.currentTarget.children].forEach(c =>
+    c.setAttribute('aria-pressed', String(c === btn)));
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const n = parseInt(e.key, 10);
+  if (n >= 1 && n <= TREATMENTS.length) select(n - 1);
+  if (e.key.toLowerCase() === 'r') frame.src = frame.src;
+});
+
+const fromHash = TREATMENTS.findIndex(
+  t => t.code.toLowerCase() === location.hash.slice(1));
+select(fromHash >= 0 ? fromHash : 0);
+</script>
+
+</body>
+</html>
