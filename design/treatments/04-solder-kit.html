@@ -1,0 +1,1003 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-04 — Solder Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   T-04 · SOLDER KIT
+   Aged plastic chassis. Unlit reflective LCD. Dither instead of
+   gradients. DIY electronics-kit language: perfboard, silkscreen,
+   component designators, resistor bands.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── pixel unit ──────────────────────────────────────────
+     Everything snaps to 2px. Corners are square or 2px hard —
+     pixel art has no antialiasing, so soft radii read as wrong. */
+  --px: 2px;
+  --u: 8px;
+  --hair: 1px;
+
+  /* ── chassis: aged ABS ───────────────────────────────────
+     Warm-shifted grey. Vintage electronics plastic yellows with
+     UV, so a neutral grey reads as modern and a warm one as old. */
+  --hz-000: oklch(0.672 0.011  92);  /* base — aged shell */
+  --hz-050: oklch(0.712 0.011  92);
+  --hz-100: oklch(0.762 0.010  92);  /* panel */
+  --hz-200: oklch(0.828 0.009  92);  /* high panel */
+  --hz-300: oklch(0.552 0.011  92);  /* hairline */
+  --hz-400: oklch(0.462 0.012  90);
+  --hz-500: oklch(0.375 0.013  88);  /* secondary text — FLOOR */
+  --hz-600: oklch(0.298 0.013  86);  /* body */
+  --hz-700: oklch(0.238 0.012  84);
+  --hz-800: oklch(0.188 0.011  82);
+  --hz-900: oklch(0.132 0.010  80);
+
+  --well-lip:   oklch(0.470 0.010 92);
+  --well-floor: oklch(0.228 0.012 88);
+  --silk:       oklch(0.955 0.006 92);
+
+  /* ── accents: muted, not bright ──────────────────────────
+     Chroma roughly halved from T-03. Vintage pigment and aged
+     phosphor are dusty; saturation is what reads as "new". */
+  --blue:  oklch(0.585 0.058 232);   /* dusty slate blue */
+  --amber: oklch(0.688 0.079  78);   /* ochre / mustard */
+
+  /* ── LCD: unlit reflective, GBA-era ──────────────────────
+     Light arrives from the FRONT, not behind, so there is no
+     backlight bleed — only a broad reflection. Contrast is
+     deliberately poor. That murk is the authentic part. */
+  --lcd-hi:    oklch(0.668 0.030 176);
+  --lcd-lo:    oklch(0.612 0.034 182);
+  --lcd-ink:   oklch(0.330 0.030 180);
+  --lcd-ghost: oklch(0.330 0.030 180 / 0.13);
+
+  --lcd-blue-hi: oklch(0.660 0.042 220);
+  --lcd-blue-lo: oklch(0.600 0.048 226);
+  --lcd-amb-hi:  oklch(0.712 0.058  92);
+  --lcd-amb-lo:  oklch(0.650 0.066  86);
+  --lcd-dead-hi: oklch(0.600 0.012 160);
+  --lcd-dead-lo: oklch(0.548 0.013 160);
+  --lcd-dead-ink: oklch(0.330 0.030 180 / 0.22);
+
+  /* ── section ramp: resistor bands, cold → hot ────────────
+     Muted throughout. Reads as printed pigment on a component
+     body rather than as emitted light. */
+  --tint-video:     oklch(0.560 0.014 250);
+  --tint-css:       oklch(0.585 0.055 248);
+  --tint-composite: oklch(0.610 0.058 222);
+  --tint-svg:       oklch(0.640 0.058 190);
+  --tint-canvas:    oklch(0.665 0.060 148);
+  --tint-webgl:     oklch(0.680 0.070 108);
+  --tint-webgpu:    oklch(0.688 0.079  78);
+
+  --tint: var(--tint-webgpu);
+  --signal: oklch(0.470 0.140 30);   /* oxidised red */
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --dot:  'Doto', 'JetBrains Mono', monospace;
+  --pix:  'Silkscreen', 'Doto', monospace;
+
+  --dur-instant: 90ms;  --dur-fast: 160ms;  --dur-base: 240ms;
+  --dur-slow: 420ms;    --dur-section: 700ms;  --dur-hero: 1400ms;
+
+  --ease-standard:   cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --ease-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  --ease-mechanical: cubic-bezier(0.4, 0.0, 0.2, 1.0);
+  /* stepped — for anything inside a display */
+  --ease-step: steps(6, end);
+
+  --lift-1: inset 0 var(--px) 0 oklch(1 0 0 / 0.26),
+            0 var(--px) 0 oklch(0.13 0.01 88 / 0.22);
+  --lift-2: inset 0 var(--px) 0 oklch(1 0 0 / 0.30),
+            0 var(--px) 0 oklch(0.13 0.01 88 / 0.24),
+            0 6px 12px oklch(0.13 0.01 88 / 0.13);
+  --lift-3: inset 0 var(--px) 0 oklch(1 0 0 / 0.34),
+            0 4px 0 oklch(0.13 0.01 88 / 0.22),
+            0 10px 20px oklch(0.13 0.01 88 / 0.16);
+  --recess: inset 0 var(--px) 4px oklch(0.13 0.01 88 / 0.55),
+            inset 0 -1px 0 oklch(1 0 0 / 0.14);
+}
+
+@media (min-resolution: 2dppx) { :root { --hair: 0.5px; } }
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* Flat shell. Perfboard is a MATERIAL, not a wallpaper — tiling
+     the hole grid behind body copy destroys legibility, so it lives
+     on panels and stage surrounds only. See .perf. */
+  background: var(--hz-000);
+}
+
+/* ═══ DITHER — the shading system ══════════════════════
+   A limited palette can't do gradients, so tone comes from
+   ordered dither. This is the treatment's core texture and it
+   is also, conveniently, a rendering technique the talk is about. */
+
+.dither-50, .dither-25, .dither-12 { position: relative; }
+.dither-50::before, .dither-25::before, .dither-12::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-repeat: repeat;
+}
+/* Exact Bayer 4×4 ordered dither, as 4px SVG tiles with
+   shape-rendering=crispEdges.
+
+   Two earlier attempts failed and both are worth recording: a
+   conic-gradient checkerboard antialiases its quadrant corners at
+   4px and renders as round DOTS, and the 45deg two-gradient recipe
+   covers ~50% of the tile in BOTH the 25 and 50 variants. Either
+   way the ramp came out non-monotonic. Specifying which of the 16
+   cells are on removes the guesswork: 2/16, 4/16, 8/16. */
+
+.dither-12::before, .dither-25::before, .dither-50::before {
+  background-size: calc(var(--px) * 2) calc(var(--px) * 2);
+  opacity: var(--do, 0.34);
+}
+/* 2 of 16 */
+.dither-12::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3C/svg%3E");
+}
+/* 4 of 16 */
+.dither-25::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='2' y='0' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3C/svg%3E");
+}
+/* 8 of 16 — true checkerboard */
+.dither-50::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Crect x='0' y='0' width='1' height='1'/%3E%3Crect x='2' y='0' width='1' height='1'/%3E%3Crect x='1' y='1' width='1' height='1'/%3E%3Crect x='3' y='1' width='1' height='1'/%3E%3Crect x='0' y='2' width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3Crect x='1' y='3' width='1' height='1'/%3E%3Crect x='3' y='3' width='1' height='1'/%3E%3C/svg%3E");
+}
+
+/* ── layout ────────────────────────────────────────────── */
+
+.sheet { max-width: 1180px; margin: 0 auto; padding: calc(var(--u) * 6) calc(var(--u) * 5) calc(var(--u) * 14); }
+section { margin-bottom: calc(var(--u) * 11); }
+
+.mono { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-500); }
+.pix  { font-family: var(--pix); font-size: 10px; letter-spacing: 0.06em; color: var(--hz-600); }
+
+h1 { font-size: clamp(38px, 5.5vw, 64px); font-weight: 200; letter-spacing: -0.035em; line-height: 1.02; color: var(--hz-900); margin: 0 0 calc(var(--u) * 2); text-transform: lowercase; }
+h2 { font-size: 22px; font-weight: 400; letter-spacing: -0.018em; color: var(--hz-900); margin: 0 0 calc(var(--u) * 0.75); text-transform: lowercase; }
+h3 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-700); margin: 0 0 calc(var(--u) * 1.5); font-weight: 500; }
+
+p { margin: 0 0 calc(var(--u) * 2); max-width: 62ch; }
+p.lead { color: var(--hz-500); font-size: 14px; }
+
+code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); border: var(--hair) solid var(--hz-300); border-radius: 0; padding: 1px 5px; color: var(--hz-700); }
+
+.sec-head { display: grid; grid-template-columns: auto 1fr auto; gap: calc(var(--u) * 2); align-items: center; margin-bottom: calc(var(--u) * 3); padding-bottom: calc(var(--u) * 1.5); border-bottom: var(--hair) solid var(--hz-300); }
+.sec-head .rule { height: var(--hair); background: var(--hz-300); }
+
+/* card — square corners, hard drop, no soft shadow */
+.card { background: var(--hz-100); border-radius: var(--px); box-shadow: var(--lift-2); }
+
+/* silkscreen: white ink printed on the shell */
+.silk-txt { font-family: var(--pix); font-size: 10px; letter-spacing: 0.05em; color: var(--silk); }
+
+/* component designator — R1, U2, LED4 */
+.desig {
+  font-family: var(--pix); font-size: 9px; color: var(--hz-500);
+  border: var(--hair) solid var(--hz-400); padding: 1px 4px; border-radius: 0;
+}
+
+/* ── masthead ──────────────────────────────────────────── */
+
+.masthead { position: relative; padding: calc(var(--u) * 5) 0 calc(var(--u) * 6); margin-bottom: calc(var(--u) * 8); border-bottom: var(--hair) solid var(--hz-300); }
+.crosshair { position: absolute; width: 13px; height: 13px; opacity: 0.85; }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--hz-400); }
+.crosshair::before { left: 50%; top: 0; bottom: 0; width: var(--hair); }
+.crosshair::after  { top: 50%; left: 0; right: 0; height: var(--hair); }
+.crosshair.tl { top: 0; left: -26px; }
+.crosshair.tr { top: 0; right: -26px; }
+
+.meta-row { display: flex; gap: calc(var(--u) * 4); flex-wrap: wrap; margin-top: calc(var(--u) * 3); }
+.meta-row div { display: flex; flex-direction: column; gap: 4px; }
+.meta-row .v { font-family: var(--mono); font-size: 11.5px; color: var(--hz-700); text-transform: none; letter-spacing: 0.02em; }
+
+/* ═══ DISPLAYS ═════════════════════════════════════════ */
+
+.well {
+  background: var(--well-floor); border-radius: var(--px); padding: 4px;
+  box-shadow: var(--recess); border-top: var(--hair) solid var(--well-lip);
+  display: inline-block;
+}
+
+.lcd {
+  position: relative; border-radius: 0; padding: 11px 15px 9px; overflow: hidden;
+  background: linear-gradient(178deg, var(--lcd-hi), var(--lcd-lo));
+  box-shadow: inset 0 0 0 var(--hair) oklch(0.13 0.01 88 / 0.40);
+}
+/* pixel cell grid */
+.lcd::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.13 0.01 88 / 0.13) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg,  oklch(0.13 0.01 88 / 0.13) 0 1px, transparent 1px 3px);
+}
+/* front-surface reflection — NOT backlight. The GBA was reflective:
+   light comes off the glass toward you, broad and diagonal. */
+.lcd::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background: linear-gradient(122deg,
+    oklch(1 0 0 / 0.20) 0 18%,
+    oklch(1 0 0 / 0.07) 18% 34%,
+    transparent 60%);
+}
+
+.lcd.blue  { background: linear-gradient(178deg, var(--lcd-blue-hi), var(--lcd-blue-lo)); }
+.lcd.amber { background: linear-gradient(178deg, var(--lcd-amb-hi), var(--lcd-amb-lo)); }
+.lcd.dead  { background: linear-gradient(178deg, var(--lcd-dead-hi), var(--lcd-dead-lo)); }
+
+.lcd .chars, .lcd .ghost {
+  font-family: var(--dot); font-weight: 700; letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums; line-height: 1; position: relative; z-index: 1;
+}
+.lcd .chars { color: var(--lcd-ink); }
+.lcd .ghost { color: var(--lcd-ghost); position: absolute; left: 15px; top: 11px; z-index: 0; }
+
+.lcd.xl .chars, .lcd.xl .ghost { font-size: 44px; }
+.lcd.md .chars, .lcd.md .ghost { font-size: 26px; }
+.lcd.sm .chars, .lcd.sm .ghost { font-size: 15px; }
+.lcd.matrix { padding: 9px 13px; }
+.lcd.matrix .chars { font-size: 16px; letter-spacing: 0.14em; }
+
+/* 7-segment — pixel font, wide tracking, hard ghosts */
+.lcd.seg .chars, .lcd.seg .ghost { font-family: var(--pix); font-size: 30px; letter-spacing: 0.10em; }
+
+.lcd-row { display: flex; gap: calc(var(--u) * 2); flex-wrap: wrap; align-items: flex-end; }
+.lcd-item { display: flex; flex-direction: column; gap: 7px; }
+.lcd-item .cap { font-family: var(--pix); font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hz-500); }
+
+/* ═══ COLOUR ═══════════════════════════════════════════ */
+
+.ramp { display: grid; grid-template-columns: repeat(11, 1fr); overflow: hidden; margin-bottom: calc(var(--u) * 2); box-shadow: var(--lift-2); border-radius: var(--px); }
+.ramp div { aspect-ratio: 1 / 1.5; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 7px; font-family: var(--pix); font-size: 8px; }
+
+.accent-pair { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+.accent-card { overflow: hidden; background: var(--hz-100); box-shadow: var(--lift-2); border-radius: var(--px); }
+.accent-card .swatch { height: 76px; position: relative; }
+.accent-card .cap { padding: 12px 14px 14px; }
+.accent-card .n { font-family: var(--mono); font-size: 10px; color: var(--hz-800); letter-spacing: 0.08em; }
+.accent-card .d { font-size: 12.5px; color: var(--hz-500); margin-top: 4px; line-height: 1.5; }
+
+/* resistor — the section ramp as a component */
+.resistor {
+  position: relative; height: 54px; margin: calc(var(--u) * 2) 0 calc(var(--u) * 2.5);
+  display: flex; align-items: center;
+}
+.resistor .lead { flex: 1; height: 2px; background: linear-gradient(180deg, oklch(0.82 0.01 92), oklch(0.55 0.01 92)); }
+.resistor .body {
+  height: 44px; width: 74%; position: relative; display: flex; align-items: stretch;
+  background: linear-gradient(180deg, oklch(0.80 0.030 78), oklch(0.66 0.032 74) 45%, oklch(0.55 0.030 72));
+  border-radius: 10px / 22px;
+  box-shadow: inset 0 -6px 10px oklch(0.13 0.01 88 / 0.28), var(--lift-2);
+  overflow: hidden;
+}
+.resistor .band { flex: 1; position: relative; }
+.resistor .band + .band { margin-left: 2px; }
+.resistor .band::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, oklch(1 0 0 / 0.22), transparent 40%, oklch(0.13 0.01 88 / 0.22)); }
+
+.tints { display: grid; grid-template-columns: repeat(7, 1fr); gap: calc(var(--u) * 1.5); }
+.tint-card { overflow: hidden; background: var(--hz-100); cursor: pointer; box-shadow: var(--lift-1); border: 0; padding: 0; text-align: left; border-radius: var(--px);
+  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
+.tint-card:hover { box-shadow: var(--lift-3); transform: translateY(-2px); }
+.tint-card .swatch { height: 58px; position: relative; }
+.tint-card .cap { padding: 8px 9px 10px; }
+.tint-card .n { font-family: var(--pix); font-size: 8px; color: var(--hz-500); }
+.tint-card .l { font-size: 12px; color: var(--hz-800); text-transform: lowercase; margin-top: 3px; }
+
+.signal-row { display: flex; align-items: center; gap: calc(var(--u) * 2); padding: calc(var(--u) * 2); background: var(--hz-100); box-shadow: var(--lift-1); border-radius: var(--px); }
+.signal-chip { width: 34px; height: 34px; background: var(--signal); flex: none; border-radius: var(--px); box-shadow: var(--lift-1); }
+
+/* ═══ TEXTURE ══════════════════════════════════════════ */
+
+.tex-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 2); }
+.tex { height: 108px; position: relative; overflow: hidden; box-shadow: var(--lift-1); border-radius: var(--px); background: var(--tint); }
+.tex .lbl { position: absolute; left: 8px; bottom: 7px; z-index: 4; font-family: var(--pix); font-size: 9px; color: var(--silk); text-shadow: 0 1px 0 oklch(0.13 0.01 88 / 0.6); }
+
+.dither-strip { height: 60px; display: grid; grid-template-columns: repeat(5, 1fr); box-shadow: var(--lift-1); overflow: hidden; border-radius: var(--px); }
+.dither-strip > div { position: relative; background: var(--tint); }
+
+/* perfboard sample */
+.perf {
+  height: 108px; position: relative; overflow: hidden; box-shadow: var(--lift-1); border-radius: var(--px);
+  background:
+    radial-gradient(circle at 50% 50%, oklch(0.13 0.01 88 / 0.45) 0 2.2px, oklch(1 0 0 / 0.18) 2.2px 3.2px, transparent 3.4px) 0 0 / 16px 16px,
+    var(--hz-050);
+}
+/* silkscreen footprint */
+.footprint {
+  height: 108px; position: relative; overflow: hidden; box-shadow: var(--recess); border-radius: var(--px);
+  background: oklch(0.315 0.055 152);
+}
+.footprint .out {
+  position: absolute; left: 18%; top: 24%; width: 64%; height: 46%;
+  border: var(--hair) solid var(--silk); border-radius: 0;
+}
+.footprint .out::before {
+  content: ''; position: absolute; left: -1px; top: 38%; width: 8px; height: 8px;
+  border-left: var(--hair) solid var(--silk); border-bottom: var(--hair) solid var(--silk);
+}
+.footprint .pad { position: absolute; width: 7px; height: 7px; background: oklch(0.78 0.14 88); border-radius: 50%; }
+.footprint .ref { position: absolute; left: 18%; top: 12%; font-family: var(--pix); font-size: 9px; color: var(--silk); }
+
+/* ═══ TYPE ════════════════════════════════════════════ */
+
+.type-row { display: grid; grid-template-columns: 108px 1fr; gap: calc(var(--u) * 3); padding: calc(var(--u) * 2.5) 0; border-bottom: var(--hair) solid var(--hz-300); align-items: baseline; }
+.type-row:last-child { border-bottom: 0; }
+.spec-display { font-size: 46px; font-weight: 200; letter-spacing: -0.035em; color: var(--hz-900); text-transform: lowercase; line-height: 1.05; }
+.spec-body { font-size: 17px; color: var(--hz-600); line-height: 1.62; }
+.spec-mono { font-family: var(--mono); font-size: 13px; color: var(--hz-600); letter-spacing: 0.02em; }
+.spec-pix { font-family: var(--pix); font-size: 16px; color: var(--hz-800); letter-spacing: 0.04em; line-height: 1.5; }
+.silk-strip { background: var(--hz-400); padding: 10px 14px; display: inline-block; box-shadow: var(--lift-1); border-radius: var(--px); }
+
+/* ═══ SURFACE ══════════════════════════════════════════ */
+
+.surface-compare { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+.demo-stage { position: relative; height: 232px; overflow: hidden; display: grid; place-items: center; box-shadow: var(--recess); border-radius: var(--px); }
+
+.internals {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 16% 22%, oklch(0.78 0.13 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 84% 30%, oklch(0.78 0.13 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 30% 84%, oklch(0.78 0.13 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 88% 76%, oklch(0.78 0.13 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 68% 20%, oklch(0.28 0.02 88) 0 15px, transparent 16px),
+    linear-gradient(oklch(0.14 0.01 88) 0 100%) 22% 52% / 92px 34px no-repeat,
+    repeating-linear-gradient(90deg, oklch(0.60 0.09 150 / 0.50) 0 1.5px, transparent 1.5px 44px),
+    repeating-linear-gradient(0deg,  oklch(0.60 0.09 150 / 0.34) 0 1.5px, transparent 1.5px 36px),
+    oklch(0.295 0.050 152);
+}
+.internals::after {
+  content: ''; position: absolute; left: 22%; top: 52%; width: 92px; height: 34px;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.70 0.008 88) 0 3px, transparent 3px 10px) 0 0 / 100% 4px,
+    repeating-linear-gradient(90deg, oklch(0.70 0.008 88) 0 3px, transparent 3px 10px) 0 100% / 100% 4px;
+  background-repeat: no-repeat;
+}
+
+.panel-clear, .panel-glass { position: relative; z-index: 4; width: 74%; padding: calc(var(--u) * 2.5); text-align: center; border-radius: var(--px); }
+.panel-clear {
+  background: linear-gradient(160deg,
+    color-mix(in oklch, var(--tint) 52%, transparent),
+    color-mix(in oklch, var(--tint) 26%, transparent) 45%,
+    color-mix(in oklch, var(--tint) 46%, transparent));
+  backdrop-filter: blur(10px) saturate(1.35);
+  box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.42), 0 6px 0 oklch(0 0 0 / 0.26);
+}
+.panel-glass { background: oklch(1 0 0 / 0.13); backdrop-filter: blur(12px); border: 1px solid oklch(1 0 0 / 0.24); }
+.panel-t { font-family: var(--pix); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: oklch(0.98 0 0); }
+.panel-s { font-size: 12px; color: oklch(0.98 0 0 / 0.80); margin-top: 6px; }
+.verdict { display: flex; gap: 8px; align-items: baseline; font-family: var(--mono); font-size: 10px; line-height: 1.6; margin-top: calc(var(--u) * 1.5); color: var(--hz-500); }
+.verdict b { color: var(--hz-800); font-weight: 500; }
+
+/* ═══ ANNOTATION ═══════════════════════════════════════ */
+
+.anno-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 3); }
+.anno-box { padding: calc(var(--u) * 2.5); background: var(--hz-100); min-height: 132px; display: flex; flex-direction: column; box-shadow: var(--lift-1); border-radius: var(--px); }
+.anno-box .cap { margin-top: auto; padding-top: calc(var(--u) * 1.5); font-family: var(--pix); font-size: 9px; color: var(--hz-500); text-transform: uppercase; }
+
+.slide-code { display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--hz-600); }
+.slide-code .num { color: var(--hz-900); }
+.slide-code .dot { width: 6px; height: 6px; background: var(--tint); }
+
+.dim { position: relative; height: 40px; margin: 14px 0 6px; }
+.dim::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: var(--hair); background: var(--hz-400); }
+.dim span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--hz-100); padding: 0 8px; font-family: var(--pix); font-size: 9px; color: var(--hz-700); }
+.dim i { position: absolute; top: 50%; transform: translateY(-50%); width: var(--hair); height: 11px; background: var(--hz-400); }
+.dim i:first-of-type { left: 0; }
+.dim i:last-of-type  { right: 0; }
+
+.rail-demo { position: relative; height: 10px; background: var(--well-floor); margin: 20px 0 10px; box-shadow: var(--recess); overflow: hidden; border-radius: var(--px); }
+.rail-demo .fill { position: absolute; inset: 2px auto 2px 2px; width: 62%; background: var(--tint); transition: width var(--dur-base) var(--ease-standard); }
+.rail-demo .tick { position: absolute; top: 0; bottom: 0; width: var(--hair); background: oklch(0.13 0.01 88 / 0.5); }
+
+/* ═══ MOTION ═══════════════════════════════════════════ */
+
+.ease-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 3); }
+.ease-card { background: var(--hz-100); padding: calc(var(--u) * 2); box-shadow: var(--lift-1); border-radius: var(--px); }
+.ease-card svg { width: 100%; height: auto; display: block; margin-bottom: 10px; }
+.ease-card .n { font-family: var(--pix); font-size: 10px; color: var(--hz-800); }
+.ease-card .v { font-family: var(--mono); font-size: 8.5px; color: var(--hz-500); margin-top: 4px; word-break: break-all; }
+
+.runner-wrap { background: var(--hz-100); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-1); border-radius: var(--px); }
+.runner { position: relative; height: 30px; margin-bottom: 9px; display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 12px; }
+.runner .lbl { font-family: var(--pix); font-size: 9px; color: var(--hz-600); }
+.runner .track { position: relative; height: 26px; background: var(--well-floor); overflow: hidden; box-shadow: var(--recess); border-radius: var(--px); }
+.runner .box { position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; background: var(--amber); transform: translateX(0); }
+.runner:nth-child(1) .box { transition: transform var(--dur-base) var(--ease-standard); }
+.runner:nth-child(2) .box { transition: transform var(--dur-base) var(--ease-decelerate); }
+.runner:nth-child(3) .box { transition: transform var(--dur-base) var(--ease-accelerate); }
+.runner:nth-child(4) .box { transition: transform var(--dur-base) var(--ease-step); }
+
+/* BOM-style table */
+.dur-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dur-table th { font-family: var(--pix); font-size: 9px; text-transform: uppercase; color: var(--hz-500); text-align: left; padding: 0 0 10px; border-bottom: var(--hair) solid var(--hz-300); font-weight: 400; }
+.dur-table td { padding: 11px 0; border-bottom: var(--hair) solid var(--hz-300); color: var(--hz-600); vertical-align: top; }
+.dur-table td:first-child { font-family: var(--pix); font-size: 10px; color: var(--hz-500); width: 46px; }
+.dur-table td:nth-child(2) { font-family: var(--mono); font-size: 11.5px; color: var(--hz-800); width: 140px; }
+.dur-table td:nth-child(3) { font-family: var(--mono); font-size: 11.5px; color: var(--hz-900); width: 74px; font-variant-numeric: tabular-nums; }
+.dur-table tr:last-child td { border-bottom: 0; }
+
+/* ═══ COMPONENTS ═══════════════════════════════════════ */
+
+.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--u) * 3); }
+.comp { background: var(--hz-100); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-2); border-radius: var(--px); }
+.comp > .h { font-family: var(--pix); font-size: 9px; text-transform: uppercase; color: var(--hz-500); margin-bottom: calc(var(--u) * 2); }
+
+.readout { display: flex; align-items: center; gap: calc(var(--u) * 2.5); flex-wrap: wrap; }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+/* tactile key — hard 3px shadow that collapses on press */
+.ibtn {
+  font-family: var(--pix); font-size: 10px; text-transform: uppercase;
+  background: linear-gradient(180deg, var(--hz-200), var(--hz-100));
+  border: 0; color: var(--hz-700); padding: 10px 15px; cursor: pointer;
+  border-radius: var(--px);
+  box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.34), 0 3px 0 var(--hz-400), 0 5px 6px oklch(0.13 0.01 88 / 0.20);
+  transition: transform var(--dur-instant) var(--ease-standard),
+              box-shadow var(--dur-instant) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.ibtn:hover { color: var(--hz-900); }
+.ibtn:active { transform: translateY(3px); box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.2), 0 0 0 var(--hz-400); }
+.ibtn.primary { color: oklch(0.98 0 0); background: linear-gradient(180deg, color-mix(in oklch, var(--blue) 78%, white), var(--blue)); box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.30), 0 3px 0 color-mix(in oklch, var(--blue) 60%, black), 0 5px 6px oklch(0.13 0.01 88 / 0.22); }
+.ibtn.warn { color: oklch(0.20 0.05 80); background: linear-gradient(180deg, color-mix(in oklch, var(--amber) 72%, white), var(--amber)); box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.34), 0 3px 0 color-mix(in oklch, var(--amber) 60%, black), 0 5px 6px oklch(0.13 0.01 88 / 0.22); }
+.ibtn.danger { color: oklch(0.98 0 0); background: linear-gradient(180deg, color-mix(in oklch, var(--signal) 78%, white), var(--signal)); box-shadow: inset 0 var(--px) 0 oklch(1 0 0 / 0.24), 0 3px 0 color-mix(in oklch, var(--signal) 55%, black), 0 5px 6px oklch(0.13 0.01 88 / 0.22); }
+
+/* LED indicator */
+.led-row { display: flex; gap: 18px; align-items: center; }
+.led { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.led .bulb {
+  width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, oklch(1 0 0 / 0.7) 0 2px, var(--c) 3px);
+  box-shadow: 0 0 7px color-mix(in oklch, var(--c) 60%, transparent),
+              inset 0 -1px 2px oklch(0.13 0.01 88 / 0.5);
+}
+.led .lb { font-family: var(--pix); font-size: 8px; color: var(--hz-500); }
+.led.off .bulb { background: radial-gradient(circle at 34% 30%, oklch(1 0 0 / 0.3) 0 2px, color-mix(in oklch, var(--c) 30%, var(--hz-400)) 3px); box-shadow: inset 0 -1px 2px oklch(0.13 0.01 88 / 0.5); }
+
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.thumb { aspect-ratio: 16 / 10; background: var(--hz-200); position: relative; overflow: hidden; cursor: pointer; box-shadow: var(--lift-1); border-radius: var(--px); transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
+.thumb:hover { transform: translateY(-2px); box-shadow: var(--lift-3); }
+.thumb[data-active] { outline: var(--px) solid var(--amber); outline-offset: calc(var(--px) * -1); }
+.thumb::before { content: attr(data-n); position: absolute; left: 6px; top: 5px; font-family: var(--pix); font-size: 8px; color: var(--hz-500); }
+.thumb .bar { position: absolute; left: 6px; right: 6px; bottom: 7px; height: 3px; background: var(--hz-300); }
+.thumb .bar::after { content: ''; position: absolute; inset: 0 40% 0 0; background: var(--c, var(--hz-500)); }
+
+/* ═══ SLIDES ═══════════════════════════════════════════ */
+
+.slide { aspect-ratio: 16 / 9; overflow: hidden; position: relative; background: var(--hz-100); padding: calc(var(--u) * 4); display: flex; flex-direction: column; margin-bottom: calc(var(--u) * 1.5); box-shadow: var(--lift-2); border-radius: var(--px); }
+.slide .chrome-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--pix); font-size: 9px; text-transform: uppercase; color: var(--hz-500); }
+.slide .chrome-bot { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; font-family: var(--pix); font-size: 9px; color: var(--hz-500); }
+.slide .body { margin: auto 0; }
+.slide h4 { font-size: clamp(26px, 3.6vw, 46px); font-weight: 200; letter-spacing: -0.035em; color: var(--hz-900); margin: 0 0 12px; text-transform: lowercase; line-height: 1.05; }
+.slide p { font-size: 15px; color: var(--hz-600); max-width: 46ch; margin: 0; }
+.slide.statement { justify-content: center; }
+.slide.statement h4 { font-size: clamp(22px, 2.9vw, 34px); max-width: 20ch; }
+
+.slide-cap { font-family: var(--pix); font-size: 9px; color: var(--hz-500); text-transform: uppercase; margin-bottom: calc(var(--u) * 4); }
+.slides-2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+
+/* ═══ NOTES ════════════════════════════════════════════ */
+
+.note { border-left: var(--px) solid var(--hz-400); padding: 2px 0 2px 16px; margin: calc(var(--u) * 2) 0; font-size: 13.5px; color: var(--hz-600); max-width: 66ch; }
+.note.warn { border-left-color: var(--signal); }
+.note.diff { border-left-color: var(--amber); }
+.note b { color: var(--hz-900); font-weight: 500; }
+
+.verify { display: inline-block; font-family: var(--pix); font-size: 8px; color: var(--signal); border: var(--hair) solid color-mix(in oklch, var(--signal) 40%, transparent); padding: 1px 4px; vertical-align: middle; }
+
+@media (max-width: 900px) {
+  .tints, .anno-grid, .ease-grid, .comp-grid, .slides-2, .surface-compare, .accent-pair, .tex-grid { grid-template-columns: 1fr 1fr; }
+  .ramp { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body data-testid="treatment-04">
+
+<div class="sheet">
+
+  <!-- ═══ MASTHEAD ═══════════════════════════════════ -->
+  <header class="masthead">
+    <span class="crosshair tl"></span><span class="crosshair tr"></span>
+    <div class="mono" style="margin-bottom:18px">WAM-2026 · TREATMENT T-04</div>
+    <h1>solder kit</h1>
+    <p class="lead" style="max-width:60ch">
+      T-03 with the saturation taken out and the workbench put in. Displays are unlit and
+      reflective rather than backlit; the shell has aged; tone comes from ordered dither
+      instead of gradients; and the whole thing sits on perfboard.
+    </p>
+    <div class="meta-row mono">
+      <div><span>Reference</span><span class="v">GBA (unlit) · Heathkit · perfboard · through-hole</span></div>
+      <div><span>Base</span><span class="v">Fork of T-03</span></div>
+      <div><span>Accents</span><span class="v">Slate blue + ochre, muted</span></div>
+      <div><span>Status</span><span class="v">Draft 01</span></div>
+    </div>
+  </header>
+
+  <!-- ═══ THE IDEA ═══════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>the idea</h2><span class="rule"></span><span class="mono">00</span></div>
+
+    <div class="note diff">
+      <b>1 · Saturation is what reads as "new".</b> Chroma is roughly halved from T-03.
+      Vintage pigment fades, plastic yellows under UV, and phosphor dims — so the shell is
+      warm-shifted rather than neutral grey, because a perfectly neutral grey reads as
+      modern injection moulding.
+    </div>
+    <div class="note diff">
+      <b>2 · The screen is reflective, not backlit.</b> This is the actual difference
+      between a GBA and a GBA SP, and it's the single biggest change from T-03. Light
+      arrives from the <i>front</i>, so there's no glow at the top edge — just a broad
+      diagonal reflection off the glass, and genuinely poor contrast underneath it.
+    </div>
+    <div class="note diff">
+      <b>3 · Dither replaces gradients.</b> A limited palette can't ramp smoothly, so tone
+      comes from ordered dithering. This is the strongest idea in the treatment, because
+      it's honest about the constraint in exactly the way exposed electronics are — and
+      dithering is itself a rendering technique, which puts it on-thesis for the talk.
+    </div>
+    <div class="note diff">
+      <b>4 · Corners go square.</b> Radii drop to 2px or zero and shadows become hard
+      offsets rather than soft blurs. Pixel art has no antialiasing; soft radii next to a
+      dither pattern read as a mistake.
+    </div>
+  </section>
+
+  <!-- ═══ DISPLAYS ═══════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>displays</h2><span class="rule"></span><span class="mono">01</span></div>
+    <p class="lead">Same <code>.well</code> + <code>.lcd</code> construction as T-03, re-lit. Compare the murk against T-03's backlit versions.</p>
+
+    <div class="lcd-row">
+      <div class="lcd-item"><span class="cap">Default · reflective</span>
+        <div class="well"><div class="lcd xl"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div></div>
+      <div class="lcd-item"><span class="cap">Blue filter</span>
+        <div class="well"><div class="lcd xl blue"><div class="ghost">88:88</div><div class="chars">06/14</div></div></div></div>
+      <div class="lcd-item"><span class="cap">Amber filter</span>
+        <div class="well"><div class="lcd xl amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div></div>
+    </div>
+
+    <div class="lcd-row" style="margin-top:26px">
+      <div class="lcd-item"><span class="cap">7-segment</span>
+        <div class="well"><div class="lcd seg"><div class="ghost">8888</div><div class="chars">1204</div></div></div></div>
+      <div class="lcd-item"><span class="cap">Matrix strip</span>
+        <div class="well"><div class="lcd matrix"><div class="chars">READY SL-06</div></div></div></div>
+      <div class="lcd-item"><span class="cap">Unpowered</span>
+        <div class="well"><div class="lcd md dead"><div class="chars" style="color:var(--lcd-dead-ink)">88:88</div></div></div></div>
+    </div>
+
+    <div class="note warn">
+      <b>This is deliberately hard to read, and that is the risk.</b> An unlit reflective
+      LCD is authentic precisely because contrast is poor — but T-03's warning applies
+      double here. These are presenter-facing chrome only. If anything on this sheet is
+      going to fail in the room, it is this.
+    </div>
+  </section>
+
+  <!-- ═══ TEXTURE ════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>texture</h2><span class="rule"></span><span class="mono">02</span></div>
+    <p class="lead">Four surfaces that carry the kit language. All are pure CSS — no images.</p>
+
+    <div class="tex-grid">
+      <div class="perf"><span class="lbl pix" style="position:absolute;left:8px;bottom:7px;color:var(--hz-600)">PERFBOARD 0.1"</span></div>
+      <div class="footprint">
+        <span class="ref">U1</span>
+        <span class="out"></span>
+        <span class="pad" style="left:12%;top:34%"></span><span class="pad" style="left:12%;top:56%"></span>
+        <span class="pad" style="right:12%;top:34%"></span><span class="pad" style="right:12%;top:56%"></span>
+        <span class="lbl pix" style="position:absolute;left:8px;bottom:7px;color:var(--silk)">SILKSCREEN</span>
+      </div>
+      <div class="tex dither-50"><span class="lbl">DITHER 50</span></div>
+      <div class="tex dither-25"><span class="lbl">DITHER 25</span></div>
+    </div>
+
+    <h3 style="margin-top:36px">Dither as a tone ramp</h3>
+    <p class="lead">One hue, five tones, no gradient — this is how shading works in this treatment.</p>
+    <div class="dither-strip">
+      <div></div>
+      <div class="dither-12"></div>
+      <div class="dither-25"></div>
+      <div class="dither-50"></div>
+      <div class="dither-50" style="--do:0.72"></div>
+    </div>
+
+    <div class="note diff">
+      <b>Why this is the good idea.</b> Dither makes the constraint visible in the surface
+      itself — the same move as a transparent case showing you the board. It's also, at
+      1-2px, effectively free, and it survives projection better than a subtle gradient
+      does, since projectors band smooth ramps badly.
+    </div>
+    <div class="note warn">
+      <b>One real cost.</b> Fine dither can shimmer or moiré when scaled or moved, and it
+      will alias against a projector's native resolution <span class="verify">VERIFY</span>.
+      Keep dithered areas static, or scale them in whole pixels. Never dither something
+      that animates continuously.
+    </div>
+  </section>
+
+  <!-- ═══ COLOUR ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>colour</h2><span class="rule"></span><span class="mono">03</span></div>
+
+    <h3>Chassis — aged ramp</h3>
+    <div class="ramp" data-testid="housing-ramp">
+      <div style="background:var(--hz-000);color:var(--hz-600)">000</div>
+      <div style="background:var(--hz-050);color:var(--hz-600)">050</div>
+      <div style="background:var(--hz-100);color:var(--hz-600)">100</div>
+      <div style="background:var(--hz-200);color:var(--hz-600)">200</div>
+      <div style="background:var(--hz-300);color:var(--hz-800)">300</div>
+      <div style="background:var(--hz-400);color:var(--silk)">400</div>
+      <div style="background:var(--hz-500);color:var(--silk)">500</div>
+      <div style="background:var(--hz-600);color:var(--silk)">600</div>
+      <div style="background:var(--hz-700);color:var(--silk)">700</div>
+      <div style="background:var(--hz-800);color:var(--silk)">800</div>
+      <div style="background:var(--hz-900);color:var(--silk)">900</div>
+    </div>
+
+    <h3 style="margin-top:40px">Accent pair — muted</h3>
+    <div class="accent-pair">
+      <div class="accent-card">
+        <div class="swatch" style="background:var(--blue)"></div>
+        <div class="cap"><div class="n">--blue · oklch(0.585 0.058 232)</div>
+        <div class="d">Slate, not sky. Chroma 0.058 against T-03's 0.125 — the difference between painted metal and a lit LED.</div></div>
+      </div>
+      <div class="accent-card">
+        <div class="swatch" style="background:var(--amber)"></div>
+        <div class="cap"><div class="n">--amber · oklch(0.688 0.079 78)</div>
+        <div class="d">Ochre, not yellow. Reads as aged plastic and old warning labels rather than as a highlighter.</div></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:40px">Section ramp — colour bands</h3>
+    <p class="lead">Presented as a resistor, because a resistor is the thing in every kit that encodes a value as bands of colour. Click a band to reskin.</p>
+    <div class="resistor">
+      <span class="lead" style="flex:1"></span>
+      <span class="body">
+        <span class="band" style="background:var(--tint-video)"></span>
+        <span class="band" style="background:var(--tint-css)"></span>
+        <span class="band" style="background:var(--tint-composite)"></span>
+        <span class="band" style="background:var(--tint-svg)"></span>
+        <span class="band" style="background:var(--tint-canvas)"></span>
+        <span class="band" style="background:var(--tint-webgl)"></span>
+        <span class="band" style="background:var(--tint-webgpu)"></span>
+      </span>
+      <span class="lead" style="flex:1"></span>
+    </div>
+
+    <div class="tints" data-testid="tint-set">
+      <button class="tint-card" data-tint="var(--tint-video)" data-testid="tint-video"><div class="swatch" style="background:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-css)" data-testid="tint-css"><div class="swatch" style="background:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-composite)" data-testid="tint-composite"><div class="swatch" style="background:var(--tint-composite)"></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-svg)" data-testid="tint-svg"><div class="swatch" style="background:var(--tint-svg)"></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-canvas)" data-testid="tint-canvas"><div class="swatch" style="background:var(--tint-canvas)"></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgl)" data-testid="tint-webgl"><div class="swatch" style="background:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgpu)" data-testid="tint-webgpu"><div class="swatch" style="background:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></button>
+    </div>
+
+    <div class="note warn">
+      <b>Muting costs separation.</b> At this chroma the seven steps are much closer
+      together than in T-03, and the middle of the ramp is now very weak
+      <span class="verify">VERIFY</span>. If the section colour has to be identifiable on
+      its own rather than just directional, this treatment needs either fewer sections or
+      a second cue — the dither density, for instance, could step with the ramp.
+    </div>
+
+    <h3 style="margin-top:40px">Signal</h3>
+    <div class="signal-row">
+      <span class="signal-chip"></span>
+      <div>
+        <div class="mono" style="color:var(--hz-800)">--signal · oklch(0.470 0.140 30)</div>
+        <p style="margin:6px 0 0;font-size:13px;color:var(--hz-600);max-width:60ch">
+          Oxidised red — closer to a warning label that's been on a machine for thirty
+          years than to an alert state. Still the most saturated thing in the system, which
+          is what keeps it working.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TYPE ═══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>typography</h2><span class="rule"></span><span class="mono">04</span></div>
+    <p class="lead">One addition: a true pixel face for labels, which replaces mono at small sizes throughout.</p>
+
+    <div class="type-row">
+      <div class="mono">Display<br><span style="text-transform:none;letter-spacing:0">Inter 200</span></div>
+      <div class="spec-display">the craft is the product</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Body<br><span style="text-transform:none;letter-spacing:0">Inter 400</span></div>
+      <div class="spec-body">Motion is a communication tool with a cost, so it should be spent where it does work.</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Pixel label<br><span style="text-transform:none;letter-spacing:0">Silkscreen</span></div>
+      <div class="spec-pix">SL-12 WEBGPU COMPUTE SHADER</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Technical<br><span style="text-transform:none;letter-spacing:0">JetBrains Mono</span></div>
+      <div class="spec-mono">requestAnimationFrame → 16.7ms budget</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Silkscreen<br><span style="text-transform:none;letter-spacing:0">Ink on shell</span></div>
+      <div><span class="silk-strip"><span class="silk-txt">POWER · VOL · CONTRAST</span></span></div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Designators<br><span style="text-transform:none;letter-spacing:0">Kit parts</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="desig">R1</span><span class="desig">C4</span><span class="desig">U2</span>
+        <span class="desig">LED1</span><span class="desig">SW3</span><span class="desig">J1</span>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>Designators replace the slide code.</b> Every slide, demo and control gets a kit
+      reference — <code>U2</code> for a demo module, <code>SW3</code> for a control,
+      <code>J1</code> for the presenter link. It's the same alphanumeric idea as T-01, but
+      it now means something: the deck is a parts list.
+    </div>
+    <div class="note warn">
+      <b>Silkscreen the typeface has no lowercase depth and poor legibility at size.</b>
+      It's a label face only — 8-11px, short strings, all caps. Anything longer than about
+      four words should fall back to mono.
+    </div>
+  </section>
+
+  <!-- ═══ SURFACE ════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>surface &amp; material</h2><span class="rule"></span><span class="mono">05</span></div>
+    <div class="surface-compare">
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-clear">
+            <div class="panel-t">TINTED POLYCARBONATE</div>
+            <div class="panel-s">Tint density up again — muted colour needs more of it to read as coloured plastic.</div>
+          </div>
+        </div>
+        <div class="verdict"><b>✓</b><span>Hard offset shadow instead of soft blur ties it to the pixel grid.</span></div>
+      </div>
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-glass">
+            <div class="panel-t">GENERIC GLASSMORPHISM</div>
+            <div class="panel-s">Uniform white blur · even border</div>
+          </div>
+        </div>
+        <div class="verdict"><b>✕</b><span>Soft, modern, and completely at odds with everything else here.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ANNOTATION ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>annotation</h2><span class="rule"></span><span class="mono">06</span></div>
+    <div class="anno-grid">
+      <div class="anno-box">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="desig">U6</span>
+          <span class="slide-code"><span class="num">06</span>/<span>14</span><span class="dot"></span></span>
+        </div>
+        <div class="cap">Designator + position</div>
+      </div>
+      <div class="anno-box">
+        <div class="dim"><i></i><span>1440 × 810</span><i></i></div>
+        <div class="cap">Dimension line</div>
+      </div>
+      <div class="anno-box">
+        <div class="rail-demo">
+          <span class="fill"></span>
+          <span class="tick" style="left:14%"></span><span class="tick" style="left:28%"></span>
+          <span class="tick" style="left:42%"></span><span class="tick" style="left:57%"></span>
+          <span class="tick" style="left:71%"></span><span class="tick" style="left:85%"></span>
+        </div>
+        <div class="cap">Progress rail</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MOTION ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>motion</h2><span class="rule"></span><span class="mono">07</span></div>
+    <p class="lead">
+      Same four curves — but this treatment adds a fifth, and the fourth runner below is
+      now <code>steps()</code> rather than linear, so you can feel the difference.
+    </p>
+
+    <div class="ease-grid" data-testid="ease-set">
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C20 100 0 0 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">STANDARD</div><div class="v">0.2, 0, 0, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C5 30 10 0 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">DECELERATE</div><div class="v">0.05, 0.7, 0.1, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C30 100 80 85 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">ACCELERATE</div><div class="v">0.3, 0, 0.8, 0.15</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/>
+          <path d="M0 100 H16.7 V83.3 H33.3 V66.7 H50 V50 H66.7 V33.3 H83.3 V16.7 H100 V0" stroke="var(--amber)" stroke-width="2"/>
+        </svg>
+        <div class="n">STEPPED</div><div class="v">steps(6, end)</div>
+      </div>
+    </div>
+
+    <div class="runner-wrap" id="runner" data-testid="ease-runner">
+      <div class="runner"><span class="lbl">STANDARD</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">DECELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">ACCELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">STEPPED</span><span class="track"><span class="box"></span></span></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
+        <button class="ibtn primary" id="playEase" data-testid="play-ease">▶ RUN</button>
+        <span class="pix">240MS · SLIDE ADVANCE</span>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>Stepped motion is this treatment's signature.</b> Low-framerate handheld hardware
+      moved sprites in whole pixels at a fixed tick, and <code>steps()</code> reproduces
+      that exactly. Use it for readouts, meters and counters — never for slide transitions,
+      where it just reads as dropped frames.
+    </div>
+
+    <h3 style="margin-top:40px">Duration scale</h3>
+    <table class="dur-table" data-testid="duration-table">
+      <tr><th>Ref</th><th>Token</th><th>Value</th><th>Applied to</th></tr>
+      <tr><td>T1</td><td>--dur-instant</td><td>90ms</td><td>Key press, focus</td></tr>
+      <tr><td>T2</td><td>--dur-fast</td><td>160ms</td><td>Hover, toggle</td></tr>
+      <tr><td>T3</td><td>--dur-base</td><td>240ms</td><td><b>Slide advance</b> — 200+ times before delivery</td></tr>
+      <tr><td>T4</td><td>--dur-slow</td><td>420ms</td><td>Panel, overview</td></tr>
+      <tr><td>T5</td><td>--dur-section</td><td>700ms</td><td>Section shift — 6×</td></tr>
+      <tr><td>T6</td><td>--dur-hero</td><td>1400ms</td><td>Cold open, WebGPU reveal</td></tr>
+    </table>
+  </section>
+
+  <!-- ═══ COMPONENTS ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>components</h2><span class="rule"></span><span class="mono">08</span></div>
+    <div class="comp-grid">
+      <div class="comp" style="grid-column:1 / -1">
+        <div class="h">Presenter readout · U1</div>
+        <div class="readout">
+          <div class="lcd-item"><span class="cap">Elapsed</span><div class="well"><div class="lcd xl"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Slide</span><div class="well"><div class="lcd md"><div class="ghost">88/88</div><div class="chars">06/14</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Pace</span><div class="well"><div class="lcd md amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Status</span><div class="well"><div class="lcd matrix"><div class="chars">RUNNING</div></div></div></div>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="h">Controls · SW1-5</div>
+        <div class="btn-row">
+          <button class="ibtn">← PREV</button>
+          <button class="ibtn primary">NEXT →</button>
+          <button class="ibtn">OVERVIEW</button>
+          <button class="ibtn warn">REDUCED</button>
+          <button class="ibtn danger">BLANK</button>
+        </div>
+        <div class="led-row" style="margin-top:22px">
+          <div class="led" style="--c:oklch(0.62 0.15 145)"><span class="bulb"></span><span class="lb">PWR</span></div>
+          <div class="led" style="--c:var(--blue)"><span class="bulb"></span><span class="lb">SYNC</span></div>
+          <div class="led off" style="--c:var(--amber)"><span class="bulb"></span><span class="lb">LOAD</span></div>
+          <div class="led off" style="--c:var(--signal)"><span class="bulb"></span><span class="lb">ERR</span></div>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="h">Overview grid</div>
+        <div class="thumbs">
+          <div class="thumb" data-n="01"><span class="bar" style="--c:var(--tint-video)"></span></div>
+          <div class="thumb" data-n="02"><span class="bar" style="--c:var(--tint-css)"></span></div>
+          <div class="thumb" data-n="03"><span class="bar" style="--c:var(--tint-svg)"></span></div>
+          <div class="thumb" data-active data-n="04"><span class="bar" style="--c:var(--tint-webgpu)"></span></div>
+        </div>
+        <div class="note diff" style="margin-bottom:0">
+          <b>LEDs are the missing status layer.</b> Power, sync, load and error as four
+          discrete lamps says more at a glance than any text readout, and it's the most
+          literal piece of kit language available.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SLIDES ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>slide compositions</h2><span class="rule"></span><span class="mono">09</span></div>
+    <div class="slide-cap">Layout · title</div>
+    <div class="slide">
+      <div class="chrome-top"><span>WAM-2026</span><span>01/14</span></div>
+      <div class="body">
+        <h4>web animation &amp; motion</h4>
+        <p>Why the craft is the product — a tour from pre-baked pixels to compute shaders.</p>
+      </div>
+      <div class="chrome-bot"><span>FOLKLORE</span><span>07.08.2026</span></div>
+    </div>
+
+    <div class="slides-2" style="margin-top:40px">
+      <div>
+        <div class="slide-cap">Layout · statement</div>
+        <div class="slide statement">
+          <div class="chrome-top"><span>THESIS</span><span>02/14</span></div>
+          <div class="body"><h4>a site's value is no longer the content it holds</h4></div>
+          <div class="chrome-bot"><span>U2</span><span>SL-02</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="slide-cap">Layout · split (demo right)</div>
+        <div class="slide">
+          <div class="chrome-top"><span>WEBGPU</span><span>12/14</span></div>
+          <div class="body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+            <div>
+              <h4 style="font-size:26px">compute</h4>
+              <p style="font-size:13px">Simulation moves to the GPU. Particle count stops being the constraint.</p>
+            </div>
+            <div style="aspect-ratio:1;position:relative;overflow:hidden;box-shadow:var(--recess)">
+              <div class="internals" style="position:absolute;inset:0"></div>
+              <div style="position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in oklch,var(--tint) 50%,transparent),color-mix(in oklch,var(--tint) 22%,transparent));backdrop-filter:blur(5px)"></div>
+            </div>
+          </div>
+          <div class="chrome-bot"><span>U12 · TD-WEBGPU</span><span>1.2M</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:var(--hair) solid var(--hz-300);padding-top:24px;margin-top:60px">
+    <div class="mono" style="line-height:2">
+      T-04 · SOLDER KIT · DRAFT<br>
+      <span style="color:var(--hz-600);text-transform:none;letter-spacing:0.02em">
+        Fork to <code>05-*.html</code> and add an entry to TREATMENTS in index.html.
+      </span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+document.querySelectorAll('[data-tint]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--tint', el.dataset.tint);
+  });
+});
+document.querySelectorAll('.resistor .band').forEach((el, i) => {
+  const names = ['video','css','composite','svg','canvas','webgl','webgpu'];
+  el.style.cursor = 'pointer';
+  el.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--tint', `var(--tint-${names[i]})`);
+  });
+});
+
+const runner = document.getElementById('runner');
+document.getElementById('playEase').addEventListener('click', () => {
+  const boxes = runner.querySelectorAll('.box');
+  const travel = runner.querySelector('.track').clientWidth - 26;
+  boxes.forEach(b => b.style.transform = 'translateX(0)');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    boxes.forEach(b => b.style.transform = `translateX(${travel}px)`);
+  }));
+  setTimeout(() => boxes.forEach(b => b.style.transform = 'translateX(0)'), 900);
+});
+</script>
+
+</body>
+</html>
