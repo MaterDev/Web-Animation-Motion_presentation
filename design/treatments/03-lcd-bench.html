@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-03 — LCD Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   T-03 · LCD BENCH
+   Medium-grey chassis. Light blue + amber accents. The recessed
+   LCD from T-02 is promoted from a detail to the organizing idea:
+   every readout is a display sunk into the housing.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── chassis: medium grey ────────────────────────────────
+     Base sits mid-scale, so surfaces can move in BOTH directions:
+     raised panels go lighter, display wells go darker. That's the
+     defining property of this treatment — dark and light are both
+     available from the same ground. */
+  --hz-000: oklch(0.680 0.005 258);  /* base — moulded ABS */
+  --hz-050: oklch(0.720 0.005 258);  /* raised */
+  --hz-100: oklch(0.772 0.004 258);  /* panel */
+  --hz-200: oklch(0.836 0.003 258);  /* high panel */
+  --hz-300: oklch(0.560 0.006 258);  /* hairline — DARKER than base */
+  --hz-400: oklch(0.470 0.008 258);  /* disabled / marks */
+  --hz-500: oklch(0.380 0.010 258);  /* secondary text — FLOOR */
+  --hz-600: oklch(0.300 0.011 258);  /* body text */
+  --hz-700: oklch(0.240 0.011 258);  /* emphasis */
+  --hz-800: oklch(0.190 0.010 258);  /* headline */
+  --hz-900: oklch(0.130 0.009 258);  /* maximum */
+
+  /* ── recess: display wells sink below the chassis ────── */
+  --well-lip:   oklch(0.480 0.006 258);
+  --well-floor: oklch(0.235 0.010 258);
+
+  /* ── silkscreen: printed label ink on plastic ──────────
+     Real device labelling is light ink on a grey shell. Used ONLY
+     at label scale — it does not have the contrast for body copy. */
+  --silk: oklch(0.965 0.002 258);
+
+  /* ── accents ─────────────────────────────────────────── */
+  --blue:  oklch(0.720 0.125 232);   /* backlit LCD / active */
+  --amber: oklch(0.800 0.155  85);   /* caution / peak load */
+
+  /* ── LCD fields ──────────────────────────────────────── */
+  --lcd-blue-hi:  oklch(0.790 0.085 226);
+  --lcd-blue-lo:  oklch(0.700 0.095 234);
+  --lcd-amber-hi: oklch(0.845 0.110  88);
+  --lcd-amber-lo: oklch(0.760 0.130  82);
+  --lcd-dead-hi:  oklch(0.560 0.012 250);   /* unpowered */
+  --lcd-dead-lo:  oklch(0.500 0.014 250);
+  --lcd-ink:      oklch(0.215 0.035 250);   /* segment "on" */
+  --lcd-ghost:    oklch(0.215 0.035 250 / 0.10);
+
+  /* ── section ramp: temperature, not rainbow ──────────────
+     Blue + amber is the accent pair, so seven arbitrary hues would
+     fight it. The spectrum instead runs cold → hot, which keeps the
+     escalation reading and matches how instruments signal load. */
+  --tint-video:     oklch(0.620 0.020 250);
+  --tint-css:       oklch(0.700 0.110 245);
+  --tint-composite: oklch(0.725 0.120 228);
+  --tint-svg:       oklch(0.755 0.115 200);
+  --tint-canvas:    oklch(0.790 0.120 155);
+  --tint-webgl:     oklch(0.810 0.145 110);
+  --tint-webgpu:    oklch(0.800 0.155  85);
+
+  --tint: var(--tint-webgpu);
+
+  --signal: oklch(0.505 0.215 27);
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --dot:  'Doto', 'JetBrains Mono', monospace;
+
+  --dur-instant: 90ms;  --dur-fast: 160ms;  --dur-base: 240ms;
+  --dur-slow: 420ms;    --dur-section: 700ms;  --dur-hero: 1400ms;
+
+  --ease-standard:   cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --ease-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  --ease-mechanical: cubic-bezier(0.4, 0.0, 0.2, 1.0);
+
+  /* moulded plastic: crisp top highlight, soft ambient below */
+  --lift-1: inset 0 1px 0 oklch(1 0 0 / 0.30),
+            0 1px 2px oklch(0.13 0.01 258 / 0.18);
+  --lift-2: inset 0 1px 0 oklch(1 0 0 / 0.34),
+            0 2px 4px oklch(0.13 0.01 258 / 0.16),
+            0 6px 14px oklch(0.13 0.01 258 / 0.12);
+  --lift-3: inset 0 1px 0 oklch(1 0 0 / 0.38),
+            0 10px 24px oklch(0.13 0.01 258 / 0.20);
+  --recess: inset 0 2px 6px oklch(0.13 0.01 258 / 0.55),
+            inset 0 -1px 0 oklch(1 0 0 / 0.16);
+
+  --u: 8px;
+  --hair: 1px;
+}
+
+@media (min-resolution: 2dppx) { :root { --hair: 0.5px; } }
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  opacity: 0.075; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── layout ────────────────────────────────────────────── */
+
+.sheet { max-width: 1180px; margin: 0 auto; padding: calc(var(--u) * 6) calc(var(--u) * 5) calc(var(--u) * 14); }
+section { margin-bottom: calc(var(--u) * 11); }
+
+.mono { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-500); }
+
+h1 { font-size: clamp(38px, 5.5vw, 64px); font-weight: 200; letter-spacing: -0.035em; line-height: 1.02; color: var(--hz-900); margin: 0 0 calc(var(--u) * 2); text-transform: lowercase; }
+h2 { font-size: 22px; font-weight: 400; letter-spacing: -0.018em; color: var(--hz-900); margin: 0 0 calc(var(--u) * 0.75); text-transform: lowercase; }
+h3 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-700); margin: 0 0 calc(var(--u) * 1.5); font-weight: 500; }
+
+p { margin: 0 0 calc(var(--u) * 2); max-width: 62ch; }
+p.lead { color: var(--hz-500); font-size: 14px; }
+
+code {
+  font-family: var(--mono); font-size: 0.87em;
+  background: var(--hz-200); border: var(--hair) solid var(--hz-300);
+  border-radius: 3px; padding: 1px 5px; color: var(--hz-700);
+}
+
+.sec-head {
+  display: grid; grid-template-columns: auto 1fr auto; gap: calc(var(--u) * 2);
+  align-items: center; margin-bottom: calc(var(--u) * 3);
+  padding-bottom: calc(var(--u) * 1.5); border-bottom: var(--hair) solid var(--hz-300);
+}
+.sec-head .rule { height: var(--hair); background: var(--hz-300); }
+
+/* silkscreen label — light ink printed on the shell */
+.silk {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--silk);
+  text-shadow: 0 1px 0 oklch(0.13 0.01 258 / 0.25);
+}
+
+/* ── masthead ──────────────────────────────────────────── */
+
+.masthead { position: relative; padding: calc(var(--u) * 5) 0 calc(var(--u) * 6); margin-bottom: calc(var(--u) * 8); border-bottom: var(--hair) solid var(--hz-300); }
+.crosshair { position: absolute; width: 13px; height: 13px; opacity: 0.8; }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--hz-400); }
+.crosshair::before { left: 50%; top: 0; bottom: 0; width: var(--hair); }
+.crosshair::after  { top: 50%; left: 0; right: 0; height: var(--hair); }
+.crosshair.tl { top: 0; left: -26px; }
+.crosshair.tr { top: 0; right: -26px; }
+
+.meta-row { display: flex; gap: calc(var(--u) * 4); flex-wrap: wrap; margin-top: calc(var(--u) * 3); }
+.meta-row div { display: flex; flex-direction: column; gap: 4px; }
+.meta-row .v { font-family: var(--mono); font-size: 11.5px; color: var(--hz-700); text-transform: none; letter-spacing: 0.02em; }
+
+/* ═══ THE LCD SYSTEM ═══════════════════════════════════ */
+
+/* A well is a recess cut into the chassis. Displays sit in wells. */
+.well {
+  background: var(--well-floor);
+  border-radius: 5px;
+  padding: 4px;
+  box-shadow: var(--recess);
+  border-top: var(--hair) solid var(--well-lip);
+  display: inline-block;
+}
+
+.lcd {
+  position: relative;
+  border-radius: 3px;
+  padding: 11px 15px 9px;
+  overflow: hidden;
+  background: linear-gradient(178deg, var(--lcd-blue-hi), var(--lcd-blue-lo));
+  box-shadow:
+    inset 0 0 0 var(--hair) oklch(0.13 0.01 258 / 0.35),
+    inset 0 14px 20px -12px oklch(1 0 0 / 0.5);   /* backlight bleed, top */
+}
+
+/* the pixel cell grid — what makes it read as a matrix, not a box */
+.lcd::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.13 0.01 258 / 0.10) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg,  oklch(0.13 0.01 258 / 0.10) 0 1px, transparent 1px 3px);
+}
+/* polariser sheen */
+.lcd::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, oklch(1 0 0 / 0.16) 0 22%, transparent 55%);
+}
+
+.lcd.amber { background: linear-gradient(178deg, var(--lcd-amber-hi), var(--lcd-amber-lo)); }
+.lcd.dead  { background: linear-gradient(178deg, var(--lcd-dead-hi), var(--lcd-dead-lo)); }
+
+.lcd .chars, .lcd .ghost {
+  font-family: var(--dot); font-weight: 700; letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums; line-height: 1;
+  position: relative; z-index: 1;
+}
+.lcd .chars { color: var(--lcd-ink); }
+.lcd .ghost { color: var(--lcd-ghost); position: absolute; left: 15px; top: 11px; z-index: 0; }
+
+.lcd.xl .chars, .lcd.xl .ghost { font-size: 44px; }
+.lcd.md .chars, .lcd.md .ghost { font-size: 26px; }
+.lcd.sm .chars, .lcd.sm .ghost { font-size: 15px; }
+
+.lcd-row { display: flex; gap: calc(var(--u) * 2); flex-wrap: wrap; align-items: flex-end; }
+.lcd-item { display: flex; flex-direction: column; gap: 7px; }
+.lcd-item .cap { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-500); }
+
+/* dot-matrix message strip */
+.matrix { padding: 9px 13px; }
+.matrix .chars { font-size: 17px; letter-spacing: 0.14em; }
+
+/* ═══ COLOUR ═══════════════════════════════════════════ */
+
+.ramp { display: grid; grid-template-columns: repeat(11, 1fr); border-radius: 6px; overflow: hidden; margin-bottom: calc(var(--u) * 2); box-shadow: var(--lift-2); }
+.ramp div { aspect-ratio: 1 / 1.5; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 7px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.04em; }
+
+.accent-pair { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+.accent-card { border-radius: 7px; overflow: hidden; background: var(--hz-100); box-shadow: var(--lift-2); }
+.accent-card .swatch { height: 76px; position: relative; }
+.accent-card .swatch::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, oklch(1 0 0 / 0.24), transparent 55%); }
+.accent-card .cap { padding: 12px 14px 14px; }
+.accent-card .n { font-family: var(--mono); font-size: 10px; color: var(--hz-800); letter-spacing: 0.08em; }
+.accent-card .d { font-size: 12.5px; color: var(--hz-500); margin-top: 4px; line-height: 1.5; }
+
+.tints { display: grid; grid-template-columns: repeat(7, 1fr); gap: calc(var(--u) * 1.5); }
+.tint-card {
+  border-radius: 6px; overflow: hidden; background: var(--hz-100);
+  cursor: pointer; box-shadow: var(--lift-1); border: 0; padding: 0; text-align: left;
+  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
+}
+.tint-card:hover { box-shadow: var(--lift-3); transform: translateY(-2px); }
+.tint-card .swatch { height: 62px; position: relative; }
+.tint-card .swatch::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, oklch(1 0 0 / 0.22), transparent 55%); }
+.tint-card .cap { padding: 9px 10px 11px; }
+.tint-card .n { font-family: var(--mono); font-size: 9px; color: var(--hz-500); letter-spacing: 0.1em; }
+.tint-card .l { font-size: 12px; color: var(--hz-800); text-transform: lowercase; margin-top: 2px; }
+
+.thermo { height: 12px; border-radius: 6px; margin: calc(var(--u) * 2) 0 calc(var(--u) * 1);
+  background: linear-gradient(90deg,
+    var(--tint-video), var(--tint-css), var(--tint-composite), var(--tint-svg),
+    var(--tint-canvas), var(--tint-webgl), var(--tint-webgpu));
+  box-shadow: var(--recess); }
+
+.signal-row { display: flex; align-items: center; gap: calc(var(--u) * 2); padding: calc(var(--u) * 2); border-radius: 7px; background: var(--hz-100); box-shadow: var(--lift-1); }
+.signal-chip { width: 34px; height: 34px; border-radius: 5px; background: var(--signal); flex: none; box-shadow: 0 3px 10px color-mix(in oklch, var(--signal) 35%, transparent); }
+
+/* ═══ TYPE ════════════════════════════════════════════ */
+
+.type-row { display: grid; grid-template-columns: 108px 1fr; gap: calc(var(--u) * 3); padding: calc(var(--u) * 2.5) 0; border-bottom: var(--hair) solid var(--hz-300); align-items: baseline; }
+.type-row:last-child { border-bottom: 0; }
+.spec-display { font-size: 46px; font-weight: 200; letter-spacing: -0.035em; color: var(--hz-900); text-transform: lowercase; line-height: 1.05; }
+.spec-body { font-size: 17px; color: var(--hz-600); line-height: 1.62; }
+.spec-mono { font-family: var(--mono); font-size: 13px; color: var(--hz-600); letter-spacing: 0.02em; }
+.spec-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-700); }
+.silk-strip { background: var(--hz-300); border-radius: 4px; padding: 10px 14px; display: inline-block; box-shadow: var(--lift-1); }
+
+/* ═══ SURFACE ══════════════════════════════════════════ */
+
+.surface-compare { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+.demo-stage { position: relative; height: 232px; border-radius: 8px; overflow: hidden; display: grid; place-items: center; box-shadow: var(--recess); }
+
+.internals {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 16% 22%, oklch(0.82 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 84% 30%, oklch(0.82 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 30% 84%, oklch(0.82 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 88% 76%, oklch(0.82 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 68% 20%, oklch(0.30 0.02 258) 0 15px, transparent 16px),
+    linear-gradient(oklch(0.15 0.01 258) 0 100%) 22% 52% / 92px 34px no-repeat,
+    repeating-linear-gradient(90deg, oklch(0.60 0.13 210 / 0.55) 0 1.5px, transparent 1.5px 44px),
+    repeating-linear-gradient(0deg,  oklch(0.60 0.13 210 / 0.38) 0 1.5px, transparent 1.5px 36px),
+    oklch(0.255 0.030 250);
+}
+.internals::after {
+  content: ''; position: absolute; left: 22%; top: 52%; width: 92px; height: 34px;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.72 0.008 258) 0 3px, transparent 3px 10px) 0 0 / 100% 4px,
+    repeating-linear-gradient(90deg, oklch(0.72 0.008 258) 0 3px, transparent 3px 10px) 0 100% / 100% 4px;
+  background-repeat: no-repeat;
+}
+
+.panel-clear, .panel-glass { position: relative; z-index: 2; width: 74%; padding: calc(var(--u) * 2.5); border-radius: 10px; text-align: center; }
+.panel-clear {
+  background: linear-gradient(160deg,
+    color-mix(in oklch, var(--tint) 42%, transparent),
+    color-mix(in oklch, var(--tint) 18%, transparent) 45%,
+    color-mix(in oklch, var(--tint) 36%, transparent));
+  backdrop-filter: blur(12px) saturate(1.7);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.48),
+              inset 0 0 24px color-mix(in oklch, var(--tint) 18%, transparent),
+              0 10px 26px oklch(0 0 0 / 0.38);
+}
+.panel-glass { background: oklch(1 0 0 / 0.13); backdrop-filter: blur(12px); border: 1px solid oklch(1 0 0 / 0.24); }
+.panel-t { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.99 0 0); }
+.panel-s { font-size: 12px; color: oklch(0.99 0 0 / 0.78); margin-top: 5px; }
+.verdict { display: flex; gap: 8px; align-items: baseline; font-family: var(--mono); font-size: 10px; line-height: 1.6; margin-top: calc(var(--u) * 1.5); color: var(--hz-500); }
+.verdict b { color: var(--hz-800); font-weight: 500; }
+
+/* ═══ ANNOTATION ═══════════════════════════════════════ */
+
+.anno-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 3); }
+.anno-box { border-radius: 7px; padding: calc(var(--u) * 2.5); background: var(--hz-100); min-height: 132px; display: flex; flex-direction: column; box-shadow: var(--lift-1); }
+.anno-box .cap { margin-top: auto; padding-top: calc(var(--u) * 1.5); font-family: var(--mono); font-size: 9.5px; color: var(--hz-500); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.slide-code { display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--hz-600); }
+.slide-code .num { color: var(--hz-900); }
+.slide-code .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--tint); }
+.slide-code .sec { color: var(--hz-800); }
+
+.dim { position: relative; height: 40px; margin: 14px 0 6px; }
+.dim::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: var(--hair); background: var(--hz-400); }
+.dim span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--hz-100); padding: 0 8px; font-family: var(--mono); font-size: 9.5px; color: var(--hz-700); }
+.dim i { position: absolute; top: 50%; transform: translateY(-50%); width: var(--hair); height: 11px; background: var(--hz-400); }
+.dim i:first-of-type { left: 0; }
+.dim i:last-of-type  { right: 0; }
+
+.rail-demo { position: relative; height: 8px; background: var(--well-floor); border-radius: 4px; margin: 20px 0 10px; box-shadow: var(--recess); overflow: hidden; }
+.rail-demo .fill { position: absolute; inset: 1px auto 1px 1px; width: 62%; background: linear-gradient(90deg, var(--blue), var(--tint)); border-radius: 3px; transition: width var(--dur-base) var(--ease-standard); }
+.rail-demo .tick { position: absolute; top: 0; bottom: 0; width: var(--hair); background: oklch(0.13 0.01 258 / 0.45); }
+
+/* ═══ MOTION ═══════════════════════════════════════════ */
+
+.ease-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 3); }
+.ease-card { border-radius: 7px; background: var(--hz-100); padding: calc(var(--u) * 2); box-shadow: var(--lift-1); }
+.ease-card svg { width: 100%; height: auto; display: block; margin-bottom: 10px; }
+.ease-card .n { font-family: var(--mono); font-size: 10px; color: var(--hz-800); letter-spacing: 0.06em; }
+.ease-card .v { font-family: var(--mono); font-size: 8.5px; color: var(--hz-500); margin-top: 3px; word-break: break-all; }
+
+.runner-wrap { border-radius: 7px; background: var(--hz-100); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-1); }
+.runner { position: relative; height: 30px; margin-bottom: 9px; display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 12px; }
+.runner .lbl { font-family: var(--mono); font-size: 9.5px; color: var(--hz-600); letter-spacing: 0.06em; }
+.runner .track { position: relative; height: 26px; background: var(--well-floor); border-radius: 4px; overflow: hidden; box-shadow: var(--recess); }
+.runner .box { position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; border-radius: 3px; background: var(--blue); box-shadow: 0 0 10px color-mix(in oklch, var(--blue) 55%, transparent); transform: translateX(0); }
+.runner:nth-child(1) .box { transition: transform var(--dur-base) var(--ease-standard); }
+.runner:nth-child(2) .box { transition: transform var(--dur-base) var(--ease-decelerate); }
+.runner:nth-child(3) .box { transition: transform var(--dur-base) var(--ease-accelerate); }
+.runner:nth-child(4) .box { transition: transform var(--dur-base) linear; }
+
+.dur-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dur-table th { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-500); text-align: left; padding: 0 0 10px; border-bottom: var(--hair) solid var(--hz-300); font-weight: 500; }
+.dur-table td { padding: 11px 0; border-bottom: var(--hair) solid var(--hz-300); color: var(--hz-600); vertical-align: top; }
+.dur-table td:first-child { font-family: var(--mono); font-size: 11.5px; color: var(--hz-800); width: 150px; }
+.dur-table td:nth-child(2) { font-family: var(--mono); font-size: 11.5px; color: var(--hz-900); width: 78px; font-variant-numeric: tabular-nums; }
+.dur-table tr:last-child td { border-bottom: 0; }
+
+/* ═══ COMPONENTS ═══════════════════════════════════════ */
+
+.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--u) * 3); }
+.comp { border-radius: 8px; background: var(--hz-100); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-2); }
+.comp > .h { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-500); margin-bottom: calc(var(--u) * 2); }
+
+.readout { display: flex; align-items: center; gap: calc(var(--u) * 2.5); flex-wrap: wrap; }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ibtn {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: linear-gradient(180deg, var(--hz-200), var(--hz-100));
+  border: 0; color: var(--hz-700); border-radius: 5px; padding: 9px 15px; cursor: pointer;
+  box-shadow: var(--lift-2);
+  transition: box-shadow var(--dur-fast) var(--ease-standard),
+              transform var(--dur-instant) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard);
+}
+.ibtn:hover { color: var(--hz-900); box-shadow: var(--lift-3); }
+.ibtn:active { transform: translateY(2px); box-shadow: var(--recess); }
+.ibtn.primary { color: oklch(0.20 0.06 235); background: linear-gradient(180deg, color-mix(in oklch, var(--blue) 65%, white), var(--blue)); }
+.ibtn.warn    { color: oklch(0.24 0.07 80);  background: linear-gradient(180deg, color-mix(in oklch, var(--amber) 60%, white), var(--amber)); }
+.ibtn.danger  { color: oklch(0.99 0 0); background: linear-gradient(180deg, color-mix(in oklch, var(--signal) 82%, white), var(--signal)); }
+
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.thumb { aspect-ratio: 16 / 10; border-radius: 5px; background: var(--hz-200); position: relative; overflow: hidden; cursor: pointer; box-shadow: var(--lift-1); transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
+.thumb:hover { transform: translateY(-2px); box-shadow: var(--lift-3); }
+.thumb[data-active] { outline: 2px solid var(--blue); outline-offset: -2px; }
+.thumb::before { content: attr(data-n); position: absolute; left: 6px; top: 5px; font-family: var(--mono); font-size: 8px; color: var(--hz-500); }
+.thumb .bar { position: absolute; left: 6px; right: 6px; bottom: 7px; height: 3px; background: var(--hz-300); border-radius: 2px; }
+.thumb .bar::after { content: ''; position: absolute; inset: 0 40% 0 0; background: var(--c, var(--hz-500)); border-radius: 2px; }
+
+/* ═══ SLIDES ═══════════════════════════════════════════ */
+
+.slide {
+  aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; position: relative;
+  background: var(--hz-100);
+  padding: calc(var(--u) * 4); display: flex; flex-direction: column;
+  margin-bottom: calc(var(--u) * 1.5); box-shadow: var(--lift-2);
+}
+.slide .chrome-top { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-500); }
+.slide .chrome-bot { margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end; font-family: var(--mono); font-size: 10px; color: var(--hz-500); letter-spacing: 0.1em; }
+.slide .body { margin: auto 0; }
+.slide h4 { font-size: clamp(26px, 3.6vw, 46px); font-weight: 200; letter-spacing: -0.035em; color: var(--hz-900); margin: 0 0 12px; text-transform: lowercase; line-height: 1.05; }
+.slide p { font-size: 15px; color: var(--hz-600); max-width: 46ch; margin: 0; }
+.slide.statement { justify-content: center; }
+.slide.statement h4 { font-size: clamp(22px, 2.9vw, 34px); max-width: 20ch; }
+
+.slide-cap { font-family: var(--mono); font-size: 9.5px; color: var(--hz-500); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: calc(var(--u) * 4); }
+.slides-2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+
+/* ═══ NOTES ════════════════════════════════════════════ */
+
+.note { border-left: 2px solid var(--hz-400); padding: 2px 0 2px 16px; margin: calc(var(--u) * 2) 0; font-size: 13.5px; color: var(--hz-600); max-width: 66ch; }
+.note.warn { border-left-color: var(--signal); }
+.note.diff { border-left-color: var(--blue); }
+.note b { color: var(--hz-900); font-weight: 500; }
+
+.verify { display: inline-block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; color: var(--signal); border: var(--hair) solid color-mix(in oklch, var(--signal) 35%, transparent); border-radius: 3px; padding: 1px 5px; vertical-align: middle; }
+
+@media (max-width: 900px) {
+  .tints, .anno-grid, .ease-grid, .comp-grid, .slides-2, .surface-compare, .accent-pair { grid-template-columns: 1fr 1fr; }
+  .ramp { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body data-testid="treatment-03">
+
+<div class="sheet">
+
+  <!-- ═══ MASTHEAD ═══════════════════════════════════ -->
+  <header class="masthead">
+    <span class="crosshair tl"></span><span class="crosshair tr"></span>
+    <div class="mono" style="margin-bottom:18px">WAM-2026 · TREATMENT T-03</div>
+    <h1>lcd bench</h1>
+    <p class="lead" style="max-width:58ch">
+      Medium-grey chassis with light blue and amber. The recessed LCD from T-02 stops
+      being a detail and becomes the organizing idea: every readout is a display sunk
+      into the housing, and the chassis exists to hold displays.
+    </p>
+    <div class="meta-row mono">
+      <div><span>Reference</span><span class="v">Game Boy DMG · OP-1 · bench instruments</span></div>
+      <div><span>Base</span><span class="v">Fork of T-02</span></div>
+      <div><span>Accents</span><span class="v">Blue + amber, locked pair</span></div>
+      <div><span>Status</span><span class="v">Draft 01</span></div>
+    </div>
+  </header>
+
+  <!-- ═══ THE IDEA ═══════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>the idea</h2><span class="rule"></span><span class="mono">00</span></div>
+    <p class="lead">Three consequences of a mid-grey ground and a locked two-accent palette.</p>
+
+    <div class="note diff">
+      <b>1 · Mid grey gives you both directions.</b> This is the structural advantage over
+      T-01 and T-02. From a light base, surfaces can only rise; from a dark base, only
+      fall. From the middle, panels rise <i>and</i> display wells sink — so the chassis
+      reads as a physical object with things mounted in it, not as a backdrop.
+    </div>
+    <div class="note diff">
+      <b>2 · The section ramp becomes temperature, not rainbow.</b> With blue and amber
+      locked as the accent pair, seven arbitrary hues would fight them. The spectrum runs
+      cold → hot instead, so the escalation still reads and it matches the way real
+      instruments signal load. WebGPU is where the meter goes amber.
+    </div>
+    <div class="note diff">
+      <b>3 · Silkscreen becomes available.</b> On a mid-grey shell, light label ink is
+      physically right — it's how every device in the reference set is actually marked.
+      It only works at label scale, which is a useful constraint rather than a limit.
+    </div>
+  </section>
+
+  <!-- ═══ DISPLAYS ═══════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>displays</h2><span class="rule"></span><span class="mono">01</span></div>
+    <p class="lead">
+      The core component. A <code>.well</code> is a recess cut into the chassis; an
+      <code>.lcd</code> sits in it. Four states, one construction.
+    </p>
+
+    <div class="lcd-row">
+      <div class="lcd-item">
+        <span class="cap">Primary · backlit</span>
+        <div class="well"><div class="lcd xl"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div>
+      </div>
+      <div class="lcd-item">
+        <span class="cap">Caution · over time</span>
+        <div class="well"><div class="lcd xl amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div>
+      </div>
+      <div class="lcd-item">
+        <span class="cap">Unpowered</span>
+        <div class="well"><div class="lcd xl dead"><div class="ghost">88:88</div><div class="chars" style="color:var(--lcd-ghost)">88:88</div></div></div>
+      </div>
+    </div>
+
+    <div class="lcd-row" style="margin-top:26px">
+      <div class="lcd-item">
+        <span class="cap">Matrix strip</span>
+        <div class="well"><div class="lcd matrix"><div class="chars">READY · SL-06 · COMPOSITE</div></div></div>
+      </div>
+      <div class="lcd-item">
+        <span class="cap">Small · inline</span>
+        <div class="well"><div class="lcd sm"><div class="ghost">888</div><div class="chars">060</div></div></div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>Four things make it read as a real display</b>, and all four are cheap: a pixel
+      cell grid over the field, a diagonal polariser sheen, backlight bleed at the top
+      edge, and the dead segments ghosted behind the live figures. Remove any one and it
+      degrades into a coloured box with mono text in it.
+    </div>
+    <div class="note warn">
+      <b>Real LCDs are low-contrast — that's the trap.</b> The aesthetic is authentic
+      precisely because segment ink barely separates from the field, which is exactly what
+      fails from the back of a room. Use displays for <i>chrome</i> — timers, codes, status
+      — and never for anything the audience has to read. Presenter-facing is fine; the
+      presenter is 400mm from the screen.
+    </div>
+  </section>
+
+  <!-- ═══ COLOUR ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>colour</h2><span class="rule"></span><span class="mono">02</span></div>
+
+    <h3>Chassis — mid ramp</h3>
+    <p class="lead">Base at L 0.68. Note 000→200 rise toward light while 300→900 fall toward ink — the base sits in the middle of its own scale.</p>
+    <div class="ramp" data-testid="housing-ramp">
+      <div style="background:var(--hz-000);color:var(--hz-600)">000</div>
+      <div style="background:var(--hz-050);color:var(--hz-600)">050</div>
+      <div style="background:var(--hz-100);color:var(--hz-600)">100</div>
+      <div style="background:var(--hz-200);color:var(--hz-600)">200</div>
+      <div style="background:var(--hz-300);color:var(--hz-800)">300</div>
+      <div style="background:var(--hz-400);color:var(--silk)">400</div>
+      <div style="background:var(--hz-500);color:var(--silk)">500</div>
+      <div style="background:var(--hz-600);color:var(--silk)">600</div>
+      <div style="background:var(--hz-700);color:var(--silk)">700</div>
+      <div style="background:var(--hz-800);color:var(--silk)">800</div>
+      <div style="background:var(--hz-900);color:var(--silk)">900</div>
+    </div>
+    <div class="note warn">
+      <b>The honest cost of a mid-grey ground.</b> You get two text directions but neither
+      has full range — dark text tops out lower than it would on white, light text tops out
+      lower than on black. Dark text from <code>--hz-500</code> down is safe; light text is
+      <i>label scale only</i>. Do not set body copy in silkscreen.
+    </div>
+
+    <h3 style="margin-top:44px">Accent pair</h3>
+    <div class="accent-pair">
+      <div class="accent-card">
+        <div class="swatch" style="background:var(--blue)"></div>
+        <div class="cap">
+          <div class="n">--blue · oklch(0.720 0.125 232)</div>
+          <div class="d">Active, current, powered. The default state colour — backlit displays, the progress fill, primary controls.</div>
+        </div>
+      </div>
+      <div class="accent-card">
+        <div class="swatch" style="background:var(--amber)"></div>
+        <div class="cap">
+          <div class="n">--amber · oklch(0.800 0.155 85)</div>
+          <div class="d">Load, caution, peak. Over-time pacing, the WebGPU end of the ramp, anything running hot.</div>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <b>The pair is a scale, not two colours.</b> Blue means nominal, amber means loaded —
+      so a single element can travel between them to express intensity. The progress rail
+      and the section ramp both do exactly this.
+    </div>
+
+    <h3 style="margin-top:44px">Section ramp — cold to hot · click to reskin</h3>
+    <div class="thermo"></div>
+    <div class="tints" data-testid="tint-set">
+      <button class="tint-card" data-tint="var(--tint-video)" data-testid="tint-video"><div class="swatch" style="background:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-css)" data-testid="tint-css"><div class="swatch" style="background:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-composite)" data-testid="tint-composite"><div class="swatch" style="background:var(--tint-composite)"></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-svg)" data-testid="tint-svg"><div class="swatch" style="background:var(--tint-svg)"></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-canvas)" data-testid="tint-canvas"><div class="swatch" style="background:var(--tint-canvas)"></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgl)" data-testid="tint-webgl"><div class="swatch" style="background:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgpu)" data-testid="tint-webgpu"><div class="swatch" style="background:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></button>
+    </div>
+    <div class="note warn">
+      <b>The ramp's weakness is its middle.</b> Cold and hot ends are unmistakable, but
+      SVG-to-Canvas is a small hue step and won't be read as "one rung up" on its own
+      <span class="verify">VERIFY</span>. Section names carry the identification; the ramp
+      only carries the <i>direction of travel</i>. Test it by clicking through in order.
+    </div>
+
+    <h3 style="margin-top:44px">Signal</h3>
+    <div class="signal-row">
+      <span class="signal-chip"></span>
+      <div>
+        <div class="mono" style="color:var(--hz-800)">--signal · oklch(0.505 0.215 27)</div>
+        <p style="margin:6px 0 0;font-size:13px;color:var(--hz-600);max-width:60ch">
+          Now competing with amber, so it must stay genuinely rare. Amber is "running hot",
+          red is "something is wrong" — if amber is doing its job, red should almost never fire.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TYPE ═══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>typography</h2><span class="rule"></span><span class="mono">03</span></div>
+
+    <div class="type-row">
+      <div class="mono">Display<br><span style="text-transform:none;letter-spacing:0">Inter 200</span></div>
+      <div class="spec-display">the craft is the product</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Body<br><span style="text-transform:none;letter-spacing:0">Inter 400</span></div>
+      <div class="spec-body">
+        Motion is a communication tool with a cost, so it should be spent where it does
+        work. The difference between a site that feels crafted and one that feels
+        exhausting is almost entirely judgement about where motion goes.
+      </div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Label<br><span style="text-transform:none;letter-spacing:0">JetBrains Mono</span></div>
+      <div class="spec-label">SL-12 · WEBGPU · COMPUTE SHADER</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Silkscreen<br><span style="text-transform:none;letter-spacing:0">Printed on shell</span></div>
+      <div><span class="silk-strip"><span class="silk">Power · Vol · Contrast · Phones</span></span></div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Readout<br><span style="text-transform:none;letter-spacing:0">Doto in a well</span></div>
+      <div><div class="well"><div class="lcd md"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ SURFACE ════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>surface &amp; material</h2><span class="rule"></span><span class="mono">04</span></div>
+    <p class="lead">The aperture is now a well like any other — the demo is just the largest display on the bench.</p>
+
+    <div class="surface-compare">
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-clear">
+            <div class="panel-t">tinted polycarbonate</div>
+            <div class="panel-s">coloured transmission · uneven density · hard specular edge</div>
+          </div>
+        </div>
+        <div class="verdict"><b>✓</b><span>Reads as moulded plastic over a board, and the recess shadow ties it to the chassis.</span></div>
+      </div>
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-glass">
+            <div class="panel-t">generic glassmorphism</div>
+            <div class="panel-s">uniform white blur · even border · reads as 2020</div>
+          </div>
+        </div>
+        <div class="verdict"><b>✕</b><span>A white veil over a dark hole. No material identity.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ANNOTATION ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>annotation</h2><span class="rule"></span><span class="mono">05</span></div>
+    <div class="anno-grid">
+      <div class="anno-box">
+        <div class="slide-code"><span class="num">06</span>/<span>14</span><span class="dot"></span><span class="sec">COMPOSITE</span></div>
+        <div class="cap">Slide code</div>
+      </div>
+      <div class="anno-box">
+        <div class="dim"><i></i><span>1440 × 810</span><i></i></div>
+        <div class="cap">Dimension line</div>
+      </div>
+      <div class="anno-box">
+        <div class="rail-demo">
+          <span class="fill"></span>
+          <span class="tick" style="left:14%"></span><span class="tick" style="left:28%"></span>
+          <span class="tick" style="left:42%"></span><span class="tick" style="left:57%"></span>
+          <span class="tick" style="left:71%"></span><span class="tick" style="left:85%"></span>
+        </div>
+        <div class="cap">Progress rail · recessed, blue→hot</div>
+      </div>
+    </div>
+    <div class="note diff">
+      <b>The rail is now a meter.</b> Recessed into the chassis and filled blue-to-hot, it
+      reads as a level indicator rather than a scrollbar — so deck position and section
+      temperature are the same gesture.
+    </div>
+  </section>
+
+  <!-- ═══ MOTION ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>motion</h2><span class="rule"></span><span class="mono">06</span></div>
+    <p class="lead">Unchanged from T-01 and T-02 — the motion system is treatment-independent by design.</p>
+
+    <div class="ease-grid" data-testid="ease-set">
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C20 100 0 0 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">standard</div><div class="v">0.2, 0, 0, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C5 30 10 0 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">decelerate</div><div class="v">0.05, 0.7, 0.1, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C30 100 80 85 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">accelerate</div><div class="v">0.3, 0, 0.8, 0.15</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none"><path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/><path d="M0 100 C40 100 20 0 100 0" stroke="var(--hz-900)" stroke-width="2"/></svg>
+        <div class="n">mechanical</div><div class="v">0.4, 0, 0.2, 1</div>
+      </div>
+    </div>
+
+    <div class="runner-wrap" id="runner" data-testid="ease-runner">
+      <div class="runner"><span class="lbl">STANDARD</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">DECELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">ACCELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">LINEAR</span><span class="track"><span class="box"></span></span></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
+        <button class="ibtn primary" id="playEase" data-testid="play-ease">▶ Run</button>
+        <span class="mono" style="letter-spacing:0.06em">240ms · slide-advance duration</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top:44px">Duration scale</h3>
+    <table class="dur-table" data-testid="duration-table">
+      <tr><th>Token</th><th>Value</th><th>Applied to</th></tr>
+      <tr><td>--dur-instant</td><td>90ms</td><td>Focus, press feedback</td></tr>
+      <tr><td>--dur-fast</td><td>160ms</td><td>Hover, toggle, small state change</td></tr>
+      <tr><td>--dur-base</td><td>240ms</td><td><b>Slide advance</b> — happens 200+ times before delivery. Must feel immediate, not like an effect.</td></tr>
+      <tr><td>--dur-slow</td><td>420ms</td><td>Panel, overlay, overview grid</td></tr>
+      <tr><td>--dur-section</td><td>700ms</td><td>Section temperature shift — experiential, happens 6×</td></tr>
+      <tr><td>--dur-hero</td><td>1400ms</td><td>Cold open, WebGPU reveal — once each</td></tr>
+    </table>
+
+    <div class="note diff">
+      <b>One motion idea this treatment unlocks.</b> LCD segments don't fade — they switch.
+      Any value inside a display should step discretely rather than tween, using
+      <code>--ease-mechanical</code> or no transition at all. The contrast between smoothly
+      animating chrome and hard-switching readouts is what sells both.
+    </div>
+  </section>
+
+  <!-- ═══ COMPONENTS ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>components</h2><span class="rule"></span><span class="mono">07</span></div>
+    <div class="comp-grid">
+      <div class="comp" style="grid-column:1 / -1">
+        <div class="h">Presenter readout</div>
+        <div class="readout">
+          <div class="lcd-item"><span class="cap">Elapsed</span><div class="well"><div class="lcd xl"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Slide</span><div class="well"><div class="lcd md"><div class="ghost">88/88</div><div class="chars">06/14</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Pace</span><div class="well"><div class="lcd md amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div></div>
+          <div class="lcd-item"><span class="cap">Status</span><div class="well"><div class="lcd matrix"><div class="chars">RUNNING</div></div></div></div>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="h">Controls</div>
+        <div class="btn-row">
+          <button class="ibtn">← Prev</button>
+          <button class="ibtn primary">Next →</button>
+          <button class="ibtn">Overview</button>
+          <button class="ibtn warn">Reduced</button>
+          <button class="ibtn danger">Blank</button>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="h">Overview grid</div>
+        <div class="thumbs">
+          <div class="thumb" data-n="01"><span class="bar" style="--c:var(--tint-video)"></span></div>
+          <div class="thumb" data-n="02"><span class="bar" style="--c:var(--tint-css)"></span></div>
+          <div class="thumb" data-n="03"><span class="bar" style="--c:var(--tint-svg)"></span></div>
+          <div class="thumb" data-active data-n="04"><span class="bar" style="--c:var(--tint-webgpu)"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SLIDES ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>slide compositions</h2><span class="rule"></span><span class="mono">08</span></div>
+    <p class="lead">Slides sit on the light panel tone, so the deck reads as paper mounted on the bench.</p>
+
+    <div class="slide-cap">Layout · title</div>
+    <div class="slide">
+      <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
+      <div class="body">
+        <h4>web animation &amp; motion</h4>
+        <p>Why the craft is the product — a tour from pre-baked pixels to compute shaders.</p>
+      </div>
+      <div class="chrome-bot"><span>FOLKLORE</span><span>07.08.2026</span></div>
+    </div>
+
+    <div class="slides-2" style="margin-top:40px">
+      <div>
+        <div class="slide-cap">Layout · statement</div>
+        <div class="slide statement">
+          <div class="chrome-top"><span>THESIS</span><span>02 / 14</span></div>
+          <div class="body"><h4>a site's value is no longer the content it holds</h4></div>
+          <div class="chrome-bot"><span></span><span>SL-02</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="slide-cap">Layout · split (demo right)</div>
+        <div class="slide">
+          <div class="chrome-top"><span>WEBGPU</span><span>12 / 14</span></div>
+          <div class="body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+            <div>
+              <h4 style="font-size:26px">compute</h4>
+              <p style="font-size:13px">Simulation moves to the GPU. Particle count stops being the constraint.</p>
+            </div>
+            <div style="aspect-ratio:1;border-radius:6px;position:relative;overflow:hidden;box-shadow:var(--recess)">
+              <div class="internals" style="position:absolute;inset:0"></div>
+              <div style="position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in oklch,var(--tint) 45%,transparent),color-mix(in oklch,var(--tint) 16%,transparent));backdrop-filter:blur(6px)"></div>
+            </div>
+          </div>
+          <div class="chrome-bot"><span>TD-WEBGPU</span><span>1.2M</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="border-top:var(--hair) solid var(--hz-300);padding-top:24px;margin-top:60px">
+    <div class="mono" style="line-height:2">
+      T-03 · LCD BENCH · DRAFT<br>
+      <span style="color:var(--hz-600);text-transform:none;letter-spacing:0.02em">
+        Fork to <code>04-*.html</code> and add an entry to TREATMENTS in index.html.
+      </span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+document.querySelectorAll('[data-tint]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--tint', el.dataset.tint);
+  });
+});
+
+const runner = document.getElementById('runner');
+document.getElementById('playEase').addEventListener('click', () => {
+  const boxes = runner.querySelectorAll('.box');
+  const travel = runner.querySelector('.track').clientWidth - 26;
+  boxes.forEach(b => b.style.transform = 'translateX(0)');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    boxes.forEach(b => b.style.transform = `translateX(${travel}px)`);
+  }));
+  setTimeout(() => boxes.forEach(b => b.style.transform = 'translateX(0)'), 900);
+});
+</script>
+
+</body>
+</html>
