@@ -415,15 +415,22 @@ section { margin-bottom: calc(var(--u) * 12); }
    ═══════════════════════════════════════════════════════ */
 
 /* 1 — morph: a compact control that becomes the panel it opens,
-   rather than being replaced by one. Shape, not swap. */
+   rather than being replaced by one. Shape, not swap.
+
+   FIXED (usability pass): was a <div>, same keyboard gap as the
+   toggle/knob. Real <button> now, with aria-expanded tracking the
+   open state — a screen reader gets "collapsed"/"expanded" the way
+   it would for any disclosure control. */
 .morph {
-  position: relative; width: 168px; height: 44px; margin: 0 auto;
+  display: block; position: relative; width: 168px; height: 44px; margin: 0 auto;
   border-radius: 22px; cursor: pointer; overflow: hidden;
+  border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
   transition: width var(--dur-slow) var(--ease-liquid),
               height var(--dur-slow) var(--ease-liquid),
               border-radius var(--dur-slow) var(--ease-liquid);
 }
 .morph.open { width: 100%; height: 158px; border-radius: 20px; }
+.morph:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
 /* Text sits directly on .mat-anodised with no label pill behind it,
    so its colour has to track the ramp (--hz-900 = max contrast in
    either scheme) rather than a literal near-black — a fixed dark
@@ -468,7 +475,7 @@ section { margin-bottom: calc(var(--u) * 12); }
   font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--hz-600); padding: 9px 4px; transition: color var(--dur-fast) var(--ease-standard);
 }
-.seg-nav button[aria-selected='true'] { color: oklch(0.99 0 0); }
+.seg-nav button[aria-pressed='true'] { color: oklch(0.99 0 0); }
 .seg-nav .pill {
   position: absolute; top: 4px; bottom: 4px; z-index: 1; border-radius: 6px;
   background: var(--tint);
@@ -517,7 +524,11 @@ section { margin-bottom: calc(var(--u) * 12); }
   background: linear-gradient(180deg, oklch(0.2 0.02 265 / 0.16) 0 1px, oklch(1 0 0 / 0.85) 1px 2px);
 }
 
-/* ── encoder ─────────────────────────────────────────── */
+/* ── encoder ────────────────────────────────────────────
+   FIXED (usability pass): same gap as the toggle — a <span>,
+   click-only, unreachable by Tab. Real <button> now; a native
+   button already fires its click handler on Space/Enter, so the
+   existing click listener below needs no extra keydown wiring. */
 .knob {
   position: relative; width: 70px; height: 70px; border-radius: 50%;
   cursor: pointer; display: grid; place-items: center;
@@ -526,10 +537,12 @@ section { margin-bottom: calc(var(--u) * 12); }
               var(--lift-2);
   transition: transform var(--dur-base) var(--ease-detent),
               box-shadow var(--dur-fast) var(--ease-standard);
+  border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
 }
 .knob:hover { box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.24),
                           inset 0 -3px 7px oklch(0.2 0.02 265 / 0.22), var(--lift-3); }
 .knob:active { transform: scale(0.97); }
+.knob:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
 .knob .idx {
   content: ''; width: 3px; height: 18px; border-radius: 2px;
   background: var(--tint); position: absolute; top: 7px;
@@ -542,11 +555,21 @@ section { margin-bottom: calc(var(--u) * 12); }
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 3px oklch(0.2 0.02 265 / 0.25);
 }
 
-/* ── toggle ──────────────────────────────────────────── */
+/* ── toggle ──────────────────────────────────────────────
+   FIXED (usability pass): was a <span> with a click handler only —
+   invisible to keyboard and screen readers, and Tab skipped over it
+   entirely (confirmed by driving actual Tab presses, not assumed
+   from the markup). Now a real <button role="switch">; the reset
+   below strips UA button chrome so it still reads as the same
+   physical toggle. */
 .toggle {
   position: relative; width: 44px; height: 24px; border-radius: 12px; cursor: pointer;
   background: var(--hz-300); box-shadow: var(--recess);
   transition: background var(--dur-fast) var(--ease-standard);
+  border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
+}
+.toggle:focus-visible {
+  outline: 2px solid var(--tint); outline-offset: 3px;
 }
 .toggle i {
   position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
@@ -585,8 +608,54 @@ section { margin-bottom: calc(var(--u) * 12); }
 }
 .ibtn.primary { color: oklch(0.99 0 0); background: linear-gradient(180deg, color-mix(in oklch, var(--tint) 82%, white), var(--tint)); border-color: color-mix(in oklch, var(--tint) 70%, black); box-shadow: var(--edge), 0 3px 0 color-mix(in oklch, var(--tint) 55%, black), var(--lift-1); }
 .ibtn.primary:active { box-shadow: var(--edge), 0 0 0 color-mix(in oklch, var(--tint) 55%, black), var(--recess); }
+/* engaged/pressed state — a toggle-style button (e.g. "Reduced")
+   needs to look different once it's on, not just claim aria-pressed
+   in the DOM with no visual confirmation. Recessed like :active,
+   but stays that way rather than springing back on release. */
+.ibtn[aria-pressed='true'] {
+  color: var(--tint); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300));
+  box-shadow: var(--edge), 0 0 0 color-mix(in oklch, var(--tint) 55%, var(--hz-300)), var(--recess);
+}
 .ibtn.danger { color: oklch(0.99 0 0); background: linear-gradient(180deg, color-mix(in oklch, var(--signal) 84%, white), var(--signal)); border-color: color-mix(in oklch, var(--signal) 70%, black); box-shadow: var(--edge), 0 3px 0 color-mix(in oklch, var(--signal) 55%, black), var(--lift-1); }
 .ibtn.danger:active { box-shadow: var(--edge), 0 0 0 color-mix(in oklch, var(--signal) 55%, black), var(--recess); }
+
+/* ── slide code ──────────────────────────────────────────
+   ADDED (usability pass): existed in T-01 through T-04, dropped
+   when T-05 rebuilt the sheet around materials/motion. DESIGN.md
+   calls this "the highest-leverage detail for the aesthetic," and
+   with T-06 now the only kept treatment it needs a home again. */
+.slide-code { display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; color: var(--hz-600); }
+.slide-code .num { color: var(--hz-900); }
+.slide-code .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tint); }
+.slide-code .sec { color: var(--tint); }
+
+/* ── progress rail ───────────────────────────────────────
+   ADDED (usability pass): a must-have per DESIGN.md's Feature Set
+   table ("slide position, section markers, tick marks") — present
+   through T-04, absent from T-05/T-06 until now. */
+.prog-rail { position: relative; height: 9px; background: var(--well-floor); border-radius: 5px; box-shadow: var(--recess); overflow: hidden; }
+.prog-rail .fill { position: absolute; inset: 1px auto 1px 1px; width: 62%; background: var(--tint); border-radius: 4px; transition: width var(--dur-base) var(--ease-standard); }
+.prog-rail .tick { position: absolute; top: 0; bottom: 0; width: var(--hair); background: oklch(1 0 0 / 0.35); }
+
+/* ── overview grid ───────────────────────────────────────
+   ADDED (usability pass): should-have per DESIGN.md ("thumbnails,
+   click to jump. Invaluable in Q&A"), present through T-04, absent
+   from T-05/T-06. Real <button>s this time, not <div>s — the
+   keyboard-story fix applies here too, since these represent an
+   actually-clickable jump-to-slide control in the app. */
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.thumb {
+  position: relative; aspect-ratio: 16 / 10; border-radius: 3px; background: var(--hz-200);
+  overflow: hidden; cursor: pointer; border: 0; padding: 0; font: inherit;
+  box-shadow: var(--edge), var(--lift-1);
+  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
+}
+.thumb:hover { transform: translateY(-3px); box-shadow: var(--edge), var(--lift-3); }
+.thumb:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.thumb[aria-current='true'] { outline: 2px solid var(--tint); outline-offset: -2px; }
+.thumb::before { content: attr(data-n); position: absolute; left: 7px; top: 6px; font-family: var(--mono); font-size: 8px; color: var(--hz-400); }
+.thumb .bar { position: absolute; left: 7px; right: 7px; bottom: 8px; height: 3px; background: var(--hz-300); border-radius: 2px; }
+.thumb .bar::after { content: ''; position: absolute; inset: 0 40% 0 0; background: var(--c, var(--hz-500)); border-radius: 2px; }
 
 /* ── LEDs ────────────────────────────────────────────── */
 .led {
@@ -647,6 +716,14 @@ section { margin-bottom: calc(var(--u) * 12); }
 .lcd.sm .chars, .lcd.sm .ghost { font-size: 14px; }
 .lcd.strip { padding: 8px 12px; }
 .lcd.strip .chars { font-size: 15px; letter-spacing: 0.14em; }
+
+/* Caution field — over-time pacing. Present in T-03/T-04, dropped
+   when the presenter unit was rebuilt for T-05 along with the Pace
+   readout itself; restored here since "pacing vs. budget" is a
+   stated must-have timer, not optional. */
+.lcd.amber { background: linear-gradient(178deg, oklch(0.760 0.110 82), oklch(0.700 0.120 78)); }
+.lcd.amber .chars { color: oklch(0.280 0.060 70); }
+.lcd.amber .ghost { color: oklch(0.280 0.060 70 / 0.14); }
 
 /* SELF-TEST — every segment driven, then released.
    The ghost layer already holds all-8s, so this animates the
@@ -734,19 +811,30 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   box-shadow: var(--edge), var(--lift-1);
 }
 /* Labels sit on top of texture, so they need their own ground —
-   mono type at 8-9px disappears completely over knurl or perforation. */
+   mono type at 8-9px disappears completely over knurl or perforation.
+
+   FIXED (usability pass): this pill was a hardcoded near-white
+   (oklch(1 0 0 / 0.78)) inherited unchanged from T-05, paired with
+   ramp-relative text (--hz-800/--hz-600). In light mode that's dark
+   text on a white pill — correct. In dark mode --hz-800/--hz-600
+   resolve near-white, landing near-white text on a near-white pill.
+   Measured by sampling actual rendered pixels: pill composited to
+   roughly RGB(210,211,212), text at L 0.96 — about 1.3:1 contrast,
+   affecting 10 of the 12 labelled tiles below (every one except the
+   two that carried a separate ".dark" override). Every chassis
+   surface in T-06 is dark, so that override is now simply correct
+   for all of them — promoted to the base rule, and the now-dead
+   ".dark" modifier and its two call sites were removed rather than
+   left as an unused, misleading class name. */
 .mat .tag, .mat .use {
   position: absolute; left: 8px; z-index: 3;
   font-family: var(--mono); text-transform: uppercase;
-  background: oklch(1 0 0 / 0.78);
+  background: oklch(0.18 0.01 265 / 0.68);
   padding: 2px 5px; border-radius: 2px;
   backdrop-filter: blur(2px);
 }
-.mat .tag { bottom: 8px; font-size: 9px; letter-spacing: 0.14em; color: var(--hz-800); }
-.mat .use { top: 8px; font-size: 8px; letter-spacing: 0.1em; color: var(--hz-600); }
-.mat.dark .tag, .mat.dark .use { background: oklch(0.18 0.01 265 / 0.62); }
-.mat.dark .tag { color: oklch(0.97 0 0); }
-.mat.dark .use { color: oklch(0.90 0 0 / 0.85); }
+.mat .tag { bottom: 8px; font-size: 9px; letter-spacing: 0.14em; color: oklch(0.97 0 0); }
+.mat .use { top: 8px; font-size: 8px; letter-spacing: 0.1em; color: oklch(0.90 0 0 / 0.85); }
 
 /* ═══ MICRO-ANIMATION CATALOGUE ════════════════════════ */
 
@@ -869,7 +957,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     <div class="lightpipe" style="margin-top:calc(var(--u)*3);max-width:340px"><span></span></div>
 
     <div class="strip">
-      <div class="knob mat-knurl" data-testid="front-knob"><span class="idx"></span><span class="cap"></span></div>
+      <button class="knob mat-knurl" type="button" aria-label="Cycle section" data-testid="front-knob"><span class="idx"></span><span class="cap"></span></button>
       <div class="modline"><span class="k">Model</span><span class="v">WAM-2026</span></div>
       <div class="modline"><span class="k">Unit</span><span class="v">T-06 / FIELD-D</span></div>
       <div class="modline"><span class="k">Slides</span><span class="v">14</span></div>
@@ -877,7 +965,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
         <span class="led breathe" style="--c:var(--ok)"></span>
         <span class="led" style="--c:var(--tint)"></span>
         <span class="led off" style="--c:var(--signal)"></span>
-        <span class="toggle on" data-testid="hero-toggle"><i></i></span>
+        <button class="toggle on" type="button" role="switch" aria-checked="true" aria-label="Power" data-testid="hero-toggle"><i></i></button>
         <button class="ibtn" id="bootBtn" data-testid="boot-button">▶ Self-test</button>
       </div>
     </div>
@@ -940,6 +1028,57 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
         </div>
       </div>
     </div>
+
+    <h3 style="margin-top:36px">Usability pass — T-06 as the kept base</h3>
+    <p class="lead">
+      T-06 is now the only treatment carried forward; the rest are archived, not deleted
+      (still on disk in <code>design/treatments/</code>, just off the switcher). Everything
+      below was found and fixed against SCOPE.md/DESIGN.md's own stated commitments,
+      verified live in the browser rather than assumed from source.
+    </p>
+    <div class="grid-2">
+      <div>
+        <div class="note warn">
+          <b>Material labels were unreadable — fixed.</b> <code>.mat .tag</code>/<code>.mat
+          .use</code> pill backgrounds were a hardcoded near-white
+          (<code>oklch(1 0 0 / 0.78)</code>) inherited unchanged from T-05, paired with
+          text that correctly followed the ramp (<code>--hz-800</code>) — near-white on
+          near-white. Measured by sampling actual rendered pixels rather than judging by
+          eye: roughly <b>1.3:1</b> contrast, affecting 10 of 12 labelled tiles. The
+          working dark-pill treatment that only two tiles had (<code>.dark</code>) is now
+          the base rule for all of them; the now-redundant modifier was removed rather
+          than left as a dead, misleading class.
+        </div>
+        <div class="note warn">
+          <b>Two disconnected reduced-motion controls — merged.</b> The presenter unit's
+          "Reduced" button had no id and no handler; <code>#toggleRM</code> in the motion
+          section was the only one that worked. Both now read and write one shared
+          <code>body.rm</code> state, and the engaged state is visible on either button
+          (<code>.ibtn[aria-pressed='true']</code>), not just present in the DOM.
+        </div>
+      </div>
+      <div>
+        <div class="note diff">
+          <b>Four missing features restored.</b> Progress rail and overview grid (both in
+          DESIGN.md's Feature Set table — must-have and should-have respectively), the
+          slide-code indicator DESIGN.md calls "the highest-leverage detail for the
+          aesthetic," and the pacing-vs-budget LCD (<code>--dur</code> aside, the actual
+          <i>must-have</i> line item is "elapsed, per-slide, and pacing") — all present
+          through T-04, all quietly dropped when T-05 rebuilt this sheet around materials
+          and motion. See §08 and the presenter unit above.
+        </div>
+        <div class="note diff">
+          <b>Keyboard story, decided per-control rather than left implicit.</b> The
+          encoder, toggle, and morph were <code>&lt;span&gt;</code>/<code>&lt;div&gt;</code>
+          — confirmed by literally pressing Tab and watching focus skip over them, not by
+          reading the markup — now real <code>&lt;button&gt;</code>s with the correct
+          role/state (<code>role="switch"</code>, <code>aria-expanded</code>). The
+          specular-tilt panel deliberately did <i>not</i> get a keyboard path: it's ambient
+          material response, not a control, and forcing one on would have been decoration,
+          not access.
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ═══ MATERIALS ══════════════════════════════════ -->
@@ -951,7 +1090,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       <div class="mat mat-anodised sweep"><span class="use">Chassis / hero</span><span class="tag">Anodised 6061</span></div>
       <div class="mat mat-blasted sweep"><span class="use">Secondary panels</span><span class="tag">Bead-blast</span></div>
       <div class="mat mat-knurl sweep"><span class="use">Knobs / grips</span><span class="tag">Knurled</span></div>
-      <div class="mat mat-rubber dark sweep"><span class="use">Feet / bumpers</span><span class="tag">Soft-touch</span></div>
+      <div class="mat mat-rubber sweep"><span class="use">Feet / bumpers</span><span class="tag">Soft-touch</span></div>
       <div class="mat mat-grille"><span class="use">Vents / speaker</span><span class="tag">Perforated</span></div>
       <div class="mat chamfer" style="background:linear-gradient(180deg,var(--hz-200),var(--hz-100))"><span class="use">All machined edges</span><span class="tag">CNC chamfer</span></div>
       <div class="mat" style="background:var(--hz-050);display:grid;place-items:center">
@@ -961,7 +1100,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       <div class="mat mat-ar" style="background:linear-gradient(178deg,oklch(0.868 0.048 128),oklch(0.812 0.052 132))"><span class="use">Display face</span><span class="tag">Anti-glare</span></div>
       <div class="mat mat-turned sweep"><span class="use">Dials / jog wheel</span><span class="tag">Turned</span></div>
       <div class="mat mat-milled sweep"><span class="use">Extruded body</span><span class="tag">Milled channel</span></div>
-      <div class="mat mat-anod-colour dark sweep"><span class="use">Accent parts</span><span class="tag">Anodised dye</span></div>
+      <div class="mat mat-anod-colour sweep"><span class="use">Accent parts</span><span class="tag">Anodised dye</span></div>
     </div>
 
     <div class="note diff">
@@ -1051,13 +1190,13 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     <div class="micro-grid" data-testid="liquid-set">
       <div class="micro">
         <div class="demo" style="width:100%">
-          <div class="morph mat-anodised chamfer js-morph" data-testid="morph-demo">
+          <button class="morph mat-anodised chamfer js-morph" type="button" aria-expanded="false" aria-label="Notes, expand for detail" data-testid="morph-demo">
             <div class="face closed">Notes</div>
             <div class="face open">
               <span>SL-06 · COMPOSITE</span>
               <span>Layout → Paint → Composite. GPU-cheap transforms vs. layout-forcing properties.</span>
             </div>
-          </div>
+          </button>
         </div>
         <div class="nm">A · Morph</div>
         <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>The control <i>becomes</i> the panel — width, height and radius animate together, nothing is swapped or replaced. Apple: "the element expands organically rather than just moving."</div>
@@ -1068,7 +1207,8 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
           <div class="glass-refractive tilt js-tilt" style="position:absolute;inset:8px" data-testid="tilt-demo"></div>
         </div>
         <div class="nm">B · Specular tilt — move your cursor over it</div>
-        <div class="sp"><b>Trigger</b> pointer move · continuous<br>Highlight tracks motion in real time — device accelerometer on hardware, cursor position standing in for it here. Not a fixed gradient; the light genuinely moves with you.</div>
+        <div class="sp"><b>Trigger</b> pointer move · continuous<br>Highlight tracks motion in real time — device accelerometer on hardware, cursor position standing in for it here. Not a fixed gradient; the light genuinely moves with you.
+        <br><b>Keyboard:</b> deliberately none. This is ambient material response layered on top of other content, not a control — nothing here is only reachable this way, so unlike the knob/toggle/morph it doesn't need a keyboard path; it already has a sensible static rest state.</div>
       </div>
 
       <div class="micro">
@@ -1085,11 +1225,15 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
       <div class="micro">
         <div class="demo" style="width:100%">
-          <div class="seg-nav js-seg" data-testid="seg-nav">
+          <!-- FIXED (usability pass): was aria-selected, which is only
+               valid ARIA on an element with role="tab"/"option" — these
+               are plain toggle buttons in a group, not tabs governing a
+               tabpanel, so aria-pressed is the correct role-free pairing. -->
+          <div class="seg-nav js-seg" role="group" aria-label="View" data-testid="seg-nav">
             <span class="pill"></span>
-            <button aria-selected="true">Deck</button>
-            <button aria-selected="false">Notes</button>
-            <button aria-selected="false">Grid</button>
+            <button type="button" aria-pressed="true">Deck</button>
+            <button type="button" aria-pressed="false">Notes</button>
+            <button type="button" aria-pressed="false">Grid</button>
           </div>
         </div>
         <div class="nm">D · Spring indicator</div>
@@ -1123,7 +1267,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
     <div style="display:flex;gap:11px;margin-bottom:calc(var(--u)*3);flex-wrap:wrap">
       <button class="ibtn primary" id="runAll" data-testid="run-all">▶ Run all</button>
-      <button class="ibtn" id="toggleRM" data-testid="toggle-rm">Simulate reduced motion</button>
+      <button class="ibtn" id="toggleRM" aria-pressed="false" data-testid="toggle-rm">Simulate reduced motion</button>
       <span class="mono" id="rmState" style="align-self:center">Reduced motion: off</span>
     </div>
 
@@ -1136,13 +1280,13 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       </div>
 
       <div class="micro">
-        <div class="demo"><span class="knob mat-knurl js-knob"><span class="idx"></span><span class="cap"></span></span></div>
+        <div class="demo"><button class="knob mat-knurl js-knob" type="button" aria-label="Cycle section (demo)"><span class="idx"></span><span class="cap"></span></button></div>
         <div class="nm">02 · Encoder detent</div>
         <div class="sp"><b>Trigger</b> click · <b>240ms</b> · detent<br>Slight overshoot then settle. The only place overshoot is honest in this system — a sprung detent genuinely does this.</div>
       </div>
 
       <div class="micro">
-        <div class="demo"><span class="toggle js-toggle"><i></i></span></div>
+        <div class="demo"><button class="toggle js-toggle" type="button" role="switch" aria-checked="false" aria-label="Demo toggle"><i></i></button></div>
         <div class="nm">03 · Toggle snap</div>
         <div class="sp"><b>Trigger</b> click · <b>160ms</b> · detent<br>Knob snaps, track colour crossfades slower. Offsetting the two stops it reading as one flat swap.</div>
       </div>
@@ -1266,8 +1410,13 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       <div style="display:flex;gap:calc(var(--u)*3);align-items:center;flex-wrap:wrap;justify-content:center;margin-top:calc(var(--u)*2)">
         <div class="well"><div class="lcd xl mat-ar" id="unitClock"><div class="ghost">88:88</div><div class="chars">12:04</div></div></div>
         <div class="well"><div class="lcd md mat-ar"><div class="ghost">88/88</div><div class="chars">06/14</div></div></div>
+        <!-- ADDED (usability pass): pacing-vs-budget is a stated
+             must-have timer (DESIGN.md: "elapsed, per-slide, and
+             pacing vs. budgetSeconds"), present in T-03/T-04, missing
+             from the presenter unit since T-05 rebuilt it. -->
+        <div class="well"><div class="lcd md amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div>
         <div class="well"><div class="lcd strip mat-ar"><div class="chars">RUNNING</div></div></div>
-        <div class="knob mat-knurl js-knob"><span class="idx"></span><span class="cap"></span></div>
+        <button class="knob mat-knurl js-knob" type="button" aria-label="Cycle section"><span class="idx"></span><span class="cap"></span></button>
         <div style="display:flex;flex-direction:column;gap:9px">
           <span class="led breathe" style="--c:var(--ok)"></span>
           <span class="led" style="--c:var(--tint)"></span>
@@ -1277,19 +1426,74 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
       <div class="lightpipe" style="margin-top:calc(var(--u)*3)"><span></span></div>
 
+      <!-- FIXED (usability pass): this Reduced button used to be
+           purely decorative — no id, no handler — while a second,
+           functioning reduced-motion control existed in section 04
+           with no visual link between them. One feature, one state
+           now: this button and #toggleRM below both drive and
+           reflect the same body.rm class. -->
       <div style="display:flex;gap:11px;flex-wrap:wrap;margin-top:calc(var(--u)*3);justify-content:center">
         <button class="ibtn">← Prev</button>
         <button class="ibtn primary">Next →</button>
-        <button class="ibtn">Overview</button>
-        <button class="ibtn">Reduced</button>
+        <button class="ibtn" id="unitOverviewBtn" data-testid="unit-overview">Overview</button>
+        <button class="ibtn" id="unitReducedBtn" aria-pressed="false" data-testid="unit-reduced">Reduced</button>
         <button class="ibtn danger">Blank</button>
       </div>
     </div>
   </section>
 
+  <!-- ═══ NAVIGATION & ANNOTATION ═════════════════════
+       ADDED (usability pass). Three things that existed through
+       T-04 and were dropped when T-05 rebuilt this sheet around
+       materials/motion: the slide-code indicator, the progress
+       rail (must-have per DESIGN.md's Feature Set table), and the
+       overview grid (should-have — "invaluable in Q&A"). With T-06
+       now the only kept treatment, these needed a home again rather
+       than staying missing by omission. -->
+  <section>
+    <div class="sec-head"><span class="idx">08</span><h2>navigation &amp; annotation</h2><span class="rule"></span><span class="ref">Fig. 6</span></div>
+    <p class="lead">Restored from T-04. The presenter unit above shows the control cluster; this is what those controls actually navigate.</p>
+
+    <div class="grid-2">
+      <div class="plate" data-testid="slide-code-demo">
+        <span class="plate-id">IDX</span>
+        <div style="margin-top:30px;display:flex;flex-direction:column;gap:18px">
+          <div class="slide-code">
+            <span class="num">06</span>/<span>14</span>
+            <span class="dot"></span>
+            <span class="sec">COMPOSITE</span>
+          </div>
+          <div class="prog-rail" data-testid="progress-rail">
+            <span class="fill"></span>
+            <span class="tick" style="left:14%"></span><span class="tick" style="left:28%"></span>
+            <span class="tick" style="left:42%"></span><span class="tick" style="left:57%"></span>
+            <span class="tick" style="left:71%"></span><span class="tick" style="left:85%"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="plate" data-testid="overview-grid-demo">
+        <span class="plate-id">OVERVIEW</span>
+        <div class="thumbs" style="margin-top:30px" role="group" aria-label="Slide overview">
+          <button type="button" class="thumb" data-n="01" aria-label="Slide 1, title" aria-current="false"><span class="bar" style="--c:var(--hz-500)"></span></button>
+          <button type="button" class="thumb" data-n="02" aria-label="Slide 2, CSS" aria-current="false"><span class="bar" style="--c:var(--tint-css)"></span></button>
+          <button type="button" class="thumb" data-n="03" aria-label="Slide 3, SVG" aria-current="false"><span class="bar" style="--c:var(--tint-svg)"></span></button>
+          <button type="button" class="thumb" data-n="04" aria-label="Slide 4, current" aria-current="true"><span class="bar" style="--c:var(--tint)"></span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>The overview thumbnails are real buttons this time.</b> T-04's version was a
+      <code>&lt;div&gt;</code> grid — same keyboard gap as the knob/toggle/morph. Click-to-jump
+      is exactly the kind of action a keyboard-only or switch-device user needs most in
+      Q&amp;A, so this is the one place in the sheet where getting that right matters most.
+    </div>
+  </section>
+
   <!-- ═══ SLIDES ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">08</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
+    <div class="sec-head"><span class="idx">09</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
     <div class="slide-cap">Layout · title</div>
     <div class="slide" style="margin-bottom:calc(var(--u)*5)">
       <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
@@ -1344,6 +1548,16 @@ document.querySelectorAll('[data-tint]').forEach(el => {
   });
 });
 
+/* overview grid — click (or Enter/Space, real <button>s) to jump.
+   aria-current moves with selection so the state is announced, not
+   just shown via outline. */
+document.querySelectorAll('[data-testid=overview-grid-demo] .thumb').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('[data-testid=overview-grid-demo] .thumb')
+      .forEach(x => x.setAttribute('aria-current', String(x === t)));
+  });
+});
+
 /* encoders — detent step + tint */
 document.querySelectorAll('.knob').forEach(k => {
   let i = 6;
@@ -1354,9 +1568,14 @@ document.querySelectorAll('.knob').forEach(k => {
   });
 });
 
-/* toggles */
+/* toggles — real <button>, so click AND keyboard (Space/Enter) both
+   reach this for free; aria-checked kept in sync since it's the
+   real state a screen reader announces, not just a visual class. */
 document.querySelectorAll('.toggle').forEach(t => {
-  t.addEventListener('click', () => t.classList.toggle('on'));
+  t.addEventListener('click', () => {
+    const on = t.classList.toggle('on');
+    t.setAttribute('aria-checked', String(on));
+  });
 });
 
 /* one-shot animation helper — remove then re-add so it can replay */
@@ -1403,7 +1622,10 @@ document.querySelectorAll('.js-adv').forEach(a => {
 
 /* A · morph — the control becomes the panel; nothing is swapped */
 document.querySelectorAll('.js-morph').forEach(m => {
-  m.addEventListener('click', () => m.classList.toggle('open'));
+  m.addEventListener('click', () => {
+    const open = m.classList.toggle('open');
+    m.setAttribute('aria-expanded', String(open));
+  });
 });
 
 /* B · specular tilt — pointer position drives the highlight.
@@ -1429,12 +1651,12 @@ document.querySelectorAll('.js-seg').forEach(nav => {
   const move = b => {
     pill.style.left = (b.offsetLeft) + 'px';
     pill.style.width = (b.offsetWidth) + 'px';
-    btns.forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    btns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
   };
   btns.forEach(b => b.addEventListener('click', () => move(b)));
   requestAnimationFrame(() => move(btns[0]));
   window.addEventListener('resize', () =>
-    move(btns.find(b => b.getAttribute('aria-selected') === 'true') || btns[0]));
+    move(btns.find(b => b.getAttribute('aria-pressed') === 'true') || btns[0]));
 });
 
 /* boot sequence */
@@ -1467,9 +1689,12 @@ setInterval(() => {
   if (!document.body.classList.contains('rm')) fire(heroLcd, 'smear', 200);
 }, 1000);
 
-/* reduced-motion simulator — the deck argues for this, so the sheet
-   lets you check it without changing OS settings */
-const rmBtn = document.getElementById('toggleRM');
+/* reduced-motion — ONE state, TWO entry points: the presenter
+   unit's own "Reduced" button (what the real chrome would have)
+   and the sheet's #toggleRM simulator (so it can be checked without
+   changing OS settings). Both read from and write to the same
+   body.rm class rather than tracking separate on/off state. */
+const rmButtons = [document.getElementById('toggleRM'), document.getElementById('unitReducedBtn')].filter(Boolean);
 const rmState = document.getElementById('rmState');
 const rmStyle = document.createElement('style');
 rmStyle.textContent = `
@@ -1479,11 +1704,14 @@ rmStyle.textContent = `
     animation-duration: 0.01ms !important; transition-duration: 0.01ms !important;
   }`;
 document.head.appendChild(rmStyle);
-rmBtn.addEventListener('click', () => {
-  document.body.classList.toggle('rm');
-  const on = document.body.classList.contains('rm');
-  rmState.textContent = `Reduced motion: ${on ? 'ON — ambient stopped, feedback instant' : 'off'}`;
-});
+
+function setReducedMotion(on) {
+  document.body.classList.toggle('rm', on);
+  rmButtons.forEach(b => b.setAttribute('aria-pressed', String(on)));
+  if (rmState) rmState.textContent = `Reduced motion: ${on ? 'ON — ambient stopped, feedback instant' : 'off'}`;
+}
+rmButtons.forEach(b => b.addEventListener('click', () =>
+  setReducedMotion(!document.body.classList.contains('rm'))));
 
 /* run the self-test once on load, the way a unit powers up */
 window.addEventListener('load', () => setTimeout(boot, 260));
