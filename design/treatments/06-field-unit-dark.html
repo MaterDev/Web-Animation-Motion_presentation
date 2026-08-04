@@ -840,7 +840,7 @@ section { margin-bottom: calc(var(--u) * 12); }
   <!-- ═══ COLOUR ═════════════════════════════════════ -->
   <section>
     <div class="sec-head"><span class="idx">06</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
-    <div class="mono" style="margin-bottom:8px">Material chip — flat, muted (current)</div>
+    <div class="mono" style="margin-bottom:8px">Material chip — dark ground (current)</div>
     <div class="tints" data-testid="tint-set">
       <button class="tint-card" data-tint="var(--tint-video)"><div class="swatch" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
       <button class="tint-card" data-tint="var(--tint-css)"><div class="swatch" style="--sw:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
@@ -851,26 +851,15 @@ section { margin-bottom: calc(var(--u) * 12); }
       <button class="tint-card" data-tint="var(--tint-webgpu)"><div class="swatch" style="--sw:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></button>
     </div>
 
-    <div class="mono" style="margin:22px 0 8px">Earlier pass — spotlight gradient (rejected, too dramatic for a "subtle tint")</div>
-    <div class="tints" data-testid="tint-set-dramatic">
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-composite)"></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-svg)"></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-canvas)"></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
-    </div>
-
-    <div class="mono" style="margin:22px 0 8px">On the display — the same tint as an accent bar on the real LCD, not a swatch</div>
-    <div class="tints" data-testid="tint-set-onscreen">
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-video)"></span></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-css)"></span></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-composite)"></span></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-svg)"></span></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-canvas)"></span></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-webgl)"></span></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-webgpu)"></span></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    <div class="mono" style="margin:22px 0 8px">Material chip — light ground</div>
+    <div class="tints" data-testid="tint-set-light">
+      <button class="tint-card" data-tint="var(--tint-video)"><div class="swatch light" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-css)"><div class="swatch light" style="--sw:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-composite)"><div class="swatch light" style="--sw:var(--tint-composite)"></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-svg)"><div class="swatch light" style="--sw:var(--tint-svg)"></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-canvas)"><div class="swatch light" style="--sw:var(--tint-canvas)"></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgl)"><div class="swatch light" style="--sw:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></button>
+      <button class="tint-card" data-tint="var(--tint-webgpu)"><div class="swatch light" style="--sw:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></button>
     </div>
 
     <div class="note diff">
@@ -878,18 +867,42 @@ section { margin-bottom: calc(var(--u) * 12); }
       meter fill, primary key, toggle. A section change now propagates through the hardware
       rather than recolouring a label.
     </div>
+  </section>
+
+  <!-- ═══ GRAPHIC LANGUAGE ═══════════════════════════
+       Moved out of "colour" — this isn't about the tint alone
+       anymore, it's the pairing of tint + pixel symbol that gives
+       each stage of the spectrum its own identity. Starting point
+       for what could grow into a fuller per-stage language later. -->
+  <section>
+    <div class="sec-head"><span class="idx">07</span><h2>graphic language</h2><span class="rule"></span><span class="ref">Fig. 7</span></div>
+    <p class="lead">
+      Each stage of the spectrum gets its own identity, not just its own colour — a tint and
+      a pixel symbol together, so a slide reads as "this stage" at a glance. Starting point:
+      the two elements that carry furthest at a distance, on the display they'll actually
+      appear on.
+    </p>
+    <div class="tints" data-testid="tint-set-key">
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-video)"></span><canvas class="gk-icon" data-topic="video" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-css)"></span><canvas class="gk-icon" data-topic="css" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-composite)"></span><canvas class="gk-icon" data-topic="composite" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-canvas)"></span><canvas class="gk-icon" data-topic="canvas" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgl)"></span><canvas class="gk-icon" data-topic="webgl" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    </div>
     <div class="note warn">
-      <b>Swatch and screen read differently on purpose.</b> The material chip above is a flat
-      colour-mix over a neutral base — right for a chassis surface. The same tint on the LCD
-      sits directly on the green backlight with no muting mix, because that's the one place a
-      section colour is genuinely signalling something (which stage is active) rather than
-      decorating a panel — the "big payoff" case the mute pass was never meant to flatten.
+      <b>Chip and key read differently on purpose.</b> Section 06's material chip is a flat
+      colour-mix over a neutral base — right for a chassis surface. Here the tint sits almost
+      directly on the LCD's own backlight, and the symbol is drawn in the same ink as
+      everything else on screen, because this is the one place a section colour is genuinely
+      signalling something — which stage is active — rather than decorating a panel.
     </div>
   </section>
 
   <!-- ═══ PRESENTER ══════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">07</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 5</span></div>
+    <div class="sec-head"><span class="idx">08</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 5</span></div>
     <div class="plate mat-blasted chamfer" style="padding:calc(var(--u)*6) calc(var(--u)*5)" data-testid="presenter-unit">
       <span class="screw tl"></span><span class="screw tr"></span>
       <span class="screw bl"></span><span class="screw br"></span>
@@ -939,7 +952,7 @@ section { margin-bottom: calc(var(--u) * 12); }
        now the only kept treatment, these needed a home again rather
        than staying missing by omission. -->
   <section>
-    <div class="sec-head"><span class="idx">08</span><h2>navigation &amp; annotation</h2><span class="rule"></span><span class="ref">Fig. 6</span></div>
+    <div class="sec-head"><span class="idx">09</span><h2>navigation &amp; annotation</h2><span class="rule"></span><span class="ref">Fig. 6</span></div>
     <p class="lead">Restored from T-04. The presenter unit above shows the control cluster; this is what those controls actually navigate.</p>
 
     <div class="grid-2">
@@ -981,7 +994,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ SLIDES ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">09</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
+    <div class="sec-head"><span class="idx">10</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
     <div class="slide-cap">Layout · title</div>
     <div class="slide" style="margin-bottom:calc(var(--u)*5)">
       <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
@@ -1258,7 +1271,47 @@ const ICONS = {
   crosshair: () => { let g = ring(blank(),5.5,5.5,4,1.4); line(g,5.5,0,5.5,3); line(g,5.5,8,5.5,11); line(g,0,5.5,3,5.5); line(g,8,5.5,11,5.5); return g; },
   /* 09 slide compositions — 16:9-ish frame outline */
   frame: () => rectOutline(blank(), 1, 3, 10, 6, 1.4),
+  /* 07 graphic language — an outlined chip beside a filled dot: the
+     swatch-plus-symbol pairing the section is actually about */
+  key: () => { const g = blank(); rectOutline(g,1,3,5,5,1); return circle(g,8.5,8.5,2.2); },
 };
+
+/* Distinct from ICONS above: those key the SHEET'S OWN section
+   nav (what changed, materials, glass...); these key the
+   PRESENTATION's content spectrum (video → webgpu) for the
+   graphic-language colour-key chips. Two different things that
+   both happen to be "seven-ish things with an icon," not the same
+   list twice. */
+const TOPIC_ICONS = {
+  /* video — a frame with a play mark, the baseline/pre-rendered case */
+  video: () => { const g = rectOutline(blank(),1,2,10,8,1.2); return triRight(g,5,4,4); },
+  /* css — cascading, shrinking bars: specificity stacking down */
+  css: () => { const g = blank(); rect(g,2,2,8,2); rect(g,2,6,6,2); rect(g,2,9,4,2); return g; },
+  /* composite — two offset layer outlines, the compositor's job */
+  composite: () => { const g = rectOutline(blank(),1,1,7,7,1); return rectOutline(g,4,4,7,7,1); },
+  /* svg — a bent path with anchor-point nodes at each vertex */
+  svg: () => { const g = blank(); line(g,1,9,5,3); line(g,5,3,10,7); circle(g,1,9,1); circle(g,5,3,1); return circle(g,10,7,1); },
+  /* canvas — a raster grid of discrete pixels, not a vector line */
+  canvas: () => { const g = blank(); rect(g,3,3,2,2); rect(g,7,3,2,2); rect(g,3,7,2,2); return rect(g,7,7,2,2); },
+  /* webgl — a faceted diamond (related to glass's, but split down
+     the middle — a cut gem/geometry read, not a flat facet) */
+  webgl: () => { const g = diamondOutline(blank(),5.5,5.5,5); return line(g,5.5,1,5.5,10); },
+  /* webgpu — an IC chip with pins on all four sides: the compute
+     payoff, deliberately the most technical-looking mark of the set */
+  webgpu: () => { const g = rect(blank(),4,4,4,4);
+    line(g,5,1,5,3); line(g,6,1,6,3); line(g,5,8,5,10); line(g,6,8,6,10);
+    line(g,1,5,3,5); line(g,1,6,3,6); line(g,8,5,10,5); line(g,8,6,10,6);
+    return g; },
+};
+document.querySelectorAll('.gk-icon').forEach(cv => {
+  const draw = TOPIC_ICONS[cv.dataset.topic];
+  if (!draw) return;
+  const ctx = cv.getContext('2d');
+  const grid = draw();
+  ctx.fillStyle = 'oklch(0.26 0.05 140)';
+  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
+    if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
+});
 
 /* which icon a section gets, matched on its own title text — kept
    as a keyword map so a re-worded heading degrades to a sane
@@ -1274,8 +1327,8 @@ const ICON_BY_KEYWORD = [
   ['what changed', 'changed'], ['material', 'materials'],
   ['liquid', 'liquid'], ['glass', 'glass'],
   ['micro-anim', 'spark'], ['motion token', 'dial'],
-  ['colour', 'colour'], ['presenter', 'play'], ['navigation', 'crosshair'],
-  ['slide', 'frame'],
+  ['colour', 'colour'], ['graphic language', 'key'], ['presenter', 'play'],
+  ['navigation', 'crosshair'], ['slide', 'frame'],
 ];
 function iconFor(title) {
   const t = title.toLowerCase();
