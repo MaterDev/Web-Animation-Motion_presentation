@@ -28,6 +28,11 @@
 .sheet { max-width: 1240px; margin: 0 auto; padding: calc(var(--u) * 5) calc(var(--u) * 5) calc(var(--u) * 16); }
 section { margin-bottom: calc(var(--u) * 12); }
 
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+
 /* ═══ HERO ═════════════════════════════════════════════ */
 
 .front {
@@ -159,6 +164,42 @@ section { margin-bottom: calc(var(--u) * 12); }
    wrapper needed since the whole background already IS the LCD */
 .giga-clock { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: oklch(0.26 0.05 140); font-variant-numeric: tabular-nums; }
 
+/* flatten every physical control inside the screen — a chrome knob,
+   a slide switch, glossy LED beads and a keycap button sitting on
+   an LCD read as hardware bolted ON TOP of the glass, not something
+   the glass could actually display. Everything here strips gradient/
+   gloss/shadow down to flat ink shapes so it reads as plausible
+   screen content instead — real controls stay physical everywhere
+   OUTSIDE the screen (.giga-btn, and every demo knob/toggle in the
+   materials and micro-animation sections further down the page,
+   neither of which this selector touches). */
+.giga-page .knob { background: none; box-shadow: none; }
+.giga-page .knob:hover { box-shadow: none; }
+.giga-page .knob::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid oklch(0.30 0.05 140 / 0.55);
+}
+.giga-page .knob .cap { background: oklch(0.30 0.05 140 / 0.10); box-shadow: none; }
+.giga-page .knob .idx { background: oklch(0.26 0.05 140); box-shadow: none; }
+
+.giga-page .led { background: var(--c); box-shadow: none; }
+.giga-page .led.off { background: oklch(0.30 0.05 140 / 0.28); }
+.giga-page .led.breathe { animation: gigaLedBreathe 2.6s var(--ease-standard) infinite; }
+@keyframes gigaLedBreathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+.giga-page .toggle { background: transparent; box-shadow: none; border: 2px solid oklch(0.30 0.05 140 / 0.5); }
+.giga-page .toggle::before { content: none; }
+.giga-page .toggle i { background: oklch(0.26 0.05 140); box-shadow: none; }
+.giga-page .toggle i::after { content: none; }
+.giga-page .toggle.on { border-color: oklch(0.26 0.05 140 / 0.75); }
+
+.giga-page .ibtn {
+  background: transparent; border: 2px solid oklch(0.30 0.05 140 / 0.55);
+  color: oklch(0.28 0.05 140); box-shadow: none;
+}
+.giga-page .ibtn:hover { color: oklch(0.22 0.05 140); }
+.giga-page .ibtn:active { transform: none; box-shadow: none; background: oklch(0.2 0.05 130 / 0.14); }
+
 /* page 1+ — one big icon, centred. The grid-stack above now hands
    this page the same height home occupies (previously a fixed
    min-height of 220px against home's 599px on desktop — the icon
@@ -199,6 +240,7 @@ section { margin-bottom: calc(var(--u) * 12); }
   width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
   border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
   font-family: var(--mono); font-size: 12px; color: var(--hz-800);
+  background: linear-gradient(160deg, var(--hz-200), var(--hz-100));
   box-shadow:
     inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3),
     inset 0 6px 10px -4px oklch(1 0 0 / 0.22),
@@ -216,34 +258,6 @@ section { margin-bottom: calc(var(--u) * 12); }
 }
 .giga-btn:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
 .giga-btn-select { width: 32px; height: 32px; }
-
-/* exposed-circuitry window — the case-hardware half of the design
-   research (Teenage Engineering / Nothing / 90s handhelds with
-   see-through shells: GBA, the bondi iMac): a strip of smoked,
-   translucent housing glazing over a glimpse of real board — traces,
-   pads, two IC silhouettes — cut into the chrome between the screen
-   and the buttons. Chrome only; doesn't touch the screen or its
-   content. Background layers stack first-listed-on-top: glare sheen,
-   smoked plastic tint, the board art, a dark substrate underneath. */
-.circuit-window {
-  position: relative; height: 26px; margin-top: calc(var(--u)*3);
-  border-radius: 3px; overflow: hidden; z-index: 2;
-  /* the background shorthand only allows a plain background-COLOR
-     on the LAST comma-separated layer — a flat colour anywhere else
-     in the list is a parse error that drops the whole declaration
-     (confirmed live: computed backgroundImage came back "none").
-     The smoked-tint layer below is a same-colour-both-stops
-     gradient specifically so it counts as an image, not a color. */
-  background:
-    linear-gradient(100deg, oklch(1 0 0 / 0.12) 0 10%, transparent 24%),
-    linear-gradient(oklch(0.2 0.02 265 / 0.55), oklch(0.2 0.02 265 / 0.55)),
-    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 400 40'%3E%3Cg fill='none' stroke='%23c9863c' stroke-width='1.3' opacity='0.85'%3E%3Cpath d='M8 8 H58 V24 H118'/%3E%3Cpath d='M38 33 H88 V14 H158 V27 H216'/%3E%3Cpath d='M178 6 H256 V20 H306'/%3E%3Cpath d='M246 34 H298 V10 H356'/%3E%3Cpath d='M326 22 H392'/%3E%3C/g%3E%3Cg fill='%23e2a75c'%3E%3Ccircle cx='8' cy='8' r='2.1'/%3E%3Ccircle cx='118' cy='24' r='2.1'/%3E%3Ccircle cx='216' cy='27' r='2.1'/%3E%3Ccircle cx='306' cy='20' r='2.1'/%3E%3Ccircle cx='356' cy='10' r='2.1'/%3E%3Ccircle cx='392' cy='22' r='2.1'/%3E%3C/g%3E%3Crect x='130' y='9' width='34' height='21' rx='1.5' fill='%230c0c0f' stroke='%233a3a42' stroke-width='1'/%3E%3Cg stroke='%239a9aa2' stroke-width='1'%3E%3Cpath d='M130 14 H124 M130 20 H124 M130 26 H124 M164 14 H170 M164 20 H170 M164 26 H170'/%3E%3C/g%3E%3Crect x='270' y='6' width='27' height='16' rx='1.5' fill='%230c0c0f' stroke='%233a3a42' stroke-width='1'/%3E%3Cg stroke='%239a9aa2' stroke-width='1'%3E%3Cpath d='M270 10 H264 M270 16 H264 M297 10 H303 M297 16 H303'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat,
-    oklch(0.08 0.01 150 / 1);
-  box-shadow:
-    inset 0 2px 5px oklch(0 0 0 / 0.55),
-    inset 0 -1px 0 oklch(1 0 0 / 0.05),
-    0 1px 0 oklch(1 0 0 / 0.06);
-}
 
 /* ═══ MATERIAL SWATCHES ════════════════════════════════ */
 
@@ -324,6 +338,9 @@ section { margin-bottom: calc(var(--u) * 12); }
 
 <div class="sheet">
 
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a></div>
+  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+
   <!-- ═══ HERO ═══════════════════════════════════════
        REBUILT as a Gigapet: the case (screws, chamfer) frames one
        big recessed LCD screen, and everything the hero used to show
@@ -362,7 +379,7 @@ section { margin-bottom: calc(var(--u) * 12); }
             <button class="knob mat-knurl-grip" type="button" aria-label="Cycle section" data-testid="front-knob"><span class="idx"></span><span class="cap"></span></button>
             <div class="modline"><span class="k">Model</span><span class="v">WAM-2026</span></div>
             <div class="modline"><span class="k">Unit</span><span class="v">T-06 / FIELD-D</span></div>
-            <div class="modline"><span class="k">Slides</span><span class="v">14</span></div>
+            <div class="modline"><span class="k">Slides</span><span class="v">15</span></div>
             <div style="display:flex;gap:13px;align-items:center;flex-wrap:wrap;margin-left:auto">
               <span class="led breathe" style="--c:var(--ok)"></span>
               <span class="led" style="--c:var(--tint)"></span>
@@ -383,12 +400,10 @@ section { margin-bottom: calc(var(--u) * 12); }
       </div>
     </div>
 
-    <div class="circuit-window" aria-hidden="true"></div>
-
     <div class="gigapet-buttons">
-      <button class="giga-btn mat-knurl-grip" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
-      <button class="giga-btn giga-btn-select mat-knurl-grip" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
-      <button class="giga-btn mat-knurl-grip" type="button" id="gigaNext" aria-label="Next section">▶</button>
+      <button class="giga-btn" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
+      <button class="giga-btn giga-btn-select" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
+      <button class="giga-btn" type="button" id="gigaNext" aria-label="Next section">▶</button>
     </div>
   </header>
 
@@ -520,8 +535,8 @@ section { margin-bottom: calc(var(--u) * 12); }
       </div>
       <div class="mat mat-ar" style="background:linear-gradient(178deg,oklch(0.868 0.048 128),oklch(0.812 0.052 132))"><span class="use">Display face</span><span class="tag">Anti-glare</span></div>
       <div class="mat mat-turned sweep"><span class="use">Dials / jog wheel</span><span class="tag">Turned</span></div>
-      <div class="mat mat-milled sweep"><span class="use">Extruded body</span><span class="tag">Milled channel</span></div>
-      <div class="mat mat-anod-colour sweep"><span class="use">Accent parts</span><span class="tag">Anodised dye</span></div>
+      <div class="mat mat-milled sweep"><span class="use">Extruded body</span><span class="tag">Ribbed channel</span></div>
+      <div class="mat mat-anod-colour sweep"><span class="use">Accent parts</span><span class="tag">Translucent dye</span></div>
     </div>
 
     <div class="note diff">
@@ -880,7 +895,7 @@ section { margin-bottom: calc(var(--u) * 12); }
         <span class="plate-id">IDX</span>
         <div style="margin-top:30px;display:flex;flex-direction:column;gap:18px">
           <div class="slide-code">
-            <span class="num">06</span>/<span>14</span>
+            <span class="num">06</span>/<span>15</span>
             <span class="dot"></span>
             <span class="sec">COMPOSITE</span>
           </div>

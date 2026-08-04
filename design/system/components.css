@@ -36,6 +36,11 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .sec-head .idx { font-family: var(--mono); font-size: 10px; color: var(--hz-200); background: var(--hz-900); padding: 4px 8px; border-radius: 2px; letter-spacing: 0.1em; }
 .sec-head .rule { height: 9px; background: repeating-linear-gradient(90deg, var(--hz-400) 0 var(--hair), transparent var(--hair) 8px); opacity: 0.65; }
 .sec-head .ref { font-family: var(--mono); font-size: 9px; color: var(--hz-400); letter-spacing: 0.14em; }
+/* pixel-font section headers — the dot-matrix face used inside the
+   Gigapet screen, carried out onto the sheet itself so it reads as
+   one consistent typographic idea rather than an effect confined to
+   a single element. */
+.sec-head h2 { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; letter-spacing: 0.01em; }
 
 .note { border-left: 2px solid var(--hz-400); padding: 2px 0 2px 16px; margin: calc(var(--u)*2) 0; font-size: 13.5px; color: var(--hz-600); max-width: 66ch; }
 .note.warn { border-left-color: var(--signal); }
@@ -268,28 +273,33 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    opacity read as noise/moiré at small sizes, especially wrapped
    around a knob's thin outer ring. Wider 13px pitch, lower contrast
    — still legibly "knurled," not buzzing. */
+/* Diamond knurl — small individual bumps (a highlight top-left, a
+   shadow bottom-right, tiled on a grid) rather than crossed lines.
+   This is the real cut pattern on OP-1/Nothing dial knobs, and reads
+   calmer at swatch scale than a woven crosshatch: each cell is one
+   quiet nub, not two competing diagonals. */
 .mat-knurl {
   background:
-    repeating-linear-gradient(48deg,
-      oklch(1 0 0 / 0.20) 0 1px, transparent 1px 6px,
-      oklch(0.2 0.02 265 / 0.14) 6px 7px, transparent 7px 13px),
-    repeating-linear-gradient(-48deg,
-      oklch(1 0 0 / 0.20) 0 1px, transparent 1px 6px,
-      oklch(0.2 0.02 265 / 0.14) 6px 7px, transparent 7px 13px),
+    radial-gradient(circle at 32% 28%, oklch(1 0 0 / 0.40) 0 1px, transparent 1.7px) 0 0 / 7px 7px,
+    radial-gradient(circle at 68% 72%, oklch(0.2 0.02 265 / 0.28) 0 1px, transparent 1.7px) 0 0 / 7px 7px,
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
-/* Radial knurl for round grips — a diagonal pattern wrapped around a
-   knob reads as a mis-applied label, not a machined edge. Real
-   knurled knobs (OP-1, Nothing dials) cut ridges radiating from
-   centre; a repeating conic-gradient draws exactly that, and at a
-   spoke count (48) close to a real fine-knurl ridge count it holds
-   up at both the knob's 70px ring and the 34px giga-btn. */
+/* Radial grip for the twist knob only — 48 full-contrast spokes
+   (the first attempt) read as visual noise at a 16px ring width, not
+   a machined edge; user's words were "looks ridiculous" and it also
+   made a neighbouring button's glyph hard to read. Real small
+   hardware doesn't telegraph "twist me" with a loud print texture —
+   it's felt, not seen. This is 12 faint ticks (an indexed dial, not
+   a crosshatch) plus a soft sheen so it still reads as machined
+   metal at a glance without fighting for attention. Push buttons
+   (.giga-btn) get a plain smooth cap instead — knurling signals
+   rotation, not a press, so it was the wrong material there too. */
 .mat-knurl-grip {
   background:
     repeating-conic-gradient(
-      oklch(1 0 0 / 0.28) 0deg 3deg,
-      oklch(0.2 0.02 265 / 0.20) 3deg 4.5deg,
-      transparent 4.5deg 7.5deg),
+      oklch(1 0 0 / 0.12) 0deg 1deg,
+      transparent 1deg 30deg),
+    linear-gradient(155deg, oklch(1 0 0 / 0.14), transparent 45%),
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
 .mat-rubber {
@@ -298,13 +308,14 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     linear-gradient(180deg, oklch(0.10 0.006 265), oklch(0.06 0.006 265));
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.08), inset 0 -1px 2px oklch(0 0 0 / 0.5);
 }
+/* Speaker slits, not drilled holes — a row of rounded-square vents
+   the way a Game Boy / Tamagotchi speaker grille cuts them, rather
+   than a uniform field of round perforations (a much more generic,
+   metal-enclosure vent pattern). Hand-drawn as a tiled SVG since a
+   rounded rect isn't something a CSS gradient can draw. */
 .mat-grille {
   background:
-    radial-gradient(circle at 50% 50%,
-      oklch(0.09 0.006 265) 0 1.5px,
-      oklch(0.05 0.008 265 / 0.7) 1.5px 2.1px,
-      oklch(1 0 0 / 0.55) 2.1px 2.8px,
-      transparent 3px) 0 0 / 10px 10px,
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' width='24' height='12'%3E%3Crect x='2' y='3' width='6' height='6' rx='3' fill='%23000000' opacity='0.55'/%3E%3Crect x='2' y='3' width='6' height='6' rx='3' fill='none' stroke='%23ffffff' stroke-opacity='0.30' stroke-width='0.6'/%3E%3Crect x='14' y='3' width='6' height='6' rx='3' fill='%23000000' opacity='0.55'/%3E%3Crect x='14' y='3' width='6' height='6' rx='3' fill='none' stroke='%23ffffff' stroke-opacity='0.30' stroke-width='0.6'/%3E%3C/svg%3E") 0 0 / 24px 12px,
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
 .mat-turned {
@@ -317,24 +328,32 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     radial-gradient(circle at 34% 28%, oklch(1 0 0 / 0.20), transparent 62%),
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
+/* Wider pitch, softer streak — the same rib idea reads as CNC'd
+   metal at a tight 14px pitch with a near-white specular line; wider
+   spacing and a duller highlight reads as an extruded/injection-
+   moulded plastic body shell instead (Game Boy, Tamagotchi), the
+   retro-handheld material this swatch is actually standing in for. */
 .mat-milled {
   background:
     repeating-linear-gradient(180deg,
-      oklch(0.2 0.02 265 / 0.16) 0 1px,
-      oklch(1 0 0 / 0.75) 1px 2px,
-      transparent 2px 14px),
-    linear-gradient(100deg, oklch(1 0 0 / 0.16) 0 14%, transparent 40%),
+      oklch(0.2 0.02 265 / 0.10) 0 1px,
+      oklch(1 0 0 / 0.45) 1px 2.5px,
+      transparent 2.5px 20px),
+    linear-gradient(100deg, oklch(1 0 0 / 0.10) 0 18%, transparent 42%),
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
+/* Translucent dyed plastic, not anodised metal — a diagonal brush
+   texture reads as machined aluminium regardless of tint; swapped
+   for a glossy radial highlight plus a lighter-toward-white top edge
+   (light finding its way through a coloured shell), the Game Boy
+   Color "Atomic Purple" read rather than a coloured accent panel. */
 .mat-anod-colour {
   background:
-    repeating-linear-gradient(96deg,
-      oklch(1 0 0 / 0.16) 0 1px, transparent 1px 2px,
-      oklch(0.2 0.02 265 / 0.07) 2px 3px, transparent 3px 4px),
-    linear-gradient(102deg, oklch(1 0 0 / 0.34) 0 14%, transparent 38%),
+    linear-gradient(122deg, oklch(1 0 0 / 0.42) 0 10%, transparent 30% 70%, oklch(1 0 0 / 0.18) 92% 100%),
+    radial-gradient(120% 90% at 20% 15%, oklch(1 0 0 / 0.30), transparent 55%),
     linear-gradient(180deg,
-      color-mix(in oklch, var(--tint) 62%, oklch(0.72 0.01 265)),
-      color-mix(in oklch, var(--tint) 78%, oklch(0.44 0.01 265)));
+      color-mix(in oklch, var(--tint) 55%, oklch(0.85 0.02 265 / 0.9)),
+      color-mix(in oklch, var(--tint) 82%, oklch(0.35 0.02 265)));
 }
 
 /* CNC chamfer — bright cut line around a machined edge */

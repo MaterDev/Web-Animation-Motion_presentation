@@ -66,7 +66,8 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
 <body data-testid="layouts-gallery">
 
 <div class="wrap">
-  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><span style="color:var(--hz-600)">Layouts</span></div>
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><span style="color:var(--hz-600)">Layouts</span></div>
+  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
   <div class="head"><h1>layouts</h1></div>
   <p class="dek">
     All 14 slides from SCOPE.md's content outline, built as real <code>.slide</code>

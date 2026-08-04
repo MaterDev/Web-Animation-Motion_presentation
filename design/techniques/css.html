@@ -61,10 +61,11 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 <body data-testid="technique-css">
 
 <div class="wrap">
-  <div class="crumb">
+  <div class="crumb" id="crumb">
     <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
     <a href="../index.html#sl-05">Techniques</a>
   </div>
+  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
 
   <div class="head">
     <span class="code">SL-05</span>
