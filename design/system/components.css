@@ -40,7 +40,10 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    Gigapet screen, carried out onto the sheet itself so it reads as
    one consistent typographic idea rather than an effect confined to
    a single element. */
-.sec-head h2 { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; letter-spacing: 0.01em; }
+/* 900 (the heaviest weight Doto is loaded at) rather than 700 —
+   a dot-matrix face's dots need to be big enough to actually read
+   as dots; a lighter weight just makes them small and sparse. */
+.sec-head h2 { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900; letter-spacing: 0.01em; }
 
 .note { border-left: 2px solid var(--hz-400); padding: 2px 0 2px 16px; margin: calc(var(--u)*2) 0; font-size: 13.5px; color: var(--hz-600); max-width: 66ch; }
 .note.warn { border-left-color: var(--signal); }
