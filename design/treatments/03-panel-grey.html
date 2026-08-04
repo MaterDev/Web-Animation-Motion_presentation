@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T-03 — Panel Grey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   T-03 · PANEL GREY
+   T-02 with the ground dropped ~0.05 lightness. Nothing else
+   changes structurally — same token names, same component CSS.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── housing: mid-light chassis ──────────────────────────
+     Semantics identical to T-01/T-02 — 000 is always the base
+     background, 900 always maximum contrast.
+
+     The ramp is deliberately NOT monotonic: 000→200 climb toward
+     white as surfaces rise, then 300→900 descend for rules and
+     text.
+
+     Against T-02, the base drops 0.925 → 0.872 and the raised
+     surfaces come down with it, but 200 stays near-white so
+     panels still read as lifting clearly off the ground. Text
+     values move only slightly — the ground got darker, so dark
+     text has marginally less headroom and 500 tightens to hold
+     the same contrast floor. */
+  --hz-000: oklch(0.872 0.005 265);  /* base — was 0.925 */
+  --hz-050: oklch(0.908 0.004 265);  /* stage surround */
+  --hz-100: oklch(0.942 0.003 265);  /* panel */
+  --hz-200: oklch(0.985 0.002 265);  /* raised panel — near white */
+  --hz-300: oklch(0.792 0.007 265);  /* hairline / divider */
+  --hz-400: oklch(0.658 0.009 265);  /* disabled / non-text marks */
+  --hz-500: oklch(0.528 0.011 265);  /* secondary text — FLOOR */
+  --hz-600: oklch(0.405 0.012 265);  /* body text */
+  --hz-700: oklch(0.298 0.012 265);  /* emphasis */
+  --hz-800: oklch(0.212 0.012 265);  /* headline */
+  --hz-900: oklch(0.140 0.010 265);  /* maximum */
+
+  /* ── signal: rationed ────────────────────────────────────
+     Darker and slightly less chromatic than T-01 — a light-mode
+     red must sit lower to hold against near-white. */
+  --signal: oklch(0.53 0.235 27);
+
+  /* ── section tints ───────────────────────────────────────
+     Rebalanced, not reused. On a light ground the T-01 values
+     read washed out, so lightness drops ~0.15 and chroma rises.
+     Ordering still climbs with capability. */
+  --tint-video:     oklch(0.62 0.020 265);
+  --tint-css:       oklch(0.55 0.150 245);
+  --tint-composite: oklch(0.58 0.130 205);
+  --tint-svg:       oklch(0.56 0.150 150);
+  --tint-canvas:    oklch(0.66 0.160  85);
+  --tint-webgl:     oklch(0.60 0.190  45);
+  --tint-webgpu:    oklch(0.50 0.240 315);
+
+  --tint: var(--tint-webgpu);
+
+  /* ── type ────────────────────────────────────────────── */
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --dot:  'Doto', 'JetBrains Mono', monospace;
+
+  /* ── motion — unchanged from T-01 ────────────────────── */
+  --dur-instant: 90ms;
+  --dur-fast:    160ms;
+  --dur-base:    240ms;
+  --dur-slow:    420ms;
+  --dur-section: 700ms;
+  --dur-hero:   1400ms;
+
+  --ease-standard:   cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --ease-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  --ease-mechanical: cubic-bezier(0.4, 0.0, 0.2, 1.0);
+
+  /* ── elevation ───────────────────────────────────────────
+     The one structural difference from T-01. On dark, shadows
+     read as smudge and elevation must come from lightness. On
+     light, cast shadow is physically correct and does the work. */
+  --lift-1: 0 1px 2px oklch(0.2 0.02 265 / 0.07),
+            0 1px 1px oklch(0.2 0.02 265 / 0.04);
+  --lift-2: 0 2px 4px oklch(0.2 0.02 265 / 0.07),
+            0 4px 12px oklch(0.2 0.02 265 / 0.06);
+  --lift-3: 0 8px 20px oklch(0.2 0.02 265 / 0.10),
+            0 2px 6px oklch(0.2 0.02 265 / 0.06);
+
+  --u: 8px;
+  --hair: 1px;
+}
+
+@media (min-resolution: 2dppx) { :root { --hair: 0.5px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--hz-000);
+  color: var(--hz-600);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* grain — multiply rather than overlay, and lighter than T-01.
+   On a light ground additive noise greys the whole sheet out. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── layout ────────────────────────────────────────────── */
+
+.sheet { max-width: 1180px; margin: 0 auto; padding: calc(var(--u) * 6) calc(var(--u) * 5) calc(var(--u) * 14); }
+section { margin-bottom: calc(var(--u) * 11); }
+
+.mono {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500);
+}
+
+h1 {
+  font-size: clamp(38px, 5.5vw, 64px); font-weight: 200; letter-spacing: -0.035em;
+  line-height: 1.02; color: var(--hz-900); margin: 0 0 calc(var(--u) * 2);
+  text-transform: lowercase;
+}
+h2 {
+  font-size: 22px; font-weight: 400; letter-spacing: -0.018em;
+  color: var(--hz-900); margin: 0 0 calc(var(--u) * 0.75); text-transform: lowercase;
+}
+h3 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--hz-600);
+  margin: 0 0 calc(var(--u) * 1.5); font-weight: 500;
+}
+
+p { margin: 0 0 calc(var(--u) * 2); max-width: 62ch; }
+p.lead { color: var(--hz-500); font-size: 14px; }
+
+code {
+  font-family: var(--mono); font-size: 0.87em;
+  background: var(--hz-200); border: var(--hair) solid var(--hz-300);
+  border-radius: 3px; padding: 1px 5px; color: var(--hz-700);
+}
+
+.sec-head {
+  display: grid; grid-template-columns: auto 1fr auto; gap: calc(var(--u) * 2);
+  align-items: center; margin-bottom: calc(var(--u) * 3);
+  padding-bottom: calc(var(--u) * 1.5); border-bottom: var(--hair) solid var(--hz-300);
+}
+.sec-head .rule { height: var(--hair); background: var(--hz-300); }
+
+/* ── masthead ──────────────────────────────────────────── */
+
+.masthead {
+  position: relative; padding: calc(var(--u) * 5) 0 calc(var(--u) * 6);
+  margin-bottom: calc(var(--u) * 8); border-bottom: var(--hair) solid var(--hz-300);
+}
+.crosshair { position: absolute; width: 13px; height: 13px; opacity: 0.75; }
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--hz-400); }
+.crosshair::before { left: 50%; top: 0; bottom: 0; width: var(--hair); }
+.crosshair::after  { top: 50%; left: 0; right: 0; height: var(--hair); }
+.crosshair.tl { top: 0; left: -26px; }
+.crosshair.tr { top: 0; right: -26px; }
+
+.meta-row { display: flex; gap: calc(var(--u) * 4); flex-wrap: wrap; margin-top: calc(var(--u) * 3); }
+.meta-row div { display: flex; flex-direction: column; gap: 4px; }
+.meta-row .v {
+  font-family: var(--mono); font-size: 11.5px; color: var(--hz-700);
+  text-transform: none; letter-spacing: 0.02em;
+}
+
+/* ═══ COLOUR ═══════════════════════════════════════════ */
+
+.ramp {
+  display: grid; grid-template-columns: repeat(11, 1fr);
+  border: var(--hair) solid var(--hz-300); border-radius: 6px;
+  overflow: hidden; margin-bottom: calc(var(--u) * 2); box-shadow: var(--lift-1);
+}
+.ramp div {
+  aspect-ratio: 1 / 1.5; display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 7px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.04em;
+}
+
+.tints { display: grid; grid-template-columns: repeat(7, 1fr); gap: calc(var(--u) * 1.5); }
+.tint-card {
+  border: var(--hair) solid var(--hz-300); border-radius: 6px; overflow: hidden;
+  background: var(--hz-200); cursor: pointer; box-shadow: var(--lift-1);
+  transition: box-shadow var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.tint-card:hover { box-shadow: var(--lift-3); transform: translateY(-2px); }
+.tint-card .swatch { height: 62px; position: relative; }
+.tint-card .swatch::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(160deg, oklch(1 0 0 / 0.22), transparent 55%);
+}
+.tint-card .cap { padding: 9px 10px 11px; }
+.tint-card .n { font-family: var(--mono); font-size: 9px; color: var(--hz-500); letter-spacing: 0.1em; }
+.tint-card .l { font-size: 12px; color: var(--hz-800); text-transform: lowercase; margin-top: 2px; }
+
+.signal-row {
+  display: flex; align-items: center; gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 2); border: var(--hair) solid var(--hz-300);
+  border-radius: 6px; background: var(--hz-200); box-shadow: var(--lift-1);
+}
+.signal-chip {
+  width: 34px; height: 34px; border-radius: 5px; background: var(--signal); flex: none;
+  box-shadow: 0 4px 14px color-mix(in oklch, var(--signal) 30%, transparent);
+}
+
+/* ═══ TYPE ════════════════════════════════════════════ */
+
+.type-row {
+  display: grid; grid-template-columns: 108px 1fr; gap: calc(var(--u) * 3);
+  padding: calc(var(--u) * 2.5) 0; border-bottom: var(--hair) solid var(--hz-300);
+  align-items: baseline;
+}
+.type-row:last-child { border-bottom: 0; }
+.spec-display {
+  font-size: 46px; font-weight: 200; letter-spacing: -0.035em;
+  color: var(--hz-900); text-transform: lowercase; line-height: 1.05;
+}
+.spec-body { font-size: 17px; color: var(--hz-600); line-height: 1.62; }
+.spec-mono { font-family: var(--mono); font-size: 13px; color: var(--hz-600); letter-spacing: 0.02em; }
+.spec-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--hz-600);
+}
+
+/* LCD readout — the structural change on light.
+   A glowing LED panel is meaningless on a light chassis, so the
+   readout becomes a recessed monochrome LCD: dark figures on a
+   green-grey field. Game Boy DMG / OP-1 rather than Nothing Glyph. */
+.lcd {
+  display: inline-block;
+  background: oklch(0.855 0.048 128);
+  border-radius: 4px;
+  padding: 10px 16px 8px;
+  box-shadow:
+    inset 0 2px 5px oklch(0.35 0.05 130 / 0.32),
+    inset 0 -1px 0 oklch(1 0 0 / 0.35),
+    0 1px 0 oklch(1 0 0 / 0.7);
+  border: var(--hair) solid oklch(0.70 0.04 130);
+}
+.lcd .chars {
+  font-family: var(--dot); font-size: 40px; font-weight: 700;
+  color: oklch(0.30 0.045 140); letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums; line-height: 1;
+}
+.lcd .ghost {
+  font-family: var(--dot); font-size: 40px; font-weight: 700;
+  color: oklch(0.30 0.045 140 / 0.09); letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums; line-height: 1;
+  position: absolute; left: 16px; top: 10px; pointer-events: none;
+}
+.lcd-wrap { position: relative; display: inline-block; }
+
+/* ═══ SURFACE ══════════════════════════════════════════ */
+
+.surface-compare { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+
+.demo-stage {
+  position: relative; height: 232px; border-radius: 8px; overflow: hidden;
+  border: var(--hair) solid var(--hz-300); display: grid; place-items: center;
+  box-shadow: var(--lift-2);
+}
+
+/* Internals as a CUTAWAY, not a background.
+   On dark, internals were a slightly-lighter field. On light they
+   have to be a dark recess — a window cut into the chassis showing
+   a real board. This is closer to how the reference products
+   actually photograph: pale housing, dark aperture. */
+.internals {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 16% 22%, oklch(0.80 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 84% 30%, oklch(0.80 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 30% 84%, oklch(0.80 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 88% 76%, oklch(0.80 0.15 88 / 0.95) 0 4px, transparent 5px),
+    radial-gradient(circle at 68% 20%, oklch(0.30 0.02 265) 0 15px, transparent 16px),
+    linear-gradient(oklch(0.16 0.01 265) 0 100%) 22% 52% / 92px 34px no-repeat,
+    repeating-linear-gradient(90deg, oklch(0.62 0.14 150 / 0.55) 0 1.5px, transparent 1.5px 44px),
+    repeating-linear-gradient(0deg,  oklch(0.62 0.14 150 / 0.38) 0 1.5px, transparent 1.5px 36px),
+    oklch(0.31 0.055 152);   /* PCB solder-mask green */
+  box-shadow: inset 0 2px 10px oklch(0 0 0 / 0.45);
+}
+.internals::after {
+  content: ''; position: absolute; left: 22%; top: 52%;
+  width: 92px; height: 34px;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.72 0.008 265) 0 3px, transparent 3px 10px) 0 0 / 100% 4px,
+    repeating-linear-gradient(90deg, oklch(0.72 0.008 265) 0 3px, transparent 3px 10px) 0 100% / 100% 4px;
+  background-repeat: no-repeat;
+}
+
+.panel-clear, .panel-glass {
+  position: relative; z-index: 2; width: 74%;
+  padding: calc(var(--u) * 2.5); border-radius: 10px; text-align: center;
+}
+
+/* Tint density rises on light: the panel must still read as coloured
+   plastic when the aperture behind it is dark. */
+.panel-clear {
+  background: linear-gradient(160deg,
+    color-mix(in oklch, var(--tint) 40%, transparent),
+    color-mix(in oklch, var(--tint) 18%, transparent) 45%,
+    color-mix(in oklch, var(--tint) 34%, transparent));
+  backdrop-filter: blur(12px) saturate(1.7);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.45),
+    inset 0 0 24px color-mix(in oklch, var(--tint) 18%, transparent),
+    0 10px 26px oklch(0 0 0 / 0.32);
+}
+.panel-glass {
+  background: oklch(1 0 0 / 0.14);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.26);
+}
+
+.panel-t {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: oklch(0.99 0 0);
+}
+.panel-s { font-size: 12px; color: oklch(0.99 0 0 / 0.78); margin-top: 5px; }
+
+.verdict {
+  display: flex; gap: 8px; align-items: baseline;
+  font-family: var(--mono); font-size: 10px; line-height: 1.6;
+  margin-top: calc(var(--u) * 1.5); color: var(--hz-500);
+}
+.verdict b { color: var(--hz-800); font-weight: 500; }
+
+/* ═══ ANNOTATION ═══════════════════════════════════════ */
+
+.anno-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u) * 3); }
+.anno-box {
+  border: var(--hair) solid var(--hz-300); border-radius: 6px;
+  padding: calc(var(--u) * 2.5); background: var(--hz-200);
+  min-height: 132px; display: flex; flex-direction: column; box-shadow: var(--lift-1);
+}
+.anno-box .cap {
+  margin-top: auto; padding-top: calc(var(--u) * 1.5);
+  font-family: var(--mono); font-size: 9.5px; color: var(--hz-500);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.slide-code {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--hz-600);
+}
+.slide-code .num { color: var(--hz-900); }
+.slide-code .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--tint); }
+.slide-code .sec { color: var(--tint); }
+
+.dim { position: relative; height: 40px; margin: 14px 0 6px; }
+.dim::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: var(--hair); background: var(--hz-400); }
+.dim span {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: var(--hz-200); padding: 0 8px;
+  font-family: var(--mono); font-size: 9.5px; color: var(--hz-600);
+}
+.dim i { position: absolute; top: 50%; transform: translateY(-50%); width: var(--hair); height: 11px; background: var(--hz-400); }
+.dim i:first-of-type { left: 0; }
+.dim i:last-of-type  { right: 0; }
+
+.rail-demo { position: relative; height: 3px; background: var(--hz-300); border-radius: 2px; margin: 20px 0 10px; }
+.rail-demo .fill {
+  position: absolute; inset: 0 auto 0 0; width: 62%;
+  background: var(--tint); border-radius: 2px;
+  transition: width var(--dur-base) var(--ease-standard);
+}
+.rail-demo .tick { position: absolute; top: -4px; width: var(--hair); height: 11px; background: var(--hz-400); }
+
+/* ═══ MOTION ═══════════════════════════════════════════ */
+
+.ease-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u) * 2); margin-bottom: calc(var(--u) * 3); }
+.ease-card {
+  border: var(--hair) solid var(--hz-300); border-radius: 6px;
+  background: var(--hz-200); padding: calc(var(--u) * 2); box-shadow: var(--lift-1);
+}
+.ease-card svg { width: 100%; height: auto; display: block; margin-bottom: 10px; }
+.ease-card .n { font-family: var(--mono); font-size: 10px; color: var(--hz-800); letter-spacing: 0.06em; }
+.ease-card .v { font-family: var(--mono); font-size: 8.5px; color: var(--hz-500); margin-top: 3px; word-break: break-all; }
+
+.runner-wrap {
+  border: var(--hair) solid var(--hz-300); border-radius: 6px;
+  background: var(--hz-200); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-1);
+}
+.runner { position: relative; height: 30px; margin-bottom: 9px; display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 12px; }
+.runner .lbl { font-family: var(--mono); font-size: 9.5px; color: var(--hz-600); letter-spacing: 0.06em; }
+.runner .track {
+  position: relative; height: 26px; background: var(--hz-000);
+  border: var(--hair) solid var(--hz-300);
+  border-radius: 4px; overflow: hidden;
+  box-shadow: inset 0 1px 3px oklch(0.2 0.02 265 / 0.10);
+}
+.runner .box { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 3px; background: var(--tint); transform: translateX(0); }
+.runner:nth-child(1) .box { transition: transform var(--dur-base) var(--ease-standard); }
+.runner:nth-child(2) .box { transition: transform var(--dur-base) var(--ease-decelerate); }
+.runner:nth-child(3) .box { transition: transform var(--dur-base) var(--ease-accelerate); }
+.runner:nth-child(4) .box { transition: transform var(--dur-base) linear; }
+
+.dur-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dur-table th {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); text-align: left;
+  padding: 0 0 10px; border-bottom: var(--hair) solid var(--hz-300); font-weight: 500;
+}
+.dur-table td { padding: 11px 0; border-bottom: var(--hair) solid var(--hz-300); color: var(--hz-600); vertical-align: top; }
+.dur-table td:first-child { font-family: var(--mono); font-size: 11.5px; color: var(--hz-800); width: 150px; }
+.dur-table td:nth-child(2) { font-family: var(--mono); font-size: 11.5px; color: var(--tint); width: 78px; font-variant-numeric: tabular-nums; }
+.dur-table tr:last-child td { border-bottom: 0; }
+
+/* ═══ COMPONENTS ═══════════════════════════════════════ */
+
+.comp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: calc(var(--u) * 3); }
+.comp {
+  border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-200); padding: calc(var(--u) * 2.5); box-shadow: var(--lift-1);
+}
+.comp > .h {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); margin-bottom: calc(var(--u) * 2);
+}
+
+.readout { display: flex; align-items: center; gap: calc(var(--u) * 3); font-variant-numeric: tabular-nums; }
+.readout .stack { display: flex; flex-direction: column; gap: 3px; }
+.readout .k { font-family: var(--mono); font-size: 9px; color: var(--hz-500); letter-spacing: 0.12em; text-transform: uppercase; }
+.readout .n { font-family: var(--mono); font-size: 15px; color: var(--hz-800); }
+.readout .n.over { color: var(--signal); }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ibtn {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  background: var(--hz-200); border: var(--hair) solid var(--hz-300); color: var(--hz-700);
+  border-radius: 5px; padding: 8px 14px; cursor: pointer; box-shadow: var(--lift-1);
+  transition: background var(--dur-fast) var(--ease-standard),
+              color var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard),
+              transform var(--dur-instant) var(--ease-standard);
+}
+.ibtn:hover { background: var(--hz-100); color: var(--hz-900); box-shadow: var(--lift-2); }
+.ibtn:active { transform: translateY(1px); box-shadow: var(--lift-1); }
+.ibtn.primary { border-color: color-mix(in oklch, var(--tint) 45%, var(--hz-300)); color: var(--tint); }
+.ibtn.danger  { border-color: color-mix(in oklch, var(--signal) 40%, var(--hz-300)); color: var(--signal); }
+
+.thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.thumb {
+  aspect-ratio: 16 / 10; border: var(--hair) solid var(--hz-300); border-radius: 4px;
+  background: var(--hz-100); position: relative; overflow: hidden; cursor: pointer;
+  box-shadow: var(--lift-1);
+  transition: box-shadow var(--dur-fast) var(--ease-standard),
+              transform var(--dur-fast) var(--ease-standard);
+}
+.thumb:hover { transform: translateY(-2px); box-shadow: var(--lift-3); }
+.thumb[data-active] { border-color: var(--tint); }
+.thumb::before {
+  content: attr(data-n); position: absolute; left: 6px; top: 5px;
+  font-family: var(--mono); font-size: 8px; color: var(--hz-500);
+}
+.thumb .bar { position: absolute; left: 6px; right: 6px; bottom: 7px; height: 2px; background: var(--hz-300); border-radius: 1px; }
+.thumb .bar::after { content: ''; position: absolute; inset: 0 40% 0 0; background: var(--c, var(--hz-500)); border-radius: 1px; }
+
+/* ═══ SLIDES ═══════════════════════════════════════════ */
+
+.slide {
+  aspect-ratio: 16 / 9; border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  overflow: hidden; position: relative;
+  background:
+    radial-gradient(var(--hz-300) 0.5px, transparent 0.5px) 0 0 / 8px 8px,
+    var(--hz-100);
+  padding: calc(var(--u) * 4); display: flex; flex-direction: column;
+  margin-bottom: calc(var(--u) * 1.5); box-shadow: var(--lift-2);
+}
+.slide .chrome-top {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hz-500);
+}
+.slide .chrome-bot {
+  margin-top: auto; display: flex; justify-content: space-between; align-items: flex-end;
+  font-family: var(--mono); font-size: 10px; color: var(--hz-500); letter-spacing: 0.1em;
+}
+.slide .body { margin: auto 0; }
+.slide h4 {
+  font-size: clamp(26px, 3.6vw, 46px); font-weight: 200; letter-spacing: -0.035em;
+  color: var(--hz-900); margin: 0 0 12px; text-transform: lowercase; line-height: 1.05;
+}
+.slide p { font-size: 15px; color: var(--hz-600); max-width: 46ch; margin: 0; }
+.slide.statement { justify-content: center; }
+.slide.statement h4 { font-size: clamp(22px, 2.9vw, 34px); max-width: 20ch; }
+
+.slide-cap {
+  font-family: var(--mono); font-size: 9.5px; color: var(--hz-500);
+  letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: calc(var(--u) * 4);
+}
+.slides-2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u) * 3); }
+
+/* ═══ NOTES ════════════════════════════════════════════ */
+
+.note {
+  border-left: 2px solid var(--hz-400); padding: 2px 0 2px 16px;
+  margin: calc(var(--u) * 2) 0; font-size: 13.5px; color: var(--hz-600); max-width: 66ch;
+}
+.note.warn { border-left-color: var(--signal); }
+.note.diff { border-left-color: var(--tint); }
+.note b { color: var(--hz-900); font-weight: 500; }
+
+.verify {
+  display: inline-block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em;
+  color: var(--signal); border: var(--hair) solid color-mix(in oklch, var(--signal) 35%, transparent);
+  border-radius: 3px; padding: 1px 5px; vertical-align: middle;
+}
+
+@media (max-width: 900px) {
+  .tints, .anno-grid, .ease-grid, .comp-grid, .slides-2, .surface-compare { grid-template-columns: 1fr 1fr; }
+  .ramp { grid-template-columns: repeat(6, 1fr); }
+}
+</style>
+</head>
+<body data-testid="treatment-02">
+
+<div class="sheet">
+
+  <!-- ═══ MASTHEAD ═══════════════════════════════════ -->
+  <header class="masthead">
+    <span class="crosshair tl"></span>
+    <span class="crosshair tr"></span>
+    <div class="mono" style="margin-bottom:18px">WAM-2026 · TREATMENT T-03</div>
+    <h1>panel grey</h1>
+    <p class="lead" style="max-width:58ch">
+      T-02 with the ground dropped one step — 0.925 to 0.872 lightness. Everything else
+      is unchanged, so this is a direct comparison of that single variable. Press 2 and 3
+      back to back to judge it.
+    </p>
+    <div class="meta-row mono">
+      <div><span>Reference</span><span class="v">TE manuals · Nothing packaging · iMac G3</span></div>
+      <div><span>Base</span><span class="v">Fork of T-02 · ground only</span></div>
+      <div><span>Target</span><span class="v">Chrome · projected · light</span></div>
+      <div><span>Status</span><span class="v">Draft 01</span></div>
+    </div>
+  </header>
+
+  <!-- ═══ WHAT CHANGED ═══════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>what changed</h2><span class="rule"></span><span class="mono">00</span></div>
+    <p class="lead">
+      One variable, deliberately. Everything T-02 established — dark-cutaway internals,
+      the recessed LCD readout, cast-shadow elevation, the tint set — carries over
+      untouched.
+    </p>
+
+    <div class="note diff">
+      <b>The ground drops 0.925 → 0.872.</b> Raised surfaces come down with it, but
+      <code>--hz-200</code> stays near-white so panels still lift clearly off the chassis.
+      That gap is what stops a darker ground from flattening the whole sheet.
+    </div>
+    <div class="note diff">
+      <b>Panels gain definition.</b> The main gain from the darker ground: white panels now
+      separate from the base on their own, so they lean less on hairlines and shadow to
+      read as objects. On T-02 the panel and the ground were close enough that the border
+      was doing most of the work.
+    </div>
+    <div class="note warn">
+      <b>The cost is dark-text headroom.</b> A darker ground gives dark text marginally
+      less contrast, so <code>--hz-500</code> tightened from 0.550 to 0.528 to hold the
+      same floor. There is no more room below that — going darker again would mean either
+      losing the light-mode text scale or flipping to light text, which is a different
+      treatment, not a tweak.
+    </div>
+    <div class="note">
+      <b>Still an open question:</b> whether the tint set wants rebalancing. These values
+      were fitted against T-02's lighter ground and still read here, but they'll be very
+      slightly hotter than optimal. Worth judging on the section swatches below rather
+      than adjusting pre-emptively.
+    </div>
+  </section>
+
+  <!-- ═══ COLOUR ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>colour</h2><span class="rule"></span><span class="mono">01</span></div>
+
+    <h3>Housing — light ramp</h3>
+    <p class="lead">
+      Base is grey, not white. White is reserved for raised surfaces, so panels read as
+      sitting <i>above</i> the chassis rather than being cut out of it. Note the ramp is
+      deliberately not monotonic — 000→200 climb toward white as surfaces rise, then
+      300→900 descend for rules and text.
+    </p>
+    <div class="ramp" data-testid="housing-ramp">
+      <div style="background:var(--hz-000);color:var(--hz-500)">000</div>
+      <div style="background:var(--hz-050);color:var(--hz-500)">050</div>
+      <div style="background:var(--hz-100);color:var(--hz-500)">100</div>
+      <div style="background:var(--hz-200);color:var(--hz-500)">200</div>
+      <div style="background:var(--hz-300);color:var(--hz-700)">300</div>
+      <div style="background:var(--hz-400);color:var(--hz-900)">400</div>
+      <div style="background:var(--hz-500);color:var(--hz-000)">500</div>
+      <div style="background:var(--hz-600);color:var(--hz-000)">600</div>
+      <div style="background:var(--hz-700);color:var(--hz-000)">700</div>
+      <div style="background:var(--hz-800);color:var(--hz-000)">800</div>
+      <div style="background:var(--hz-900);color:var(--hz-000)">900</div>
+    </div>
+    <div class="note warn">
+      <b>Text floor is still 500 — but it's a different risk here.</b> On dark, thin light
+      text on black smears under projection. On light, the failure is the opposite:
+      projectors wash out light backgrounds and lift blacks, so mid-greys lose contrast
+      against the ground. <b>Light is generally the safer projection choice</b> in a room
+      with ambient light, which is the strongest practical argument for this treatment.
+    </div>
+
+    <h3 style="margin-top:44px">Section tints — click to reskin</h3>
+    <p class="lead">Rebalanced for a light ground <span class="verify">VERIFY</span>. Chroma still climbs with capability.</p>
+    <div class="tints" data-testid="tint-set">
+      <button class="tint-card" data-tint="var(--tint-video)" data-testid="tint-video">
+        <div class="swatch" style="background:var(--tint-video)"></div>
+        <div class="cap"><div class="n">00</div><div class="l">video</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-css)" data-testid="tint-css">
+        <div class="swatch" style="background:var(--tint-css)"></div>
+        <div class="cap"><div class="n">01</div><div class="l">css</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-composite)" data-testid="tint-composite">
+        <div class="swatch" style="background:var(--tint-composite)"></div>
+        <div class="cap"><div class="n">02</div><div class="l">composite</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-svg)" data-testid="tint-svg">
+        <div class="swatch" style="background:var(--tint-svg)"></div>
+        <div class="cap"><div class="n">03</div><div class="l">svg</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-canvas)" data-testid="tint-canvas">
+        <div class="swatch" style="background:var(--tint-canvas)"></div>
+        <div class="cap"><div class="n">04</div><div class="l">canvas</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-webgl)" data-testid="tint-webgl">
+        <div class="swatch" style="background:var(--tint-webgl)"></div>
+        <div class="cap"><div class="n">05</div><div class="l">webgl</div></div>
+      </button>
+      <button class="tint-card" data-tint="var(--tint-webgpu)" data-testid="tint-webgpu">
+        <div class="swatch" style="background:var(--tint-webgpu)"></div>
+        <div class="cap"><div class="n">06</div><div class="l">webgpu</div></div>
+      </button>
+    </div>
+
+    <h3 style="margin-top:44px">Signal — one, rationed</h3>
+    <div class="signal-row">
+      <span class="signal-chip"></span>
+      <div>
+        <div class="mono" style="color:var(--hz-700)">--signal · oklch(0.53 0.235 27)</div>
+        <p style="margin:6px 0 0;font-size:13px;color:var(--hz-600);max-width:60ch">
+          Sits lower than T-01's red — a light-mode accent has to darken to hold against
+          near-white. Same rationing rule: recording, error, reduced-motion, over-time.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TYPE ═══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>typography</h2><span class="rule"></span><span class="mono">02</span></div>
+    <p class="lead">
+      Same three faces and same jobs. Light grounds need marginally more weight — hairline
+      display type that reads as elegant on black can look weak and grey on light.
+    </p>
+
+    <div class="type-row">
+      <div class="mono">Display<br><span style="text-transform:none;letter-spacing:0">Inter 200</span></div>
+      <div class="spec-display">the craft is the product</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Body<br><span style="text-transform:none;letter-spacing:0">Inter 400</span></div>
+      <div class="spec-body">
+        Motion is a communication tool with a cost, so it should be spent where it does
+        work. The difference between a site that feels crafted and one that feels
+        exhausting is almost entirely judgement about where motion goes.
+      </div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Label<br><span style="text-transform:none;letter-spacing:0">JetBrains Mono</span></div>
+      <div class="spec-label">SL-12 · WEBGPU · COMPUTE SHADER · 1.2M PARTICLES</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Technical<br><span style="text-transform:none;letter-spacing:0">JetBrains Mono</span></div>
+      <div class="spec-mono">requestAnimationFrame → 16.7ms budget → composite only</div>
+    </div>
+    <div class="type-row">
+      <div class="mono">Readout<br><span style="text-transform:none;letter-spacing:0">Doto on LCD</span></div>
+      <div>
+        <div class="lcd-wrap">
+          <div class="lcd">
+            <div class="ghost">88:88</div>
+            <div class="chars">12:04</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>The LCD carries its own dead segments.</b> The faint <code>88:88</code> ghosted
+      behind the live figures is what an unlit segment actually looks like on a real
+      display. It's the single detail that stops this reading as "dark text in a green
+      box" — and it costs one absolutely-positioned element.
+    </div>
+    <div class="note warn">
+      <b>Legibility floor is a room, not a viewport.</b> Body copy on a slide starts at
+      ~24px effective, headlines 64px+. On light, also watch weight: Inter 200 at display
+      size is fine, but don't let it below ~300 for anything smaller.
+    </div>
+  </section>
+
+  <!-- ═══ SURFACE ════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>surface &amp; material</h2><span class="rule"></span><span class="mono">03</span></div>
+    <p class="lead">
+      Both panels sit over the same dark aperture. On a light chassis this comparison is
+      more decisive than on dark — white-on-dark glassmorphism is at least plausible,
+      whereas white-on-light simply disappears.
+    </p>
+
+    <div class="surface-compare">
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-clear">
+            <div class="panel-t">tinted polycarbonate</div>
+            <div class="panel-s">coloured transmission · uneven density · hard specular edge</div>
+          </div>
+        </div>
+        <div class="verdict">
+          <b>✓</b><span>Tint density raised to ~40% — on light the panel has to hold its
+          colour against a dark aperture. Reads as moulded plastic over a board.</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="demo-stage">
+          <div class="internals"></div>
+          <div class="panel-glass">
+            <div class="panel-t">generic glassmorphism</div>
+            <div class="panel-s">uniform white blur · even border · reads as 2020</div>
+          </div>
+        </div>
+        <div class="verdict">
+          <b>✕</b><span>A white veil over a dark hole. No material identity at all, and the
+          edge treatment does nothing. Worse here than in T-01.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>The internals should be honest.</b> First preference is the live demo itself
+      behind the panel. Second is a PCB trace pattern generated from the actual slide
+      graph — nodes are slides, traces are navigation paths.
+    </div>
+  </section>
+
+  <!-- ═══ ANNOTATION ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>annotation</h2><span class="rule"></span><span class="mono">04</span></div>
+    <p class="lead">
+      This is where light pulls ahead. Technical-drawing furniture is native to white
+      paper — TE's own manuals are printed black-on-white, and hairlines, dimension lines
+      and leader callouts are all drawn from that tradition.
+    </p>
+
+    <div class="anno-grid">
+      <div class="anno-box">
+        <div class="slide-code">
+          <span class="num">06</span>/<span>14</span>
+          <span class="dot"></span><span class="sec">COMPOSITE</span>
+        </div>
+        <div class="cap">Slide code</div>
+      </div>
+      <div class="anno-box">
+        <div class="dim"><i></i><span>1440 × 810</span><i></i></div>
+        <div class="cap">Dimension line</div>
+      </div>
+      <div class="anno-box">
+        <div class="rail-demo">
+          <span class="fill"></span>
+          <span class="tick" style="left:14%"></span><span class="tick" style="left:28%"></span>
+          <span class="tick" style="left:42%"></span><span class="tick" style="left:57%"></span>
+          <span class="tick" style="left:71%"></span><span class="tick" style="left:85%"></span>
+        </div>
+        <div class="cap">Progress rail · section ticks</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MOTION ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>motion</h2><span class="rule"></span><span class="mono">05</span></div>
+    <p class="lead">Identical to T-01 — the motion system is treatment-independent by design.</p>
+
+    <div class="ease-grid" data-testid="ease-set">
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/>
+          <path d="M0 100 C20 100 0 0 100 0" stroke="var(--tint)" stroke-width="2"/>
+        </svg>
+        <div class="n">standard</div><div class="v">0.2, 0, 0, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/>
+          <path d="M0 100 C5 30 10 0 100 0" stroke="var(--tint)" stroke-width="2"/>
+        </svg>
+        <div class="n">decelerate</div><div class="v">0.05, 0.7, 0.1, 1</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/>
+          <path d="M0 100 C30 100 80 85 100 0" stroke="var(--tint)" stroke-width="2"/>
+        </svg>
+        <div class="n">accelerate</div><div class="v">0.3, 0, 0.8, 0.15</div>
+      </div>
+      <div class="ease-card">
+        <svg viewBox="0 0 100 100" fill="none">
+          <path d="M0 100 H100 M0 100 V0" stroke="var(--hz-300)" stroke-width="0.5"/>
+          <path d="M0 100 C40 100 20 0 100 0" stroke="var(--tint)" stroke-width="2"/>
+        </svg>
+        <div class="n">mechanical</div><div class="v">0.4, 0, 0.2, 1</div>
+      </div>
+    </div>
+
+    <div class="runner-wrap" id="runner" data-testid="ease-runner">
+      <div class="runner"><span class="lbl">STANDARD</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">DECELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">ACCELERATE</span><span class="track"><span class="box"></span></span></div>
+      <div class="runner"><span class="lbl">LINEAR</span><span class="track"><span class="box"></span></span></div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
+        <button class="ibtn" id="playEase" data-testid="play-ease">▶ Run</button>
+        <span class="mono" style="letter-spacing:0.06em">240ms · slide-advance duration</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top:44px">Duration scale</h3>
+    <table class="dur-table" data-testid="duration-table">
+      <tr><th>Token</th><th>Value</th><th>Applied to</th></tr>
+      <tr><td>--dur-instant</td><td>90ms</td><td>Focus, press feedback</td></tr>
+      <tr><td>--dur-fast</td><td>160ms</td><td>Hover, toggle, small state change</td></tr>
+      <tr><td>--dur-base</td><td>240ms</td><td><b>Slide advance</b> — happens 200+ times before delivery. Must feel immediate, not like an effect.</td></tr>
+      <tr><td>--dur-slow</td><td>420ms</td><td>Panel, overlay, overview grid</td></tr>
+      <tr><td>--dur-section</td><td>700ms</td><td>Section tint change — experiential, happens 6×</td></tr>
+      <tr><td>--dur-hero</td><td>1400ms</td><td>Cold open, WebGPU reveal — once each</td></tr>
+    </table>
+
+    <div class="note warn">
+      <b>One motion consequence of going light.</b> A full-screen cross-fade between light
+      slides is a large bright area changing — less likely to read as flicker than on dark,
+      but far more fatiguing over 20 minutes if brightness swings between slides. Keep
+      slide grounds at a consistent lightness; vary tint, not luminance.
+    </div>
+  </section>
+
+  <!-- ═══ COMPONENTS ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>components</h2><span class="rule"></span><span class="mono">06</span></div>
+    <div class="comp-grid">
+      <div class="comp">
+        <div class="h">Presenter readout</div>
+        <div class="readout">
+          <div class="lcd-wrap">
+            <div class="lcd"><div class="ghost">88:88</div><div class="chars">12:04</div></div>
+          </div>
+          <div class="stack"><span class="k">Slide</span><span class="n">06 / 14</span></div>
+          <div class="stack"><span class="k">Pace</span><span class="n over">+0:38</span></div>
+        </div>
+      </div>
+
+      <div class="comp">
+        <div class="h">Controls</div>
+        <div class="btn-row">
+          <button class="ibtn">← Prev</button>
+          <button class="ibtn primary">Next →</button>
+          <button class="ibtn">Overview</button>
+          <button class="ibtn danger">Blank</button>
+        </div>
+      </div>
+
+      <div class="comp" style="grid-column:1 / -1">
+        <div class="h">Overview grid</div>
+        <div class="thumbs">
+          <div class="thumb" data-n="01"><span class="bar" style="--c:var(--hz-500)"></span></div>
+          <div class="thumb" data-n="02"><span class="bar" style="--c:var(--hz-500)"></span></div>
+          <div class="thumb" data-n="03"><span class="bar" style="--c:var(--tint-css)"></span></div>
+          <div class="thumb" data-active data-n="04"><span class="bar" style="--c:var(--tint)"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SLIDES ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><h2>slide compositions</h2><span class="rule"></span><span class="mono">07</span></div>
+    <p class="lead">Placeholder content. Same layout presets as T-01.</p>
+
+    <div class="slide-cap">Layout · title</div>
+    <div class="slide">
+      <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
+      <div class="body">
+        <h4>web animation &amp; motion</h4>
+        <p>Why the craft is the product — a tour from pre-baked pixels to compute shaders.</p>
+      </div>
+      <div class="chrome-bot"><span>FOLKLORE</span><span>07.08.2026</span></div>
+    </div>
+
+    <div class="slides-2" style="margin-top:40px">
+      <div>
+        <div class="slide-cap">Layout · statement</div>
+        <div class="slide statement">
+          <div class="chrome-top"><span>THESIS</span><span>02 / 14</span></div>
+          <div class="body"><h4>a site's value is no longer the content it holds</h4></div>
+          <div class="chrome-bot"><span></span><span>SL-02</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="slide-cap">Layout · split (demo right)</div>
+        <div class="slide">
+          <div class="chrome-top"><span style="color:var(--tint)">WEBGPU</span><span>12 / 14</span></div>
+          <div class="body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+            <div>
+              <h4 style="font-size:26px">compute</h4>
+              <p style="font-size:13px">Simulation moves to the GPU. Particle count stops being the constraint.</p>
+            </div>
+            <div style="aspect-ratio:1;border-radius:6px;position:relative;overflow:hidden;border:var(--hair) solid var(--hz-300)">
+              <div class="internals" style="position:absolute;inset:0"></div>
+              <div style="position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in oklch,var(--tint) 45%,transparent),color-mix(in oklch,var(--tint) 16%,transparent));backdrop-filter:blur(6px)"></div>
+            </div>
+          </div>
+          <div class="chrome-bot"><span>TD-WEBGPU</span><span>1.2M</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>The demo aperture is the argument for this treatment.</b> On a light slide, a dark
+      demo window is the brightest contrast on screen and pulls the eye straight to the
+      running code — which is what every slide in this deck is trying to do.
+    </div>
+  </section>
+
+  <footer style="border-top:var(--hair) solid var(--hz-300);padding-top:24px;margin-top:60px">
+    <div class="mono" style="line-height:2">
+      T-03 · PANEL GREY · DRAFT<br>
+      <span style="color:var(--hz-600);text-transform:none;letter-spacing:0.02em">
+        Fork to <code>04-*.html</code> and add an entry to TREATMENTS in index.html.
+      </span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+document.querySelectorAll('[data-tint]').forEach(el => {
+  el.addEventListener('click', () => {
+    document.documentElement.style.setProperty('--tint', el.dataset.tint);
+  });
+});
+
+const runner = document.getElementById('runner');
+document.getElementById('playEase').addEventListener('click', () => {
+  const boxes = runner.querySelectorAll('.box');
+  const travel = runner.querySelector('.track').clientWidth - 26;
+  boxes.forEach(b => b.style.transform = 'translateX(0)');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    boxes.forEach(b => b.style.transform = `translateX(${travel}px)`);
+  }));
+  setTimeout(() => boxes.forEach(b => b.style.transform = 'translateX(0)'), 900);
+});
+</script>
+
+</body>
+</html>
