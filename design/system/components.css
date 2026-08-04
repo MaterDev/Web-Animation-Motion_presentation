@@ -208,7 +208,12 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    accent drawn on top of it — sits below the pixel-grid/sheen
    overlays (z-index 3/4) so it still reads as the LCD's own tint,
    not a sticker on the glass. */
-.lcd .wash { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: multiply; opacity: 0.30; }
+/* color, not multiply — multiply darkens toward mud at any real
+   strength, color keeps the tint's actual hue/chroma while still
+   letting the LCD's own pixel-grid/sheen texture show through as
+   luminance. Needed to be strong enough to read as "this section's
+   colour," not just a faint cast. */
+.lcd .wash { position: absolute; inset: 0; z-index: 1; pointer-events: none; mix-blend-mode: color; opacity: 0.62; }
 .gk-lcd { display: flex; align-items: center; justify-content: center; }
 .gk-icon { position: relative; z-index: 2; image-rendering: pixelated; width: 34px; height: 34px; }
 .lcd.xl .chars, .lcd.xl .ghost { font-size: 42px; }
