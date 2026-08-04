@@ -35,16 +35,24 @@
   --signal: oklch(0.62 0.24 27);
   --ok: oklch(0.68 0.17 145);
 
-  /* section tints — chroma climbs with capability. These map 1:1
-     onto SCOPE.md's technique spectrum: video → css → composite →
-     svg → canvas → webgl → webgpu. */
-  --tint-video:     oklch(0.55 0.03 265);
-  --tint-css:       oklch(0.68 0.13 235);
-  --tint-composite: oklch(0.72 0.16 195);
-  --tint-svg:       oklch(0.75 0.18 145);
-  --tint-canvas:    oklch(0.80 0.17 95);
-  --tint-webgl:     oklch(0.74 0.19 55);
-  --tint-webgpu:    oklch(0.70 0.26 320);
+  /* section tints — chroma still climbs with capability (the story
+     is unchanged: video is passive, webgpu is the payoff), but the
+     ceiling is much lower than the first pass. 0.26 peak chroma at
+     L 0.70 reads as neon regardless of hue — closer to a saturated
+     app icon than a tinted display. Halving the range top-to-bottom
+     gets the same escalation read from a muted starting point, the
+     way colour actually looks tinted through plastic or glass
+     rather than painted flat and bright. Functional colours
+     (--signal, --ok below) are NOT touched by this — an error/ok
+     indicator needs to read clearly, that's a real use for
+     saturation, not a decorative one. */
+  --tint-video:     oklch(0.55 0.02 265);
+  --tint-css:       oklch(0.62 0.04 235);
+  --tint-composite: oklch(0.64 0.045 195);
+  --tint-svg:       oklch(0.66 0.05 145);
+  --tint-canvas:    oklch(0.70 0.055 95);
+  --tint-webgl:     oklch(0.66 0.06 55);
+  --tint-webgpu:    oklch(0.60 0.07 320);
   --tint: var(--tint-webgpu);
 
   --sans: 'Inter', system-ui, -apple-system, sans-serif;
