@@ -1,0 +1,112 @@
+/* ═══════════════════════════════════════════════════════════════
+   WAM-2026 · DESIGN TOKENS
+   Extracted from treatments/06-field-unit-dark.html (T-06, the kept
+   base — see design/DESIGN.md and that file's own "what changed"
+   section for the reasoning behind every value here). This is now
+   the single source of truth: T-06 and every subpage link this file
+   rather than each carrying its own copy.
+
+   Housing ramp and signal are T-01's dark values. Tints are also
+   T-01's — a dark ramp needs tints that climb in LIGHTNESS to pop
+   off near-black; a light-ramp tint set (lower L, higher C, built to
+   hold against a bright ground) goes muddy here. Don't swap these
+   for another treatment's tint values without re-deriving them for
+   this ramp — that mismatch is exactly the bug T-06's own commit
+   history found and fixed twice.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── housing: dark ──────────────────────────────────────── */
+  --hz-000: oklch(0.14 0.006 265);
+  --hz-050: oklch(0.18 0.006 265);
+  --hz-100: oklch(0.22 0.007 265);
+  --hz-200: oklch(0.28 0.008 265);
+  --hz-300: oklch(0.36 0.008 265);
+  --hz-400: oklch(0.48 0.008 265);
+  --hz-500: oklch(0.62 0.007 265);
+  --hz-600: oklch(0.75 0.005 265);
+  --hz-700: oklch(0.88 0.004 265);
+  --hz-800: oklch(0.96 0.002 265);
+  --hz-900: oklch(0.99 0.000 265);
+
+  /* Well must read as a recess regardless of what sits nearby —
+     "darker than the darkest chassis surface," not a fixed value. */
+  --well-floor: oklch(0.085 0.010 265);
+  --signal: oklch(0.62 0.24 27);
+  --ok: oklch(0.68 0.17 145);
+
+  /* section tints — chroma climbs with capability. These map 1:1
+     onto SCOPE.md's technique spectrum: video → css → composite →
+     svg → canvas → webgl → webgpu. */
+  --tint-video:     oklch(0.55 0.03 265);
+  --tint-css:       oklch(0.68 0.13 235);
+  --tint-composite: oklch(0.72 0.16 195);
+  --tint-svg:       oklch(0.75 0.18 145);
+  --tint-canvas:    oklch(0.80 0.17 95);
+  --tint-webgl:     oklch(0.74 0.19 55);
+  --tint-webgpu:    oklch(0.70 0.26 320);
+  --tint: var(--tint-webgpu);
+
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+  --dot:  'Doto', 'JetBrains Mono', monospace;
+
+  /* ── motion ──────────────────────────────────────────────── */
+  --dur-instant: 90ms;  --dur-fast: 160ms;  --dur-base: 240ms;
+  --dur-slow: 420ms;    --dur-section: 700ms;  --dur-hero: 1400ms;
+
+  --ease-standard:   cubic-bezier(0.2, 0.0, 0.0, 1.0);
+  --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
+  --ease-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
+  --ease-mechanical: cubic-bezier(0.4, 0.0, 0.2, 1.0);
+  /* detent — a sprung mechanism genuinely overshoots a little */
+  --ease-detent:     cubic-bezier(0.34, 1.28, 0.64, 1.0);
+  /* ballistic — meter movement, damped, no overshoot */
+  --ease-ballistic:  cubic-bezier(0.16, 0.84, 0.28, 1.0);
+  /* liquid — spring settle, authored with linear() since a
+     mass-on-a-spring response has more inflections than four bezier
+     control points can express. Used for morph/concentric-radius
+     motion (Apple's "Liquid Glass"), not literal fluid. */
+  --ease-liquid: linear(
+    0, 0.006, 0.025, 0.101, 0.539 32.6%, 0.68, 0.792, 0.877, 0.938 62.4%,
+    0.968, 0.991, 1.006, 1.014 78%, 1.015, 1.013, 1.009, 1.004, 1, 0.999, 1
+  );
+
+  --lift-1: 0 1px 2px oklch(0.2 0.02 265 / 0.09), 0 1px 1px oklch(0.2 0.02 265 / 0.05);
+  --lift-2: 0 2px 4px oklch(0.2 0.02 265 / 0.09), 0 6px 16px oklch(0.2 0.02 265 / 0.08);
+  --lift-3: 0 10px 26px oklch(0.2 0.02 265 / 0.14), 0 2px 6px oklch(0.2 0.02 265 / 0.08);
+  --recess: inset 0 2px 6px oklch(0.2 0.02 265 / 0.30), inset 0 -1px 0 oklch(1 0 0 / 0.55);
+  --edge: inset 0 1px 0 oklch(1 0 0 / 0.9), inset 0 -1px 0 oklch(0.2 0.02 265 / 0.10);
+
+  --u: 8px;
+  --hair: 1px;
+}
+
+@media (min-resolution: 2dppx) { :root { --hair: 0.5px; } }
+
+/* Reduced motion: the deck argues for this, so every page here
+   honours it. Ambient loops stop entirely; triggered feedback keeps
+   a single instant state change so the fact of the event survives. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
+  .led.breathe, .led.blink, .lightpipe span, .sweep::after { animation: none !important; }
+  .glass-liquid:hover { border-radius: 18px; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999;
+  opacity: 0.05; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}

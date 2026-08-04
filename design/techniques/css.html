@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SL-05 · CSS — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-css); }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+
+/* the "little canvas area" — a bounded, chamfered demo stage at the
+   deck's own 16:9, so what you build here is a preview of the real
+   slide, not a differently-shaped sandbox */
+.canvas-frame {
+  aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden;
+  display: grid; place-items: center; margin-bottom: calc(var(--u)*3);
+}
+.canvas-frame .demo-mount { position: absolute; inset: 0; display: grid; place-items: center; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+
+/* ── the actual demo: hover/transition box ──────────────
+   SL-05's content: browser-managed motion, transitions/keyframes,
+   the render pipeline. This is the live hover/transition half —
+   the pipeline diagram is a separate build (see notes below). */
+.demo-box {
+  width: 160px; height: 100px; border-radius: 10px;
+  background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 70%, white), var(--tint));
+  box-shadow: 0 10px 24px color-mix(in oklch, var(--tint) 30%, transparent);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: oklch(0.99 0 0);
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: translateY(0) scale(1);
+  transition: transform 240ms var(--ease-standard), box-shadow 240ms var(--ease-standard), border-radius 240ms var(--ease-standard);
+}
+.demo-box:hover { transform: translateY(-8px) scale(1.04); border-radius: 16px; box-shadow: 0 20px 36px color-mix(in oklch, var(--tint) 40%, transparent); }
+.demo-box:active { transform: translateY(-2px) scale(0.98); transition-duration: 90ms; }
+</style>
+</head>
+<body data-testid="technique-css">
+
+<div class="wrap">
+  <div class="crumb">
+    <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
+    <a href="../index.html#sl-05">Techniques</a>
+  </div>
+
+  <div class="head">
+    <span class="code">SL-05</span>
+    <h1>css</h1>
+  </div>
+  <p class="dek">
+    Browser-managed motion — transitions and keyframes, plus the render pipeline
+    (Layout → Paint → Composite) that makes some of them expensive and some nearly free.
+  </p>
+
+  <div class="canvas-frame" data-testid="demo-canvas">
+    <div class="demo-mount">
+      <div class="demo-box" data-testid="css-demo-box" tabindex="0">hover</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ibtn" disabled style="opacity:.5;cursor:not-allowed">▶ Pipeline diagram — not built yet</button>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 05</h3>
+    <p style="max-width:62ch;color:var(--hz-500);font-size:13.5px">
+      "CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
+      Layout → Paint → Composite; visual: animated pipeline diagram + simple live hover/transition demo."
+    </p>
+    <p style="max-width:62ch;color:var(--hz-500);font-size:13.5px">
+      The hover/transition box above is real and live — that's the "simple live demo" half.
+      The animated Layout → Paint → Composite pipeline diagram is a separate build, not started yet.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

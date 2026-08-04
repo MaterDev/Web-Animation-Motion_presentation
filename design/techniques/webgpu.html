@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SL-12 · WebGPU — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-webgpu); }
+.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); display: grid; place-items: center; }
+.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fallback { text-align: center; padding: 0 calc(var(--u)*4); position: relative; z-index: 2; }
+.fallback .led { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 14px; background: var(--signal); box-shadow: 0 0 10px color-mix(in oklch, var(--signal) 60%, transparent); }
+.fallback h4 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-700); margin-bottom: 8px; }
+.fallback p { font-size: 12px; color: var(--hz-500); max-width: 46ch; margin: 0 auto; }
+.status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); z-index: 2; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+</style>
+</head>
+<body data-testid="technique-webgpu">
+
+<div class="wrap">
+  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-12">Techniques</a></div>
+  <div class="head"><span class="code">SL-12</span><h1>webgpu</h1></div>
+  <p class="dek">
+    Compute shaders. Simulation moves onto the GPU — the particle count WebGL can't
+    sustain, and the payoff of the whole callback chain.
+  </p>
+
+  <div class="canvas-frame" data-testid="demo-canvas">
+    <canvas id="c" data-testid="canvas-el" hidden></canvas>
+    <div class="fallback" id="fallback">
+      <div class="led"></div>
+      <h4>Detecting WebGPU…</h4>
+      <p>Feature-detected on load, not device-sniffed — per SCOPE.md's degradation-ladder
+        rule. This machine's result will show in a moment.</p>
+    </div>
+    <span class="status" id="status"></span>
+  </div>
+
+  <div class="controls">
+    <span class="fps" style="font-family:var(--mono);font-size:10px;color:var(--hz-500)">
+      <code>navigator.gpu</code>: <b id="supportLabel" style="color:var(--tint)">checking…</b>
+    </span>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 12</h3>
+    <p>"WebGPU: The New Layer — compute shaders enable particle/fluid sims and on-device ML
+      at a scale WebGL can't reach; visual: thread demo in WebGPU at a particle count the
+      WebGL version couldn't sustain (hundreds of thousands to millions) — the payoff of
+      the whole callback chain."</p>
+    <p>What's built so far is the honest floor: real feature detection and a clean
+      fallback card, which is itself half of slide 13's argument (the degradation ladder).
+      If this machine supports WebGPU, a clear-colour device init runs so the pipeline is
+      proven end to end. The actual compute-shader particle sim is the next step — not
+      built yet.</p>
+  </div>
+</div>
+
+<script type="module">
+const canvas = document.getElementById('c');
+const fallback = document.getElementById('fallback');
+const status = document.getElementById('status');
+const supportLabel = document.getElementById('supportLabel');
+
+async function init() {
+  if (!('gpu' in navigator)) {
+    supportLabel.textContent = 'unsupported';
+    fallback.querySelector('h4').textContent = 'WebGPU not available';
+    fallback.querySelector('p').textContent =
+      'navigator.gpu is undefined on this browser/machine. This is the fallback rung of the ladder — a static poster would render here in the real deck.';
+    return;
+  }
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) throw new Error('no adapter');
+    const device = await adapter.requestDevice();
+    const ctx = canvas.getContext('webgpu');
+    const format = navigator.gpu.getPreferredCanvasFormat();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const frame = canvas.closest('.canvas-frame');
+    const resize = () => {
+      const r = frame.getBoundingClientRect();
+      canvas.width = r.width * dpr;
+      canvas.height = r.height * dpr;
+    };
+    resize();
+    ctx.configure({ device, format, alphaMode: 'opaque' });
+
+    /* Regex-matching numbers out of getComputedStyle(probe).color
+       was wrong: current Chrome preserves oklch() through
+       getComputedStyle rather than normalising it to rgb(), so
+       that extracted [0.70, 0.26, 320] — the raw OKLCH values —
+       and divided THEM by 255 as if they were sRGB bytes. Canvas
+       2D genuinely parses oklch() (verified in canvas.html); paint
+       1px and read the real bytes back instead of parsing a string. */
+    function resolveToRGB(cssColor) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 1;
+      const cctx = c.getContext('2d');
+      cctx.fillStyle = cssColor;
+      cctx.fillRect(0, 0, 1, 1);
+      return [...cctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+    }
+    const tint = getComputedStyle(document.documentElement).getPropertyValue('--tint').trim();
+    const rgb = resolveToRGB(tint || 'oklch(0.70 0.26 320)');
+
+    function draw() {
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [{
+          view: ctx.getCurrentTexture().createView(),
+          clearValue: { r: rgb[0] / 255 * 0.35, g: rgb[1] / 255 * 0.35, b: rgb[2] / 255 * 0.35, a: 1 },
+          loadOp: 'clear', storeOp: 'store',
+        }],
+      });
+      pass.end();
+      device.queue.submit([encoder.finish()]);
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    canvas.hidden = false;
+    fallback.remove();
+    supportLabel.textContent = 'supported — device initialised';
+    status.textContent = `Adapter: ${adapter.info?.vendor || 'unknown vendor'} · clear-colour pipeline only`;
+  } catch (err) {
+    supportLabel.textContent = 'supported, init failed';
+    fallback.querySelector('h4').textContent = 'WebGPU present but device init failed';
+    fallback.querySelector('p').textContent = String(err.message || err);
+  }
+}
+init();
+</script>
+
+</body>
+</html>
