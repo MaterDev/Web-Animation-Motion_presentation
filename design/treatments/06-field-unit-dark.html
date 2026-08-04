@@ -253,25 +253,29 @@ section { margin-bottom: calc(var(--u) * 12); }
    the radial knurl, same physical language as .knob's cap — and a
    real press (translateY + shadow flips to recessed) instead of a
    bare scale, matching .ibtn's keycap-travel metaphor. */
+/* Redone in .mat-toy (retro moulded plastic, see components.css) —
+   the previous smooth-metal gradient + tight dome-arc shadow read as
+   precision aluminium hardware, which fought the Tamagotchi/Game Boy
+   reference the screen itself is making. Shadow softened to match:
+   one broad soft rim instead of two sharp specular arcs, dark ink
+   glyphs instead of white (the plastic is light/mid-toned, not a
+   dark metal disc). */
 .giga-btn {
   width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
   border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
-  font-family: var(--mono); font-size: 12px; color: var(--hz-800);
-  background: linear-gradient(160deg, var(--hz-200), var(--hz-100));
+  font-family: var(--mono); font-size: 12px; color: oklch(0.22 0.03 265 / 0.8);
   box-shadow:
-    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3),
-    inset 0 6px 10px -4px oklch(1 0 0 / 0.22),
-    inset 0 -5px 9px -3px oklch(0.2 0.02 265 / 0.32),
-    var(--lift-2);
+    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.22),
+    inset 0 -3px 6px oklch(0.2 0.02 265 / 0.14),
+    var(--lift-1);
   transition: transform var(--dur-instant) var(--ease-standard), box-shadow var(--dur-instant) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
-.giga-btn:hover { color: var(--tint); }
+.giga-btn:hover { color: oklch(0.12 0.03 265 / 0.95); }
 .giga-btn:active {
-  transform: translateY(2px) scale(0.96);
+  transform: translateY(1px) scale(0.97);
   box-shadow:
-    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3),
-    inset 0 3px 6px oklch(0.2 0.02 265 / 0.4),
-    var(--recess);
+    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.22),
+    inset 0 2px 5px oklch(0.2 0.02 265 / 0.3);
 }
 .giga-btn:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
 .giga-btn-select { width: 32px; height: 32px; }
@@ -418,9 +422,9 @@ section { margin-bottom: calc(var(--u) * 12); }
     </div>
 
     <div class="gigapet-buttons">
-      <button class="giga-btn" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
-      <button class="giga-btn giga-btn-select" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
-      <button class="giga-btn" type="button" id="gigaNext" aria-label="Next section">▶</button>
+      <button class="giga-btn mat-toy" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
+      <button class="giga-btn giga-btn-select mat-toy" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
+      <button class="giga-btn mat-toy" type="button" id="gigaNext" aria-label="Next section">▶</button>
     </div>
   </header>
 
@@ -657,7 +661,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
       <div class="micro">
         <div class="demo" style="width:100%;position:relative;height:72px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,oklch(0.30 0.06 250),oklch(0.42 0.10 150))">
-          <div class="glass-refractive tilt js-tilt" style="position:absolute;inset:8px" data-testid="tilt-demo"></div>
+          <div class="mat-toy tilt js-tilt" style="position:absolute;inset:8px;border-radius:10px" data-testid="tilt-demo"></div>
         </div>
         <div class="nm">B · Specular tilt — move your cursor over it</div>
         <div class="sp"><b>Trigger</b> pointer move · continuous<br>Highlight tracks motion in real time — device accelerometer on hardware, cursor position standing in for it here. Not a fixed gradient; the light genuinely moves with you.

@@ -356,6 +356,32 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       color-mix(in oklch, var(--tint) 82%, oklch(0.35 0.02 265)));
 }
 
+/* Toy plastic — injection-moulded ABS shell (Game Boy, Tamagotchi),
+   not machined metal. The tell isn't colour, it's the highlight:
+   metal gets a tight mirror-sharp specular streak, moulded plastic
+   gets one broad soft diffuse bloom and nothing else — no streak,
+   no crisp rim. Lighter/chalkier tint mix than .mat-anod-colour on
+   purpose: that one reads as glossy translucent dye, this one as
+   flat matte opaque plastic — different plastics, not the same
+   recipe recoloured.
+   A mould-parting-line seam (a thin ::after line across the middle)
+   was here originally but read as a stray scratch/defect at the
+   36px giga-btn size rather than a manufacturing detail — dropped
+   rather than kept as a bug users have to mentally filter out. */
+.mat-toy {
+  position: relative;
+  background:
+    radial-gradient(150% 120% at 28% -10%, oklch(1 0 0 / 0.30), transparent 55%),
+    linear-gradient(180deg,
+      color-mix(in oklch, var(--tint) 45%, oklch(0.88 0.02 265)),
+      color-mix(in oklch, var(--tint) 62%, oklch(0.55 0.02 265)));
+}
+.mat-toy::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='50' height='50' filter='url(%23t)' opacity='0.16'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
 /* CNC chamfer — bright cut line around a machined edge */
 .chamfer {
   position: relative;
