@@ -72,16 +72,19 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .knob {
   position: relative; width: 70px; height: 70px; border-radius: 50%;
   cursor: pointer; display: grid; place-items: center;
-  box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.24),
-              inset 0 -3px 7px oklch(0.2 0.02 265 / 0.22),
+  box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.28),
+              inset 0 -4px 9px oklch(0.2 0.02 265 / 0.26),
+              inset 0 3px 5px oklch(1 0 0 / 0.10),
               var(--lift-2);
   transition: transform var(--dur-base) var(--ease-detent),
               box-shadow var(--dur-fast) var(--ease-standard);
   border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
 }
-.knob:hover { box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.24),
-                          inset 0 -3px 7px oklch(0.2 0.02 265 / 0.22), var(--lift-3); }
-.knob:active { transform: scale(0.97); }
+.knob:hover { box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.28),
+                          inset 0 -4px 9px oklch(0.2 0.02 265 / 0.26),
+                          inset 0 3px 5px oklch(1 0 0 / 0.10), var(--lift-3); }
+/* real inward travel on press, not just a scale flourish */
+.knob:active { transform: scale(0.96) translateY(1px); }
 .knob:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
 .knob .idx {
   content: ''; width: 3px; height: 18px; border-radius: 2px;
@@ -89,28 +92,61 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   box-shadow: 0 0 7px color-mix(in oklch, var(--tint) 55%, transparent);
   transition: background var(--dur-section) var(--ease-standard);
 }
+/* groove ring (0 0 0 2px) separates the knurled grip from the cap —
+   without it the dome looked pasted on rather than seated in a
+   machined recess. */
 .knob .cap {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(160deg, oklch(0.98 0.002 265), oklch(0.87 0.005 265));
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.9), 0 1px 3px oklch(0.2 0.02 265 / 0.25);
+  background: linear-gradient(160deg, oklch(0.98 0.002 265), oklch(0.85 0.006 265));
+  box-shadow:
+    0 0 0 2px oklch(0.2 0.02 265 / 0.32),
+    0 0 0 3px oklch(1 0 0 / 0.06),
+    inset 0 1px 0 oklch(1 0 0 / 0.9),
+    inset 0 -3px 5px oklch(0.2 0.02 265 / 0.18),
+    0 2px 4px oklch(0.2 0.02 265 / 0.3);
 }
 
-/* toggle — real <button role="switch">, not a <span> */
+/* toggle — real <button role="switch">, not a <span>.
+   Redesigned from a soft iOS-style pill to a slide switch: a cut
+   slot in the housing (recessed track + a visible centre detent
+   groove, the way a real two-position slide switch shows both rest
+   notches) with a squared paddle that has its own grip ridges,
+   rather than a plain circle. */
 .toggle {
-  position: relative; width: 44px; height: 24px; border-radius: 12px; cursor: pointer;
-  background: var(--hz-300); box-shadow: var(--recess);
-  transition: background var(--dur-fast) var(--ease-standard);
+  position: relative; width: 46px; height: 26px; border-radius: 4px; cursor: pointer;
+  background: linear-gradient(180deg, var(--hz-100), var(--hz-050));
+  box-shadow: var(--recess), inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3);
+  transition: box-shadow var(--dur-fast) var(--ease-standard);
   border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
+}
+.toggle::before {
+  content: ''; position: absolute; left: 7px; right: 7px; top: 50%; height: 2px;
+  transform: translateY(-50%); border-radius: 1px;
+  background: oklch(0.2 0.02 265 / 0.4);
+  box-shadow: inset 0 1px 1px oklch(0 0 0 / 0.4);
 }
 .toggle:focus-visible { outline: 2px solid var(--tint); outline-offset: 3px; }
 .toggle i {
-  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
-  background: linear-gradient(160deg, oklch(0.99 0 0), oklch(0.88 0.004 265));
-  box-shadow: 0 1px 2px oklch(0.2 0.02 265 / 0.35);
-  transition: transform var(--dur-fast) var(--ease-detent);
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 20px; border-radius: 3px;
+  background: linear-gradient(160deg, oklch(0.98 0.002 265), oklch(0.82 0.006 265));
+  box-shadow:
+    0 2px 3px oklch(0.2 0.02 265 / 0.4),
+    inset 0 1px 0 oklch(1 0 0 / 0.9),
+    inset 0 -2px 3px oklch(0.2 0.02 265 / 0.22);
+  transition: transform var(--dur-fast) var(--ease-detent), background var(--dur-fast) var(--ease-standard);
 }
-.toggle.on { background: var(--tint); }
-.toggle.on i { transform: translateX(20px); }
+/* grip ridges on the paddle face — a physical thumb-grip, not a
+   blank chip */
+.toggle i::after {
+  content: ''; position: absolute; inset: 5px 4px;
+  background: repeating-linear-gradient(90deg,
+    oklch(0.2 0.02 265 / 0.28) 0 1.5px, transparent 1.5px 4px);
+  border-radius: 1px;
+}
+.toggle.on i {
+  transform: translateX(22px);
+  background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 65%, white), var(--tint));
+}
 
 /* LEDs */
 .led {
@@ -228,14 +264,32 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23b)' opacity='0.30'/%3E%3C/svg%3E"),
     linear-gradient(180deg, var(--hz-100), var(--hz-050));
 }
+/* Toned down from the original: tighter 8px crosshatch at 0.34/0.22
+   opacity read as noise/moiré at small sizes, especially wrapped
+   around a knob's thin outer ring. Wider 13px pitch, lower contrast
+   — still legibly "knurled," not buzzing. */
 .mat-knurl {
   background:
     repeating-linear-gradient(48deg,
-      oklch(1 0 0 / 0.34) 0 1px, transparent 1px 4px,
-      oklch(0.2 0.02 265 / 0.22) 4px 5px, transparent 5px 8px),
+      oklch(1 0 0 / 0.20) 0 1px, transparent 1px 6px,
+      oklch(0.2 0.02 265 / 0.14) 6px 7px, transparent 7px 13px),
     repeating-linear-gradient(-48deg,
-      oklch(1 0 0 / 0.34) 0 1px, transparent 1px 4px,
-      oklch(0.2 0.02 265 / 0.22) 4px 5px, transparent 5px 8px),
+      oklch(1 0 0 / 0.20) 0 1px, transparent 1px 6px,
+      oklch(0.2 0.02 265 / 0.14) 6px 7px, transparent 7px 13px),
+    linear-gradient(180deg, var(--hz-200), var(--hz-100));
+}
+/* Radial knurl for round grips — a diagonal pattern wrapped around a
+   knob reads as a mis-applied label, not a machined edge. Real
+   knurled knobs (OP-1, Nothing dials) cut ridges radiating from
+   centre; a repeating conic-gradient draws exactly that, and at a
+   spoke count (48) close to a real fine-knurl ridge count it holds
+   up at both the knob's 70px ring and the 34px giga-btn. */
+.mat-knurl-grip {
+  background:
+    repeating-conic-gradient(
+      oklch(1 0 0 / 0.28) 0deg 3deg,
+      oklch(0.2 0.02 265 / 0.20) 3deg 4.5deg,
+      transparent 4.5deg 7.5deg),
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
 .mat-rubber {

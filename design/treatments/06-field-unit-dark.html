@@ -77,8 +77,23 @@ section { margin-bottom: calc(var(--u) * 12); }
    idx/title live off its <section> — the same information the page
    already carries, not a re-authored copy of it. */
 .gigapet-well { display: block; width: 100%; margin-bottom: calc(var(--u)*3); position: relative; z-index: 2; }
+/* display:grid + both .giga-page children pinned to the same
+   1/1 cell: the row auto-sizes to the TALLEST child regardless of
+   which one is visually active, so the screen's own height never
+   changes when paging — measured before this fix, home ran 599px
+   on desktop against the icon page's 220px, a real jump every time
+   a button was pressed. Grid's default align-items:stretch then
+   grows the shorter (icon) page to match that height for free. */
 .gigapet-screen {
+  /* an implicit single grid column with no explicit track sizing
+     hugs its content's max-content width (shrink-to-fit) instead of
+     stretching to the container — confirmed live, it collapsed the
+     whole screen down to ~168px on a 206px-wide box. minmax(0,1fr)
+     forces it to actually fill the available width, and the 0 min
+     stops long unbroken content (e.g. the readout title) from
+     blowing the column back out past the container again. */
   position: relative; overflow: hidden; border-radius: 6px;
+  display: grid; grid-template-columns: minmax(0, 1fr);
   background: linear-gradient(178deg, oklch(0.868 0.048 128), oklch(0.812 0.052 132));
   box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.05 130 / 0.4);
   padding: calc(var(--u)*4) calc(var(--u)*5);
@@ -107,36 +122,57 @@ section { margin-bottom: calc(var(--u) * 12); }
 /* ink — every piece of the sheet's own header content, recoloured
    to read as LCD ink rather than metal-panel text. Scoped to
    .giga-page so nothing outside the screen is affected. */
-.giga-page { position: relative; z-index: 2; }
+/* every piece of text on the screen renders in Doto — its dots are
+   what makes this read as glowing LCD segments rather than metal-
+   panel type wearing screen-coloured ink. 'ROND' 100 is Doto's own
+   axis for how circular each dot is; verified empirically (screen-
+   shot at both ends) rather than assumed, since an axis tag typo is
+   silently ignored, not an error. */
+/* stacked in the same grid cell (see .gigapet-screen) and swapped
+   with opacity/visibility, not the hidden attribute — hidden pulls
+   an element out of layout entirely, which is exactly what would
+   undo the grid-stack sizing trick above. visibility:hidden keeps
+   it sized but out of hit-testing and the tab order. */
+.giga-page {
+  position: relative; z-index: 2; font-family: var(--dot);
+  grid-row: 1; grid-column: 1;
+  visibility: hidden; opacity: 0; pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.giga-page.is-active { visibility: visible; opacity: 1; pointer-events: auto; }
 .giga-page .brandline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(var(--u)*3); }
-.giga-page .brandline .mono { color: oklch(0.36 0.05 140); text-shadow: none; }
+.giga-page .brandline .mono { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; letter-spacing: 0.02em; color: oklch(0.36 0.05 140); text-shadow: none; }
 .giga-page .title-row { display: flex; align-items: flex-end; gap: calc(var(--u)*3); flex-wrap: wrap; }
-.giga-page h1 { color: oklch(0.26 0.05 140); }
-.giga-page .sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: oklch(0.36 0.05 140); text-shadow: none; text-transform: uppercase; margin-top: calc(var(--u)*2.5); line-height: 1.9; }
+/* Doto at weight 900 runs much wider per glyph than the Inter the
+   base h1 clamp() was tuned for — "field" alone overflowed the
+   screen's own content width at a narrow viewport (confirmed live:
+   it ran past the edge and the screen's overflow:hidden silently
+   clipped it, rather than wrapping). A lower, screen-scoped clamp
+   plus a break-word safety net keeps every word inside the glass. */
+.giga-page h1 { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900; letter-spacing: 0; color: oklch(0.26 0.05 140); font-size: clamp(40px, 8vw, 132px); overflow-wrap: break-word; }
+.giga-page .sub { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; color: oklch(0.36 0.05 140); text-shadow: none; text-transform: uppercase; margin-top: calc(var(--u)*2.5); line-height: 1.9; }
 .giga-page .lightpipe { margin-top: calc(var(--u)*3); max-width: 340px; background: oklch(0.2 0.05 130 / 0.22); }
 .giga-page .strip { display: flex; align-items: center; gap: calc(var(--u)*3.5); flex-wrap: wrap; margin-top: calc(var(--u)*4); padding-top: calc(var(--u)*3); border-top: var(--hair) solid oklch(0.2 0.05 130 / 0.25); }
-.giga-page .modline .k { color: oklch(0.42 0.05 140 / 0.75); }
-.giga-page .modline .v { color: oklch(0.28 0.05 140); }
+.giga-page .modline .k { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; color: oklch(0.42 0.05 140 / 0.75); }
+.giga-page .modline .v { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; color: oklch(0.28 0.05 140); }
 /* the clock — plain on-screen digits now, no separate LCD-in-LCD
    wrapper needed since the whole background already IS the LCD */
-.giga-clock { font-family: var(--dot); font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: oklch(0.26 0.05 140); font-variant-numeric: tabular-nums; }
+.giga-clock { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: oklch(0.26 0.05 140); font-variant-numeric: tabular-nums; }
 
-/* page 1+ — one big icon, centred, filling the same footprint the
-   home page occupies so paging doesn't visibly resize the card */
-/* [hidden] loses to ANY author display rule of equal or lower
-   specificity, regardless of source order — author origin always
-   beats UA origin. Confirmed by actually looking at the render: the
-   icon page showed through faintly at the bottom of the home page
-   despite carrying the hidden attribute. :not([hidden]) fixes it by
-   only applying flex when hidden is actually absent. */
-.giga-page-icon:not([hidden]) { display: flex; min-height: 220px; align-items: center; justify-content: center; gap: calc(var(--u)*3); }
+/* page 1+ — one big icon, centred. The grid-stack above now hands
+   this page the same height home occupies (previously a fixed
+   min-height of 220px against home's 599px on desktop — the icon
+   page just floated in a mostly-empty box). height:100% + centring
+   fills that real space instead of leaving it blank; canvas/title
+   sized up accordingly so the page reads as intentional, not small. */
+.giga-page-icon { display: flex; height: 100%; align-items: center; justify-content: center; gap: calc(var(--u)*4); }
 .giga-page-icon canvas {
-  image-rendering: pixelated; width: min(38vw, 168px); aspect-ratio: 1/1; flex: none;
+  image-rendering: pixelated; width: min(30vw, 220px); aspect-ratio: 1/1; flex: none;
   animation: gigaBob 1.6s steps(2) infinite;
 }
 @keyframes gigaBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-.giga-readout .idx { font-family: var(--dot); font-size: 13px; font-weight: 700; color: oklch(0.26 0.05 140); opacity: 0.7; display: block; }
-.giga-readout .title { font-family: var(--dot); font-size: clamp(16px, 2.6vw, 22px); font-weight: 700; color: oklch(0.26 0.05 140); line-height: 1.2; display: block; max-width: 34ch; }
+.giga-readout .idx { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-size: 15px; font-weight: 700; color: oklch(0.26 0.05 140); opacity: 0.7; display: block; }
+.giga-readout .title { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-size: clamp(18px, 3.4vw, 30px); font-weight: 700; color: oklch(0.26 0.05 140); line-height: 1.25; display: block; max-width: 20ch; }
 
 /* Narrow screens: the row layout above measured out at a real
    390px viewport with the canvas (flex:none, sized off vw) wider
@@ -146,25 +182,68 @@ section { margin-bottom: calc(var(--u) * 12); }
    screen's overflow:hidden then clipped mid-word. Stack instead of
    squeeze below the same breakpoint the rest of the sheet uses. */
 @media (max-width: 560px) {
-  .giga-page-icon:not([hidden]) { flex-direction: column; gap: calc(var(--u)*2); }
-  .giga-page-icon canvas { width: min(30vw, 110px); }
+  .giga-page-icon { flex-direction: column; gap: calc(var(--u)*2); }
+  .giga-page-icon canvas { width: min(34vw, 150px); }
   .giga-readout { width: 100%; text-align: center; }
   .giga-readout .title { max-width: none; }
+  .giga-page h1 { font-size: clamp(28px, 9.2vw, 38px); }
 }
 
 /* physical paging buttons — outside the glass, below the screen */
 .gigapet-buttons { display: flex; justify-content: center; gap: 12px; position: relative; z-index: 2; }
+/* domed cap via inset shadow (bright arc top, dark arc bottom) over
+   the radial knurl, same physical language as .knob's cap — and a
+   real press (translateY + shadow flips to recessed) instead of a
+   bare scale, matching .ibtn's keycap-travel metaphor. */
 .giga-btn {
-  width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: grid; place-items: center;
   border: 0; padding: 0; font: inherit; -webkit-appearance: none; appearance: none;
-  font-family: var(--mono); font-size: 12px; color: var(--hz-700);
-  box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.24), inset 0 -2px 4px oklch(0.2 0.02 265 / 0.2), var(--lift-1);
+  font-family: var(--mono); font-size: 12px; color: var(--hz-800);
+  box-shadow:
+    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3),
+    inset 0 6px 10px -4px oklch(1 0 0 / 0.22),
+    inset 0 -5px 9px -3px oklch(0.2 0.02 265 / 0.32),
+    var(--lift-2);
   transition: transform var(--dur-instant) var(--ease-standard), box-shadow var(--dur-instant) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
 .giga-btn:hover { color: var(--tint); }
-.giga-btn:active { transform: scale(0.92); }
+.giga-btn:active {
+  transform: translateY(2px) scale(0.96);
+  box-shadow:
+    inset 0 0 0 var(--hair) oklch(0.2 0.02 265 / 0.3),
+    inset 0 3px 6px oklch(0.2 0.02 265 / 0.4),
+    var(--recess);
+}
 .giga-btn:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
-.giga-btn-select { width: 30px; height: 30px; }
+.giga-btn-select { width: 32px; height: 32px; }
+
+/* exposed-circuitry window — the case-hardware half of the design
+   research (Teenage Engineering / Nothing / 90s handhelds with
+   see-through shells: GBA, the bondi iMac): a strip of smoked,
+   translucent housing glazing over a glimpse of real board — traces,
+   pads, two IC silhouettes — cut into the chrome between the screen
+   and the buttons. Chrome only; doesn't touch the screen or its
+   content. Background layers stack first-listed-on-top: glare sheen,
+   smoked plastic tint, the board art, a dark substrate underneath. */
+.circuit-window {
+  position: relative; height: 26px; margin-top: calc(var(--u)*3);
+  border-radius: 3px; overflow: hidden; z-index: 2;
+  /* the background shorthand only allows a plain background-COLOR
+     on the LAST comma-separated layer — a flat colour anywhere else
+     in the list is a parse error that drops the whole declaration
+     (confirmed live: computed backgroundImage came back "none").
+     The smoked-tint layer below is a same-colour-both-stops
+     gradient specifically so it counts as an image, not a color. */
+  background:
+    linear-gradient(100deg, oklch(1 0 0 / 0.12) 0 10%, transparent 24%),
+    linear-gradient(oklch(0.2 0.02 265 / 0.55), oklch(0.2 0.02 265 / 0.55)),
+    url("data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 400 40'%3E%3Cg fill='none' stroke='%23c9863c' stroke-width='1.3' opacity='0.85'%3E%3Cpath d='M8 8 H58 V24 H118'/%3E%3Cpath d='M38 33 H88 V14 H158 V27 H216'/%3E%3Cpath d='M178 6 H256 V20 H306'/%3E%3Cpath d='M246 34 H298 V10 H356'/%3E%3Cpath d='M326 22 H392'/%3E%3C/g%3E%3Cg fill='%23e2a75c'%3E%3Ccircle cx='8' cy='8' r='2.1'/%3E%3Ccircle cx='118' cy='24' r='2.1'/%3E%3Ccircle cx='216' cy='27' r='2.1'/%3E%3Ccircle cx='306' cy='20' r='2.1'/%3E%3Ccircle cx='356' cy='10' r='2.1'/%3E%3Ccircle cx='392' cy='22' r='2.1'/%3E%3C/g%3E%3Crect x='130' y='9' width='34' height='21' rx='1.5' fill='%230c0c0f' stroke='%233a3a42' stroke-width='1'/%3E%3Cg stroke='%239a9aa2' stroke-width='1'%3E%3Cpath d='M130 14 H124 M130 20 H124 M130 26 H124 M164 14 H170 M164 20 H170 M164 26 H170'/%3E%3C/g%3E%3Crect x='270' y='6' width='27' height='16' rx='1.5' fill='%230c0c0f' stroke='%233a3a42' stroke-width='1'/%3E%3Cg stroke='%239a9aa2' stroke-width='1'%3E%3Cpath d='M270 10 H264 M270 16 H264 M297 10 H303 M297 16 H303'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat,
+    oklch(0.08 0.01 150 / 1);
+  box-shadow:
+    inset 0 2px 5px oklch(0 0 0 / 0.55),
+    inset 0 -1px 0 oklch(1 0 0 / 0.05),
+    0 1px 0 oklch(1 0 0 / 0.06);
+}
 
 /* ═══ MATERIAL SWATCHES ════════════════════════════════ */
 
@@ -261,7 +340,7 @@ section { margin-bottom: calc(var(--u) * 12); }
       <div class="gigapet-screen" id="gigaScreen">
         <span class="scan"></span>
 
-        <div class="giga-page home" id="gigaHome">
+        <div class="giga-page home is-active" id="gigaHome">
           <div class="brandline">
             <span class="mono">Folklore · Presentation System</span>
             <span class="giga-clock" id="heroClock">00:00</span>
@@ -280,7 +359,7 @@ section { margin-bottom: calc(var(--u) * 12); }
           <div class="lightpipe"><span></span></div>
 
           <div class="strip">
-            <button class="knob mat-knurl" type="button" aria-label="Cycle section" data-testid="front-knob"><span class="idx"></span><span class="cap"></span></button>
+            <button class="knob mat-knurl-grip" type="button" aria-label="Cycle section" data-testid="front-knob"><span class="idx"></span><span class="cap"></span></button>
             <div class="modline"><span class="k">Model</span><span class="v">WAM-2026</span></div>
             <div class="modline"><span class="k">Unit</span><span class="v">T-06 / FIELD-D</span></div>
             <div class="modline"><span class="k">Slides</span><span class="v">14</span></div>
@@ -294,7 +373,7 @@ section { margin-bottom: calc(var(--u) * 12); }
           </div>
         </div>
 
-        <div class="giga-page giga-page-icon" id="gigaIconPage" hidden>
+        <div class="giga-page giga-page-icon" id="gigaIconPage">
           <canvas id="gigaCanvas" width="12" height="12" aria-hidden="true"></canvas>
           <div class="giga-readout">
             <span class="idx" id="gigaIdx">00</span>
@@ -304,10 +383,12 @@ section { margin-bottom: calc(var(--u) * 12); }
       </div>
     </div>
 
+    <div class="circuit-window" aria-hidden="true"></div>
+
     <div class="gigapet-buttons">
-      <button class="giga-btn mat-knurl" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
-      <button class="giga-btn giga-btn-select mat-knurl" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
-      <button class="giga-btn mat-knurl" type="button" id="gigaNext" aria-label="Next section">▶</button>
+      <button class="giga-btn mat-knurl-grip" type="button" id="gigaPrev" aria-label="Previous section">◀</button>
+      <button class="giga-btn giga-btn-select mat-knurl-grip" type="button" id="gigaSelect" aria-label="Jump to shown section, or run self-test on the home page">●</button>
+      <button class="giga-btn mat-knurl-grip" type="button" id="gigaNext" aria-label="Next section">▶</button>
     </div>
   </header>
 
@@ -620,7 +701,7 @@ section { margin-bottom: calc(var(--u) * 12); }
       </div>
 
       <div class="micro">
-        <div class="demo"><button class="knob mat-knurl js-knob" type="button" aria-label="Cycle section (demo)"><span class="idx"></span><span class="cap"></span></button></div>
+        <div class="demo"><button class="knob mat-knurl-grip js-knob" type="button" aria-label="Cycle section (demo)"><span class="idx"></span><span class="cap"></span></button></div>
         <div class="nm">02 · Encoder detent</div>
         <div class="sp"><b>Trigger</b> click · <b>240ms</b> · detent<br>Slight overshoot then settle. The only place overshoot is honest in this system — a sprung detent genuinely does this.</div>
       </div>
@@ -756,7 +837,7 @@ section { margin-bottom: calc(var(--u) * 12); }
              from the presenter unit since T-05 rebuilt it. -->
         <div class="well"><div class="lcd md amber"><div class="ghost">+8:88</div><div class="chars">+0:38</div></div></div>
         <div class="well"><div class="lcd strip mat-ar"><div class="chars">RUNNING</div></div></div>
-        <button class="knob mat-knurl js-knob" type="button" aria-label="Cycle section"><span class="idx"></span><span class="cap"></span></button>
+        <button class="knob mat-knurl-grip js-knob" type="button" aria-label="Cycle section"><span class="idx"></span><span class="cap"></span></button>
         <div style="display:flex;flex-direction:column;gap:9px">
           <span class="led breathe" style="--c:var(--ok)"></span>
           <span class="led" style="--c:var(--tint)"></span>
@@ -1160,14 +1241,16 @@ function drawGiga(grid) {
     if (grid[y][x]) gigaCtx.fillRect(x, y, 1, 1);
 }
 
-/* Swap which HALF of the screen shows — not which elements inside
-   one shared LCD are visible (that was the small-widget version).
-   Home and icon page occupy the same screen footprint so paging
-   doesn't visibly resize the card. */
+/* Swap which HALF of the screen shows via the .is-active class, not
+   the hidden attribute — hidden removes an element from layout,
+   which would collapse the grid-stack sizing .gigapet-screen relies
+   on to keep both pages the same height (see that rule's comment).
+   Both pages stay laid out at all times; only visibility/opacity
+   change, so paging never resizes the card. */
 function renderGiga() {
   const onHome = gigaPage === 0;
-  gigaHomeEl.hidden = !onHome;
-  gigaIconEl.hidden = onHome;
+  gigaHomeEl.classList.toggle('is-active', onHome);
+  gigaIconEl.classList.toggle('is-active', !onHome);
   if (onHome) return;
   const page = gigaPages[gigaPage];
   gigaIdxEl.textContent = page.idx;
