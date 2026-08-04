@@ -791,9 +791,21 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   border-radius: 10px; overflow: hidden;
   padding: calc(var(--u) * 6) calc(var(--u) * 6) calc(var(--u) * 5);
 }
+/* FIXED: brandline/subtitle sit directly on .mat-anodised — a fine
+   1-2px diagonal brush texture, not a flat surface. --hz-500 is
+   DESIGN.md's stated floor, which is fine against a flat panel, but
+   it's a FLOOR (a minimum), not a target — against this texture the
+   brush lines compete with the thin glyph strokes at almost the
+   same visual frequency, so even "adequate average contrast" text
+   loses definition locally. Two independent fixes, since either
+   alone left it borderline on inspection: raised well above the
+   floor to --hz-800, and a soft dark text-shadow so legibility
+   doesn't depend on which exact pixel of the brush pattern sits
+   behind a given letter. */
 .front .brandline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(var(--u) * 4); position: relative; z-index: 2; }
+.front .brandline .mono { color: var(--hz-700); text-shadow: 0 1px 2px oklch(0.1 0.01 265 / 0.7); }
 .front .title-row { display: flex; align-items: flex-end; gap: calc(var(--u) * 3); flex-wrap: wrap; position: relative; z-index: 2; }
-.front .sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--hz-500); text-transform: uppercase; margin-top: calc(var(--u) * 2.5); line-height: 1.9; position: relative; z-index: 2; }
+.front .sub { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--hz-700); text-shadow: 0 1px 2px oklch(0.1 0.01 265 / 0.7); text-transform: uppercase; margin-top: calc(var(--u) * 2.5); line-height: 1.9; position: relative; z-index: 2; }
 .front .strip {
   display: flex; align-items: center; gap: calc(var(--u) * 3.5); flex-wrap: wrap;
   margin-top: calc(var(--u) * 5); padding-top: calc(var(--u) * 3.5);
