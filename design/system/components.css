@@ -367,14 +367,17 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    A mould-parting-line seam (a thin ::after line across the middle)
    was here originally but read as a stray scratch/defect at the
    36px giga-btn size rather than a manufacturing detail — dropped
-   rather than kept as a bug users have to mentally filter out. */
+   rather than kept as a bug users have to mentally filter out.
+   The highlight/base pairing was also toned down a step after —
+   a 0.30-opacity spotlight over a two-stop tint gradient was two
+   dramatic gradients stacked where one soft, mostly-flat one reads
+   calmer and still plastic (a flat colour-mix base, one faint
+   highlight, not a light-source beam). */
 .mat-toy {
   position: relative;
   background:
-    radial-gradient(150% 120% at 28% -10%, oklch(1 0 0 / 0.30), transparent 55%),
-    linear-gradient(180deg,
-      color-mix(in oklch, var(--tint) 45%, oklch(0.88 0.02 265)),
-      color-mix(in oklch, var(--tint) 62%, oklch(0.55 0.02 265)));
+    radial-gradient(160% 130% at 30% -10%, oklch(1 0 0 / 0.14), transparent 62%),
+    color-mix(in oklch, var(--tint) 42%, oklch(0.78 0.02 265));
 }
 .mat-toy::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
@@ -650,8 +653,26 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .tints { display: grid; grid-template-columns: repeat(7, 1fr); gap: calc(var(--u) * 1.5); }
 .tint-card { position: relative; border-radius: 4px; overflow: hidden; background: var(--hz-200); cursor: pointer; box-shadow: var(--edge), var(--lift-1); border: 0; padding: 0; text-align: left; transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
 .tint-card:hover { box-shadow: var(--edge), var(--lift-3); transform: translateY(-3px); }
-.tint-card .swatch { height: 70px; position: relative; }
-.tint-card .swatch::after { content: ''; position: absolute; inset: 0; background: linear-gradient(160deg, oklch(1 0 0 / 0.26), transparent 52%); }
+/* A flat colour-fill swatch (set the actual tint as the background)
+   reads as a paint chip. Reading a tint through a neutral base
+   instead — colour wash + grain over --hz-100, not colour AS the
+   surface — is what makes it read as a tinted display segment, the
+   same idea the mute pass applied to the tokens themselves. Card
+   sets --sw to the tint it's demonstrating; this rule does the
+   compositing. */
+/* First pass stacked a 60%-strength spotlight radial UNDER a second
+   diagonal sheen gradient — two dramatic gradients doing the work
+   one flat, evenly-muted tint should. A swatch meant to read as
+   "subtly tinted" shouldn't itself be the most dramatic gradient on
+   the page. Flat colour-mix fill now; the only gradient left is a
+   barely-there top edge, not a beam. */
+.tint-card .swatch { height: 70px; position: relative; background: color-mix(in oklch, var(--sw) 24%, var(--hz-100)); }
+.tint-card .swatch::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='50' height='50' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+.tint-card .swatch::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, oklch(1 0 0 / 0.05), transparent 60%); }
 .tint-card .cap { padding: 9px 11px 12px; }
 .tint-card .n { font-family: var(--mono); font-size: 8.5px; color: var(--hz-400); letter-spacing: 0.12em; }
 .tint-card .l { font-size: 12.5px; color: var(--hz-800); text-transform: lowercase; margin-top: 3px; }
