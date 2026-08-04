@@ -89,10 +89,11 @@
    instant state change so the fact of the event survives. */
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
-  .led.breathe, .led.blink, .lightpipe span, .sweep::after,
-  .fill .level::before, .fill .level::after { animation: none !important; }
-  /* liquid still lands, it just stops being liquid about it */
-  .glass-liquid:hover { transform: none; border-radius: 18px; }
+  .led.breathe, .led.blink, .lightpipe span, .sweep::after { animation: none !important; }
+  /* glass still morphs on hover, just snaps instead of easing —
+     the global transition-duration override below handles that.
+     Only the shape target itself needs pinning back to rest. */
+  .glass-liquid:hover { border-radius: 18px; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -359,84 +360,67 @@ section { margin-bottom: calc(var(--u) * 12); }
 }
 
 /* ═══════════════════════════════════════════════════════
-   LIQUID PHYSICS
-   Surface tension, not bounce. The distinction that matters:
-   liquid merges and separates, it does not oscillate.
+   LIQUID GLASS MOTION
+   Not water physics — Apple's actual system (WWDC 2025,
+   iOS/macOS/iPadOS 26). Four things define it, and none of
+   them are blob/bounce/ripple:
+     1. Elements MORPH continuously between states rather than
+        being swapped or translated — a control expands into
+        the panel it opens, it doesn't get replaced by one.
+     2. Specular highlight tracks motion in real time (device
+        tilt on hardware; pointer position here).
+     3. Corner radii stay CONCENTRIC — an inner shape's radius
+        is always (outer radius − padding), never a fixed value,
+        so nested glass reads as one continuous material.
+     4. Motion is spring-based (arrives with a little settle,
+        never oscillates) — this is the one place the earlier
+        "liquid" build was already right, so --ease-liquid and
+        the segmented indicator below carry over unchanged.
    ═══════════════════════════════════════════════════════ */
 
-/* metaball field — blobs fuse as they approach */
-.goo { filter: url(#goo); position: relative; width: 100%; height: 72px; }
-.goo b {
-  position: absolute; top: 50%; width: 34px; height: 34px; border-radius: 50%;
-  background: var(--tint); transform: translateY(-50%);
-  transition: left var(--dur-slow) var(--ease-liquid), width var(--dur-slow) var(--ease-liquid);
+/* 1 — morph: a compact control that becomes the panel it opens,
+   rather than being replaced by one. Shape, not swap. */
+.morph {
+  position: relative; width: 168px; height: 44px; margin: 0 auto;
+  border-radius: 22px; cursor: pointer; overflow: hidden;
+  transition: width var(--dur-slow) var(--ease-liquid),
+              height var(--dur-slow) var(--ease-liquid),
+              border-radius var(--dur-slow) var(--ease-liquid);
 }
-.goo b:nth-child(1) { left: 12%; }
-.goo b:nth-child(2) { left: 42%; width: 26px; }
-.goo b:nth-child(3) { left: 68%; width: 20px; }
-.goo-wrap:hover .goo b:nth-child(1) { left: 34%; }
-.goo-wrap:hover .goo b:nth-child(2) { left: 40%; }
-.goo-wrap:hover .goo b:nth-child(3) { left: 46%; }
+.morph.open { width: 100%; height: 158px; border-radius: 20px; }
+.morph .face {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: oklch(0.15 0 0); transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.morph.open .face.closed { opacity: 0; pointer-events: none; }
+.morph .face.open { opacity: 0; flex-direction: column; gap: 8px; padding: 16px; align-items: flex-start; }
+.morph.open .face.open { opacity: 1; transition-delay: 90ms; }
+.morph .face.open span:first-child { font-size: 9px; color: oklch(0.15 0 0 / 0.6); }
+.morph .face.open span:last-child { font-size: 12px; letter-spacing: 0.02em; text-transform: none; color: oklch(0.12 0 0); }
 
-/* ripple — displacement spreading from the point of contact */
-.ripple { position: relative; overflow: hidden; cursor: pointer; }
-.ripple span {
-  position: absolute; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, oklch(1 0 0 / 0.55) 0 40%, oklch(1 0 0 / 0.12) 62%, transparent 72%);
-  transform: translate(-50%, -50%) scale(0);
-  animation: ripple 620ms var(--ease-decelerate) forwards;
-}
-@keyframes ripple {
-  0%   { transform: translate(-50%,-50%) scale(0);   opacity: 0.9; }
-  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+/* 2 — specular tilt: highlight position driven by --mx/--my,
+   set from pointer position in JS (device tilt on real hardware,
+   cursor here — same principle, different input). */
+.tilt { position: relative; }
+.tilt::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%),
+    oklch(1 0 0 / 0.65), transparent 38%);
+  mix-blend-mode: screen;
+  transition: background 90ms linear;
 }
 
-/* liquid fill — a level with a moving surface, not a bar */
-/* width:100% is load-bearing — .demo centres its child, and .fill's
-   only child is absolutely positioned, so it shrink-wraps to 0. */
-.fill {
-  position: relative; width: 100%; height: 78px; border-radius: 8px; overflow: hidden;
-  background: var(--well-floor); box-shadow: var(--recess); cursor: pointer;
-}
-/* The meniscus is a scalloped crest that scrolls sideways.
-   The usual trick — a giant rotating disc with border-radius:43% —
-   was tried first and failed here: at 260% width the disc is ~866px
-   tall, so it covered the entire tile and the level rendered as a
-   flat rectangle. Two repeating scallops at different speeds are
-   controllable at any meter size. */
-.fill .level {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 12%;
-  background: var(--tint);
-  transition: height 1100ms var(--ease-liquid);
-}
-.fill.on .level { height: 74%; }
-/* Circle radius must EXCEED half the tile so neighbours overlap.
-   At radius == half-tile they meet in sharp cusps and the crest
-   reads as teeth rather than fluid. */
-.fill .level::before, .fill .level::after {
-  content: ''; position: absolute; left: -60px; right: -60px;
-  background-repeat: repeat-x;
-}
-/* Radius just over half-tile (27 vs 24) — enough overlap to kill
-   the cusp, little enough to stay sinusoidal. Far over (34) gives
-   broad flat tops with narrow notches instead of a wave. */
-.fill .level::before {
-  height: 30px; top: -23px;
-  background-image: radial-gradient(circle at 24px 30px, var(--tint) 0 27px, transparent 27.5px);
-  background-size: 48px 30px;
-  animation: waveX 3.4s linear infinite;
-}
-.fill .level::after {
-  height: 24px; top: -16px;
-  background-image: radial-gradient(circle at 17px 24px, var(--tint) 0 19px, transparent 19.5px);
-  background-size: 34px 24px;
-  opacity: 0.6;
-  animation: waveX 2.1s linear infinite reverse;
-}
-@keyframes waveX { to { transform: translateX(-48px); } }
+/* 3 — concentric corners: --r is set once on the outer shape,
+   inner shapes compute (r − padding) rather than re-guessing a
+   radius. This is a formula, not a matched pair of constants. */
+.nest-outer { --r: 26px; border-radius: var(--r); padding: 14px; }
+.nest-inner { --p: 14px; border-radius: calc(var(--r) - var(--p)); }
+.nest-innermost { --p2: 10px; border-radius: calc(var(--r) - var(--p) - var(--p2)); }
 
 /* elastic indicator — stretches in transit, settles on arrival.
-   This is surface tension: it resists leaving, then catches up. */
+   Spring motion, the one liquid-adjacent thing Apple's system
+   genuinely does: it resists leaving, then catches up. */
 .seg-nav { display: flex; gap: 2px; position: relative; padding: 4px; border-radius: 9px; background: var(--hz-050); box-shadow: var(--recess); }
 .seg-nav button {
   position: relative; z-index: 2; flex: 1; border: 0; background: transparent; cursor: pointer;
@@ -797,7 +781,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 </head>
 <body data-testid="treatment-05">
 
-<!-- filter defs — refraction and metaball fusion -->
+<!-- filter defs — backdrop refraction for the glass panels -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <!-- refract: warps the backdrop the way a thick lens does.
@@ -808,17 +792,6 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       <feGaussianBlur in="n" stdDeviation="1.4" result="ns"/>
       <feDisplacementMap in="SourceGraphic" in2="ns" scale="26"
                          xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-
-    <!-- goo: blur then hard-threshold alpha, so near shapes fuse -->
-    <filter id="goo">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
-      <feColorMatrix in="b" mode="matrix" result="g"
-        values="1 0 0 0 0
-                0 1 0 0 0
-                0 0 1 0 0
-                0 0 0 22 -11"/>
-      <feBlend in="SourceGraphic" in2="g"/>
     </filter>
   </defs>
 </svg>
@@ -878,10 +851,11 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
           and behaviour.
         </p>
         <div class="note diff">
-          <b>Materials became distinct processes.</b> T-04 had one plastic. This has six —
-          anodised aluminium with a unidirectional brush, bead-blasted matte, knurled grip,
-          soft-touch rubber, perforated grille, and a CNC chamfer. The differences are
-          small and cumulative, which is exactly what stops a panel reading as one slab.
+          <b>Materials became distinct processes.</b> T-04 had one plastic. This has nine —
+          anodised aluminium (brushed, turned, milled, and dyed-in-the-oxide), bead-blasted
+          matte, knurled grip, soft-touch rubber, perforated grille, and a CNC chamfer. The
+          differences are small and cumulative, which is exactly what stops a panel reading
+          as one slab.
         </div>
         <div class="note diff">
           <b>The self-test is the organising idea.</b> Real instruments drive every segment
@@ -897,22 +871,32 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
           go undocumented and inconsistent.
         </div>
         <div class="note diff">
-          <b>Two new easing curves.</b> <code>--ease-detent</code> has slight overshoot for
-          sprung mechanisms; <code>--ease-ballistic</code> is damped with none, for meters.
-          Overshoot is honest in exactly one place — a detent — and nowhere else.
+          <b>Three new easing curves.</b> <code>--ease-detent</code> has slight overshoot for
+          sprung mechanisms; <code>--ease-ballistic</code> is damped with none, for meters;
+          <code>--ease-liquid</code> is a spring authored with <code>linear()</code> for
+          anything that morphs or settles. Overshoot is honest in two places — a detent and
+          a spring — and nowhere else.
         </div>
         <div class="note diff">
-          <b>Glass and liquid, added after the fact.</b> Sections 02 and 03. The earlier
-          rejection of "glassmorphism" holds for the flat version — so glass here is built
-          optically instead: rim lensing, caustics, dispersion, and real backdrop
-          refraction via an SVG displacement map.
+          <b>Glass, added after the fact.</b> Section 02. The earlier rejection of
+          "glassmorphism" holds for the flat version — so glass here is built optically
+          instead: rim lensing, caustics, dispersion, and real backdrop refraction via an
+          SVG displacement map.
+        </div>
+        <div class="note diff">
+          <b>Liquid Glass motion, corrected mid-build.</b> Section 03 was first built as
+          literal water physics — metaballs, a ripple, a fill tank — before it was pointed
+          out that "liquid" meant Apple's actual system
+          (<a href="https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/" target="_blank" rel="noopener">Apple Newsroom</a>).
+          That system is morphing shape-continuity, motion-tracked specular highlight, and
+          concentric corner radii — not blobs. The section was rebuilt around the real
+          thing; only the spring easing survived the swap.
         </div>
         <div class="note warn">
           <b>Ambient vs. triggered is the line that matters.</b> Looping motion (breathing
-          LEDs, the light pipe, the liquid meniscus) stops dead under
-          <code>prefers-reduced-motion</code>; triggered feedback keeps an instant state
-          change so the event still registers. Nothing here is load-bearing for
-          comprehension.
+          LEDs, the light pipe) stops dead under <code>prefers-reduced-motion</code>;
+          triggered feedback keeps an instant state change so the event still registers.
+          Nothing here is load-bearing for comprehension.
         </div>
       </div>
     </div>
@@ -921,7 +905,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   <!-- ═══ MATERIALS ══════════════════════════════════ -->
   <section>
     <div class="sec-head"><span class="idx">01</span><h2>materials</h2><span class="rule"></span><span class="ref">Fig. 1</span></div>
-    <p class="lead">Six processes. Hover any swatch — the specular sweep is how a real surface announces it's tilted into the light.</p>
+    <p class="lead">Eleven surfaces, nine of them distinct manufacturing processes. Hover any swatch — the specular sweep is how a real surface announces it's tilted into the light.</p>
 
     <div class="mat-grid" data-testid="material-set">
       <div class="mat mat-anodised sweep"><span class="use">Chassis / hero</span><span class="tag">Anodised 6061</span></div>
@@ -1011,39 +995,52 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     </div>
   </section>
 
-  <!-- ═══ LIQUID ═════════════════════════════════════ -->
+  <!-- ═══ LIQUID GLASS MOTION ════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">03</span><h2>liquid physics</h2><span class="rule"></span><span class="ref">Fig. 3</span></div>
+    <div class="sec-head"><span class="idx">03</span><h2>liquid glass motion</h2><span class="rule"></span><span class="ref">Fig. 3 · Apple, WWDC 2025</span></div>
     <p class="lead">
-      Surface tension, not bounce. The distinction that matters: liquid <b>merges and
-      separates</b>, it doesn't oscillate. A blob that springs back reads as rubber.
+      Not water physics — Apple's actual system, shipped as "Liquid Glass" across
+      iOS/macOS/iPadOS 26. <b>Sources: <a href="https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/" target="_blank" rel="noopener">Apple Newsroom</a>,
+      <a href="https://www.macstories.net/news/ios-26-ipados-26-and-liquid-glass-the-macstories-overview/" target="_blank" rel="noopener">MacStories</a>.</b>
+      It has almost nothing to do with the blob/ripple/tank build that was here before
+      this pass — that was a literal reading of "liquid" that doesn't match what Apple
+      built. Four things define the real system, and only the last one overlaps with
+      what was here already.
     </p>
 
     <div class="micro-grid" data-testid="liquid-set">
-      <div class="micro goo-wrap">
-        <div class="demo" style="width:100%">
-          <div class="goo"><b></b><b></b><b></b></div>
-        </div>
-        <div class="nm">A · Metaball fusion</div>
-        <div class="sp"><b>Trigger</b> hover · <b>420ms</b> · liquid<br>Blur plus an alpha threshold, so shapes fuse as they approach. The only true "liquid" primitive — everything else is easing.</div>
-      </div>
-
       <div class="micro">
         <div class="demo" style="width:100%">
-          <div class="ripple" style="width:100%;height:72px;border-radius:8px;background:linear-gradient(180deg,var(--hz-200),var(--hz-100));box-shadow:var(--edge),var(--lift-1);display:grid;place-items:center" data-testid="ripple-pad">
-            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--hz-500);pointer-events:none">Click anywhere</span>
+          <div class="morph mat-anodised chamfer js-morph" data-testid="morph-demo">
+            <div class="face closed">Notes</div>
+            <div class="face open">
+              <span>SL-06 · COMPOSITE</span>
+              <span>Layout → Paint → Composite. GPU-cheap transforms vs. layout-forcing properties.</span>
+            </div>
           </div>
         </div>
-        <div class="nm">B · Contact ripple</div>
-        <div class="sp"><b>Trigger</b> click · <b>620ms</b> · decelerate<br>Originates at the contact point, never the centre. Causality — motion starts where the user acted.</div>
+        <div class="nm">A · Morph</div>
+        <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>The control <i>becomes</i> the panel — width, height and radius animate together, nothing is swapped or replaced. Apple: "the element expands organically rather than just moving."</div>
+      </div>
+
+      <div class="micro">
+        <div class="demo" style="width:100%;position:relative;height:72px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,oklch(0.30 0.06 250),oklch(0.42 0.10 150))">
+          <div class="glass-refractive tilt js-tilt" style="position:absolute;inset:8px" data-testid="tilt-demo"></div>
+        </div>
+        <div class="nm">B · Specular tilt — move your cursor over it</div>
+        <div class="sp"><b>Trigger</b> pointer move · continuous<br>Highlight tracks motion in real time — device accelerometer on hardware, cursor position standing in for it here. Not a fixed gradient; the light genuinely moves with you.</div>
       </div>
 
       <div class="micro">
         <div class="demo" style="width:100%">
-          <div class="fill js-fill" data-testid="liquid-fill"><span class="level"></span></div>
+          <div class="nest-outer mat-blasted chamfer" style="width:100%" data-testid="concentric-demo">
+            <div class="nest-inner" style="background:var(--hz-050);box-shadow:var(--recess);padding:10px">
+              <div class="nest-innermost" style="background:var(--tint);height:28px"></div>
+            </div>
+          </div>
         </div>
-        <div class="nm">C · Liquid level</div>
-        <div class="sp"><b>Trigger</b> click · <b>1100ms</b> · liquid<br>A level with a moving surface rather than a bar. Two counter-rotating discs make the meniscus. Waves stop under reduced motion.</div>
+        <div class="nm">C · Concentric radius</div>
+        <div class="sp"><b>Formula</b> r = outer − padding, always<br>Every nested radius is <i>computed</i>, never eyeballed — <code>calc(var(--r) - var(--p))</code>. A fixed inner radius next to a rounder outer one is the single most common tell of a UI that copied the look without the system.</div>
       </div>
 
       <div class="micro">
@@ -1055,23 +1052,24 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
             <button aria-selected="false">Grid</button>
           </div>
         </div>
-        <div class="nm">D · Elastic indicator</div>
-        <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>Resists leaving, catches up, settles without oscillating. The <code>linear()</code> curve does what a bezier can't express.</div>
+        <div class="nm">D · Spring indicator</div>
+        <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>Resists leaving, catches up, settles without oscillating. The one place the earlier build was already right — Apple's motion is spring-based throughout, and <code>--ease-liquid</code> already approximated that correctly.</div>
       </div>
     </div>
 
     <div class="note diff">
-      <b>One new curve, and it revises an earlier claim.</b> Section 00 said overshoot is
-      honest in exactly one place — the detent. That was true before liquid existed here;
-      it's now two. <code>--ease-liquid</code> is authored with <code>linear()</code>
-      because a mass-on-a-spring response has more inflections than four bezier control
-      points can carry.
+      <b>What survives from the first pass: exactly one curve.</b> <code>--ease-liquid</code>
+      and the spring/settle idea behind it were correct — Apple's system really is
+      spring-driven. Everything built <i>around</i> that curve was wrong: metaball fusion,
+      a contact ripple, and a liquid-filled tank are water-simulation ideas with no
+      counterpart in Liquid Glass. They've been removed rather than kept as extras, so
+      this section doesn't quietly teach the wrong thing.
     </div>
     <div class="note warn">
-      <b>Where liquid does not belong.</b> Slide advance. It happens 200+ times before
-      delivery, and surface tension at that frequency is the exact failure mode SCOPE.md
-      names — charming once, infuriating on the fortieth. Liquid is for moments of arrival:
-      the indicator landing, a level filling, a hero reveal.
+      <b>Where morph does not belong.</b> Slide advance, for the same reason as before —
+      it happens 200+ times before delivery, and a shape-morph at that frequency is the
+      exact failure mode SCOPE.md names. Morph is for moments of arrival: a control
+      opening into its own detail, not routine navigation.
     </div>
   </section>
 
@@ -1363,24 +1361,24 @@ document.querySelectorAll('.js-adv').forEach(a => {
   });
 });
 
-/* B · contact ripple — sized to reach the far corner from the
-   contact point, so the wave always clears the element */
-document.querySelectorAll('.ripple').forEach(pad => {
-  pad.addEventListener('click', e => {
-    const r = pad.getBoundingClientRect();
-    const x = e.clientX - r.left, y = e.clientY - r.top;
-    const reach = Math.hypot(Math.max(x, r.width - x), Math.max(y, r.height - y)) * 2;
-    const s = document.createElement('span');
-    s.style.left = x + 'px'; s.style.top = y + 'px';
-    s.style.width = s.style.height = reach + 'px';
-    pad.appendChild(s);
-    s.addEventListener('animationend', () => s.remove());
-  });
+/* A · morph — the control becomes the panel; nothing is swapped */
+document.querySelectorAll('.js-morph').forEach(m => {
+  m.addEventListener('click', () => m.classList.toggle('open'));
 });
 
-/* C · liquid level */
-document.querySelectorAll('.js-fill').forEach(f => {
-  f.addEventListener('click', () => f.classList.toggle('on'));
+/* B · specular tilt — pointer position drives the highlight.
+   On real hardware this is the accelerometer; a cursor is the same
+   principle standing in for tilt during desktop review. */
+document.querySelectorAll('.js-tilt').forEach(el => {
+  el.addEventListener('pointermove', e => {
+    const r = el.getBoundingClientRect();
+    el.style.setProperty('--mx', `${((e.clientX - r.left) / r.width) * 100}%`);
+    el.style.setProperty('--my', `${((e.clientY - r.top) / r.height) * 100}%`);
+  });
+  el.addEventListener('pointerleave', () => {
+    el.style.setProperty('--mx', '30%');
+    el.style.setProperty('--my', '20%');
+  });
 });
 
 /* D · elastic indicator — the pill is measured from the real
@@ -1435,9 +1433,8 @@ const rmBtn = document.getElementById('toggleRM');
 const rmState = document.getElementById('rmState');
 const rmStyle = document.createElement('style');
 rmStyle.textContent = `
-  body.rm .led.breathe, body.rm .led.blink, body.rm .lightpipe span, body.rm .sweep::after,
-  body.rm .fill .level::before, body.rm .fill .level::after { animation: none !important; }
-  body.rm .glass-liquid:hover { transform: none !important; border-radius: 18px !important; }
+  body.rm .led.breathe, body.rm .led.blink, body.rm .lightpipe span, body.rm .sweep::after { animation: none !important; }
+  body.rm .glass-liquid:hover { border-radius: 18px !important; }
   body.rm *, body.rm *::before, body.rm *::after {
     animation-duration: 0.01ms !important; transition-duration: 0.01ms !important;
   }`;
