@@ -33,7 +33,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 <body data-testid="technique-canvas">
 
 <div class="wrap">
-  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-09">Techniques</a></div>
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-09">Techniques</a></div>
+  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
   <div class="head"><span class="code">SL-09</span><h1>canvas</h1></div>
   <p class="dek">
     Imperative pixel drawing, CPU-bound, no DOM overhead — the count jumps from tens of
