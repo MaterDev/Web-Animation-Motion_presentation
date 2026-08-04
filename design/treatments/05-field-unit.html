@@ -58,11 +58,19 @@
   --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1.0);
   --ease-accelerate: cubic-bezier(0.3, 0.0, 0.8, 0.15);
   --ease-mechanical: cubic-bezier(0.4, 0.0, 0.2, 1.0);
-  /* detent — a sprung mechanism genuinely overshoots a little.
-     This is the ONE place overshoot is honest in this system. */
+  /* detent — a sprung mechanism genuinely overshoots a little */
   --ease-detent:     cubic-bezier(0.34, 1.28, 0.64, 1.0);
   /* ballistic — meter movement, damped, no overshoot */
   --ease-ballistic:  cubic-bezier(0.16, 0.84, 0.28, 1.0);
+  /* liquid — surface tension. Resists leaving, then catches up and
+     settles without oscillating. Authored with linear() rather than
+     a bezier because a mass-on-a-spring curve has more inflections
+     than four control points can express. Liquid MERGES; it does
+     not bounce — a bouncing blob reads as rubber, not fluid. */
+  --ease-liquid: linear(
+    0, 0.006, 0.025, 0.101, 0.539 32.6%, 0.68, 0.792, 0.877, 0.938 62.4%,
+    0.968, 0.991, 1.006, 1.014 78%, 1.015, 1.013, 1.009, 1.004, 1, 0.999, 1
+  );
 
   --lift-1: 0 1px 2px oklch(0.2 0.02 265 / 0.09), 0 1px 1px oklch(0.2 0.02 265 / 0.05);
   --lift-2: 0 2px 4px oklch(0.2 0.02 265 / 0.09), 0 6px 16px oklch(0.2 0.02 265 / 0.08);
@@ -81,7 +89,10 @@
    instant state change so the fact of the event survives. */
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-hero: var(--dur-base); --dur-section: var(--dur-base); }
-  .led.breathe, .led.blink, .lightpipe span, .sweep::after { animation: none !important; }
+  .led.breathe, .led.blink, .lightpipe span, .sweep::after,
+  .fill .level::before, .fill .level::after { animation: none !important; }
+  /* liquid still lands, it just stops being liquid about it */
+  .glass-liquid:hover { transform: none; border-radius: 18px; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -202,6 +213,245 @@ section { margin-bottom: calc(var(--u) * 12); }
   background: linear-gradient(118deg, oklch(1 0 0 / 0.14) 0 26%, transparent 52%);
   filter: blur(3px);
 }
+
+/* ── ALUMINIUM, extended ─────────────────────────────────
+   Three more processes, because "aluminium" isn't one finish.
+   The difference between them is the direction of the tool
+   mark, and that alone changes how a part reads. */
+
+/* turned / machined — concentric tool path. Jog wheels, click
+   wheels, the face of a milled dial. */
+.mat-turned {
+  background:
+    repeating-radial-gradient(circle at 50% 50%,
+      oklch(1 0 0 / 0.30) 0 1px,
+      transparent 1px 2px,
+      oklch(0.2 0.02 265 / 0.07) 2px 3px,
+      transparent 3px 4px),
+    radial-gradient(circle at 34% 28%, oklch(1 0 0 / 0.55), transparent 62%),
+    linear-gradient(180deg, var(--hz-200), var(--hz-100));
+}
+
+/* milled channel — extruded profile with a cut groove */
+.mat-milled {
+  background:
+    repeating-linear-gradient(180deg,
+      oklch(0.2 0.02 265 / 0.16) 0 1px,
+      oklch(1 0 0 / 0.75) 1px 2px,
+      transparent 2px 14px),
+    linear-gradient(100deg, oklch(1 0 0 / 0.4) 0 14%, transparent 40%),
+    linear-gradient(180deg, var(--hz-200), var(--hz-100));
+}
+
+/* anodised in colour — dye takes into the oxide layer, so the
+   metal grain still reads through the tint. That show-through is
+   what separates anodising from paint. */
+.mat-anod-colour {
+  background:
+    repeating-linear-gradient(96deg,
+      oklch(1 0 0 / 0.16) 0 1px, transparent 1px 2px,
+      oklch(0.2 0.02 265 / 0.07) 2px 3px, transparent 3px 4px),
+    linear-gradient(102deg, oklch(1 0 0 / 0.34) 0 14%, transparent 38%),
+    linear-gradient(180deg,
+      color-mix(in oklch, var(--tint) 62%, oklch(0.72 0.01 265)),
+      color-mix(in oklch, var(--tint) 78%, oklch(0.44 0.01 265)));
+}
+
+/* ═══════════════════════════════════════════════════════
+   GLASS
+   The earlier sheets rejected "glassmorphism", and that
+   rejection stands — for the flat version: uniform blur, one
+   even hairline, no optical behaviour.
+
+   Real glass does four things that the cliché doesn't:
+   refracts what's behind it, lenses hardest at the rim,
+   throws caustics along the edge, and disperses colour.
+   Those four are what's built below.
+   ═══════════════════════════════════════════════════════ */
+
+/* 1 — the cliché, for comparison */
+.glass-flat {
+  background: oklch(1 0 0 / 0.14);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 0.26);
+  border-radius: 14px;
+}
+
+/* 2 — optical glass, CSS only */
+.glass-optical {
+  position: relative; border-radius: 18px;
+  background:
+    linear-gradient(150deg, oklch(1 0 0 / 0.20), oklch(1 0 0 / 0.05) 42%, oklch(1 0 0 / 0.14));
+  backdrop-filter: blur(7px) saturate(180%) brightness(1.06);
+  box-shadow:
+    /* rim lensing — brightest at top-left, wrapping the edge */
+    inset  0  1.5px 0    oklch(1 0 0 / 0.92),
+    inset  0 -1.5px 0    oklch(1 0 0 / 0.38),
+    inset  2px 0   0     oklch(1 0 0 / 0.34),
+    inset -2px 0   0     oklch(1 0 0 / 0.34),
+    /* thickness — light bending through the body */
+    inset  0  0   22px -8px oklch(1 0 0 / 0.65),
+    /* chromatic dispersion: warm one side, cool the other */
+    inset  3px  3px 10px -8px oklch(0.72 0.16  40 / 0.55),
+    inset -3px -3px 10px -8px oklch(0.70 0.16 250 / 0.55),
+    /* cast */
+    0 10px 30px oklch(0.2 0.02 265 / 0.22);
+}
+/* caustic streak along the top rim */
+.glass-optical::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(122deg,
+    oklch(1 0 0 / 0.5) 0 7%, transparent 22% 78%, oklch(1 0 0 / 0.22) 94% 100%);
+  mix-blend-mode: screen;
+}
+
+/* 3 — refractive glass: true displacement of the backdrop.
+   Chrome-only, which this deck already is. */
+.glass-refractive {
+  position: relative; border-radius: 18px;
+  background: linear-gradient(150deg, oklch(1 0 0 / 0.16), oklch(1 0 0 / 0.04) 45%, oklch(1 0 0 / 0.12));
+  backdrop-filter: blur(3px) url(#refract) saturate(170%) brightness(1.05);
+  box-shadow:
+    inset  0  1.5px 0    oklch(1 0 0 / 0.92),
+    inset  0 -1.5px 0    oklch(1 0 0 / 0.38),
+    inset  2px 0   0     oklch(1 0 0 / 0.34),
+    inset -2px 0   0     oklch(1 0 0 / 0.34),
+    inset  0  0   26px -10px oklch(1 0 0 / 0.6),
+    inset  3px  3px 12px -9px oklch(0.72 0.16  40 / 0.6),
+    inset -3px -3px 12px -9px oklch(0.70 0.16 250 / 0.6),
+    0 10px 30px oklch(0.2 0.02 265 / 0.22);
+}
+.glass-refractive::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(122deg, oklch(1 0 0 / 0.45) 0 7%, transparent 22% 78%, oklch(1 0 0 / 0.2) 94% 100%);
+  mix-blend-mode: screen;
+}
+
+/* liquid glass — optical glass that deforms under interaction.
+   The radius morphs and the body swells; the rim keeps up. */
+.glass-liquid {
+  transition:
+    border-radius var(--dur-slow) var(--ease-liquid),
+    transform var(--dur-slow) var(--ease-liquid),
+    backdrop-filter var(--dur-slow) var(--ease-standard);
+}
+.glass-liquid:hover {
+  border-radius: 42px 18px 42px 18px;
+  transform: scale(1.035);
+  backdrop-filter: blur(5px) url(#refract) saturate(200%) brightness(1.1);
+}
+
+/* a subject to look through — glass needs something behind it
+   or it is just a translucent rectangle */
+/* The grid IS the test, so it has to sit on top and stay legible.
+   First attempt put big saturated blobs over it and the rules
+   vanished — which made refraction impossible to see, i.e. it
+   defeated the only reason the bed exists. Rules paint last (listed
+   first), colour is demoted to a wash underneath. */
+.glass-bed {
+  position: relative; border-radius: 10px; overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, oklch(0.28 0.02 265 / 0.55) 0 1.5px, transparent 1.5px 26px),
+    repeating-linear-gradient(0deg,  oklch(0.28 0.02 265 / 0.42) 0 1.5px, transparent 1.5px 26px),
+    radial-gradient(circle at 16% 24%, color-mix(in oklch, var(--tint) 55%, transparent) 0 4%, transparent 24%),
+    radial-gradient(circle at 84% 74%, oklch(0.70 0.17 45 / 0.45) 0 5%, transparent 26%),
+    linear-gradient(140deg, oklch(0.91 0.018 250), oklch(0.85 0.028 300));
+}
+
+/* ═══════════════════════════════════════════════════════
+   LIQUID PHYSICS
+   Surface tension, not bounce. The distinction that matters:
+   liquid merges and separates, it does not oscillate.
+   ═══════════════════════════════════════════════════════ */
+
+/* metaball field — blobs fuse as they approach */
+.goo { filter: url(#goo); position: relative; width: 100%; height: 72px; }
+.goo b {
+  position: absolute; top: 50%; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--tint); transform: translateY(-50%);
+  transition: left var(--dur-slow) var(--ease-liquid), width var(--dur-slow) var(--ease-liquid);
+}
+.goo b:nth-child(1) { left: 12%; }
+.goo b:nth-child(2) { left: 42%; width: 26px; }
+.goo b:nth-child(3) { left: 68%; width: 20px; }
+.goo-wrap:hover .goo b:nth-child(1) { left: 34%; }
+.goo-wrap:hover .goo b:nth-child(2) { left: 40%; }
+.goo-wrap:hover .goo b:nth-child(3) { left: 46%; }
+
+/* ripple — displacement spreading from the point of contact */
+.ripple { position: relative; overflow: hidden; cursor: pointer; }
+.ripple span {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, oklch(1 0 0 / 0.55) 0 40%, oklch(1 0 0 / 0.12) 62%, transparent 72%);
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 620ms var(--ease-decelerate) forwards;
+}
+@keyframes ripple {
+  0%   { transform: translate(-50%,-50%) scale(0);   opacity: 0.9; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0; }
+}
+
+/* liquid fill — a level with a moving surface, not a bar */
+/* width:100% is load-bearing — .demo centres its child, and .fill's
+   only child is absolutely positioned, so it shrink-wraps to 0. */
+.fill {
+  position: relative; width: 100%; height: 78px; border-radius: 8px; overflow: hidden;
+  background: var(--well-floor); box-shadow: var(--recess); cursor: pointer;
+}
+/* The meniscus is a scalloped crest that scrolls sideways.
+   The usual trick — a giant rotating disc with border-radius:43% —
+   was tried first and failed here: at 260% width the disc is ~866px
+   tall, so it covered the entire tile and the level rendered as a
+   flat rectangle. Two repeating scallops at different speeds are
+   controllable at any meter size. */
+.fill .level {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 12%;
+  background: var(--tint);
+  transition: height 1100ms var(--ease-liquid);
+}
+.fill.on .level { height: 74%; }
+/* Circle radius must EXCEED half the tile so neighbours overlap.
+   At radius == half-tile they meet in sharp cusps and the crest
+   reads as teeth rather than fluid. */
+.fill .level::before, .fill .level::after {
+  content: ''; position: absolute; left: -60px; right: -60px;
+  background-repeat: repeat-x;
+}
+/* Radius just over half-tile (27 vs 24) — enough overlap to kill
+   the cusp, little enough to stay sinusoidal. Far over (34) gives
+   broad flat tops with narrow notches instead of a wave. */
+.fill .level::before {
+  height: 30px; top: -23px;
+  background-image: radial-gradient(circle at 24px 30px, var(--tint) 0 27px, transparent 27.5px);
+  background-size: 48px 30px;
+  animation: waveX 3.4s linear infinite;
+}
+.fill .level::after {
+  height: 24px; top: -16px;
+  background-image: radial-gradient(circle at 17px 24px, var(--tint) 0 19px, transparent 19.5px);
+  background-size: 34px 24px;
+  opacity: 0.6;
+  animation: waveX 2.1s linear infinite reverse;
+}
+@keyframes waveX { to { transform: translateX(-48px); } }
+
+/* elastic indicator — stretches in transit, settles on arrival.
+   This is surface tension: it resists leaving, then catches up. */
+.seg-nav { display: flex; gap: 2px; position: relative; padding: 4px; border-radius: 9px; background: var(--hz-050); box-shadow: var(--recess); }
+.seg-nav button {
+  position: relative; z-index: 2; flex: 1; border: 0; background: transparent; cursor: pointer;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); padding: 9px 4px; transition: color var(--dur-fast) var(--ease-standard);
+}
+.seg-nav button[aria-selected='true'] { color: oklch(0.99 0 0); }
+.seg-nav .pill {
+  position: absolute; top: 4px; bottom: 4px; z-index: 1; border-radius: 6px;
+  background: var(--tint);
+  transition: left var(--dur-slow) var(--ease-liquid),
+              width var(--dur-slow) var(--ease-liquid);
+}
+
+@keyframes spin360 { to { transform: rotate(360deg); } }
 
 /* specular sweep — the panel catches the light on hover.
    Material feedback with no layout cost: transform only. */
@@ -547,6 +797,32 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 </head>
 <body data-testid="treatment-05">
 
+<!-- filter defs — refraction and metaball fusion -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- refract: warps the backdrop the way a thick lens does.
+         Low frequency = broad bending, not frosted noise. -->
+    <filter id="refract" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.010"
+                    numOctaves="2" seed="7" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="1.4" result="ns"/>
+      <feDisplacementMap in="SourceGraphic" in2="ns" scale="26"
+                         xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <!-- goo: blur then hard-threshold alpha, so near shapes fuse -->
+    <filter id="goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+      <feColorMatrix in="b" mode="matrix" result="g"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 22 -11"/>
+      <feBlend in="SourceGraphic" in2="g"/>
+    </filter>
+  </defs>
+</svg>
+
 <div class="sheet">
 
   <!-- ═══ HERO ═══════════════════════════════════════ -->
@@ -625,11 +901,18 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
           sprung mechanisms; <code>--ease-ballistic</code> is damped with none, for meters.
           Overshoot is honest in exactly one place — a detent — and nowhere else.
         </div>
+        <div class="note diff">
+          <b>Glass and liquid, added after the fact.</b> Sections 02 and 03. The earlier
+          rejection of "glassmorphism" holds for the flat version — so glass here is built
+          optically instead: rim lensing, caustics, dispersion, and real backdrop
+          refraction via an SVG displacement map.
+        </div>
         <div class="note warn">
           <b>Ambient vs. triggered is the line that matters.</b> Looping motion (breathing
-          LEDs, the light pipe) stops dead under <code>prefers-reduced-motion</code>;
-          triggered feedback keeps an instant state change so the event still registers.
-          Nothing here is load-bearing for comprehension.
+          LEDs, the light pipe, the liquid meniscus) stops dead under
+          <code>prefers-reduced-motion</code>; triggered feedback keeps an instant state
+          change so the event still registers. Nothing here is load-bearing for
+          comprehension.
         </div>
       </div>
     </div>
@@ -652,6 +935,18 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
         <span class="tag">Light pipe</span>
       </div>
       <div class="mat mat-ar" style="background:linear-gradient(178deg,oklch(0.868 0.048 128),oklch(0.812 0.052 132))"><span class="use">Display face</span><span class="tag">Anti-glare</span></div>
+      <div class="mat mat-turned sweep"><span class="use">Dials / jog wheel</span><span class="tag">Turned</span></div>
+      <div class="mat mat-milled sweep"><span class="use">Extruded body</span><span class="tag">Milled channel</span></div>
+      <div class="mat mat-anod-colour dark sweep"><span class="use">Accent parts</span><span class="tag">Anodised dye</span></div>
+    </div>
+
+    <div class="note diff">
+      <b>"Aluminium" is not one finish — it's a tool direction.</b> Anodised brush runs
+      linear, turned runs concentric, milled leaves parallel channels. Same metal, same
+      colour, and they read as completely different parts. Anodised dye is the one that
+      earns its place functionally: the dye sinks into the oxide layer so the grain still
+      shows through, which is exactly what separates anodising from paint — and it means
+      accent parts can carry <code>--tint</code> while still reading as metal.
     </div>
 
     <div class="note diff">
@@ -666,9 +961,123 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
     </div>
   </section>
 
+  <!-- ═══ GLASS ══════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>glass</h2><span class="rule"></span><span class="ref">Fig. 2</span></div>
+    <p class="lead">
+      Earlier sheets rejected "glassmorphism" and that rejection stands — for the flat
+      version. Real glass does four things the cliché doesn't: it <b>refracts</b> what's
+      behind it, <b>lenses hardest at the rim</b>, throws <b>caustics</b> along the edge,
+      and <b>disperses colour</b>. All four are below. Hover the fourth.
+    </p>
+
+    <div class="glass-bed" style="padding:calc(var(--u)*5);display:grid;grid-template-columns:repeat(4,1fr);gap:calc(var(--u)*2.5)" data-testid="glass-set">
+      <div class="glass-flat" style="padding:calc(var(--u)*2.5);min-height:132px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.15 0 0)">01 · Flat blur</div>
+        <div style="font-size:11px;color:oklch(0.2 0 0 / 0.7);margin-top:5px">The cliché. One blur, one even border.</div>
+      </div>
+      <div class="glass-optical" style="padding:calc(var(--u)*2.5);min-height:132px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.15 0 0)">02 · Optical</div>
+        <div style="font-size:11px;color:oklch(0.2 0 0 / 0.7);margin-top:5px">Rim lensing, caustics, dispersion. CSS only.</div>
+      </div>
+      <div class="glass-refractive" style="padding:calc(var(--u)*2.5);min-height:132px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.15 0 0)">03 · Refractive</div>
+        <div style="font-size:11px;color:oklch(0.2 0 0 / 0.7);margin-top:5px">Backdrop actually displaced. Grid bends.</div>
+      </div>
+      <div class="glass-refractive glass-liquid" style="padding:calc(var(--u)*2.5);min-height:132px;display:flex;flex-direction:column;justify-content:flex-end" data-testid="glass-liquid">
+        <div style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:oklch(0.15 0 0)">04 · Liquid</div>
+        <div style="font-size:11px;color:oklch(0.2 0 0 / 0.7);margin-top:5px">Hover — radius morphs, body swells.</div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>The grid behind the panels is the test.</b> Straight rules are the only honest way
+      to show refraction: under 01 they stay straight and merely blur, under 03 they bend.
+      If a glass treatment can't visibly distort a straight line, it isn't glass — it's a
+      translucent rectangle.
+    </div>
+    <div class="note warn">
+      <b>Glass needs a subject, and that's the real cost.</b> Every panel here sits on a
+      deliberately busy bed. Over flat grey it collapses back into the cliché no matter how
+      good the optics are. For this deck that's actually fine — the demos are behind the
+      chrome — but it means glass can only be used where something is genuinely running
+      underneath, never as a default panel style.
+    </div>
+    <div class="note warn">
+      <b>Cost check.</b> <code>backdrop-filter</code> forces the compositor to re-sample
+      everything beneath, and the SVG displacement doubles that. Three of these on screen is
+      fine; one over a live WebGPU particle sim is not. Rule for the build: <b>glass never
+      overlaps a running demo</b> — it goes on chrome that sits beside one.
+    </div>
+  </section>
+
+  <!-- ═══ LIQUID ═════════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>liquid physics</h2><span class="rule"></span><span class="ref">Fig. 3</span></div>
+    <p class="lead">
+      Surface tension, not bounce. The distinction that matters: liquid <b>merges and
+      separates</b>, it doesn't oscillate. A blob that springs back reads as rubber.
+    </p>
+
+    <div class="micro-grid" data-testid="liquid-set">
+      <div class="micro goo-wrap">
+        <div class="demo" style="width:100%">
+          <div class="goo"><b></b><b></b><b></b></div>
+        </div>
+        <div class="nm">A · Metaball fusion</div>
+        <div class="sp"><b>Trigger</b> hover · <b>420ms</b> · liquid<br>Blur plus an alpha threshold, so shapes fuse as they approach. The only true "liquid" primitive — everything else is easing.</div>
+      </div>
+
+      <div class="micro">
+        <div class="demo" style="width:100%">
+          <div class="ripple" style="width:100%;height:72px;border-radius:8px;background:linear-gradient(180deg,var(--hz-200),var(--hz-100));box-shadow:var(--edge),var(--lift-1);display:grid;place-items:center" data-testid="ripple-pad">
+            <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--hz-500);pointer-events:none">Click anywhere</span>
+          </div>
+        </div>
+        <div class="nm">B · Contact ripple</div>
+        <div class="sp"><b>Trigger</b> click · <b>620ms</b> · decelerate<br>Originates at the contact point, never the centre. Causality — motion starts where the user acted.</div>
+      </div>
+
+      <div class="micro">
+        <div class="demo" style="width:100%">
+          <div class="fill js-fill" data-testid="liquid-fill"><span class="level"></span></div>
+        </div>
+        <div class="nm">C · Liquid level</div>
+        <div class="sp"><b>Trigger</b> click · <b>1100ms</b> · liquid<br>A level with a moving surface rather than a bar. Two counter-rotating discs make the meniscus. Waves stop under reduced motion.</div>
+      </div>
+
+      <div class="micro">
+        <div class="demo" style="width:100%">
+          <div class="seg-nav js-seg" data-testid="seg-nav">
+            <span class="pill"></span>
+            <button aria-selected="true">Deck</button>
+            <button aria-selected="false">Notes</button>
+            <button aria-selected="false">Grid</button>
+          </div>
+        </div>
+        <div class="nm">D · Elastic indicator</div>
+        <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>Resists leaving, catches up, settles without oscillating. The <code>linear()</code> curve does what a bezier can't express.</div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>One new curve, and it revises an earlier claim.</b> Section 00 said overshoot is
+      honest in exactly one place — the detent. That was true before liquid existed here;
+      it's now two. <code>--ease-liquid</code> is authored with <code>linear()</code>
+      because a mass-on-a-spring response has more inflections than four bezier control
+      points can carry.
+    </div>
+    <div class="note warn">
+      <b>Where liquid does not belong.</b> Slide advance. It happens 200+ times before
+      delivery, and surface tension at that frequency is the exact failure mode SCOPE.md
+      names — charming once, infuriating on the fortieth. Liquid is for moments of arrival:
+      the indicator landing, a level filling, a hero reveal.
+    </div>
+  </section>
+
   <!-- ═══ MICRO-ANIMATIONS ═══════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">02</span><h2>micro-animations</h2><span class="rule"></span><span class="ref">Fig. 2 · 12 entries</span></div>
+    <div class="sec-head"><span class="idx">04</span><h2>micro-animations</h2><span class="rule"></span><span class="ref">Fig. 4 · 12 entries</span></div>
     <p class="lead">
       Every one is live. Triggers are marked — hover, click, or ambient. Durations and
       easing are stated so they can be implemented without guessing.
@@ -770,7 +1179,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
   <!-- ═══ MOTION TOKENS ══════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">03</span><h2>motion tokens</h2><span class="rule"></span><span class="ref">Two curves added</span></div>
+    <div class="sec-head"><span class="idx">05</span><h2>motion tokens</h2><span class="rule"></span><span class="ref">Three curves added</span></div>
     <table class="dur-table" data-testid="duration-table">
       <tr><th>Curve</th><th>Value</th><th>Use</th></tr>
       <tr><td>--ease-standard</td><td>0.2,0,0,1</td><td>Default. Slide advance, most state change.</td></tr>
@@ -779,17 +1188,19 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
       <tr><td>--ease-mechanical</td><td>0.4,0,0.2,1</td><td>Readouts, counters, segment switching.</td></tr>
       <tr><td>--ease-detent</td><td>0.34,1.28,0.64,1</td><td><b>New.</b> Sprung mechanisms only — encoder, toggle. Slight overshoot.</td></tr>
       <tr><td>--ease-ballistic</td><td>0.16,0.84,0.28,1</td><td><b>New.</b> Meters and needles. Damped, no overshoot.</td></tr>
+      <tr><td>--ease-liquid</td><td>linear(…)</td><td><b>New.</b> Surface tension — merge, level, elastic indicator. Authored as <code>linear()</code>; a bezier can't carry the inflections.</td></tr>
     </table>
     <div class="note warn">
-      <b>Six curves is the ceiling.</b> Past this, a motion system stops being a system —
-      nobody can hold seven curves in their head, and they start getting picked by feel.
-      If a seventh is needed, one of these is wrong.
+      <b>Seven curves is the ceiling, and this is it.</b> Past this a motion system stops
+      being a system — nobody holds eight curves in their head and they start getting
+      picked by feel. Liquid earned the seventh slot because <code>linear()</code> does
+      something no bezier here can. An eighth means one of these is wrong.
     </div>
   </section>
 
   <!-- ═══ COLOUR ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">04</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
+    <div class="sec-head"><span class="idx">06</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
     <div class="tints" data-testid="tint-set">
       <button class="tint-card" data-tint="var(--tint-video)"><div class="swatch" style="background:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
       <button class="tint-card" data-tint="var(--tint-css)"><div class="swatch" style="background:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
@@ -808,7 +1219,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
   <!-- ═══ PRESENTER ══════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">05</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 3</span></div>
+    <div class="sec-head"><span class="idx">07</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 5</span></div>
     <div class="plate mat-blasted chamfer" style="padding:calc(var(--u)*6) calc(var(--u)*5)" data-testid="presenter-unit">
       <span class="screw tl"></span><span class="screw tr"></span>
       <span class="screw bl"></span><span class="screw br"></span>
@@ -840,7 +1251,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 
   <!-- ═══ SLIDES ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">06</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
+    <div class="sec-head"><span class="idx">08</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
     <div class="slide-cap">Layout · title</div>
     <div class="slide" style="margin-bottom:calc(var(--u)*5)">
       <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
@@ -952,6 +1363,42 @@ document.querySelectorAll('.js-adv').forEach(a => {
   });
 });
 
+/* B · contact ripple — sized to reach the far corner from the
+   contact point, so the wave always clears the element */
+document.querySelectorAll('.ripple').forEach(pad => {
+  pad.addEventListener('click', e => {
+    const r = pad.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    const reach = Math.hypot(Math.max(x, r.width - x), Math.max(y, r.height - y)) * 2;
+    const s = document.createElement('span');
+    s.style.left = x + 'px'; s.style.top = y + 'px';
+    s.style.width = s.style.height = reach + 'px';
+    pad.appendChild(s);
+    s.addEventListener('animationend', () => s.remove());
+  });
+});
+
+/* C · liquid level */
+document.querySelectorAll('.js-fill').forEach(f => {
+  f.addEventListener('click', () => f.classList.toggle('on'));
+});
+
+/* D · elastic indicator — the pill is measured from the real
+   button box, so it stretches correctly at any label length */
+document.querySelectorAll('.js-seg').forEach(nav => {
+  const pill = nav.querySelector('.pill');
+  const btns = [...nav.querySelectorAll('button')];
+  const move = b => {
+    pill.style.left = (b.offsetLeft) + 'px';
+    pill.style.width = (b.offsetWidth) + 'px';
+    btns.forEach(x => x.setAttribute('aria-selected', String(x === b)));
+  };
+  btns.forEach(b => b.addEventListener('click', () => move(b)));
+  requestAnimationFrame(() => move(btns[0]));
+  window.addEventListener('resize', () =>
+    move(btns.find(b => b.getAttribute('aria-selected') === 'true') || btns[0]));
+});
+
 /* boot sequence */
 function boot() {
   selftest();
@@ -988,7 +1435,9 @@ const rmBtn = document.getElementById('toggleRM');
 const rmState = document.getElementById('rmState');
 const rmStyle = document.createElement('style');
 rmStyle.textContent = `
-  body.rm .led.breathe, body.rm .led.blink, body.rm .lightpipe span, body.rm .sweep::after { animation: none !important; }
+  body.rm .led.breathe, body.rm .led.blink, body.rm .lightpipe span, body.rm .sweep::after,
+  body.rm .fill .level::before, body.rm .fill .level::after { animation: none !important; }
+  body.rm .glass-liquid:hover { transform: none !important; border-radius: 18px !important; }
   body.rm *, body.rm *::before, body.rm *::after {
     animation-duration: 0.01ms !important; transition-duration: 0.01ms !important;
   }`;
