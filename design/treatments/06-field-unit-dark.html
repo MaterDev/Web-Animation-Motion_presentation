@@ -187,10 +187,27 @@ section { margin-bottom: calc(var(--u) * 12); }
 .giga-page .led.breathe { animation: gigaLedBreathe 2.6s var(--ease-standard) infinite; }
 @keyframes gigaLedBreathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-.giga-page .toggle { background: transparent; box-shadow: none; border: 2px solid oklch(0.30 0.05 140 / 0.5); }
+/* Redone: the first pass was a small block sliding inside a track
+   with a gap on either side — inside a rounded outline that read as
+   a rectangle nested in a rectangle, not obviously a two-state
+   switch. This fills exactly one half of the track solid and
+   leaves the other half empty, with a divider line between them —
+   an on/off segment readout, unambiguous at a glance either state. */
+.giga-page .toggle {
+  background: oklch(0.30 0.05 140 / 0.08); box-shadow: none;
+  border: 2px solid oklch(0.30 0.05 140 / 0.55); overflow: hidden;
+}
 .giga-page .toggle::before { content: none; }
-.giga-page .toggle i { background: oklch(0.26 0.05 140); box-shadow: none; }
+.giga-page .toggle::after {
+  content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px;
+  background: oklch(0.30 0.05 140 / 0.4); transform: translateX(-1px);
+}
+.giga-page .toggle i {
+  top: 0; left: 0; width: 50%; height: 100%; border-radius: 0;
+  background: oklch(0.26 0.05 140); box-shadow: none; transform: translateX(0);
+}
 .giga-page .toggle i::after { content: none; }
+.giga-page .toggle.on i { transform: translateX(100%); }
 .giga-page .toggle.on { border-color: oklch(0.26 0.05 140 / 0.75); }
 
 .giga-page .ibtn {
