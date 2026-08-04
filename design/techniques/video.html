@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SL-04 · Video / GIF — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-video); }
+.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u)*3); margin-bottom: calc(var(--u)*3); }
+.panel { aspect-ratio: 16/10; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; display: grid; place-items: center; }
+.panel .mark { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); text-align: center; }
+.panel .size { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--hz-400); }
+.panel .fmt { position: absolute; right: 12px; top: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--tint); text-transform: uppercase; }
+/* simple looping placeholder motion so the panel isn't dead static
+   while there's no real asset — a soft pulse, standing in for
+   "something is playing here" */
+.panel .pulse { width: 46px; height: 46px; border-radius: 50%; background: var(--tint); opacity: 0.5; animation: pulse 2.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(0.85); opacity: 0.35; } 50% { transform: scale(1.1); opacity: 0.6; } }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+</style>
+</head>
+<body data-testid="technique-video">
+
+<div class="wrap">
+  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-04">Techniques</a></div>
+  <div class="head"><span class="code">SL-04</span><h1>video / gif</h1></div>
+  <p class="dek">
+    The baseline. Pre-baked pixels, no interactivity — everything after this slide is
+    measured against what these two formats cost to deliver the same motion.
+  </p>
+
+  <div class="pair" data-testid="demo-canvas">
+    <div class="panel">
+      <span class="fmt">GIF</span>
+      <div class="pulse"></div>
+      <span class="size">— MB · no asset baked yet</span>
+    </div>
+    <div class="panel">
+      <span class="fmt">MP4</span>
+      <div class="pulse"></div>
+      <span class="size">— MB · no asset baked yet</span>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 04</h3>
+    <p>"Baseline: Video &amp; GIF — pre-baked pixels, no interactivity; visual: thread demo
+      as GIF and video side by side with file sizes labeled."</p>
+    <p>Both panels are placeholders — there's no real thread-demo footage to encode yet
+      (same brandmark/vector-asset dependency the SVG and Canvas pages are blocked on).
+      Once it exists, the plan per SCOPE.md is to bake it live on stage via
+      <code>ffmpeg.wasm</code> or Remotion, then drop the real file sizes into the two
+      labels above.</p>
+  </div>
+</div>
+
+</body>
+</html>

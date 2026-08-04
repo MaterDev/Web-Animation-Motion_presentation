@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SL-06 · Composite — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-composite); }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+
+.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); padding: calc(var(--u)*4); display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u)*3); }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+
+/* ── the demo: two identical boxes, one animated via transform
+   (compositor-only), one via left/width (forces layout every frame).
+   Both run the same duration/easing so the ONLY variable is which
+   CSS property is moving. */
+.lane { display: flex; align-items: center; gap: 16px; }
+.lane .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); width: 96px; flex: none; }
+.track { position: relative; flex: 1; height: 56px; background: var(--well-floor); border-radius: 6px; box-shadow: var(--recess); overflow: hidden; }
+.mover { position: absolute; top: 8px; left: 8px; width: 40px; height: 40px; border-radius: 6px; background: var(--tint); box-shadow: 0 4px 10px color-mix(in oklch, var(--tint) 40%, transparent); }
+
+.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
+.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-testid="technique-composite">
+
+<div class="wrap">
+  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-06">Techniques</a></div>
+
+  <div class="head"><span class="code">SL-06</span><h1>composite</h1></div>
+  <p class="dek">
+    CPU vs. GPU. <code>transform</code>/<code>opacity</code> are compositor-only — cheap.
+    <code>left</code>/<code>width</code> force layout every frame — expensive. Same duration,
+    same easing, only the property differs.
+  </p>
+
+  <div class="canvas-frame" data-testid="demo-canvas">
+    <div class="lane">
+      <span class="lbl">transform</span>
+      <div class="track"><div class="mover" id="moverGood"></div></div>
+    </div>
+    <div class="lane">
+      <span class="lbl">left / width</span>
+      <div class="track"><div class="mover" id="moverBad"></div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="ibtn primary" id="run">▶ Run both</button>
+    <span class="fps">Frame time — transform: <b id="fpsGood">—</b> · left/width: <b id="fpsBad">—</b></span>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 06</h3>
+    <p>"CPU vs. GPU: Compositing — transform/opacity are GPU-cheap, width/top/left force
+      layout ('jank'); visual: live side-by-side janky vs. smooth box animation with a
+      measured FPS readout and an adjustable layout load."</p>
+    <p>This is a working first pass at that: real transform vs. real left/width, run
+      side by side. The frame-time readout above is a rough <code>performance.now()</code>
+      delta between rAF ticks during the run, not a proper FPS meter — a real one (and the
+      "adjustable layout load" control) is the next step here, not built yet.</p>
+  </div>
+</div>
+
+<script>
+const good = document.getElementById('moverGood');
+const bad  = document.getElementById('moverBad');
+const fpsGoodEl = document.getElementById('fpsGood');
+const fpsBadEl  = document.getElementById('fpsBad');
+
+function measure(el, useLeft, out) {
+  return new Promise(resolve => {
+    const track = el.parentElement;
+    const dist = track.clientWidth - el.clientWidth - 16;
+    let frames = 0, last = performance.now(), total = 0;
+    el.style.transition = 'none';
+    if (useLeft) { el.style.left = '8px'; el.style.transform = 'none'; }
+    else { el.style.left = '8px'; el.style.transform = 'translateX(0)'; }
+    void el.offsetWidth;
+
+    const dur = 900;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - t, 3);
+      if (useLeft) el.style.left = (8 + eased * dist) + 'px';
+      else el.style.transform = `translateX(${eased * dist}px)`;
+
+      frames++; total += now - last; last = now;
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        out.textContent = (total / frames).toFixed(2) + 'ms/frame';
+        resolve();
+      }
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+document.getElementById('run').addEventListener('click', async () => {
+  await Promise.all([
+    measure(good, false, fpsGoodEl),
+    measure(bad, true, fpsBadEl),
+  ]);
+});
+</script>
+
+</body>
+</html>

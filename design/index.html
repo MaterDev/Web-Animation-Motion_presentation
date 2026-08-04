@@ -3,292 +3,95 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>design treatments — web animation &amp; motion</title>
+<title>design — web animation &amp; motion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="system/tokens.css">
 <style>
-  :root {
-    --hz-000: oklch(0.14 0.006 265);
-    --hz-050: oklch(0.18 0.006 265);
-    --hz-100: oklch(0.22 0.007 265);
-    --hz-200: oklch(0.28 0.008 265);
-    --hz-300: oklch(0.36 0.008 265);
-    --hz-400: oklch(0.48 0.008 265);
-    --hz-500: oklch(0.62 0.007 265);
-    --hz-600: oklch(0.75 0.005 265);
-    --hz-800: oklch(0.96 0.002 265);
-    --signal: oklch(0.62 0.24 27);
-    --sans: 'Inter', system-ui, sans-serif;
-    --mono: 'JetBrains Mono', ui-monospace, monospace;
-    --ease: cubic-bezier(0.2, 0, 0, 1);
-  }
+/* Sidebar + iframe harness. Same shape as the old multi-treatment
+   switcher, but the list is now grouped — Reference (the T-06
+   system sheet, the layouts gallery) and Techniques (one page per
+   SCOPE.md spectrum stage) — instead of parallel design variations.
+   T-01–T-05 stay archived on disk; this shell only points at T-06. */
 
-  * { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
 
-  html, body {
-    height: 100%;
-    margin: 0;
-  }
+body {
+  display: grid;
+  grid-template-columns: 264px 1fr;
+  background: var(--hz-000);
+  color: var(--hz-600);
+  font-family: var(--sans);
+  font-size: 14px;
+  overflow: hidden;
+}
 
-  body {
-    display: grid;
-    grid-template-columns: 264px 1fr;
-    background: var(--hz-000);
-    color: var(--hz-600);
-    font-family: var(--sans);
-    font-size: 14px;
-    overflow: hidden;
-  }
+/* ── sidebar ─────────────────────────────────────────── */
 
-  /* ── sidebar ─────────────────────────────────────────── */
+.rail { display: flex; flex-direction: column; border-right: var(--hair) solid var(--hz-300); background: var(--hz-050); overflow: hidden; }
+.rail-head { padding: 18px 18px 16px; border-bottom: var(--hair) solid var(--hz-300); }
+.rail-code { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 8px; }
+.rail-title { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--hz-800); line-height: 1.3; }
+.rail-sub { font-family: var(--mono); font-size: 10.5px; color: var(--hz-400); margin-top: 6px; line-height: 1.5; }
 
-  .rail {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--hz-300);
-    background: var(--hz-050);
-    overflow: hidden;
-  }
+.rail-label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-400); padding: 16px 18px 8px; }
+.list { list-style: none; margin: 0; padding: 0 10px; overflow-y: auto; flex: 1; }
 
-  .rail-head {
-    padding: 18px 18px 16px;
-    border-bottom: 1px solid var(--hz-300);
-  }
+.item {
+  width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: baseline;
+  padding: 10px 10px; border: 0; border-radius: 5px; background: transparent;
+  color: var(--hz-500); font: inherit; text-align: left; cursor: pointer;
+  transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard);
+}
+.item:hover { background: var(--hz-100); color: var(--hz-600); }
+.item[aria-current='true'] { background: var(--hz-200); color: var(--hz-800); }
+.item-code { font-family: var(--mono); font-size: 10px; color: var(--ct, var(--hz-400)); letter-spacing: 0.04em; }
+.item[aria-current='true'] .item-code { color: var(--ct, var(--hz-600)); }
+.item-name { font-size: 13px; line-height: 1.35; }
+.item-note { grid-column: 2; font-family: var(--mono); font-size: 10px; color: var(--hz-400); margin-top: 3px; line-height: 1.45; }
 
-  .rail-code {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--hz-400);
-    margin-bottom: 8px;
-  }
+.rail-foot { border-top: var(--hair) solid var(--hz-300); padding: 12px 18px 14px; font-family: var(--mono); font-size: 10px; color: var(--hz-400); line-height: 1.7; }
+.rail-foot kbd { font-family: var(--mono); font-size: 9.5px; background: var(--hz-100); border: var(--hair) solid var(--hz-300); border-radius: 3px; padding: 1px 4px; color: var(--hz-500); }
 
-  .rail-title {
-    font-size: 15px;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    color: var(--hz-800);
-    line-height: 1.3;
-  }
+/* ── stage ───────────────────────────────────────────── */
 
-  .rail-sub {
-    font-family: var(--mono);
-    font-size: 10.5px;
-    color: var(--hz-400);
-    margin-top: 6px;
-    line-height: 1.5;
-  }
+.stage { display: flex; flex-direction: column; overflow: hidden; background: radial-gradient(var(--hz-200) 0.5px, transparent 0.5px) 0 0 / 8px 8px, var(--hz-000); }
+.bar { display: flex; align-items: center; gap: 14px; padding: 0 16px; height: 44px; border-bottom: var(--hair) solid var(--hz-300); background: var(--hz-050); flex: none; }
+.bar-title { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
+.bar-spacer { flex: 1; }
 
-  .rail-label {
-    font-family: var(--mono);
-    font-size: 9.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--hz-400);
-    padding: 16px 18px 8px;
-  }
+.seg { display: flex; border: var(--hair) solid var(--hz-300); border-radius: 5px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--hz-500); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; padding: 5px 11px; cursor: pointer; transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard); }
+.seg button + button { border-left: var(--hair) solid var(--hz-300); }
+.seg button:hover { background: var(--hz-100); color: var(--hz-600); }
+.seg button[aria-pressed='true'] { background: var(--hz-200); color: var(--hz-800); }
 
-  .list {
-    list-style: none;
-    margin: 0;
-    padding: 0 10px;
-    overflow-y: auto;
-    flex: 1;
-  }
+.btn { border: var(--hair) solid var(--hz-300); border-radius: 5px; background: transparent; color: var(--hz-500); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; padding: 5px 11px; cursor: pointer; text-decoration: none; transition: background 160ms var(--ease-standard), color 160ms var(--ease-standard); }
+.btn:hover { background: var(--hz-100); color: var(--hz-800); }
 
-  .item {
-    width: 100%;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 10px;
-    align-items: baseline;
-    padding: 10px 10px;
-    border: 0;
-    border-radius: 5px;
-    background: transparent;
-    color: var(--hz-500);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition: background var(--dur, 160ms) var(--ease),
-                color 160ms var(--ease);
-  }
+.frame-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 0; }
+.frame-wrap[data-w='fit'] { padding: 0; }
+.frame-wrap:not([data-w='fit']) { padding: 20px; }
 
-  .item:hover { background: var(--hz-100); color: var(--hz-600); }
-
-  .item[aria-current='true'] {
-    background: var(--hz-200);
-    color: var(--hz-800);
-  }
-
-  .item-code {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--hz-400);
-    letter-spacing: 0.04em;
-  }
-
-  .item[aria-current='true'] .item-code { color: var(--tint, var(--hz-600)); }
-
-  .item-name {
-    font-size: 13px;
-    line-height: 1.35;
-  }
-
-  .item-note {
-    grid-column: 2;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--hz-400);
-    margin-top: 3px;
-    line-height: 1.45;
-  }
-
-  .rail-foot {
-    border-top: 1px solid var(--hz-300);
-    padding: 12px 18px 14px;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--hz-400);
-    line-height: 1.7;
-  }
-
-  .rail-foot kbd {
-    font-family: var(--mono);
-    font-size: 9.5px;
-    background: var(--hz-100);
-    border: 1px solid var(--hz-300);
-    border-radius: 3px;
-    padding: 1px 4px;
-    color: var(--hz-500);
-  }
-
-  /* ── stage ───────────────────────────────────────────── */
-
-  .stage {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background:
-      radial-gradient(var(--hz-200) 0.5px, transparent 0.5px) 0 0 / 8px 8px,
-      var(--hz-000);
-  }
-
-  .bar {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 0 16px;
-    height: 44px;
-    border-bottom: 1px solid var(--hz-300);
-    background: var(--hz-050);
-    flex: none;
-  }
-
-  .bar-title {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--hz-500);
-  }
-
-  .bar-spacer { flex: 1; }
-
-  .seg {
-    display: flex;
-    border: 1px solid var(--hz-300);
-    border-radius: 5px;
-    overflow: hidden;
-  }
-
-  .seg button {
-    border: 0;
-    background: transparent;
-    color: var(--hz-500);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: 0.06em;
-    padding: 5px 11px;
-    cursor: pointer;
-    transition: background 160ms var(--ease), color 160ms var(--ease);
-  }
-
-  .seg button + button { border-left: 1px solid var(--hz-300); }
-  .seg button:hover { background: var(--hz-100); color: var(--hz-600); }
-  .seg button[aria-pressed='true'] { background: var(--hz-200); color: var(--hz-800); }
-
-  .btn {
-    border: 1px solid var(--hz-300);
-    border-radius: 5px;
-    background: transparent;
-    color: var(--hz-500);
-    font-family: var(--mono);
-    font-size: 10.5px;
-    letter-spacing: 0.06em;
-    padding: 5px 11px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 160ms var(--ease), color 160ms var(--ease);
-  }
-
-  .btn:hover { background: var(--hz-100); color: var(--hz-800); }
-
-  .frame-wrap {
-    flex: 1;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-  }
-
-  .frame-wrap[data-w='fit'] { padding: 0; }
-  .frame-wrap:not([data-w='fit']) { padding: 20px; }
-
-  iframe {
-    border: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--hz-000);
-    display: block;
-  }
-
-  .frame-wrap:not([data-w='fit']) iframe {
-    border: 1px solid var(--hz-300);
-    border-radius: 6px;
-    box-shadow: 0 24px 60px oklch(0 0 0 / 0.5);
-    height: auto;
-    min-height: 100%;
-  }
-
-  .empty {
-    margin: auto;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--hz-400);
-    line-height: 1.8;
-    max-width: 400px;
-  }
+iframe { border: 0; width: 100%; height: 100%; background: var(--hz-000); display: block; }
+.frame-wrap:not([data-w='fit']) iframe { border: var(--hair) solid var(--hz-300); border-radius: 6px; box-shadow: 0 24px 60px oklch(0 0 0 / 0.5); height: auto; min-height: 100%; }
 </style>
 </head>
 <body>
 
-<nav class="rail" data-testid="treatment-rail">
+<nav class="rail" data-testid="nav-rail">
   <div class="rail-head">
     <div class="rail-code">WAM-2026 / DESIGN</div>
-    <div class="rail-title">Design treatments</div>
-    <div class="rail-sub">Each treatment is a standalone file.<br>Fork one to iterate.</div>
+    <div class="rail-title">T-06 · Field Unit (Dark)</div>
+    <div class="rail-sub">Kept base treatment. T-01–T-05 archived on<br>disk, off this list. See design/system/ for<br>the shared tokens + components.</div>
   </div>
 
-  <div class="rail-label">Treatments</div>
-  <ul class="list" id="list" data-testid="treatment-list"></ul>
+  <ul class="list" id="list" data-testid="nav-list"></ul>
 
   <div class="rail-foot">
     <kbd>1</kbd>–<kbd>9</kbd> switch &nbsp; <kbd>R</kbd> reload<br>
-    Add one: edit <span style="color:var(--hz-500)">TREATMENTS</span> in index.html
+    Add a page: edit <span style="color:var(--hz-500)">ITEMS</span> in index.html
   </div>
 </nav>
 
@@ -307,27 +110,26 @@
   </div>
 
   <div class="frame-wrap" id="wrap" data-w="fit">
-    <iframe id="frame" title="Design treatment preview" data-testid="treatment-frame"></iframe>
+    <iframe id="frame" title="Design page preview" data-testid="page-frame"></iframe>
   </div>
 </main>
 
 <script>
 /* ─────────────────────────────────────────────────────────
-   Treatment manifest.
-   To add an iteration: copy a file in treatments/, rename it,
-   then add one entry here. Nothing else needs to change.
+   Item manifest, grouped. `ct` (optional) tints the item's code
+   in the sidebar to match that technique's section tint, so the
+   list itself previews the colour system before you click in.
    ───────────────────────────────────────────────────────── */
-/* T-01 through T-05 are archived, not deleted — still on disk in
-   treatments/, just off the switcher. T-06 is the kept base; every
-   iteration now happens there rather than by forking a new file.
-   Re-add an entry below (same shape as T-06's) to bring one back. */
-const TREATMENTS = [
-  {
-    code: 'T-06',
-    name: 'Field Unit (Dark)',
-    note: 'T-05, dark ground — base',
-    file: 'treatments/06-field-unit-dark.html',
-  },
+const ITEMS = [
+  { group: 'Reference', code: 'SYS', name: 'System', note: 'T-06 — the design system reference sheet', file: 'treatments/06-field-unit-dark.html' },
+  { group: 'Reference', code: 'LAY', name: 'Layouts', note: 'Slide layout gallery, click a tile to preview', file: 'layouts/index.html' },
+  { group: 'Techniques', code: 'SL-04', name: 'Video / GIF', note: 'Baseline — pre-baked pixels', file: 'techniques/video.html', ct: 'var(--tint-video)' },
+  { group: 'Techniques', code: 'SL-05', name: 'CSS', note: 'Browser-managed motion', file: 'techniques/css.html', ct: 'var(--tint-css)' },
+  { group: 'Techniques', code: 'SL-06', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', ct: 'var(--tint-composite)' },
+  { group: 'Techniques', code: 'SL-08', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', ct: 'var(--tint-svg)' },
+  { group: 'Techniques', code: 'SL-09', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', ct: 'var(--tint-canvas)' },
+  { group: 'Techniques', code: 'SL-10', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', ct: 'var(--tint-webgl)' },
+  { group: 'Techniques', code: 'SL-12', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', ct: 'var(--tint-webgpu)' },
 ];
 
 const list     = document.getElementById('list');
@@ -340,13 +142,22 @@ let active = 0;
 
 function render() {
   list.innerHTML = '';
-  TREATMENTS.forEach((t, i) => {
+  let lastGroup = null;
+  ITEMS.forEach((t, i) => {
+    if (t.group !== lastGroup) {
+      const label = document.createElement('div');
+      label.className = 'rail-label';
+      label.textContent = t.group;
+      list.appendChild(label);
+      lastGroup = t.group;
+    }
     const li = document.createElement('li');
     const b  = document.createElement('button');
     b.className = 'item';
     b.type = 'button';
+    b.style.setProperty('--ct', t.ct || '');
     b.setAttribute('aria-current', String(i === active));
-    b.setAttribute('data-testid', `treatment-item-${t.code.toLowerCase()}`);
+    b.setAttribute('data-testid', `nav-item-${t.code.toLowerCase()}`);
     b.innerHTML =
       `<span class="item-code">${t.code}</span>` +
       `<span class="item-name">${t.name}</span>` +
@@ -359,7 +170,7 @@ function render() {
 
 function select(i) {
   active = i;
-  const t = TREATMENTS[i];
+  const t = ITEMS[i];
   frame.src = t.file;
   barTitle.textContent = `${t.code} · ${t.name}`;
   popout.href = t.file;
@@ -385,12 +196,11 @@ document.getElementById('widths').addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const n = parseInt(e.key, 10);
-  if (n >= 1 && n <= TREATMENTS.length) select(n - 1);
+  if (n >= 1 && n <= ITEMS.length) select(n - 1);
   if (e.key.toLowerCase() === 'r') frame.src = frame.src;
 });
 
-const fromHash = TREATMENTS.findIndex(
-  t => t.code.toLowerCase() === location.hash.slice(1));
+const fromHash = ITEMS.findIndex(t => t.code.toLowerCase() === location.hash.slice(1));
 select(fromHash >= 0 ? fromHash : 0);
 </script>
 

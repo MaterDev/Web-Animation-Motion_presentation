@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Layouts — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+/* Every slide from SCOPE.md's content outline, scaled down in a
+   grid. Data and rendering are separate (per DESIGN.md §3.1) — the
+   SLIDES array below is the only place slide content lives; both
+   the grid thumbnail and the modal preview render from it. */
+
+:root { --tint: var(--tint-webgpu); }
+
+.wrap { max-width: 1280px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head h1 { font-size: clamp(36px, 6vw, 60px); margin-bottom: 10px; }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*6); }
+
+/* ── thumbnail grid ──────────────────────────────────────
+   Each .slide is built at its real design size (960×540, the
+   deck's actual 16:9) and scaled down with a transform — not
+   shrunk via clamp()'s vw component, which would fight its own
+   minimum bound at small sizes and either overflow or wrap wrong.
+   That guarantees the thumbnail is pixel-faithful to the real
+   slide, not an approximation of it. */
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u)*3); }
+.tile { display: block; border: 0; padding: 0; background: transparent; cursor: pointer; text-align: left; width: 100%; }
+.tile-frame {
+  display: block; width: 100%;
+  aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; position: relative;
+  box-shadow: var(--edge), var(--lift-1);
+  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
+}
+.tile:hover .tile-frame { transform: translateY(-3px); box-shadow: var(--edge), var(--lift-3); }
+.tile:focus-visible .tile-frame { outline: 2px solid var(--tint); outline-offset: 2px; }
+.tile-frame .stage-960 { width: 960px; height: 540px; position: absolute; top: 0; left: 0; transform-origin: top left; }
+.tile-cap { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+.tile-cap .n { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); letter-spacing: 0.06em; flex: none; }
+.tile-cap .t { font-size: 11.5px; color: var(--hz-600); text-transform: lowercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile-cap .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ct, var(--hz-400)); flex: none; }
+
+/* ── modal ────────────────────────────────────────────── */
+dialog {
+  border: 0; padding: 0; background: transparent; max-width: none; max-height: none;
+  width: 100%; height: 100%; margin: 0;
+}
+dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px); }
+.modal-inner { width: 100%; height: 100%; display: grid; place-items: center; padding: calc(var(--u)*5); }
+.modal-stage { width: min(1200px, 92vw); aspect-ratio: 16/9; position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 30px 70px oklch(0 0 0 / 0.6); }
+.modal-stage .stage-960 { width: 960px; height: 540px; position: absolute; top: 0; left: 0; transform-origin: top left; }
+.modal-bar { position: fixed; top: calc(var(--u)*3); right: calc(var(--u)*3); display: flex; gap: 10px; z-index: 3; }
+
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 760px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body data-testid="layouts-gallery">
+
+<div class="wrap">
+  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><span style="color:var(--hz-600)">Layouts</span></div>
+  <div class="head"><h1>layouts</h1></div>
+  <p class="dek">
+    All 14 slides from SCOPE.md's content outline, built as real <code>.slide</code>
+    components at 960×540 and scaled down — not approximated. Click a tile for a full-size
+    preview.
+  </p>
+
+  <div class="grid" id="grid" data-testid="layouts-grid"></div>
+</div>
+
+<dialog id="modal" data-testid="layouts-modal">
+  <div class="modal-bar">
+    <button class="ibtn" id="closeModal" data-testid="modal-close">✕ Close</button>
+  </div>
+  <div class="modal-inner">
+    <div class="modal-stage" id="modalStage"></div>
+  </div>
+</dialog>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SLIDE DATA — the only place content lives. `layout` selects a
+   render function below; `tint` (optional) is the section colour
+   for technique slides, matching design/index.html's tint map.
+   ═══════════════════════════════════════════════════════ */
+const SLIDES = [
+  { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'title',
+    kicker: 'WAM-2026', h: 'web animation<br>&amp; motion', body: 'Thread demo already running full-bleed, no explanation yet.' },
+  { n: '02', code: 'SL-02', title: 'the thesis', layout: 'statement',
+    kicker: 'Thesis', h: "a site's value is no longer<br>the content it holds" },
+  { n: '03', code: 'SL-03', title: 'the map', layout: 'map',
+    kicker: 'The Map', h: 'the spectrum',
+    items: ['video / gif', 'css', 'composite', 'svg', 'canvas', 'webgl', 'webgpu'] },
+  { n: '04', code: 'SL-04', title: 'baseline: video & gif', layout: 'split-media', tint: 'var(--tint-video)',
+    kicker: 'Video / GIF', h: 'pre-baked pixels', body: 'No interactivity — the baseline everything else is measured against.' },
+  { n: '05', code: 'SL-05', title: 'css + render pipeline', layout: 'split-media', tint: 'var(--tint-css)',
+    kicker: 'CSS', h: 'browser-managed motion', body: 'Layout → Paint → Composite, plus a live hover/transition demo.' },
+  { n: '06', code: 'SL-06', title: 'cpu vs. gpu: compositing', layout: 'split-media', tint: 'var(--tint-composite)',
+    kicker: 'Composite', h: 'transform vs. layout', body: 'GPU-cheap properties vs. layout-forcing ones, side by side, with a measured frame-time readout.' },
+  { n: '07', code: 'SL-07', title: 'when motion earns its place', layout: 'triptych', tint: 'var(--hz-400)',
+    kicker: 'Motion Craft', h: 'restraint',
+    items: ['no motion', 'well-judged', 'overdone'] },
+  { n: '08', code: 'SL-08', title: 'svg animation', layout: 'split-media', tint: 'var(--tint-svg)',
+    kicker: 'SVG', h: 'vector, dom-based', body: 'Tens of real DOM nodes, resolving into the brandmark via path morph.' },
+  { n: '09', code: 'SL-09', title: 'canvas 2d', layout: 'split-media', tint: 'var(--tint-canvas)',
+    kicker: 'Canvas', h: 'imperative pixels', body: 'Thousands of points, no DOM overhead, CPU-bound.' },
+  { n: '10', code: 'SL-10', title: 'webgl', layout: 'split-media', tint: 'var(--tint-webgl)',
+    kicker: 'WebGL', h: 'gpu shaders, real 3d', body: 'Tens of thousands of particles, reactive to the cursor.' },
+  { n: '11', code: 'SL-11', title: 'same tech, different surfaces', layout: 'quad', tint: 'var(--hz-400)',
+    kicker: 'Beyond the Browser', h: 'one build, four surfaces',
+    items: ['broadcast lower-third', 'digital signage', 'ad creative', 'social video'] },
+  { n: '12', code: 'SL-12', title: 'webgpu: the new layer', layout: 'split-media', tint: 'var(--tint-webgpu)',
+    kicker: 'WebGPU', h: 'compute shaders', body: 'The particle count WebGL can\'t sustain — the payoff of the whole callback chain.' },
+  { n: '13', code: 'SL-13', title: 'building the version without it', layout: 'quad', tint: 'var(--signal)',
+    kicker: 'Fallbacks', h: 'the degradation ladder',
+    items: ['full compute sim', 'webgl reduced', 'static poster', 'reduced-motion cross-fade'] },
+  { n: '14', code: 'SL-14', title: 'close: full circle', layout: 'statement',
+    kicker: 'Close', h: 'the craft is the product' },
+];
+
+/* ── renderers — one per `layout` value ─────────────────── */
+function renderSlide(s) {
+  const tint = s.tint ? `style="--tint:${s.tint}"` : '';
+  const top = `<div class="chrome-top"><span>${s.kicker || ''}</span><span>${s.n} / 14</span></div>`;
+  const bot = `<div class="chrome-bot"><span>${s.code}</span><span>Folklore</span></div>`;
+
+  if (s.layout === 'title') {
+    return `<div class="slide" ${tint}>${top}
+      <div class="body"><h4>${s.h}</h4><p>${s.body || ''}</p></div>${bot}</div>`;
+  }
+  if (s.layout === 'statement') {
+    return `<div class="slide" ${tint} style="justify-content:center">
+      ${top}<div class="body" style="margin:auto 0"><h4 style="max-width:16ch">${s.h}</h4></div>${bot}</div>`;
+  }
+  if (s.layout === 'map') {
+    const rows = s.items.map((t, i) =>
+      `<div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--hz-600)">
+        <span style="width:16px;color:var(--hz-400)">0${i}</span>
+        <span style="flex:1;height:1px;background:var(--hz-300)"></span>
+        <span style="text-transform:lowercase">${t}</span>
+      </div>`).join('');
+    return `<div class="slide" ${tint}>${top}
+      <div class="body"><h4 style="font-size:32px;margin-bottom:20px">${s.h}</h4>
+      <div style="display:flex;flex-direction:column;gap:8px;max-width:320px">${rows}</div></div>${bot}</div>`;
+  }
+  if (s.layout === 'split-media') {
+    return `<div class="slide" ${tint}>${top}
+      <div class="body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
+        <div><h4 style="font-size:30px">${s.h}</h4><p style="font-size:13px">${s.body || ''}</p></div>
+        <div style="aspect-ratio:1;border-radius:6px;position:relative;overflow:hidden;box-shadow:var(--recess);background:var(--hz-050)">
+          <div style="position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in oklch,var(--tint) 45%,transparent),color-mix(in oklch,var(--tint) 16%,transparent))"></div>
+        </div>
+      </div>${bot}</div>`;
+  }
+  if (s.layout === 'triptych') {
+    const cols = s.items.map(t =>
+      `<div style="flex:1;border-radius:4px;background:var(--hz-050);box-shadow:var(--recess);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--hz-500);text-transform:uppercase;letter-spacing:0.08em">${t}</div>`
+    ).join('');
+    return `<div class="slide" ${tint}>${top}
+      <div class="body"><h4 style="font-size:30px;margin-bottom:16px">${s.h}</h4>
+      <div style="display:flex;gap:12px;height:120px">${cols}</div></div>${bot}</div>`;
+  }
+  if (s.layout === 'quad') {
+    const cells = s.items.map(t =>
+      `<div style="border-radius:4px;background:var(--hz-050);box-shadow:var(--recess);display:grid;place-items:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--hz-500);text-transform:uppercase;letter-spacing:0.06em;text-align:center">${t}</div>`
+    ).join('');
+    return `<div class="slide" ${tint}>${top}
+      <div class="body"><h4 style="font-size:26px;margin-bottom:14px">${s.h}</h4>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;height:150px">${cells}</div></div>${bot}</div>`;
+  }
+  return `<div class="slide" ${tint}>${top}<div class="body"><h4>${s.h || ''}</h4></div>${bot}</div>`;
+}
+
+const grid = document.getElementById('grid');
+const modal = document.getElementById('modal');
+const modalStage = document.getElementById('modalStage');
+
+const TILE_W = 240; // matches 4-column grid at this wrap width; scale is computed anyway
+SLIDES.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'tile';
+  btn.setAttribute('data-testid', `layout-tile-${s.code.toLowerCase()}`);
+  btn.innerHTML = `
+    <span class="tile-frame">
+      <span class="stage-960" style="${s.tint ? `--tint:${s.tint};` : ''}">${renderSlide(s)}</span>
+    </span>
+    <span class="tile-cap">
+      <span class="n">${s.code}</span>
+      <span class="dot" style="${s.tint ? `--ct:${s.tint}` : ''}"></span>
+      <span class="t">${s.title}</span>
+    </span>`;
+  // scale the 960-wide stage to fit the actual rendered frame width
+  const frame = btn.querySelector('.tile-frame');
+  const stage = btn.querySelector('.stage-960');
+  new ResizeObserver(() => {
+    const w = frame.getBoundingClientRect().width;
+    stage.style.transform = `scale(${w / 960})`;
+  }).observe(frame);
+
+  btn.addEventListener('click', () => {
+    modalStage.innerHTML = `<span class="stage-960" style="${s.tint ? `--tint:${s.tint};` : ''}">${renderSlide(s)}</span>`;
+    const mstage = modalStage.querySelector('.stage-960');
+    const setScale = () => {
+      const w = modalStage.getBoundingClientRect().width;
+      mstage.style.transform = `scale(${w / 960})`;
+    };
+    modal.showModal();
+    requestAnimationFrame(setScale);
+    new ResizeObserver(setScale).observe(modalStage);
+  });
+
+  grid.appendChild(btn);
+});
+
+document.getElementById('closeModal').addEventListener('click', () => modal.close());
+modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SL-09 · Canvas — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-canvas); }
+.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); }
+.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
+.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
+.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+</style>
+</head>
+<body data-testid="technique-canvas">
+
+<div class="wrap">
+  <div class="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-09">Techniques</a></div>
+  <div class="head"><span class="code">SL-09</span><h1>canvas</h1></div>
+  <p class="dek">
+    Imperative pixel drawing, CPU-bound, no DOM overhead — the count jumps from tens of
+    SVG nodes to thousands of points with no per-particle element cost.
+  </p>
+
+  <div class="canvas-frame" data-testid="demo-canvas">
+    <canvas id="c" data-testid="canvas-el"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="ibtn primary" id="toggle">⏸ Pause</button>
+    <span class="fps">Particles: <b id="count">0</b> · Frame time: <b id="ft">—</b></span>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 09</h3>
+    <p>"Canvas 2D — imperative pixel drawing, CPU-bound, good for generative work; visual:
+      thread demo in Canvas 2D at a visibly higher particle count (thousands), no DOM
+      overhead."</p>
+    <p>What's running above is a real particle field (~1,800 points, drifting) as a stand-in
+      for the thread demo — proving out the escalation in particle count this slide argues
+      for. It isn't resolving into the brandmark yet; that needs the actual vector path
+      data, same open dependency as the SVG page.</p>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const countEl = document.getElementById('count');
+const ftEl = document.getElementById('ft');
+const toggleBtn = document.getElementById('toggle');
+
+let running = true;
+let dpr = Math.min(2, window.devicePixelRatio || 1);
+let W, H, particles = [];
+const N = 1800;
+
+function resize() {
+  const r = canvas.getBoundingClientRect();
+  W = canvas.width = r.width * dpr;
+  H = canvas.height = r.height * dpr;
+}
+function seed() {
+  particles = Array.from({ length: N }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.4 * dpr, vy: (Math.random() - 0.5) * 0.4 * dpr,
+    r: (0.8 + Math.random() * 1.6) * dpr,
+  }));
+  countEl.textContent = N;
+}
+resize(); seed();
+window.addEventListener('resize', () => { resize(); });
+
+const tintRGB = getComputedStyle(document.documentElement).getPropertyValue('--tint');
+let last = performance.now();
+function frame(now) {
+  const dt = now - last; last = now;
+  if (running) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = tintRGB || '#7dd3fc';
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      ctx.globalAlpha = 0.55;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ftEl.textContent = dt.toFixed(2) + 'ms';
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+toggleBtn.addEventListener('click', () => {
+  running = !running;
+  toggleBtn.textContent = running ? '⏸ Pause' : '▶ Resume';
+});
+</script>
+
+</body>
+</html>
