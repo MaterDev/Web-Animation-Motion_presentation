@@ -147,13 +147,20 @@ section { margin-bottom: calc(var(--u) * 12); }
    watching the text return). Opacity is cut by roughly two-thirds
    here so the streak brightens the surface by a comparable
    proportion rather than a comparable absolute amount. */
+/* FIXED: the brush-line texture itself was too loud — a
+   high-frequency 4px repeat at 0.16/0.055 opacity reads as active
+   static/noise rather than a background material, and it's what
+   was actually fighting the brandline/subtitle text, not just their
+   colour. Cut roughly in half; this is the real fix, the text-side
+   colour/shadow adjustment from the previous pass is a secondary
+   safety margin now rather than the load-bearing one. */
 .mat-anodised {
   background:
     linear-gradient(102deg, oklch(1 0 0 / 0.12) 0 12%, transparent 34% 66%, oklch(1 0 0 / 0.08) 88% 100%),
     repeating-linear-gradient(96deg,
-      oklch(1 0 0 / 0.16) 0 1px,
+      oklch(1 0 0 / 0.08) 0 1px,
       transparent 1px 2px,
-      oklch(0.2 0.02 265 / 0.055) 2px 3px,
+      oklch(0.2 0.02 265 / 0.03) 2px 3px,
       transparent 3px 4px),
     linear-gradient(180deg, var(--hz-200), var(--hz-100));
 }
