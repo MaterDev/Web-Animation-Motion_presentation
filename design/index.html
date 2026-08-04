@@ -317,41 +317,15 @@
    To add an iteration: copy a file in treatments/, rename it,
    then add one entry here. Nothing else needs to change.
    ───────────────────────────────────────────────────────── */
+/* T-01 through T-05 are archived, not deleted — still on disk in
+   treatments/, just off the switcher. T-06 is the kept base; every
+   iteration now happens there rather than by forking a new file.
+   Re-add an entry below (same shape as T-06's) to bring one back. */
 const TREATMENTS = [
-  {
-    code: 'T-01',
-    name: 'Instrument Housing',
-    note: 'Baseline from DESIGN.md',
-    file: 'treatments/01-instrument-housing.html',
-  },
-  {
-    code: 'T-02',
-    name: 'Daylight Panel',
-    note: 'Light-grey chassis',
-    file: 'treatments/02-daylight-panel.html',
-  },
-  {
-    code: 'T-03',
-    name: 'Panel Grey',
-    note: 'T-02, one step darker',
-    file: 'treatments/03-panel-grey.html',
-  },
-  {
-    code: 'T-04',
-    name: 'Chassis',
-    note: 'T-03, pushed into product',
-    file: 'treatments/04-chassis.html',
-  },
-  {
-    code: 'T-05',
-    name: 'Field Unit',
-    note: 'Materials + micro-motion',
-    file: 'treatments/05-field-unit.html',
-  },
   {
     code: 'T-06',
     name: 'Field Unit (Dark)',
-    note: 'T-05, dark ground',
+    note: 'T-05, dark ground — base',
     file: 'treatments/06-field-unit-dark.html',
   },
 ];
