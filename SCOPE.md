@@ -168,7 +168,8 @@ Practical stance: design the motion system mobile-first — decide what's essent
   - WebGL section: Three.js (optionally via React Three Fiber)
   - WebGPU section: Three.js's experimental `WebGPURenderer`/TSL, letting the WebGL and WebGPU demos share one codebase
   - Video/GIF section: native `<video>`/`<img>`; optionally `ffmpeg.wasm` or Remotion to bake the thread demo to video live on stage
-- **Presentation chrome (not content):** Anime.js for slide transitions, progress bar, nav UI — kept separate from the technique demos themselves so the audience isn't confused about which tech is doing what. Chosen over Framer Motion specifically so the chrome and the Layout Animation slide both showcase the same library, rather than splitting JS-animation tooling across two libraries with overlapping purposes.
+- **JS animation, by default: Anime.js.** One library used deeply rather than several used shallowly — chosen over Framer Motion/GSAP so the deck's own tooling doesn't fragment. The only exceptions are WebGL and WebGPU, which need their own rendering pipelines (Three.js, WGSL) rather than a DOM animation library; everything else — SVG path work, the Layout Animation section, and the presentation chrome itself — runs on Anime.js.
+- **Presentation chrome (not content):** Anime.js's layout animation API drives the slide-to-slide transitions themselves, not just a progress bar and nav UI riding on top. Each slide's DOM measured before and after a navigation event, the transition animated as one continuous layout move — content reflowing into its new arrangement — rather than a cut or a generic wipe. If it holds up under real slide content this is the detail that makes the deck's own chrome distinctive rather than merely competent: the same technique slide 7 explains, used to move between the slides explaining it. Kept conceptually separate from the technique demos themselves so the audience isn't confused about which tech is doing what.
 
 ## Architecture Considerations
 
@@ -190,6 +191,7 @@ Practical stance: design the motion system mobile-first — decide what's essent
 - **Evidence caveats:** the AI-traffic-decline data is directionally solid but contested by Google; state it as "multiple studies show," not as settled fact.
 - **Slide 14 demands extra build work.** Showing four rungs of the degradation ladder side by side means actually building the reduced, static, and reduced-motion variants — not just describing them. Worth it (it's the credibility slide), but it's the one place where the talk's content and the app's engineering overlap most expensively.
 - **The deck should practice what slide 14 preaches.** A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks. Low cost to honour it in the presentation app; worth doing.
+- **Layout-animation-driven slide transitions are the highest-upside, least-proven build item.** Genuinely distinctive if it works — a deck whose own navigation demonstrates the technique it's teaching — but "animate real slide layouts into each other" has more surface area for visual bugs (overlapping text mid-transition, wrong measured state after a fast double-advance) than a standard slide/fade. Prototype this early against real slide content, not a toy example, and keep a plain cross-fade as a fallback transition if it doesn't hold up under rehearsal.
 
 ## Out of Scope
 
