@@ -673,6 +673,18 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   mix-blend-mode: overlay;
 }
 .tint-card .swatch::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, oklch(1 0 0 / 0.05), transparent 60%); }
+/* Kept for the rejected-comparison row in the colour section, not
+   used elsewhere — this is the original spotlight-radial-under-a-
+   diagonal-sheen recipe .tint-card .swatch used before it was
+   flattened. Documented rather than deleted so the "too dramatic"
+   call is something a reader can actually see, not just take on
+   faith. */
+.tint-card .swatch.dramatic {
+  background:
+    radial-gradient(120% 100% at 28% -10%, color-mix(in oklch, var(--sw) 60%, transparent), transparent 68%),
+    var(--hz-100);
+}
+.tint-card .swatch.dramatic::after { background: linear-gradient(160deg, oklch(1 0 0 / 0.22), transparent 52%); }
 .tint-card .cap { padding: 9px 11px 12px; }
 .tint-card .n { font-family: var(--mono); font-size: 8.5px; color: var(--hz-400); letter-spacing: 0.12em; }
 .tint-card .l { font-size: 12.5px; color: var(--hz-800); text-transform: lowercase; margin-top: 3px; }

@@ -840,6 +840,7 @@ section { margin-bottom: calc(var(--u) * 12); }
   <!-- ═══ COLOUR ═════════════════════════════════════ -->
   <section>
     <div class="sec-head"><span class="idx">06</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
+    <div class="mono" style="margin-bottom:8px">Material chip — flat, muted (current)</div>
     <div class="tints" data-testid="tint-set">
       <button class="tint-card" data-tint="var(--tint-video)"><div class="swatch" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
       <button class="tint-card" data-tint="var(--tint-css)"><div class="swatch" style="--sw:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></button>
@@ -849,10 +850,40 @@ section { margin-bottom: calc(var(--u) * 12); }
       <button class="tint-card" data-tint="var(--tint-webgl)"><div class="swatch" style="--sw:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></button>
       <button class="tint-card" data-tint="var(--tint-webgpu)"><div class="swatch" style="--sw:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></button>
     </div>
+
+    <div class="mono" style="margin:22px 0 8px">Earlier pass — spotlight gradient (rejected, too dramatic for a "subtle tint")</div>
+    <div class="tints" data-testid="tint-set-dramatic">
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-css)"></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-composite)"></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-svg)"></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-canvas)"></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-webgl)"></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="swatch dramatic" style="--sw:var(--tint-webgpu)"></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    </div>
+
+    <div class="mono" style="margin:22px 0 8px">On the display — the same tint as an accent bar on the real LCD, not a swatch</div>
+    <div class="tints" data-testid="tint-set-onscreen">
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-video)"></span></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-css)"></span></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-composite)"></span></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-svg)"></span></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-canvas)"></span></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-webgl)"></span></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd" style="height:66px;padding:0;position:relative;overflow:hidden"><span style="position:absolute;left:9px;right:9px;bottom:10px;height:4px;border-radius:2px;background:var(--tint-webgpu)"></span></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    </div>
+
     <div class="note diff">
       <b>The tint drives every powered element.</b> Encoder index, active LED, light pipe,
       meter fill, primary key, toggle. A section change now propagates through the hardware
       rather than recolouring a label.
+    </div>
+    <div class="note warn">
+      <b>Swatch and screen read differently on purpose.</b> The material chip above is a flat
+      colour-mix over a neutral base — right for a chassis surface. The same tint on the LCD
+      sits directly on the green backlight with no muting mix, because that's the one place a
+      section colour is genuinely signalling something (which stage is active) rather than
+      decorating a panel — the "big payoff" case the mute pass was never meant to flatten.
     </div>
   </section>
 
