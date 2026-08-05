@@ -1,32 +1,68 @@
-/* App-level CSS only. Everything visual — tokens, materials,
-   displays, type, the LED slide surface — comes from
-   design/system/*.css, loaded in app.html and served verbatim from
-   static/design/. This file holds the handful of rules that belong
-   to the app shell rather than the design system, so the boundary
-   between "the system" and "this app" stays legible. */
+/* ═══════════════════════════════════════════════════════════════
+   The app's stylesheet — which is mostly just importing the design
+   system. These three files are the SAME files the standalone
+   harness sheets link; they are imported here rather than <link>ed
+   from static so that Vite resolves, bundles and content-hashes
+   them, and so the system is part of the app's build rather than an
+   asset sitting next to it.
+
+   Everything below the imports is app-shell only: rules for things
+   the design system has no opinion about because they don't exist in
+   the harness — the top nav, and rendered-markdown prose. If
+   something here starts looking like a component, it belongs in
+   components.css instead.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import '../design/system/fonts.css';
+@import '../design/system/tokens.css';
+@import '../design/system/components.css';
 
 /* SvelteKit renders into a wrapper div; the shell needs full height
-   to make a sticky topbar plus a filling content area work. */
+   for a sticky topbar plus a filling content area. */
 html, body { height: 100%; }
 
 a { color: var(--tint); }
 
-/* Prose defaults for the long-form document routes (Paper, and the
-   methodology section on Design). Scoped to .prose so the harness's
-   own pages, which arrive inside iframes with their own styling,
-   are untouched. */
+/* ═══ TOP NAV ═══════════════════════════════════════════
+   Global rather than scoped to the layout component because the
+   Design System trigger lives in NavMenu.svelte and has to look
+   identical to its sibling links — Svelte scopes styles per
+   component, so a shared appearance has to live in shared CSS. */
+.navlink {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 7px 12px; border-radius: 4px; text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-standard);
+}
+.navcode {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  color: var(--hz-400); text-transform: uppercase;
+}
+.navlabel { font-size: 13.5px; color: var(--hz-600); }
+.navlink:hover { background: var(--hz-200); }
+.navlink:hover .navlabel { color: var(--hz-800); }
+.navlink:focus-visible { outline: 2px solid var(--tint); outline-offset: 1px; }
+/* active takes the tint, the same way every engaged control in this
+   system does — colour marks state, it doesn't decorate */
+.navlink.active { background: color-mix(in oklch, var(--tint) 15%, var(--hz-100)); }
+.navlink.active .navlabel { color: var(--hz-900); }
+.navlink.active .navcode { color: var(--tint); }
+
+@media (max-width: 720px) { .navlabel { display: none; } }
+
+/* ═══ PROSE ═════════════════════════════════════════════
+   For rendered markdown, where the HTML shape is fixed and can't be
+   restructured into .sec-head / .note the way authored pages are.
+   Deliberately thin: components.css already styles h1, h2, h3, p and
+   code globally, so this only covers what markdown adds — lists,
+   tables, blockquotes, rules — plus the spacing a long document
+   needs. */
 .prose { max-width: 74ch; }
-.prose h1 { font-size: clamp(34px, 5vw, 56px); margin: 0 0 calc(var(--u) * 2); }
 .prose h2 {
-  font-size: 22px; margin: calc(var(--u) * 6) 0 calc(var(--u) * 2);
+  margin: calc(var(--u) * 6) 0 calc(var(--u) * 2);
   padding-bottom: calc(var(--u) * 1.5);
   border-bottom: var(--hair) solid var(--hz-300);
 }
-.prose h3 {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--hz-600);
-  margin: calc(var(--u) * 4) 0 calc(var(--u) * 1.5);
-}
+.prose h3 { margin: calc(var(--u) * 4) 0 calc(var(--u) * 1.5); }
 .prose p, .prose li { color: var(--hz-600); font-size: 14.5px; line-height: 1.75; }
 .prose li { margin-bottom: calc(var(--u) * 1); }
 .prose ul, .prose ol { padding-left: calc(var(--u) * 3); margin: 0 0 calc(var(--u) * 2); }

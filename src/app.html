@@ -4,14 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:," />
-  <!-- Self-hosted fonts and the design system's own stylesheets, all
-       served from static/sheets/ and loaded unmodified. The app uses
-       the identical files the reference harness does — not a port of
-       them — so the two cannot drift apart. Nothing here loads from
-       a third party. -->
-  <link rel="stylesheet" href="%sveltekit.assets%/sheets/vendor/fonts.css" />
-  <link rel="stylesheet" href="%sveltekit.assets%/sheets/system/tokens.css" />
-  <link rel="stylesheet" href="%sveltekit.assets%/sheets/system/components.css" />
+  <!-- No stylesheet links here on purpose. The design system is
+       @imported by src/app.css, so Vite bundles and hashes it as part
+       of the app rather than the app fetching it as a loose asset.
+       Fonts come through the same import chain. -->
   %sveltekit.head%
 </head>
 <body data-sveltekit-preload-data="hover">
