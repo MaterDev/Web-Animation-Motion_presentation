@@ -530,8 +530,10 @@ section { margin-bottom: calc(var(--u) * 12); }
       <a href="https://www.macstories.net/news/ios-26-ipados-26-and-liquid-glass-the-macstories-overview/" target="_blank" rel="noopener">MacStories</a>.</b>
       It has almost nothing to do with the blob/ripple/tank build that was here before
       this pass — that was a literal reading of "liquid" that doesn't match what Apple
-      built. Four things define the real system, and only the last one overlaps with
-      what was here already.
+      built. Four things define Apple's own system, and only the last one overlaps with
+      what was here already. A fifth, below, is this system's own extension of it —
+      the same curve, looped ambiently rather than fired once, because it turned out to
+      be the only motion vocabulary the rest of this design system needed.
     </p>
 
     <div class="micro-grid" data-testid="liquid-set">
@@ -586,6 +588,19 @@ section { margin-bottom: calc(var(--u) * 12); }
         <div class="nm">D · Spring indicator</div>
         <div class="sp"><b>Trigger</b> click · <b>420ms</b> · liquid<br>Resists leaving, catches up, settles without oscillating. The one place the earlier build was already right — Apple's motion is spring-based throughout, and <code>--ease-liquid</code> already approximated that correctly.</div>
       </div>
+
+      <div class="micro">
+        <div class="demo" style="width:100%">
+          <div class="well" style="display:inline-block;padding:4px">
+            <div class="lcd" style="height:52px;width:52px;padding:0;position:relative;overflow:hidden;display:grid;place-items:center">
+              <span class="wash" style="background:var(--tint)"></span>
+              <div class="liquid-idle" style="width:22px;height:22px;border-radius:5px;background:oklch(0.26 0.05 140);position:relative;z-index:2" data-testid="ambient-demo"></div>
+            </div>
+          </div>
+        </div>
+        <div class="nm">E · Ambient idle</div>
+        <div class="sp"><b>Trigger</b> none · continuous · <b>2.2s</b> · liquid<br>Same curve, looped instead of fired once — settles, slightly overshoots, never fully stops. This is the <i>only</i> ambient/decorative motion used anywhere in this design system: every idle loop on every page, whatever it's attached to, runs this exact curve via the shared <code>.liquid-idle</code>/<code>.liquid-fill</code> classes in components.css. The <a href="../graphic-language/index.html">Graphic Language</a> reference page is the clearest example — seven topics, one shared motion, differentiated entirely by shape, colour and pattern.</div>
+      </div>
     </div>
 
     <div class="note diff">
@@ -601,6 +616,15 @@ section { margin-bottom: calc(var(--u) * 12); }
       it happens 200+ times before delivery, and a shape-morph at that frequency is the
       exact failure mode SCOPE.md names. Morph is for moments of arrival: a control
       opening into its own detail, not routine navigation.
+    </div>
+    <div class="note warn">
+      <b>One curve, not a palette to pick from per context.</b> It would be easy to read
+      "differentiate each topic/section" as licence to give each one its own timing or
+      easing — a slightly bouncier curve here, a snappier one there. That's exactly what
+      this system rules out: motion stays identical everywhere it appears, and
+      differentiation is carried entirely by graphic elements — colour, shape, pattern,
+      type — never by bespoke motion per instance. A reader shouldn't be able to tell
+      two contexts apart by how something moves, only by how it looks.
     </div>
   </section>
 
@@ -717,7 +741,7 @@ section { margin-bottom: calc(var(--u) * 12); }
       <tr><td>--ease-mechanical</td><td>0.4,0,0.2,1</td><td>Readouts, counters, segment switching.</td></tr>
       <tr><td>--ease-detent</td><td>0.34,1.28,0.64,1</td><td><b>New.</b> Sprung mechanisms only — encoder, toggle. Slight overshoot.</td></tr>
       <tr><td>--ease-ballistic</td><td>0.16,0.84,0.28,1</td><td><b>New.</b> Meters and needles. Damped, no overshoot.</td></tr>
-      <tr><td>--ease-liquid</td><td>linear(…)</td><td><b>New.</b> Surface tension — merge, level, elastic indicator. Authored as <code>linear()</code>; a bezier can't carry the inflections.</td></tr>
+      <tr><td>--ease-liquid</td><td>linear(…)</td><td><b>New.</b> Surface tension — merge, level, elastic indicator, <b>and every ambient loop in the system</b> (see §02 E). Authored as <code>linear()</code>; a bezier can't carry the inflections.</td></tr>
     </table>
     <div class="note warn">
       <b>Seven curves is the ceiling, and this is it.</b> Past this a motion system stops
