@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Graphic Language — WAM-2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../system/tokens.css">
+<link rel="stylesheet" href="../system/components.css">
+<style>
+:root { --tint: var(--tint-webgpu); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head h1 { font-size: clamp(36px, 6vw, 60px); margin-bottom: 10px; }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*6); }
+</style>
+</head>
+<body data-testid="graphic-language-page">
+
+<div class="wrap">
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><span style="color:var(--hz-600)">Graphic language</span></div>
+  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="head"><h1>graphic language</h1></div>
+  <p class="dek">
+    Each stage of the presentation's technique spectrum gets its own identity, not just its
+    own colour — a tint and a pixel symbol together, so a slide reads as "this stage" at a
+    glance. Starting point: the two elements that carry furthest at a distance, on the
+    display they'll actually appear on.
+  </p>
+
+  <div class="tints" data-testid="tint-set-key">
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-video)"></span><canvas class="gk-icon" data-topic="video" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-css)"></span><canvas class="gk-icon" data-topic="css" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-composite)"></span><canvas class="gk-icon" data-topic="composite" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-canvas)"></span><canvas class="gk-icon" data-topic="canvas" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgl)"></span><canvas class="gk-icon" data-topic="webgl" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+  </div>
+  <div class="note warn">
+    <b>Chip and key read differently on purpose.</b> A material chip (see the system
+    reference) is a flat colour-mix over a neutral base — right for a chassis surface. Here
+    the tint sits almost directly on the LCD's own backlight, and the symbol is drawn in the
+    same ink as everything else on screen, because this is the one place a section colour is
+    genuinely signalling something — which stage is active — rather than decorating a panel.
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   Pixel icons, drawn from geometric predicates on a 12×12 grid
+   rather than hand-typed bitmaps — see design/treatments/
+   06-field-unit-dark.html for the fuller rationale (a blind-
+   authored 144-cell grid is exactly the kind of thing that comes
+   out lopsided; math doesn't). Copied here rather than shared via
+   a module because this is the only page that needs it.
+   ═══════════════════════════════════════════════════════ */
+const GRID = 12;
+function blank() { return Array.from({ length: GRID }, () => Array(GRID).fill(false)); }
+function circle(g, cx, cy, r) {
+  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
+    if (Math.hypot(x - cx, y - cy) <= r) g[y][x] = true;
+  return g;
+}
+function rect(g, x0, y0, w, h) {
+  for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
+    const xi = Math.round(x), yi = Math.round(y);
+    if (xi >= 0 && xi < GRID && yi >= 0 && yi < GRID) g[yi][xi] = true;
+  }
+  return g;
+}
+function rectOutline(g, x0, y0, w, h, t = 1) {
+  rect(g, x0, y0, w, t); rect(g, x0, y0 + h - t, w, t);
+  rect(g, x0, y0, t, h); rect(g, x0 + w - t, y0, t, h);
+  return g;
+}
+function triRight(g, x0, y0, size) {
+  for (let y = 0; y < size; y++) {
+    const half = Math.min(y, size - 1 - y);
+    rect(g, x0, y0 + y, half + 1, 1);
+  }
+  return g;
+}
+function diamondOutline(g, cx, cy, r) {
+  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++) {
+    const d = Math.abs(x - cx) + Math.abs(y - cy);
+    if (d <= r && d > r - 2) g[y][x] = true;
+  }
+  return g;
+}
+function line(g, x0, y0, x1, y1) {
+  const dx = x1 - x0, dy = y1 - y0, n = Math.max(Math.abs(dx), Math.abs(dy));
+  for (let i = 0; i <= n; i++) {
+    const x = Math.round(x0 + (dx * i) / n), y = Math.round(y0 + (dy * i) / n);
+    if (x >= 0 && x < GRID && y >= 0 && y < GRID) g[y][x] = true;
+  }
+  return g;
+}
+
+const TOPIC_ICONS = {
+  /* video — a frame with a play mark, the baseline/pre-rendered case */
+  video: () => { const g = rectOutline(blank(),1,2,10,8,1.2); return triRight(g,5,4,4); },
+  /* css — cascading, shrinking bars: specificity stacking down */
+  css: () => { const g = blank(); rect(g,2,2,8,2); rect(g,2,6,6,2); rect(g,2,9,4,2); return g; },
+  /* composite — two offset layer outlines, the compositor's job */
+  composite: () => { const g = rectOutline(blank(),1,1,7,7,1); return rectOutline(g,4,4,7,7,1); },
+  /* svg — a bent path with anchor-point nodes at each vertex */
+  svg: () => { const g = blank(); line(g,1,9,5,3); line(g,5,3,10,7); circle(g,1,9,1); circle(g,5,3,1); return circle(g,10,7,1); },
+  /* canvas — a raster grid of discrete pixels, not a vector line */
+  canvas: () => { const g = blank(); rect(g,3,3,2,2); rect(g,7,3,2,2); rect(g,3,7,2,2); return rect(g,7,7,2,2); },
+  /* webgl — a faceted diamond split down the middle — a cut gem/
+     geometry read, related to but distinct from a flat facet */
+  webgl: () => { const g = diamondOutline(blank(),5.5,5.5,5); return line(g,5.5,1,5.5,10); },
+  /* webgpu — an IC chip with pins on all four sides: the compute
+     payoff, deliberately the most technical-looking mark of the set */
+  webgpu: () => { const g = rect(blank(),4,4,4,4);
+    line(g,5,1,5,3); line(g,6,1,6,3); line(g,5,8,5,10); line(g,6,8,6,10);
+    line(g,1,5,3,5); line(g,1,6,3,6); line(g,8,5,10,5); line(g,8,6,10,6);
+    return g; },
+};
+document.querySelectorAll('.gk-icon').forEach(cv => {
+  const draw = TOPIC_ICONS[cv.dataset.topic];
+  if (!draw) return;
+  const ctx = cv.getContext('2d');
+  const grid = draw();
+  ctx.fillStyle = 'oklch(0.26 0.05 140)';
+  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
+    if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
+});
+</script>
+
+</body>
+</html>
