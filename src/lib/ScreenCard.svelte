@@ -1,15 +1,13 @@
 <script>
-  /* A card as an LCD panel — a backlit green screen in a recessed
-     well, the same readout the hardware sheets and the T-06 hero
-     use. Everything visual comes from .lcd-panel / .lcd-* in
-     components.css.
+  /* A chassis card with an LCD chip in it — not a card made OF an
+     LCD. The screen is a component here, showing the code and the
+     count, and the card around it is ordinary panel material.
 
-     An earlier version built these on the dark LED screen surface
-     instead. That was the wrong display: the LED panel is emissive
-     and belongs to the deck's slides — what the device outputs — and
-     the app IS the device, so the app is made of the device's own
-     LCD. Building cards from the slide surface made the app look
-     like a deck.
+     This is the correction to the previous version, which wrapped
+     the whole card in .lcd-panel. Every card being a green screen
+     made the app read as one continuous surface and the display
+     stopped meaning anything. A full .lcd-panel earns its place for
+     a hero or a callout; a chip is the default.
 
      Never write a literal style or script tag inside a comment in
      here: svelte2tsx scans for the closing tag textually, so one in
@@ -24,40 +22,62 @@
 </script>
 
 <a
-  class="lcd-panel is-link"
+  class="card"
   {href}
+  style={tint ? `--ct:${tint}` : ''}
   target={external ? '_blank' : undefined}
   rel={external ? 'noopener' : undefined}
   data-testid={testId || undefined}
 >
-  <span class="well">
-    <span class="lcd">
-      <!-- .wash tints the backlight itself rather than painting over
-           it, so a tinted card still reads as the same screen -->
-      {#if tint}<span class="wash" style={`background:${tint}`}></span>{/if}
-      <span class="lcd-body">
-        <span class="top">
-          <span class="lcd-kv"><span class="k">{code}</span></span>
-          {#if meta}<span class="lcd-kv"><span class="v">{meta}</span></span>{/if}
-        </span>
-        <span class="lcd-title">{title}</span>
-        {#if note}
-          <span class="lcd-rule"></span>
-          <span class="lcd-text">{note}</span>
-        {/if}
-        {#if status}
-          <span class="foot">
-            <span class="led" style="--c:var(--ok)" aria-hidden="true"></span>
-            <span class="lcd-kv"><span class="k">{status}</span></span>
-          </span>
-        {/if}
-      </span>
+  <span class="top">
+    <span class="lcd-chip">
+      <span class="lcd"><span class="v">{code}</span></span>
     </span>
+    {#if meta}<span class="meta mono">{meta}</span>{/if}
   </span>
+
+  <span class="title">{title}</span>
+  {#if note}<span class="note-text">{note}</span>{/if}
+
+  {#if status}
+    <span class="foot">
+      <span class="led" style="--c:var(--ok)" aria-hidden="true"></span>
+      <span class="mono st">{status}</span>
+    </span>
+  {/if}
 </a>
 
 <style>
-  /* layout only — colour, texture and type come from the system */
-  .top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-  .foot { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+  .card {
+    position: relative; display: flex; flex-direction: column; gap: 11px;
+    padding: calc(var(--u) * 2.5); border-radius: 6px; text-decoration: none;
+    background: linear-gradient(180deg, var(--hz-200), var(--hz-100));
+    box-shadow: var(--edge), var(--lift-1);
+    transition: transform var(--dur-fast) var(--ease-standard),
+                box-shadow var(--dur-fast) var(--ease-standard);
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--edge), var(--lift-3); }
+  .card:active { transform: translateY(-1px); }
+  .card:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+  /* the tint marks identity on an otherwise neutral panel — colour
+     for state, never decoration */
+  .card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    border-radius: 6px 0 0 6px; background: var(--ct, var(--tint));
+  }
+
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .meta { font-size: 9px; color: var(--hz-400); }
+
+  /* title in the dot face on the chassis, light ink — the pixel
+     voice carries without needing a green ground behind it */
+  .title {
+    font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+    font-size: 20px; line-height: 1.1; letter-spacing: 0.01em;
+    color: var(--hz-900); text-transform: lowercase;
+  }
+  .note-text { font-size: 12.5px; line-height: 1.6; color: var(--hz-500); }
+
+  .foot { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 3px; }
+  .st { font-size: 8.5px; color: var(--hz-500); }
 </style>
