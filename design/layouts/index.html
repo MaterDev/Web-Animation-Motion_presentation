@@ -69,6 +69,41 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
 .modal-stage .led-slide { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .modal-bar { position: fixed; top: calc(var(--u)*3); right: calc(var(--u)*3); display: flex; gap: 10px; z-index: 3; }
 
+/* ── transition preview arrangements ──────────────────────
+   Four real compositions off the field above, expressed only as
+   grid placement. The DOM never changes — same four elements, same
+   order, every time — which is the whole point: if elements were
+   being added and removed this would be a cross-fade wearing a
+   costume, not a layout animation. Each arrangement is one of the
+   slide shapes the deck actually uses, so the demo is showing the
+   real transition rather than an abstract box move. */
+#txField [data-lb] { position: relative; }
+#txField [data-lb="t"] { display: flex; align-items: center; }
+
+/* A — figure-left: title right, three stacked blocks left */
+#txField.arr-a [data-lb="t"] { grid-column: 8/13; grid-row: 2/6; }
+#txField.arr-a [data-lb="1"] { grid-column: 1/7; grid-row: 1/3; }
+#txField.arr-a [data-lb="2"] { grid-column: 1/7; grid-row: 3/5; }
+#txField.arr-a [data-lb="3"] { grid-column: 1/7; grid-row: 5/7; }
+
+/* B — pipeline: title top-left, three stages in a row */
+#txField.arr-b [data-lb="t"] { grid-column: 1/8; grid-row: 1/3; }
+#txField.arr-b [data-lb="1"] { grid-column: 1/5; grid-row: 4/6; }
+#txField.arr-b [data-lb="2"] { grid-column: 5/9; grid-row: 4/6; }
+#txField.arr-b [data-lb="3"] { grid-column: 9/13; grid-row: 4/6; }
+
+/* C — ladder: title top, three rungs stepping down and right */
+#txField.arr-c [data-lb="t"] { grid-column: 1/9; grid-row: 1/3; }
+#txField.arr-c [data-lb="1"] { grid-column: 3/13; grid-row: 3/4; }
+#txField.arr-c [data-lb="2"] { grid-column: 5/13; grid-row: 4/5; }
+#txField.arr-c [data-lb="3"] { grid-column: 7/13; grid-row: 5/6; }
+
+/* D — figure-wide: title left, one wide block under, two flanking */
+#txField.arr-d [data-lb="t"] { grid-column: 1/6; grid-row: 1/3; }
+#txField.arr-d [data-lb="1"] { grid-column: 1/13; grid-row: 4/7; }
+#txField.arr-d [data-lb="2"] { grid-column: 7/10; grid-row: 1/3; }
+#txField.arr-d [data-lb="3"] { grid-column: 10/13; grid-row: 1/3; }
+
 @media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
@@ -150,6 +185,42 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
   </p>
 
   <div class="grid" id="grid" data-testid="layouts-grid"></div>
+
+  <div class="sec-label">Slide transitions — Anime.js layout animation</div>
+  <p class="sec-note">
+    The deck's own slide changes are the technique slide 7 explains. These are the
+    <i>same four elements</i> in four different arrangements — nothing enters or leaves, the
+    grid placement changes and Anime.js's layout API measures before and after and animates
+    the difference. Watch a block travel across the field and resize as one continuous move
+    rather than being cut and redrawn. It runs on the system's own liquid spring, so a slide
+    change feels like every other transition in the deck.
+  </p>
+
+  <div class="controls">
+    <button class="ibtn primary" id="txPlay" aria-pressed="true" data-testid="tx-play">⏸ Pause</button>
+    <button class="ibtn" id="txStep" data-testid="tx-step">Step →</button>
+    <span class="mono" id="txState" style="align-self:center">Arrangement: —</span>
+  </div>
+  <div class="stage-box" id="txBox" style="max-width:860px" data-testid="transition-preview">
+    <div class="led-slide" id="txStage" style="--tint:var(--tint-composite)">
+      <div class="led-chrome top"><span id="txKicker">Arrangement A</span><span>07 / 15</span></div>
+      <div class="led-chrome bot"><span>SL-07 · layout animation</span><span>Folklore</span></div>
+      <div class="led-field arr-a" id="txField">
+        <div data-lb="t"><h4 class="led-head led-lit" id="txTitle">measure,<br>then move</h4></div>
+        <div data-lb="1" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">one</span></div>
+        <div data-lb="2" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">two</span></div>
+        <div data-lb="3" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">three</span></div>
+      </div>
+      <div class="led-guides"><span class="margin"></span><span class="field"></span></div>
+    </div>
+  </div>
+  <div class="note warn" style="margin-top:18px;max-width:66ch">
+    <b>This is the part SCOPE.md flags as least-proven.</b> It reads well with four blocks
+    and no text reflow. The open question is real slide content — headings of different
+    lengths, a media well that's a live canvas, and a fast double-advance landing mid-flight.
+    Worth prototyping against those before committing the deck's navigation to it; a plain
+    cross-fade stays the fallback.
+  </div>
 </div>
 
 <dialog id="modal" data-testid="layouts-modal">
@@ -571,12 +642,113 @@ guideToggle.addEventListener('click', () => {
   guideToggle.setAttribute('aria-pressed', String(guidesOn));
   guideToggle.textContent = guidesOn ? 'Hide grid guides' : 'Show grid guides';
   guideState.textContent = `Guides: ${guidesOn ? 'on' : 'off'}`;
-  document.querySelectorAll('.tile .led-slide, #typeBox .led-slide, .modal-stage .led-slide')
+  /* the transition preview is included deliberately — with guides on
+     you can watch blocks land on module boundaries, which is the
+     clearest evidence that the animation respects the grid rather
+     than just moving things about */
+  document.querySelectorAll('.tile .led-slide, #typeBox .led-slide, #txStage, .modal-stage .led-slide')
     .forEach(el => el.classList.toggle('guides', guidesOn));
 });
 
 document.getElementById('closeModal').addEventListener('click', () => modal.close());
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+
+fitStage(document.getElementById('txBox'));
+</script>
+
+<script type="module">
+/* ═══════════════════════════════════════════════════════
+   SLIDE TRANSITIONS — Anime.js layout animation, running for real.
+
+   Loaded from a CDN here because this harness has no build step;
+   the actual deck should vendor animejs rather than depend on a
+   live CDN during the talk, the same caveat the WebGL page already
+   carries about Three.js.
+
+   How the layout API works: record the DOM's measured geometry,
+   change whatever you like (here, one class on the field), then let
+   it animate the difference between the two measurements. Because
+   it measures rather than being told, it can animate between states
+   expressed in grid-column/grid-row — properties that are not
+   animatable at all in CSS. That's the whole argument of slide 7.
+   ═══════════════════════════════════════════════════════ */
+/* spring(), not createSpring() — the latter still works but logs a
+   deprecation warning in v4. Caught from the real console, which is
+   the only way that kind of thing surfaces. */
+import { createLayout, spring } from 'https://cdn.jsdelivr.net/npm/animejs@4/+esm';
+
+const ARRS = ['arr-a', 'arr-b', 'arr-c', 'arr-d'];
+const TITLES = ['measure,<br>then move', 'layout →<br>paint → composite', 'the degradation<br>ladder', 'one build,<br>four surfaces'];
+const field = document.getElementById('txField');
+const stage = document.getElementById('txStage');
+const kicker = document.getElementById('txKicker');
+const title = document.getElementById('txTitle');
+const stateEl = document.getElementById('txState');
+const playBtn = document.getElementById('txPlay');
+const stepBtn = document.getElementById('txStep');
+
+/* A spring rather than a named easing, because the system's one
+   ambient/transition curve is a spring settle (--ease-liquid, see
+   T-06 §02). Matching it here by feel — a CSS linear() ramp can't be
+   handed to Anime.js directly — keeps a slide change consistent with
+   every other transition in the deck instead of introducing an
+   eighth curve through the back door. */
+const liquid = spring({ stiffness: 92, damping: 14 });
+
+const layout = createLayout(field);
+let i = 0;
+
+/* The global prefers-reduced-motion rule in tokens.css only reaches
+   CSS animations and transitions — this is JS-driven, so it has to
+   opt in explicitly or it would keep moving for exactly the users
+   the deck argues hardest about. Reduced motion gets the state
+   change with no travel, and no autoplay. */
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+function apply(n) {
+  const next = ARRS[n];
+  layout.update(({ root }) => {
+    root.classList.remove(...ARRS);
+    root.classList.add(next);
+    title.innerHTML = TITLES[n];
+  }, reduced.matches ? { duration: 0 } : { duration: 900, ease: liquid });
+  kicker.textContent = `Arrangement ${next.slice(-1).toUpperCase()}`;
+  stateEl.textContent = `Arrangement: ${next.slice(-1).toUpperCase()}`;
+}
+
+function step() { i = (i + 1) % ARRS.length; apply(i); }
+
+let timer = null;
+function play() {
+  if (timer || reduced.matches) return;
+  timer = setInterval(step, 2600);
+  playBtn.textContent = '⏸ Pause';
+  playBtn.setAttribute('aria-pressed', 'true');
+}
+function pause() {
+  clearInterval(timer); timer = null;
+  playBtn.textContent = '▶ Play';
+  playBtn.setAttribute('aria-pressed', 'false');
+}
+
+playBtn.addEventListener('click', () => (timer ? pause() : play()));
+stepBtn.addEventListener('click', () => { pause(); step(); });
+
+/* Pause when off-screen — an autoplaying loop that keeps running in
+   a scrolled-past section is exactly the waste SCOPE.md's fallback
+   notes call out, and this one drives a measure/animate cycle on
+   every tick. */
+new IntersectionObserver(entries => {
+  entries.forEach(e => { if (!e.isIntersecting) pause(); });
+}, { threshold: 0 }).observe(stage);
+
+apply(0);
+if (reduced.matches) {
+  pause();
+  stateEl.textContent = 'Arrangement: A · autoplay off (reduced motion)';
+} else {
+  play();
+}
 </script>
 
 </body>
