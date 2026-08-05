@@ -171,38 +171,47 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
    composition occupies IS the design decision here.
    ═══════════════════════════════════════════════════════ */
 const SLIDES = [
-  { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'title',
+  { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'glass-hero',
     kicker: 'WAM-2026', h: 'web animation<br>&amp; motion', body: 'Thread demo already running full-bleed, no explanation yet.' },
   { n: '02', code: 'SL-02', title: 'the thesis', layout: 'statement',
     kicker: 'Thesis', h: "a site's value is<br>no longer the<br>content it holds" },
-  { n: '03', code: 'SL-03', title: 'the map', layout: 'map',
+  { n: '03', code: 'SL-03', title: 'the map', layout: 'index',
     kicker: 'The Map', h: 'the spectrum',
-    items: ['video / gif', 'css', 'composite', 'layout animation', 'svg', 'canvas', 'webgl', 'webgpu'] },
-  { n: '04', code: 'SL-04', title: 'baseline: video & gif', layout: 'split-media', tint: 'var(--tint-video)',
-    kicker: 'Video / GIF', h: 'pre-baked pixels', body: 'No interactivity — the baseline everything else is measured against.' },
-  { n: '05', code: 'SL-05', title: 'css + render pipeline', layout: 'split-media', tint: 'var(--tint-css)',
-    kicker: 'CSS', h: 'browser-managed motion', body: 'Layout → Paint → Composite, plus a live hover/transition demo.' },
-  { n: '06', code: 'SL-06', title: 'cpu vs. gpu: compositing', layout: 'split-media', tint: 'var(--tint-composite)',
-    kicker: 'Composite', h: 'transform vs. layout', body: 'GPU-cheap properties vs. layout-forcing ones, side by side, with a measured frame-time readout.' },
-  { n: '07', code: 'SL-07', title: 'layout animation', layout: 'split-media', tint: 'var(--led-ink)',
-    kicker: 'Layout Animation', h: 'measure, then move', body: 'FLIP via Anime.js\'s layout API — a real UI element reflowing between two arrangements as one continuous move, not a cut.' },
+    items: ['video / gif', 'css', 'composite', 'layout animation', 'svg', 'canvas', 'webgl', 'webgpu'],
+    keys: ['var(--tint-video)','var(--tint-css)','var(--tint-composite)','var(--led-ink)','var(--tint-svg)','var(--tint-canvas)','var(--tint-webgl)','var(--tint-webgpu)'] },
+  { n: '04', code: 'SL-04', title: 'baseline: video & gif', layout: 'figure-left', tint: 'var(--tint-video)',
+    kicker: 'Video / GIF', h: 'pre-baked pixels', body: 'No interactivity — the baseline everything else is measured against.',
+    readout: [['1.4', 'mb gif'], ['0', 'fps ctrl']] },
+  { n: '05', code: 'SL-05', title: 'css + render pipeline', layout: 'pipeline', tint: 'var(--tint-css)',
+    kicker: 'CSS', h: 'browser-managed motion',
+    items: ['layout', 'paint', 'composite'] },
+  { n: '06', code: 'SL-06', title: 'cpu vs. gpu: compositing', layout: 'compare', tint: 'var(--tint-composite)',
+    kicker: 'Composite', h: 'transform vs. layout',
+    items: ['width / top / left', 'transform / opacity'],
+    readout: [['18.4', 'ms cpu'], ['0.9', 'ms gpu']] },
+  { n: '07', code: 'SL-07', title: 'layout animation', layout: 'reflow', tint: 'var(--led-ink)',
+    kicker: 'Layout Animation', h: 'measure,<br>then move', body: 'FLIP via Anime.js\'s layout API — one continuous move, not a cut.' },
   { n: '08', code: 'SL-08', title: 'when motion earns its place', layout: 'triptych', tint: 'var(--led-ink)',
     kicker: 'Motion Craft', h: 'restraint',
     items: ['no motion', 'well-judged', 'overdone'] },
-  { n: '09', code: 'SL-09', title: 'svg animation', layout: 'split-media', tint: 'var(--tint-svg)',
-    kicker: 'SVG', h: 'vector, dom-based', body: 'Tens of real DOM nodes, resolving into the brandmark via path morph.' },
-  { n: '10', code: 'SL-10', title: 'canvas 2d', layout: 'split-media', tint: 'var(--tint-canvas)',
-    kicker: 'Canvas', h: 'imperative pixels', body: 'Thousands of points, no DOM overhead, CPU-bound.' },
-  { n: '11', code: 'SL-11', title: 'webgl', layout: 'split-media', tint: 'var(--tint-webgl)',
-    kicker: 'WebGL', h: 'gpu shaders, real 3d', body: 'Tens of thousands of particles, reactive to the cursor.' },
+  { n: '09', code: 'SL-09', title: 'svg animation', layout: 'figure-right', tint: 'var(--tint-svg)',
+    kicker: 'SVG', h: 'vector,<br>dom-based', body: 'Tens of real DOM nodes, resolving into the brandmark via path morph.',
+    readout: [['48', 'dom nodes']] },
+  { n: '10', code: 'SL-10', title: 'canvas 2d', layout: 'figure-wide', tint: 'var(--tint-canvas)',
+    kicker: 'Canvas', h: 'imperative pixels', body: 'Thousands of points, no DOM overhead, CPU-bound.',
+    readout: [['1,800', 'particles'], ['4.2', 'ms frame']] },
+  { n: '11', code: 'SL-11', title: 'webgl', layout: 'figure-left', tint: 'var(--tint-webgl)',
+    kicker: 'WebGL', h: 'gpu shaders,<br>real 3d', body: 'Tens of thousands of particles, reactive to the cursor.',
+    readout: [['24,000', 'points']] },
   { n: '12', code: 'SL-12', title: 'same tech, different surfaces', layout: 'quad', tint: 'var(--led-ink)',
     kicker: 'Beyond the Browser', h: 'one build,<br>four surfaces',
     items: ['broadcast lower-third', 'digital signage', 'ad creative', 'social video'] },
-  { n: '13', code: 'SL-13', title: 'webgpu: the new layer', layout: 'split-media', tint: 'var(--tint-webgpu)',
-    kicker: 'WebGPU', h: 'compute shaders', body: 'The particle count WebGL can\'t sustain — the payoff of the whole callback chain.' },
-  { n: '14', code: 'SL-14', title: 'building the version without it', layout: 'quad', tint: 'var(--signal)',
+  { n: '13', code: 'SL-13', title: 'webgpu: the new layer', layout: 'glass-bleed', tint: 'var(--tint-webgpu)',
+    kicker: 'WebGPU', h: 'compute shaders', body: 'The particle count WebGL can\'t sustain — the payoff of the whole callback chain.',
+    readout: [['1.2', 'm particles']] },
+  { n: '14', code: 'SL-14', title: 'building the version without it', layout: 'ladder', tint: 'var(--signal)',
     kicker: 'Fallbacks', h: 'the degradation<br>ladder',
-    items: ['full compute sim', 'webgl reduced', 'static poster', 'reduced-motion cross-fade'] },
+    items: ['full compute sim', 'webgl reduced', 'static poster', 'reduced-motion'] },
   { n: '15', code: 'SL-15', title: 'close: full circle', layout: 'statement',
     kicker: 'Close', h: 'the craft is<br>the product' },
 ];
@@ -212,28 +221,62 @@ const GUIDES = `<div class="led-guides"><span class="margin"></span><span class=
 /* ── renderers — one per `layout` value ───────────────────
    Each returns a full .led-slide. Placement is expressed as
    grid-column / grid-row against the 12 × 6 field, so every
-   composition is stated in modules rather than pixels. */
+   composition is stated in modules rather than pixels.
+
+   Twelve layouts across fifteen slides, not three. An earlier pass
+   ran eight of the fifteen through one split-media renderer, which
+   made the deck read as one template with the words swapped —
+   structurally uniform even though the grid underneath was sound. A
+   modular grid is supposed to make varied compositions coherent,
+   not make them identical; if every slide lands on the same modules
+   the grid is doing none of its work.
+
+   Each renderer also draws on a different part of the design
+   system — LCD readouts for instrumentation, glass for overlay,
+   registration brackets for framed subjects — so the aesthetic
+   carries onto the slides rather than stopping at the chassis. */
+
+/* an LCD instrument readout, for slides that have a real number to
+   show. Deliberately not on every slide: it means "measured", and
+   putting it on a statement slide would make it decoration. */
+function readout(pairs, style = '') {
+  if (!pairs) return '';
+  const cells = pairs.map(([v, k]) =>
+    `<span style="display:flex;flex-direction:column;gap:2px"><span class="v">${v}</span><span class="k">${k}</span></span>`).join('');
+  return `<div class="led-readout" style="${style}">${cells}</div>`;
+}
+const REG = `<span class="led-reg"><i></i><i></i><i></i><i></i></span>`;
+/* stand-in for a live demo — the thread demo renders here in the
+   real deck, so this is a placeholder texture, not a design element */
+const FIELDART = `<span style="position:absolute;inset:0;background:
+  radial-gradient(circle at 30% 35%, color-mix(in oklch, var(--tint) 55%, transparent) 0 2px, transparent 3px) 0 0/26px 26px,
+  radial-gradient(circle at 70% 65%, color-mix(in oklch, var(--tint) 35%, transparent) 0 1.5px, transparent 3px) 0 0/34px 34px;
+  opacity:0.55"></span>`;
+
 function renderSlide(s) {
   const tint = s.tint ? `--tint:${s.tint};` : '';
   const top = `<div class="led-chrome top"><span>${s.kicker || ''}</span><span>${s.n} / 15</span></div>`;
   const bot = `<div class="led-chrome bot"><span>${s.code}</span><span>Folklore</span></div>`;
   const shell = inner => `<div class="led-slide" style="${tint}">${top}${inner}${bot}${GUIDES}</div>`;
 
-  if (s.layout === 'title') {
-    /* cols 1–8, bottom-weighted: type sits low, the demo runs behind
-       it full-bleed. The four empty columns at the right are where
-       the thread demo actually resolves. */
+  /* 01 — full-bleed demo with a glass title card floating over it.
+     The one slide where type sits ON the artwork rather than beside
+     it, which is exactly the case glass exists for. */
+  if (s.layout === 'glass-hero') {
     return shell(`
-      <div class="led-bleed" style="background:radial-gradient(70% 90% at 78% 40%, color-mix(in oklch, var(--tint) 30%, transparent), transparent 70%)"></div>
+      <div class="led-bleed" style="background:radial-gradient(80% 110% at 66% 45%, color-mix(in oklch, var(--tint) 42%, transparent), transparent 72%)">${FIELDART}</div>
       <div class="led-field">
-        <div style="grid-column:1/9;grid-row:3/6;display:flex;flex-direction:column;justify-content:flex-end;gap:18px">
-          <h4 class="led-display led-lit">${s.h}</h4>
-          <p class="led-body">${s.body || ''}</p>
+        <div class="led-glass" style="grid-column:1/8;grid-row:3/6;display:flex;flex-direction:column;justify-content:center;gap:14px">
+          <h4 class="led-display" style="color:var(--led-ink)">${s.h}</h4>
+          <p class="led-body" style="color:oklch(0.86 0.01 265)">${s.body || ''}</p>
         </div>
       </div>`);
   }
+
+  /* 02, 15 — one element on the slide. No furniture at all: the
+     restraint is the point, and it gives the deck a hard silence
+     between the dense technical slides. */
   if (s.layout === 'statement') {
-    /* cols 1–9, vertically centred. One element on the slide. */
     return shell(`
       <div class="led-field">
         <div style="grid-column:1/10;grid-row:2/6;display:flex;align-items:center">
@@ -241,12 +284,15 @@ function renderSlide(s) {
         </div>
       </div>`);
   }
-  if (s.layout === 'map') {
-    /* title cols 1–4, list cols 6–12 — one empty module between
-       them, which is the entire spacing system in one gap. */
+
+  /* 03 — the spectrum as a colour-keyed index. Each row carries its
+     section's own tint chip, so this slide doubles as the legend for
+     the graphic-language system the rest of the deck uses. */
+  if (s.layout === 'index') {
     const rows = s.items.map((t, i) =>
-      `<div style="display:flex;align-items:baseline;gap:12px;font-family:var(--mono);font-size:14px;line-height:24px;color:var(--led-dim)">
-        <span style="width:22px;color:color-mix(in oklch,var(--led-dim) 60%,transparent)">${String(i).padStart(2,'0')}</span>
+      `<div style="display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:15px;line-height:34px;color:var(--led-dim)">
+        <span style="width:22px;font-size:11px;opacity:0.6">${String(i + 1).padStart(2,'0')}</span>
+        <span style="width:10px;height:10px;border-radius:2px;background:${s.keys[i]};flex:none"></span>
         <span style="text-transform:lowercase">${t}</span>
       </div>`).join('');
     return shell(`
@@ -255,21 +301,109 @@ function renderSlide(s) {
         <div style="grid-column:6/13;grid-row:1/7;display:flex;flex-direction:column;justify-content:center">${rows}</div>
       </div>`);
   }
-  if (s.layout === 'split-media') {
-    /* type cols 1–5, media cols 7–13 — again one empty module
-       between. The media well is a whole number of modules, so it
-       can never be a slightly-off rectangle. */
+
+  /* 04, 11 — figure left. Mirroring figure-right rather than always
+     putting media on the same side keeps consecutive technique
+     slides from stacking into one shape. */
+  if (s.layout === 'figure-left') {
     return shell(`
       <div class="led-field">
-        <div style="grid-column:1/6;grid-row:2/6;display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="led-cellblock" style="grid-column:1/7;grid-row:1/7">${FIELDART}${REG}</div>
+        <div style="grid-column:8/13;grid-row:1/7;display:flex;flex-direction:column;justify-content:center;gap:16px">
+          <h4 class="led-head led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
+          ${readout(s.readout, 'height:56px;margin-top:6px')}
+        </div>
+      </div>`);
+  }
+
+  /* 09 — figure right, and the figure is a 4 × 4 square rather than
+     6 × 6, so even the mirrored version isn't the same rectangle */
+  if (s.layout === 'figure-right') {
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/6;grid-row:1/7;display:flex;flex-direction:column;justify-content:center;gap:16px">
+          <h4 class="led-head led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
+          ${readout(s.readout, 'height:56px;margin-top:6px')}
+        </div>
+        <div class="led-cellblock" style="grid-column:8/12;grid-row:2/6">${FIELDART}${REG}</div>
+      </div>`);
+  }
+
+  /* 10 — type banded across the top, figure full-width below. A
+     landscape figure reads completely differently from a square one
+     even though both are whole modules. */
+  if (s.layout === 'figure-wide') {
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/8;grid-row:1/3;display:flex;flex-direction:column;justify-content:center;gap:8px">
           <h4 class="led-head led-lit">${s.h}</h4>
           <p class="led-body">${s.body || ''}</p>
         </div>
-        <div class="led-cellblock" style="grid-column:7/13;grid-row:1/7"></div>
+        ${readout(s.readout, 'grid-column:9/13;grid-row:1/3;height:56px;align-self:center')}
+        <div class="led-cellblock" style="grid-column:1/13;grid-row:4/7">${FIELDART}${REG}</div>
       </div>`);
   }
+
+  /* 05 — the render pipeline as three stages with connectors. The
+     content of this slide is a sequence, so the layout is one. */
+  if (s.layout === 'pipeline') {
+    const stages = s.items.map((t, i) => {
+      const c = 1 + i * 4;
+      return `<div class="led-cellblock" style="grid-column:${c}/${c + 3};grid-row:3/5;display:grid;place-items:center">
+          <span class="led-sub led-lit">${t}</span>
+        </div>
+        ${i < s.items.length - 1 ? `<div style="grid-column:${c + 3}/${c + 4};grid-row:3/5;display:grid;place-items:center;color:var(--led-dim);font-family:var(--mono);font-size:18px">→</div>` : ''}`;
+    }).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/8;grid-row:1/3"><h4 class="led-head led-lit">${s.h}</h4></div>
+        ${stages}
+        <div style="grid-column:1/13;grid-row:5/7;display:flex;align-items:center;gap:10px">
+          <span class="led-dot"></span><span class="led-micro">transform and opacity skip the first two</span>
+        </div>
+      </div>`);
+  }
+
+  /* 06 — two panels that have to be read against each other, with
+     the measured numbers on an LCD between them. The comparison is
+     the slide, so nothing else competes. */
+  if (s.layout === 'compare') {
+    const panels = s.items.map((t, i) =>
+      `<div class="led-cellblock" style="grid-column:${1 + i * 7}/${7 + i * 7};grid-row:1/5;display:grid;place-items:end start;padding:16px">
+        <span class="led-micro">${t}</span>
+      </div>`).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/7;grid-row:5/7;display:flex;align-items:center"><h4 class="led-head led-lit" style="font-size:36px;line-height:36px">${s.h}</h4></div>
+        ${panels}
+        ${readout(s.readout, 'grid-column:8/13;grid-row:5/7;height:60px;align-self:center')}
+      </div>`);
+  }
+
+  /* 07 — the layout-animation slide shows its own subject: the same
+     three elements in two arrangements, with the move between them
+     called out. See the transition preview further down this page
+     for the real thing running. */
+  if (s.layout === 'reflow') {
+    const a = [0,1,2].map(i => `<span style="flex:1;background:color-mix(in oklch, var(--tint) 26%, var(--led-ground));box-shadow:inset 0 0 0 1px color-mix(in oklch, var(--tint) 40%, transparent)"></span>`).join('');
+    const b = [0,1,2].map(i => `<span style="height:${i === 0 ? 52 : 22}%;background:color-mix(in oklch, var(--tint) ${i === 0 ? 34 : 20}%, var(--led-ground));box-shadow:inset 0 0 0 1px color-mix(in oklch, var(--tint) 40%, transparent)"></span>`).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/5;grid-row:1/7;display:flex;flex-direction:column;justify-content:center;gap:14px">
+          <h4 class="led-head led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
+        </div>
+        <div style="grid-column:6/9;grid-row:2/6;display:flex;gap:6px">${a}</div>
+        <div style="grid-column:9/10;grid-row:2/6;display:grid;place-items:center;color:var(--tint);font-family:var(--mono);font-size:20px">→</div>
+        <div style="grid-column:10/13;grid-row:2/6;display:flex;flex-direction:column;gap:6px;justify-content:center">${b}</div>
+      </div>`);
+  }
+
+  /* 08 — three panels, title above. Equal weight is correct here:
+     the slide argues that these are three settings of one dial. */
   if (s.layout === 'triptych') {
-    /* title on its own row, three 4-module panels below */
     const cols = s.items.map((t, i) =>
       `<div class="led-cellblock" style="grid-column:${1 + i * 4}/${5 + i * 4};grid-row:3/6;display:grid;place-items:end start;padding:14px">
         <span class="led-micro">${t}</span>
@@ -280,11 +414,14 @@ function renderSlide(s) {
         ${cols}
       </div>`);
   }
+
+  /* 12 — four surfaces, so a literal 2 × 2. Each panel gets a
+     status dot: these are four live outputs, not four categories. */
   if (s.layout === 'quad') {
-    /* title cols 1–5, a 2 × 2 of 3-module panels at cols 7–13 */
     const cells = s.items.map((t, i) => {
       const c = 7 + (i % 2) * 3, r = 1 + Math.floor(i / 2) * 3;
-      return `<div class="led-cellblock" style="grid-column:${c}/${c + 3};grid-row:${r}/${r + 3};display:grid;place-items:end start;padding:12px">
+      return `<div class="led-cellblock" style="grid-column:${c}/${c + 3};grid-row:${r}/${r + 3};display:flex;flex-direction:column;justify-content:space-between;padding:12px">
+        <span class="led-dot" style="width:7px;height:7px"></span>
         <span class="led-micro" style="line-height:14px">${t}</span>
       </div>`;
     }).join('');
@@ -294,6 +431,43 @@ function renderSlide(s) {
         ${cells}
       </div>`);
   }
+
+  /* 13 — the payoff slide. Full-bleed demo, glass card bottom-right,
+     one number on an LCD. The only slide that uses bleed and glass
+     together, which is what makes it land as the peak. */
+  if (s.layout === 'glass-bleed') {
+    return shell(`
+      <div class="led-bleed" style="background:radial-gradient(90% 120% at 40% 50%, color-mix(in oklch, var(--tint) 46%, transparent), transparent 70%)">${FIELDART}</div>
+      <div class="led-field">
+        ${readout(s.readout, 'grid-column:1/5;grid-row:1/2;height:56px')}
+        <div class="led-glass" style="grid-column:6/13;grid-row:4/7;display:flex;flex-direction:column;justify-content:center;gap:12px">
+          <h4 class="led-head" style="color:var(--led-ink)">${s.h}</h4>
+          <p class="led-body" style="color:oklch(0.86 0.01 265)">${s.body || ''}</p>
+        </div>
+      </div>`);
+  }
+
+  /* 14 — a ladder, drawn as one: four rungs stepping down and
+     narrowing, so the shape of the slide states the argument before
+     the labels are read. */
+  if (s.layout === 'ladder') {
+    /* rungs step down AND right, so each one starts where the last
+       one's indent left off. Title sits in its own two rows above:
+       at 8 cells the word "degradation" is wider than four modules,
+       so putting it beside the ladder collided with the top rung —
+       caught on the real render, not in the abstract. */
+    const rungs = s.items.map((t, i) =>
+      `<div class="led-cellblock" style="grid-column:${3 + i * 2}/13;grid-row:${3 + i}/${4 + i};display:flex;align-items:center;padding:0 14px;gap:10px">
+        <span class="led-dot" style="width:6px;height:6px;opacity:${1 - i * 0.22}"></span>
+        <span class="led-micro" style="line-height:12px">${t}</span>
+      </div>`).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/9;grid-row:1/3"><h4 class="led-head led-lit">${s.h}</h4></div>
+        ${rungs}
+      </div>`);
+  }
+
   return shell(`<div class="led-field"><div style="grid-column:1/9;grid-row:2/5"><h4 class="led-head">${s.h || ''}</h4></div></div>`);
 }
 
