@@ -13,6 +13,7 @@
   /* startsWith rather than equality so /design/anything keeps the
      section lit — the design section will grow sub-routes. Guarded
      against '/' matching everything. */
+  /** @param {string} href */
   const isActive = (href) => page.url.pathname === href || page.url.pathname.startsWith(href + '/');
 </script>
 

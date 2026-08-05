@@ -1,0 +1,16 @@
+# Render. Same build, same output directory as netlify.toml — both
+# are checked in on purpose so the hosting decision stays reversible.
+# Nothing in the app knows or cares which one runs it.
+services:
+  - type: web
+    name: wam-2026
+    runtime: static
+    buildCommand: bun install && bun run build
+    staticPublishPath: ./build
+    headers:
+      - path: /_app/immutable/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /sheets/vendor/fonts/*
+        name: Cache-Control
+        value: public, max-age=604800

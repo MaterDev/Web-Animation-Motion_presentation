@@ -12,7 +12,7 @@ build/
 .wrangler
 
 # generated: copied from design/ and node_modules by scripts/
-static/design/
+static/sheets/
 design/vendor/
 
 # env
