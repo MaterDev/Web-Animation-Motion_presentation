@@ -22,7 +22,12 @@
 
 :root { --tint: var(--tint-webgpu); }
 
-.wrap { max-width: 1280px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+/* the page sits inside a screen (.screen-unit / .screen-face, in
+   components.css). The outer .wrap keeps the bezel off the viewport
+   edge; the inner padding is on .screen-content so the matrix runs
+   right to the bezel rather than stopping at a content margin. */
+.wrap { max-width: 1280px; margin: 0 auto; padding: calc(var(--u)*4) calc(var(--u)*4) calc(var(--u)*10); }
+.screen-content { padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*12); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
@@ -79,6 +84,11 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
    real transition rather than an abstract box move. */
 #txField [data-lb] { position: relative; }
 #txField [data-lb="t"] { display: flex; align-items: center; }
+/* see the docs' "my text is jumping" gotcha — the title block's
+   width changes between every arrangement, and without nowrap the
+   heading rewraps on intermediate frames even though no end state
+   wraps. The <br> stays; it's the automatic wrapping that has to go. */
+#txField #txTitle { white-space: nowrap; }
 
 /* A — figure-left: title right, three stacked blocks left */
 #txField.arr-a [data-lb="t"] { grid-column: 8/13; grid-row: 2/6; }
@@ -113,6 +123,10 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
 <div class="wrap">
   <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><span style="color:var(--hz-600)">Layouts</span></div>
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+
+<div class="screen-unit" data-testid="page-screen">
+<div class="screen-face">
+<div class="screen-content">
   <div class="head"><h1>layouts</h1></div>
   <p class="dek">
     Every slide is content on a pixelated LED panel, composed on a modular grid quantised to
@@ -206,7 +220,7 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
       <div class="led-chrome top"><span id="txKicker">Arrangement A</span><span>07 / 15</span></div>
       <div class="led-chrome bot"><span>SL-07 · layout animation</span><span>Folklore</span></div>
       <div class="led-field arr-a" id="txField">
-        <div data-lb="t"><h4 class="led-head led-lit" id="txTitle">measure,<br>then move</h4></div>
+        <div data-lb="t"><h4 class="led-head led-lit" id="txTitle">measure,<br>then move</h4></div><!-- nowrap below: the docs flag text reflowing mid-transition as a known cause of jumping, since intermediate frames can hit a width the text wraps at even when both end states don't -->
         <div data-lb="1" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">one</span></div>
         <div data-lb="2" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">two</span></div>
         <div data-lb="3" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">three</span></div>
@@ -221,7 +235,10 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
     Worth prototyping against those before committing the deck's navigation to it; a plain
     cross-fade stays the fallback.
   </div>
-</div>
+</div><!-- /.screen-content -->
+</div><!-- /.screen-face -->
+</div><!-- /.screen-unit -->
+</div><!-- /.wrap -->
 
 <dialog id="modal" data-testid="layouts-modal">
   <div class="modal-bar">
@@ -678,24 +695,45 @@ fitStage(document.getElementById('txBox'));
 import { createLayout, spring } from 'https://cdn.jsdelivr.net/npm/animejs@4/+esm';
 
 const ARRS = ['arr-a', 'arr-b', 'arr-c', 'arr-d'];
-const TITLES = ['measure,<br>then move', 'layout →<br>paint → composite', 'the degradation<br>ladder', 'one build,<br>four surfaces'];
 const field = document.getElementById('txField');
 const stage = document.getElementById('txStage');
 const kicker = document.getElementById('txKicker');
-const title = document.getElementById('txTitle');
 const stateEl = document.getElementById('txState');
 const playBtn = document.getElementById('txPlay');
 const stepBtn = document.getElementById('txStep');
 
 /* A spring rather than a named easing, because the system's one
-   ambient/transition curve is a spring settle (--ease-liquid, see
-   T-06 §02). Matching it here by feel — a CSS linear() ramp can't be
-   handed to Anime.js directly — keeps a slide change consistent with
-   every other transition in the deck instead of introducing an
-   eighth curve through the back door. */
+   transition curve is a spring settle (--ease-liquid, see T-06 §02).
+   Matching it by feel — a CSS linear() ramp can't be handed to
+   Anime.js directly — keeps a slide change consistent with every
+   other transition in the deck instead of introducing an eighth
+   curve through the back door. */
 const liquid = spring({ stiffness: 92, damping: 14 });
 
-const layout = createLayout(field);
+/* Three settings here are fixes for real breakage, all three found
+   in the official docs after the first version visibly popped:
+
+   children — without an explicit selector every descendant becomes
+   a target, including the text inside each block. Naming the blocks
+   means the blocks are what move.
+
+   swapAt: { opacity: 1 } — the documented default swaps non-target
+   descendants at 50% progress by fading them to 0 and back, which is
+   precisely the "gets partway then pops" that was happening: the
+   labels inside each block blinked out mid-flight. Forcing opacity 1
+   keeps them visible for the whole move.
+   (docs: Layout → Common auto layout gotchas)
+
+   ease with NO duration — a spring carries its own duration. The
+   first version passed `{ duration: 900, ease: spring }`, which
+   truncated the settle partway through and cut hard to the end
+   state. Every official spring example omits duration; that was the
+   main cause of the transition looking broken. */
+const layout = createLayout(field, {
+  children: '[data-lb]',
+  swapAt: { opacity: 1 },
+  ease: liquid,
+});
 let i = 0;
 
 /* The global prefers-reduced-motion rule in tokens.css only reaches
@@ -707,47 +745,80 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function apply(n) {
   const next = ARRS[n];
+  /* nothing but the class changes. An earlier version also rewrote
+     the title's text in here — which meant a content swap and a
+     layout move at once, and the text was the most obviously broken
+     part. The arrangement letter lives in the chrome instead, which
+     sits outside the animated root and so swaps cleanly. */
   layout.update(({ root }) => {
     root.classList.remove(...ARRS);
     root.classList.add(next);
-    title.innerHTML = TITLES[n];
-  }, reduced.matches ? { duration: 0 } : { duration: 900, ease: liquid });
-  kicker.textContent = `Arrangement ${next.slice(-1).toUpperCase()}`;
-  stateEl.textContent = `Arrangement: ${next.slice(-1).toUpperCase()}`;
+  }, reduced.matches ? { duration: 0 } : {});
+  const letter = next.slice(-1).toUpperCase();
+  kicker.textContent = `Arrangement ${letter}`;
+  stateEl.textContent = `Arrangement: ${letter}`;
 }
 
 function step() { i = (i + 1) % ARRS.length; apply(i); }
 
-let timer = null;
+/* Chained timeout rather than setInterval: a spring's duration isn't
+   a number you set, so a fixed interval either starts the next move
+   mid-flight or leaves a dead pause. Waiting for the transition to
+   actually finish and then holding a beat is the only way to get an
+   even rhythm out of a spring. */
+let timer = null, running = false;
+function queueNext() {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!running) return;
+    step();
+    Promise.resolve(layout.timeline).then(() => queueNext());
+  }, 1500);
+}
 function play() {
-  if (timer || reduced.matches) return;
-  timer = setInterval(step, 2600);
+  if (running || reduced.matches) return;
+  running = true;
   playBtn.textContent = '⏸ Pause';
   playBtn.setAttribute('aria-pressed', 'true');
+  queueNext();
 }
 function pause() {
-  clearInterval(timer); timer = null;
+  running = false;
+  clearTimeout(timer); timer = null;
   playBtn.textContent = '▶ Play';
   playBtn.setAttribute('aria-pressed', 'false');
 }
 
-playBtn.addEventListener('click', () => (timer ? pause() : play()));
-stepBtn.addEventListener('click', () => { pause(); step(); });
+/* "the user pressed pause" and "it's off-screen" are different
+   states and have to be tracked separately. The first version
+   conflated them: the observer paused on load (the preview starts
+   below the fold), and nothing ever resumed it, so by the time you
+   scrolled down the demo was frozen and looked broken in a second,
+   dumber way than the animation itself was. Caught by watching for
+   class changes over nine seconds and seeing none. */
+let userPaused = false;
+playBtn.addEventListener('click', () => {
+  userPaused = running;
+  running ? pause() : play();
+});
+stepBtn.addEventListener('click', () => { userPaused = true; pause(); step(); });
 
-/* Pause when off-screen — an autoplaying loop that keeps running in
-   a scrolled-past section is exactly the waste SCOPE.md's fallback
-   notes call out, and this one drives a measure/animate cycle on
-   every tick. */
+/* Pause when off-screen — an autoplaying loop running in a
+   scrolled-past section is exactly the waste SCOPE.md's fallback
+   notes call out, and this one drives a measure/animate cycle every
+   time. Resumes on re-entry unless the user asked for it to stop. */
 new IntersectionObserver(entries => {
-  entries.forEach(e => { if (!e.isIntersecting) pause(); });
-}, { threshold: 0 }).observe(stage);
+  entries.forEach(e => {
+    if (!e.isIntersecting) pause();
+    else if (!userPaused) play();
+  });
+}, { threshold: 0.25 }).observe(stage);
 
 apply(0);
 if (reduced.matches) {
+  userPaused = true;
   pause();
   stateEl.textContent = 'Arrangement: A · autoplay off (reduced motion)';
-} else {
-  play();
 }
 </script>
 

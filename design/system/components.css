@@ -664,6 +664,59 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .slide-cap { font-family: var(--mono); font-size: 9px; color: var(--hz-400); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: calc(var(--u)*1.5); }
 .slides-2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u)*3); }
 
+/* ═══ SCREEN UNIT ═══════════════════════════════════════
+   A page's content presented as what's ON a display, rather than as
+   a document that happens to be dark. Same idea as T-06's hero
+   (.gigapet-screen) scaled up to hold a whole page — but an LED
+   matrix rather than that hero's reflective LCD, matching the slide
+   surface below, and with no controls on it at all: a bare screen,
+   not a device. The bezel is the only hardware, and it's kept to a
+   thin frame precisely so it reads as "the edge of the display"
+   instead of becoming another thing to look at.
+
+   The overlays are absolutely positioned against the face, so on a
+   tall page they stretch the full scroll height and the matrix
+   stays continuous — which is the point. Content sits at z-index 2,
+   above the matrix and below the bloom. */
+.screen-unit {
+  position: relative; border-radius: 12px; padding: 10px;
+  background: linear-gradient(180deg, var(--hz-200), var(--hz-100));
+  box-shadow: var(--edge), var(--lift-2);
+}
+.screen-face {
+  position: relative; overflow: hidden; border-radius: 5px;
+  background: var(--led-ground);
+  box-shadow: inset 0 0 0 var(--hair) oklch(0 0 0 / 0.6), var(--recess);
+}
+.screen-face::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+  background:
+    repeating-linear-gradient(90deg, oklch(1 0 0 / 0.032) 0 1px, transparent 1px var(--led-cell)),
+    repeating-linear-gradient(0deg,  oklch(1 0 0 / 0.032) 0 1px, transparent 1px var(--led-cell));
+}
+/* corner falloff only — a full-height page can't have a centre
+   bloom without darkening its own middle, so this is edge vignette
+   rather than the .led-slide's radial hotspot */
+.screen-face::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background: linear-gradient(90deg, oklch(0 0 0 / 0.30), transparent 8% 92%, oklch(0 0 0 / 0.30));
+}
+.screen-content { position: relative; z-index: 2; }
+
+/* Type inside a screen is screen type. The page h1 is Inter 200
+   everywhere else, which is right on a printed-looking tearsheet and
+   wrong the moment the page becomes something a display is showing —
+   a hairline grotesk is the one thing a dot-matrix panel physically
+   cannot render. Scoped to .screen-face rather than changed
+   globally, so adopting the screen is what switches the headline,
+   and pages that haven't adopted it are unaffected. Matches
+   .sec-head h2, which is already Doto. */
+.screen-face h1 {
+  font-family: var(--dot); font-variation-settings: 'ROND' 100;
+  font-weight: 900; letter-spacing: 0.005em; line-height: 0.94;
+  font-size: clamp(40px, 7vw, 96px);
+}
+
 /* ═══ LED SLIDE SURFACE ═════════════════════════════════
    The real slide treatment: content living inside a pixelated LED
    panel rather than printed on a card. Distinct from .lcd above on
