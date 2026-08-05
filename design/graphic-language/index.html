@@ -73,43 +73,15 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
    inside a .sec-head grid */
 .gk-pair-title { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900; letter-spacing: 0.01em; margin: 0; text-transform: lowercase; line-height: 1; }
 
-/* topic-specific background patterns — each inspired by what the
-   technique actually IS, not a shared texture recoloured seven
-   times: film-frame ticks, cascading rules, an offset layer grid,
-   scattered path nodes, a raster dither, a facet lattice. Sits
-   below the registration/primary-mark canvas (z-index 2) the same
-   way .wash sits below .lcd's own grid/sheen overlays. */
-.gk-pattern { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
-.gk-pattern-video {
-  background-image: repeating-linear-gradient(90deg, oklch(0.26 0.05 140 / 0.55) 0 3px, transparent 3px 16px);
-  background-position: center;
-}
-.gk-pattern-css {
-  background-image: repeating-linear-gradient(0deg, oklch(0.26 0.05 140 / 0.4) 0 2px, transparent 2px 11px);
-}
-.gk-pattern-composite {
-  background-image:
-    repeating-linear-gradient(0deg, oklch(0.26 0.05 140 / 0.28) 0 1px, transparent 1px 11px),
-    repeating-linear-gradient(90deg, oklch(0.26 0.05 140 / 0.28) 0 1px, transparent 1px 11px);
-  background-position: 0 0, 5px 5px;
-}
-/* no explicit background-size here originally meant the radial
-   tiled from one origin across the WHOLE element — one set of big
-   ripples, not a repeating grid of small dots. Confirmed by
-   looking at the render, not assumed. */
-.gk-pattern-svg {
-  background-image: repeating-radial-gradient(circle at 6px 6px, oklch(0.26 0.05 140 / 0.5) 0 1.4px, transparent 1.6px 18px);
-  background-size: 18px 18px;
-}
-.gk-pattern-canvas {
-  background-image: repeating-conic-gradient(oklch(0.26 0.05 140 / 0.32) 0% 25%, transparent 0% 50%);
-  background-size: 9px 9px;
-}
-.gk-pattern-webgl {
-  background-image:
-    repeating-linear-gradient(58deg, oklch(0.26 0.05 140 / 0.24) 0 1px, transparent 1px 13px),
-    repeating-linear-gradient(-58deg, oklch(0.26 0.05 140 / 0.24) 0 1px, transparent 1px 13px);
-}
+/* First pass gave each topic a full-bleed tiled background pattern
+   (repeating-gradient wallpaper) — cool idea, ugly result: it
+   stacked on top of the LCD's own grain/sheen/pixel-grid (already
+   three texture layers) and fought the primary mark for attention
+   instead of supporting it. Replaced entirely — no tiling now. Each
+   topic's "vibe" comes from how its primary mark itself is composed
+   (a few related shapes, asymmetric, real negative space) rather
+   than a separate texture layer glued behind it. See EXPANDED_ICONS
+   below. */
 </style>
 </head>
 <body data-testid="graphic-language-page">
@@ -153,12 +125,12 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
     facet lattice, circuit vias — not one texture recoloured seven times.
   </p>
   <div class="tints" data-testid="gk-expanded-set">
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-video)"></span><span class="gk-pattern gk-pattern-video"></span><span class="gk-plate">SL-04</span><canvas class="gk-expanded" data-topic="video" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-css)"></span><span class="gk-pattern gk-pattern-css"></span><span class="gk-plate">SL-05</span><canvas class="gk-expanded" data-topic="css" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-composite)"></span><span class="gk-pattern gk-pattern-composite"></span><span class="gk-plate">SL-06</span><canvas class="gk-expanded" data-topic="composite" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-svg)"></span><span class="gk-pattern gk-pattern-svg"></span><span class="gk-plate">SL-09</span><canvas class="gk-expanded" data-topic="svg" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-canvas)"></span><span class="gk-pattern gk-pattern-canvas"></span><span class="gk-plate">SL-10</span><canvas class="gk-expanded" data-topic="canvas" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgl)"></span><span class="gk-pattern gk-pattern-webgl"></span><span class="gk-plate">SL-11</span><canvas class="gk-expanded" data-topic="webgl" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-video)"></span><span class="gk-plate">SL-04</span><canvas class="gk-expanded" data-topic="video" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-css)"></span><span class="gk-plate">SL-05</span><canvas class="gk-expanded" data-topic="css" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-composite)"></span><span class="gk-plate">SL-06</span><canvas class="gk-expanded" data-topic="composite" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-svg)"></span><span class="gk-plate">SL-09</span><canvas class="gk-expanded" data-topic="svg" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-canvas)"></span><span class="gk-plate">SL-10</span><canvas class="gk-expanded" data-topic="canvas" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgl)"></span><span class="gk-plate">SL-11</span><canvas class="gk-expanded" data-topic="webgl" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
     <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas id="gkExpandedWebgpu" class="gk-expanded" data-topic="webgpu" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
   </div>
 
@@ -342,13 +314,48 @@ function triRightN(g, x0, y0, size) {
 }
 
 const EXPANDED_GRID = 28;
+/* Each mark is an asymmetric arrangement of a few related shapes
+   with real negative space, not a single centred symmetric glyph —
+   the "vibe" is meant to come from the composition itself, not a
+   texture layered behind it (see the note above where the old
+   tiled-pattern approach used to live). */
 const EXPANDED_ICONS = {
-  video: () => { const g = rectOutlineN(blankN(28), 5, 6, 18, 16, 2); return triRightN(g, 11, 10, 8); },
-  css: () => { const g = blankN(28); rectN(g,5,6,18,3); rectN(g,5,13,14,3); return rectN(g,5,20,10,3); },
-  composite: () => { const g = rectOutlineN(blankN(28), 3, 3, 16, 16, 2); return rectOutlineN(g, 9, 9, 16, 16, 2); },
-  svg: () => { const g = blankN(28); lineN(g,3,21,12,7); lineN(g,12,7,24,16); circleN(g,3,21,1.8); circleN(g,12,7,1.8); return circleN(g,24,16,1.8); },
-  canvas: () => { const g = blankN(28); [7,14,21].forEach(y => [7,14,21].forEach(x => rectN(g, x-1, y-1, 3, 3))); return g; },
-  webgl: () => { const g = diamondOutlineN(blankN(28), 13.5, 13.5, 12, 3); return lineN(g, 13.5, 2, 13.5, 25); },
+  video: () => {
+    const g = blankN(28);
+    rectOutlineN(g, 2, 2, 12, 9, 1.5);   // smaller frame, back-left
+    rectOutlineN(g, 9, 10, 17, 13, 2);   // larger frame, overlapping
+    return triRightN(g, 14, 14, 6);       // play mark inside the front frame
+  },
+  css: () => {
+    const g = blankN(28);
+    rectN(g, 3, 4, 17, 3);   // cascading bars, each shifted right + down
+    rectN(g, 7, 12, 13, 3);
+    return rectN(g, 11, 20, 9, 3);
+  },
+  composite: () => {
+    const g = blankN(28);
+    rectOutlineN(g, 2, 2, 11, 11, 2);
+    rectOutlineN(g, 9, 8, 13, 13, 2);
+    return rectOutlineN(g, 15, 16, 9, 9, 2);
+  },
+  svg: () => {
+    const g = blankN(28);
+    lineN(g, 3, 24, 9, 15); lineN(g, 9, 15, 14, 18); lineN(g, 14, 18, 23, 5);
+    circleN(g, 3, 24, 1.8); circleN(g, 9, 15, 1.8); circleN(g, 14, 18, 1.8);
+    return circleN(g, 23, 5, 1.8);
+  },
+  canvas: () => {
+    const g = blankN(28);
+    circleN(g, 6, 8, 1.4); circleN(g, 12, 5, 0.9); circleN(g, 18, 11, 1.8);
+    circleN(g, 9, 17, 1.1); circleN(g, 22, 20, 1.4);
+    return circleN(g, 15, 23, 0.9);
+  },
+  webgl: () => {
+    const g = blankN(28);
+    lineN(g, 4, 21, 13, 5); lineN(g, 13, 5, 19, 17); lineN(g, 19, 17, 4, 21);   // triangle, back-left
+    lineN(g, 15, 23, 21, 10); lineN(g, 21, 10, 26, 20);                          // triangle, front-right, smaller
+    return lineN(g, 26, 20, 15, 23);
+  },
   webgpu: () => {
     const g = blankN(28);
     rectN(g, 9, 9, 10, 10);              // chip body
