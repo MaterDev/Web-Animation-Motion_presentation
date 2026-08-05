@@ -8,6 +8,22 @@
 
 ---
 
+## Revision — where this actually landed (5 Aug 2026)
+
+This document was written **before** the six treatments were built, and it did its job: it set the problem, the constraints, and the starting direction. Building against it then changed four things materially. Rather than silently rewriting the original — the treatments only make sense as a record if the brief they were answering is still legible — the deltas are stated here, and the affected sections below carry pointers back to this one.
+
+**1. The premise moved from "instrument housing" to "content on an LED panel."** Part 0 proposed a machined instrument enclosure. Five treatments in, the stronger idea turned out to be that a slide *is a display*: an emissive dark ground with a visible pixel matrix, rather than a printed card sitting in a metal case. The housing survives as the app's chassis — top bar, bezels, plates — but the slide surface itself is a screen. This produced the `.led-slide` / `.screen-unit` components and the rule that governs both: **on-screen elements are emissive graphics and glass; chassis materials (moulded plastic, chamfers, knurl, wells) stay off the screen.**
+
+**2. The grid is quantised to that panel's pixel matrix.** §1.3's "12-column grid with a wide gutter" is superseded. See §1.3 for the replacement: 12 × 6 square modules on a 160 × 90 cell matrix, no gutter, every dimension a whole number of LED cells.
+
+**3. Dot-matrix went from a garnish to the headline face.** §1.2 restricts it to readouts — "numbers and short codes only." That was the right instinct for a *dot* face at projection distance, and wrong once the ground became a pixel screen. See §1.2 for the current rule, including the ROND-axis trap that cost real time.
+
+**4. Motion collapsed to one curve.** Seven decorative curves were tried and cut. See Part 2.
+
+**Kept treatment:** T-06 (Field Unit, dark). The other five are still in `design/treatments/` and viewable in the app at `/design/treatments`.
+
+---
+
 ## Part 0 — Design Thesis
 
 ### The problem with the reference set
@@ -155,11 +171,21 @@ Used sparingly and only where a physical device would have a segment or matrix d
 
 **Restraint note:** dot-matrix is illegible below a certain size and exhausting in quantity. It is a *readout* face — numbers and short codes only. Never body text, never anything the audience must read quickly.
 
+> **⟲ Revised — see the Revision section at the top.** The restraint note above is now half right and half wrong, and the split matters.
+>
+> **Wrong:** dot-matrix is no longer a garnish. Once the ground became a pixel screen, a hairline grotesk was the one thing a dot-matrix panel physically cannot render — so **every `h1` and every `.sec-head h2` is Doto**, at display and head sizes. It's the headline face, not a readout accent.
+>
+> **Still right, and now a stated rule:** it hands off below 4 cells. The scale is **five sizes, all whole LED cells** — display 72px (12 cells), head 48px (8), sub 24px (4), body 18px (3), micro 12px (2) — with Doto at display and head, mono at sub and micro, and sans for body. Below head size at projection distance the dots stop resolving, which is exactly the failure mode the original note predicted.
+>
+> **The ROND trap.** Doto is variable on two axes: `wght`, and `ROND` where **0 = square pixels and 100 = round dots**. This system wants square — round dots read as a dot-matrix *printer*, not an LED matrix. This bit hard: while the fonts were loaded from a Google Fonts URL requesting `Doto:wght@...` only, the ROND axis wasn't in the file, so a `font-variation-settings: 'ROND' 100` sitting in the CSS was silently inert and everything rendered square by default. Self-hosting the full variant exposed the axis, that setting took effect for the first time, and every headline on the site quietly turned round. **Always self-host the `full` variant and always state `'ROND' 0`.**
+
 #### Scale
 
 Fluid via `clamp()`, but note this app has an unusual constraint: **it targets one machine at one resolution, projected.** So fluid type is a convenience during development, not a responsive requirement (SCOPE.md §Out of Scope excludes responsive layout). The more important axis is that **slide type must be legible from the back of a room** — which means the floor for body copy is considerably higher than web-normal. Baseline assumption: minimum ~24px effective body, headlines 64px+. Validate by standing at the back of the actual room.
 
 ### 1.3 Grid & Layout
+
+> **⟲ Superseded for the slide surface — see below.** The 8px base unit and the named-preset rule still hold for app chrome and are still correct. The 12-column-with-gutter stage grid is replaced by the LED-matrix grid at the end of this section.
 
 Swiss modular grid, made **visible** — the blueprint/technical-drawing read.
 
@@ -175,6 +201,31 @@ background-image: radial-gradient(var(--hz-300) 0.5px, transparent 0.5px);
 background-size: 8px 8px;
 opacity: 0.14;
 ```
+
+#### The slide grid, as built — a Swedish modular grid quantised to the LED matrix
+
+Two ideas that only work together. Swedish modernist layout discipline gives the compositions their structure; the LED matrix gives that structure a reason to land on exactly these numbers rather than arbitrary ones. **The grid unit is a whole number of LED cells, so nothing in a composition can fall between pixels.**
+
+| Unit | Value | In cells |
+|---|---|---|
+| stage | 960 × 540 | 160 × 90 — the matrix |
+| cell | 6px | 1 — one LED pixel |
+| margin x / y | 48 / 54 | 8 / 9 |
+| field | 864 × 432 | 144 × 72 |
+| module | 72 × 72 | **12 × 12 — a true square** |
+| grid | 12 × 6 | **no gutter** |
+
+`12 × 72 + 48 + 48 = 960` and `6 × 72 + 54 + 54 = 540`, exactly. Change one value and the rest have to be re-derived.
+
+Three rules come out of this and are worth stating separately, because they're what make it read as Swedish rather than merely gridded:
+
+- **No gutter.** Columns butt directly together and spacing is made by *leaving a module empty*. Every gap in every composition is therefore exactly one module, guaranteed by structure rather than by remembering a number. A gutter would also put fractional cells between columns and break the one rule everything rests on.
+- **The margin is composition, not leftover.** 8 and 9 cells is a lot of empty edge for a 16:9 frame. The void is an active element that gives type somewhere to sit; only a deliberate full-bleed layer crosses it.
+- **Asymmetry by default.** Content takes a subset of the columns and the rest is deliberately empty.
+
+**Live reference:** `/design/reference?sheet=lay` — the grid with guides, the type scale, all 15 compositions, and the transition preview.
+
+**Constraint discovered in build, not in theory:** because the grid is specified in fixed pixels, a slide is a fixed size, and **a CSS `transform: scale()` on a slide breaks Anime.js's layout animation** (it re-roots the `position: fixed` the library uses mid-transition and scales the translate). Scaling a fixed-size slide to the window is the obvious way to build presenter chrome, so this shapes the app's architecture. Recorded in SCOPE.md's risk list.
 
 ### 1.4 Surface & Material — the exposed-electronics layer
 
@@ -275,6 +326,22 @@ Rules, from SCOPE.md §Motion Craft:
 - **One focal point.** During a slide transition, the chrome does not also animate. Either the content moves or the chrome does — never both.
 
 CSS `linear()` is available (Chrome-only target) for any curve needing multiple inflections — a mechanical stepper or a segment-display flicker. Not needed for standard transitions.
+
+> **⟲ Revised — see the Revision section at the top.** Two corrections from build.
+>
+> **Springs were wrong to exclude.** "Springs and bounce read as playful and belong to a different brand" holds for *bounce*, and doesn't for a damped spring settle. Apple's Liquid Glass is spring-driven throughout, and a mass-on-a-spring response has more inflections than four bezier control points can express — so `--ease-liquid` is authored with `linear()` and is now the system's most-used curve. The set is **seven curves and that is the ceiling**: past this nobody holds them in their head and they start getting picked by feel.
+>
+> ```css
+> --ease-detent:    cubic-bezier(0.34, 1.28, 0.64, 1.0);  /* sprung mechanisms only — slight overshoot */
+> --ease-ballistic: cubic-bezier(0.16, 0.84, 0.28, 1.0);  /* meters and needles — damped, no overshoot */
+> --ease-liquid:    linear(…);                            /* morph, settle, AND every ambient loop */
+> ```
+>
+> **Motion is not a differentiator.** An intermediate pass gave each of the seven technique sections its own idle signature — breathe, settle, drift, reveal, flicker, tilt, pulse. It read as seven unrelated widgets rather than one family, and it was cut entirely. **Every ambient loop anywhere in the system now runs `--ease-liquid`, unchanged** (`.liquid-idle` / `.liquid-fill` in components.css). Differentiation between sections is carried by graphic elements only — colour, shape, pattern, rule treatment, type — never by bespoke motion. A reader should not be able to tell two contexts apart by how something moves, only by how it looks.
+>
+> The remaining variation is *compositional*, not topical: parts of a single mark stagger so they don't move in lockstep, using the same positional rule for all seven topics.
+>
+> **`prefers-reduced-motion` needs handling twice.** The global CSS rule in `tokens.css` only reaches CSS animations and transitions. Anything JS-driven — the Anime.js layout transitions, any autoplay loop — has to check `matchMedia` explicitly, or it keeps moving for exactly the users this deck argues hardest about.
 
 ### 2.4 Slide transition
 
