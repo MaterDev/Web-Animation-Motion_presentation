@@ -74,6 +74,30 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
 .modal-stage .led-slide { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .modal-bar { position: fixed; top: calc(var(--u)*3); right: calc(var(--u)*3); display: flex; gap: 10px; z-index: 3; }
 
+/* ── transition preview: rendered at TRUE 1:1, no transform ──
+   Every other stage on this page is authored at 960 and scaled down
+   with transform: scale(). This one must not be, and the reason is
+   a genuine incompatibility worth knowing about:
+
+   During a transition Anime.js takes each element out of flow and
+   sets `position: fixed; left: 0; top: 0` plus a `translate` of the
+   measured screen-space delta (confirmed by reading the inline
+   styles it writes mid-flight, not assumed). A transformed ancestor
+   creates a containing block for fixed descendants AND scales the
+   translate — so inside a scale(0.9) stage the blocks flew to
+   roughly 0.9 × the right offset from the wrong origin, ending up
+   low and to the right, then snapped back when the inline styles
+   were cleaned up at the end. That was the "goes to the bottom-right
+   then shifts back" bug exactly.
+
+   So: 960 × 540 at scale 1, in a scroll container for narrow
+   viewports. This matters well beyond this page — the real deck will
+   want to scale slides to fit the window, and that is the same
+   transform. Flagged in SCOPE.md's risk list. */
+.tx-scroll { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+.tx-box { position: relative; width: 960px; height: 540px; border-radius: 6px; overflow: hidden; background: var(--well-floor); box-shadow: var(--recess), var(--lift-1); }
+.tx-box .led-slide { position: absolute; top: 0; left: 0; }
+
 /* ── transition preview arrangements ──────────────────────
    Four real compositions off the field above, expressed only as
    grid placement. The DOM never changes — same four elements, same
@@ -215,7 +239,8 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
     <button class="ibtn" id="txStep" data-testid="tx-step">Step →</button>
     <span class="mono" id="txState" style="align-self:center">Arrangement: —</span>
   </div>
-  <div class="stage-box" id="txBox" style="max-width:860px" data-testid="transition-preview">
+  <div class="tx-scroll">
+  <div class="tx-box" id="txBox" data-testid="transition-preview">
     <div class="led-slide" id="txStage" style="--tint:var(--tint-composite)">
       <div class="led-chrome top"><span id="txKicker">Arrangement A</span><span>07 / 15</span></div>
       <div class="led-chrome bot"><span>SL-07 · layout animation</span><span>Folklore</span></div>
@@ -228,12 +253,23 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
       <div class="led-guides"><span class="margin"></span><span class="field"></span></div>
     </div>
   </div>
+  </div>
   <div class="note warn" style="margin-top:18px;max-width:66ch">
+    <b>Shown at true size, and it has to be.</b> Anime.js takes each block out of flow
+    during a transition and positions it <code>fixed</code> with a measured screen-space
+    <code>translate</code>. A <code>transform</code> on any ancestor both re-roots that
+    fixed positioning and scales the translate, which sent every block low and right
+    mid-flight before snapping back at the end. So this preview is 960 × 540 at 1:1 while
+    every other stage on the page is scaled down.
+  </div>
+  <div class="note warn" style="max-width:66ch">
     <b>This is the part SCOPE.md flags as least-proven.</b> It reads well with four blocks
-    and no text reflow. The open question is real slide content — headings of different
-    lengths, a media well that's a live canvas, and a fast double-advance landing mid-flight.
-    Worth prototyping against those before committing the deck's navigation to it; a plain
-    cross-fade stays the fallback.
+    and no text reflow. The open questions are real slide content — headings of different
+    lengths, a media well that's a live canvas, a fast double-advance landing mid-flight —
+    and the scaling constraint above, since a real deck will want to scale slides to fit
+    the window and that is exactly the transform that breaks this. Worth prototyping
+    against all of it before committing the deck's navigation; a plain cross-fade stays
+    the fallback.
   </div>
 </div><!-- /.screen-content -->
 </div><!-- /.screen-face -->
@@ -670,7 +706,8 @@ guideToggle.addEventListener('click', () => {
 document.getElementById('closeModal').addEventListener('click', () => modal.close());
 modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
 
-fitStage(document.getElementById('txBox'));
+/* deliberately NOT fitStage()'d — see .tx-box in the stylesheet:
+   a transform on an ancestor breaks Anime.js's layout animation */
 </script>
 
 <script type="module">
