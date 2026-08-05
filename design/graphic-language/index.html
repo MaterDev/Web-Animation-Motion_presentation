@@ -30,73 +30,32 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
   color: oklch(0.30 0.045 140 / 0.65); text-transform: uppercase;
 }
 
-/* idle motion signature per topic — the point of a talk about web
-   animation is that even its own supporting material should
-   demonstrate motion carrying meaning, not just sit still next to
-   text about it. Each one is a genuinely different feel (breathe /
-   settle / drift / reveal / flicker / tilt / pulse), not the same
-   loop retimed seven ways. All ambient/decorative, so the global
-   prefers-reduced-motion rule in tokens.css stops every one of them
-   without any extra work here. */
-@keyframes gkBreathe { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
-@keyframes gkSettle  { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-2px); } 65% { transform: translateY(0.5px); } }
-@keyframes gkDrift   { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(1.5px, -1px); } }
-@keyframes gkReveal  { 0%, 100% { clip-path: inset(0 0 0 0); } 50% { clip-path: inset(0 55% 0 0); } }
-@keyframes gkFlicker { 0%, 100% { opacity: 1; } 8% { opacity: 0.4; } 16% { opacity: 1; } 45% { opacity: 0.7; } 52% { opacity: 1; } }
-@keyframes gkTilt    { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
-@keyframes gkPulse   { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.55; filter: brightness(1.3); } }
+/* ONE motion, seven topics. An earlier pass gave each topic its own
+   idle signature (breathe / settle / drift / reveal / flicker / tilt
+   / pulse) and each mark part its own timing — which was a
+   misreading of what "differentiate the sections" means. Motion is
+   not a differentiator in this system: --ease-liquid is the single
+   ambient curve (T-06 §02 E), and everything that idles anywhere
+   uses it unchanged. Differentiation is carried by graphic elements
+   only — colour, shape, pattern, type. So both the small key icons
+   and the expanded marks' individual parts run the same
+   liquidAmbient/--ease-liquid pairing the shared .liquid-idle class
+   in components.css applies (declared directly here only because
+   these are canvases generated with fixed classes), with nothing
+   overridden per topic except the stagger below, which is
+   compositional — parts of one mark shouldn't move in lockstep —
+   rather than topical. */
+.gk-icon, .gk-part { animation: liquidAmbient 2.2s var(--ease-liquid) infinite alternate; }
 
-/* small compact-key icons — the whole 12x12 bitmap is one shape, so
-   the whole element animates as one unit. Fine at that scale; you
-   can't tell "the whole icon" from "one part of it" when it's 34px. */
-.gk-icon[data-topic="video"]     { animation: gkBreathe 2.4s var(--ease-standard) infinite; }
-.gk-icon[data-topic="css"]       { animation: gkSettle 3.2s var(--ease-detent) infinite; }
-.gk-icon[data-topic="composite"] { animation: gkDrift 3.6s ease-in-out infinite; }
-.gk-icon[data-topic="svg"]       { animation: gkReveal 2.8s steps(6, end) infinite; }
-.gk-icon[data-topic="canvas"]    { animation: gkFlicker 2.6s steps(1, end) infinite; }
-.gk-icon[data-topic="webgl"]     { animation: gkTilt 3.4s ease-in-out infinite alternate; }
-.gk-icon[data-topic="webgpu"]    { animation: gkPulse 1.1s steps(2, end) infinite; }
-
-/* expanded marks — each is now DRAWN as separate layered canvases
-   (.gk-part, one per shape, plus a static .gk-reg for the corner
-   ticks) instead of one flat bitmap, specifically so the motion can
-   act on what the content actually depicts rather than wobbling the
-   whole picture uniformly: a frame jumping ahead, bars cascading in
-   one after another, layers popping in in sequence, dots flickering
-   independently, facets catching light out of phase with each
-   other, pins pulsing while the chip body itself stays put. */
-@keyframes gkAdvance { 0%, 72% { transform: translateX(0); } 74%, 100% { transform: translateX(3px); } }
-@keyframes gkPop     { 0%, 100% { opacity: 0.5; transform: scale(0.93); } 50% { opacity: 1; transform: scale(1); } }
-@keyframes gkTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-
-.gk-part[data-topic="video"][data-part="front"] { animation: gkAdvance 2.2s steps(1, end) infinite; }
-
-.gk-part[data-topic="css"] { animation: gkSettle 2.4s var(--ease-detent) infinite; }
-.gk-part[data-topic="css"][data-part="bar2"] { animation-delay: 0.25s; }
-.gk-part[data-topic="css"][data-part="bar3"] { animation-delay: 0.5s; }
-
-.gk-part[data-topic="composite"] { animation: gkPop 3s ease-in-out infinite; }
-.gk-part[data-topic="composite"][data-part="sq2"] { animation-delay: 0.4s; }
-.gk-part[data-topic="composite"][data-part="sq3"] { animation-delay: 0.8s; }
-
-.gk-part[data-topic="svg"] { animation: gkReveal 2.8s steps(6, end) infinite; }
-
-.gk-part[data-topic="canvas"] { animation: gkTwinkle 1.8s steps(1, end) infinite; }
-.gk-part[data-topic="canvas"][data-part="d2"] { animation-delay: 0.3s; animation-duration: 2.1s; }
-.gk-part[data-topic="canvas"][data-part="d3"] { animation-delay: 0.6s; animation-duration: 1.5s; }
-.gk-part[data-topic="canvas"][data-part="d4"] { animation-delay: 0.9s; animation-duration: 2.4s; }
-.gk-part[data-topic="canvas"][data-part="d5"] { animation-delay: 1.2s; animation-duration: 1.7s; }
-.gk-part[data-topic="canvas"][data-part="d6"] { animation-delay: 1.5s; animation-duration: 2s; }
-
-.gk-part[data-topic="webgl"][data-part="tri1"] { animation: gkTilt 3.2s ease-in-out infinite alternate; }
-.gk-part[data-topic="webgl"][data-part="tri2"] { animation: gkTilt 2.6s ease-in-out infinite alternate-reverse; animation-delay: 0.3s; }
-
-/* ~0.9Hz — well under WCAG 2.3.1's 3Hz seizure threshold, same
-   headroom SCOPE.md's own "fault blink" micro-animation uses.
-   Pins pulse; the chip body itself is drawn as part of .gk-reg's
-   sibling static layer and never animates — silicon doesn't flicker,
-   I/O does. */
-.gk-part[data-topic="webgpu"][data-part="pins"] { animation: gkPulse 1.1s steps(2, end) infinite; }
+/* stagger by position within a mark, not by topic — the nth-of-type
+   index is the same rule for all seven, so a two-part mark and a
+   six-part mark differ in how many beats they have, not in feel. */
+.gk-part:nth-of-type(2) { animation-delay: 0.12s; }
+.gk-part:nth-of-type(3) { animation-delay: 0.24s; }
+.gk-part:nth-of-type(4) { animation-delay: 0.36s; }
+.gk-part:nth-of-type(5) { animation-delay: 0.48s; }
+.gk-part:nth-of-type(6) { animation-delay: 0.60s; }
+.gk-part:nth-of-type(7) { animation-delay: 0.72s; }
 
 .gk-sec-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-500); margin: 40px 0 8px; }
 .gk-sec-note { font-size: 13px; color: var(--hz-500); max-width: 62ch; margin: 0 0 18px; }
@@ -130,10 +89,10 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
    card — big enough to hold several distinct visual elements at
    once: a spec-plate code, the pixel-type name in the topic's own
    colour, the animated multi-part mark, a divider, a pattern swatch,
-   a second independently-timed motion element, and a mono duration/
-   easing readout. --tint is scoped per-panel via inline style so
-   every child below just reads var(--tint) — no --tint-X repeated
-   seven times over. */
+   a sweep bar, and a mono motion readout. Every one of those varies
+   graphically per topic; none of them varies in timing or easing.
+   --tint is scoped per-panel via inline style so every child below
+   just reads var(--tint) — no --tint-X repeated seven times over. */
 .gk-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: calc(var(--u) * 3); }
 .gk-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .gk-code { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 18%, var(--hz-100)); padding: 3px 8px; border-radius: 3px; }
@@ -159,22 +118,15 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 .gk-pattern[data-topic="webgl"]     { background-image: repeating-linear-gradient(60deg, var(--tint) 0 1px, transparent 1px 6px), repeating-linear-gradient(-60deg, var(--tint) 0 1px, transparent 1px 6px); opacity: 0.4; }
 .gk-pattern[data-topic="webgpu"]    { background-image: radial-gradient(var(--tint) 1px, transparent 1.4px); background-size: 8px 8px; opacity: 0.5; }
 
-/* sweep bar — a second, independently-timed motion element per
-   panel (distinct duration/easing from the mark's own animation
-   above), so "multiple different animations" reads as true within
-   one panel, not just across the seven of them. Hard reset from
-   100% back to its start width is deliberate — a meter re-arming,
-   not a smoothed loop. */
+/* sweep bar — a second motion element in each panel, running the
+   same shared .liquid-fill class every other bar in the system uses.
+   An earlier pass gave each topic its own duration and easing here
+   (steps(8) for video, linear for svg, and so on); there was no
+   reason for a loading bar to move differently depending on which
+   topic it sat under, and it made seven panels that should read as
+   one family feel like seven unrelated widgets. */
 .gk-sweep { flex: 1 1 auto; position: relative; height: 8px; border-radius: 4px; background: var(--well-floor); box-shadow: var(--recess); overflow: hidden; }
 .gk-sweep .fill { position: absolute; inset: 1px auto 1px 1px; width: 6%; border-radius: 3px; background: var(--tint); }
-@keyframes gkSweep { 0% { width: 6%; } 70%, 100% { width: 100%; } }
-.gk-sweep[data-topic="video"] .fill     { animation: gkSweep 1.6s steps(8, end) infinite; }
-.gk-sweep[data-topic="css"] .fill       { animation: gkSweep 2s ease-out infinite; }
-.gk-sweep[data-topic="composite"] .fill { animation: gkSweep 2.4s ease-in-out infinite; }
-.gk-sweep[data-topic="svg"] .fill       { animation: gkSweep 3s linear infinite; }
-.gk-sweep[data-topic="canvas"] .fill    { animation: gkSweep 1.2s steps(6, end) infinite; }
-.gk-sweep[data-topic="webgl"] .fill     { animation: gkSweep 2.2s ease-in-out infinite; }
-.gk-sweep[data-topic="webgpu"] .fill    { animation: gkSweep 0.9s steps(4, end) infinite; }
 </style>
 </head>
 <body data-testid="graphic-language-page">
@@ -185,10 +137,11 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
   <div class="head"><h1>graphic language</h1></div>
   <p class="dek">
     Each stage of the presentation's technique spectrum gets its own identity, not just its
-    own colour — a tint, a pixel symbol, a slide-code plate, and now a distinct idle motion
-    per topic, so a slide reads as "this stage" before anyone reads a word of it, on the
-    display it'll actually appear on. A talk about web animation should have its own
-    supporting material demonstrate the thing it argues for.
+    own colour — a tint, a pixel symbol, a slide-code plate, a pattern — so a slide reads as
+    "this stage" before anyone reads a word of it, on the display it'll actually appear on.
+    Everything that differentiates a topic here is a <i>graphic</i> element. Motion is
+    deliberately not one of them: every idle loop on this page runs the single
+    <code>--ease-liquid</code> curve from the system reference, unchanged.
   </p>
 
   <div class="tints" data-testid="tint-set-key">
@@ -210,61 +163,62 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 
   <div class="gk-sec-label">Expanded visual language — a style preview per topic</div>
   <p class="gk-sec-note">
-    Not one animation in a box but a small kit per topic, on one plate: the slide code, the
-    name set in its own colour, a bigger animated multi-part mark, a divider, a technique-
-    inspired pattern swatch (film ticks, cascading rules, an offset grid, scattered nodes, a
-    raster dither, a facet lattice, circuit vias), and a second, independently-timed motion
-    element with its own duration/easing readout — coherent as a set, distinct per topic.
+    A small kit per topic on one plate: the slide code, the name set in its own colour, a
+    multi-part mark, a divider, and a technique-inspired pattern swatch — film ticks,
+    cascading rules, an offset grid, scattered nodes, a raster dither, a facet lattice,
+    circuit vias. Every one of those is a graphic difference. The motion underneath them is
+    identical across all seven, which is what lets the set read as one family rather than
+    seven unrelated widgets.
   </p>
   <div class="gk-panels" data-testid="gk-expanded-set">
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-video)" data-testid="gk-panel-video">
       <div class="gk-panel-head"><span class="gk-code">SL-04</span><span class="gk-pair-title gk-panel-title">video</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="video" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="back" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="front" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="video" aria-hidden="true"></div><div class="gk-sweep" data-topic="video"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>2.2s</b> · steps(1) — sweep <b>1.6s</b> · steps(8)</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="video" aria-hidden="true"></div><div class="gk-sweep" data-topic="video"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-css)" data-testid="gk-panel-css">
       <div class="gk-panel-head"><span class="gk-code">SL-05</span><span class="gk-pair-title gk-panel-title">css</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="css" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="css" aria-hidden="true"></div><div class="gk-sweep" data-topic="css"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>2.4s</b> · ease-detent — sweep <b>2.0s</b> · ease-out</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="css" aria-hidden="true"></div><div class="gk-sweep" data-topic="css"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-composite)" data-testid="gk-panel-composite">
       <div class="gk-panel-head"><span class="gk-code">SL-06</span><span class="gk-pair-title gk-panel-title">composite</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="composite" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="composite" aria-hidden="true"></div><div class="gk-sweep" data-topic="composite"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>3.0s</b> · ease-in-out — sweep <b>2.4s</b> · ease-in-out</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="composite" aria-hidden="true"></div><div class="gk-sweep" data-topic="composite"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-svg)" data-testid="gk-panel-svg">
       <div class="gk-panel-head"><span class="gk-code">SL-09</span><span class="gk-pair-title gk-panel-title">svg</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="svg" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="svg" data-part="main" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="svg" aria-hidden="true"></div><div class="gk-sweep" data-topic="svg"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>2.8s</b> · steps(6) — sweep <b>3.0s</b> · linear</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="svg" aria-hidden="true"></div><div class="gk-sweep" data-topic="svg"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-canvas)" data-testid="gk-panel-canvas">
       <div class="gk-panel-head"><span class="gk-code">SL-10</span><span class="gk-pair-title gk-panel-title">canvas</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="canvas" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d4" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d5" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d6" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="canvas" aria-hidden="true"></div><div class="gk-sweep" data-topic="canvas"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>1.8s</b> · steps(1) — sweep <b>1.2s</b> · steps(6)</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="canvas" aria-hidden="true"></div><div class="gk-sweep" data-topic="canvas"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-webgl)" data-testid="gk-panel-webgl">
       <div class="gk-panel-head"><span class="gk-code">SL-11</span><span class="gk-pair-title gk-panel-title">webgl</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="webgl" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgl" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgl"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>3.2s</b> · ease-in-out — sweep <b>2.2s</b> · ease-in-out</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgl" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgl"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-webgpu)" data-testid="gk-panel-webgpu">
       <div class="gk-panel-head"><span class="gk-code">SL-13</span><span class="gk-pair-title gk-panel-title">webgpu</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="webgpu" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="body" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="pins" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
       <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgpu" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgpu"><span class="fill"></span></div></div>
-      <div class="gk-spec">mark <b>1.1s</b> · steps(2) — sweep <b>0.9s</b> · steps(4)</div>
+      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgpu" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgpu"><span class="fill liquid-fill"></span></div></div>
+      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
     </div>
   </div>
 

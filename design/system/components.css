@@ -180,6 +180,21 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .led.boot { animation: ledboot 520ms var(--ease-decelerate) both; }
 @keyframes ledboot { 0% { opacity: 0; transform: scale(0.4) } 100% { opacity: 1; transform: scale(1) } }
 
+/* ═══ AMBIENT LIQUID MOTION ═════════════════════════════
+   The one ambient/decorative motion pattern used anywhere in this
+   system — see T-06 §02 "liquid glass motion" for the full
+   rationale and the triggered (click/pointer) variants this is
+   looped from. Same curve, same idea, just never fired once: settle
+   with a slight overshoot, never fully at rest. Any page that needs
+   to differentiate states or topics by look should do it with
+   colour, shape or pattern and reuse this rather than authoring a
+   bespoke ambient timing/easing per instance — see
+   design/graphic-language/index.html for the reference case. */
+@keyframes liquidAmbient { 0% { transform: scale(0.93); opacity: 0.6; } 100% { transform: scale(1); opacity: 1; } }
+.liquid-idle { animation: liquidAmbient 2.2s var(--ease-liquid) infinite alternate; }
+@keyframes liquidFill { 0% { width: 6%; } 100% { width: 100%; } }
+.liquid-fill { animation: liquidFill 1.6s var(--ease-liquid) infinite alternate; }
+
 /* ═══ DISPLAYS ══════════════════════════════════════════ */
 
 .well { background: var(--well-floor); border-radius: 4px; padding: 4px; box-shadow: var(--recess); display: inline-block; }
