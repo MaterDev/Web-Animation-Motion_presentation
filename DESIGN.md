@@ -22,6 +22,8 @@ This document was written **before** the six treatments were built, and it did i
 
 **5. There are two displays, and which one you use is a rule, not a preference.** See below — this is the single most load-bearing thing to get right, and the easiest to get backwards.
 
+**6. The material question mostly dissolved.** §1.4 treats surface material as the primary carrier of the aesthetic, and an open question through the treatments was how far to push plastic and glass against anodised aluminium. Once the screens arrived, that stopped mattering much: the displays carry the identity, and the chassis is deliberately quiet around them. Of the eleven material recipes in §1.4, nine now appear only in T-06's own materials catalogue, which documents them; `.mat-anodised` is the only one doing real work in the app. They're kept rather than pruned — the catalogue is part of the record of how the system got here, and it costs nothing but a section on one sheet. **The live distinction is screen vs. chassis, not metal vs. plastic.**
+
 **Kept treatment:** T-06 (Field Unit, dark). The other five are still in `design/treatments/` and viewable in the app at `/design/treatments`.
 
 ### The two displays
@@ -316,6 +318,14 @@ Teenage Engineering's manuals are the reference: isometric line drawings, number
 - **Alphanumeric codes.** Every slide gets one (`SL-06`), every demo gets one (`TD-WEBGL`, matching the thread demo naming). Displayed in mono. This is pure TE and it makes the deck feel like equipment.
 - **Dimension and leader lines** for callouts on diagram slides — hairline with tick terminals, the annotation offset on a horizontal leader.
 - **Dashed construction lines** to indicate the inactive or planned state (a not-yet-visited slide, a disabled degradation rung).
+
+> **⟲ Resolved in build — icons are pixel marks, drawn to the matrix.** Adopting an off-the-shelf set (Carbon was the candidate) was considered and rejected as a dependency. Two reasons: the system already has a real iconography — the topic marks, registration brackets and glyph sets on the graphic-language sheet, all drawn as boolean grids and rendered a cell at a time — and a clean neutral grid set sitting next to those is a second visual voice saying the same thing differently. The app also needs about five icons, which is not a dependency's worth.
+>
+> **Carbon stays useful as a reference, not a package.** Its icons are geometrically disciplined and solve the "what does this glyph look like at 16px" problem well. Pull one up, read the geometry, and redraw it on the pixel grid — that's a legitimate and fast way to get a mark that's both conventional enough to recognise and native to this system. Don't install it.
+>
+> **How to draw one.** The predicate approach in `design/graphic-language/index.html` is the pattern: compose from `rect` / `line` / `circle` / `triOutline` helpers over a boolean grid at a fixed cell size, then paint. Hand-typing a bitmap produces lopsided marks; math doesn't. Keep stroke thickness a whole number of cells — fractional widths double an edge, which has been a real bug here twice.
+>
+> Until the presentation viewer needs genuine affordances (nav, fullscreen, speaker view), the handful of arrows and chevrons in the app stay as mono glyphs — they're set in JetBrains Mono alongside their labels and read as part of the type, not as icons.
 
 ---
 
