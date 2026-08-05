@@ -116,6 +116,24 @@
   --led-ink: oklch(0.90 0.015 265);
   --led-dim: oklch(0.62 0.012 265);
 
+  /* ── LCD: the reflective screen ───────────────────────────
+     The other display in this system, and the one the app itself is
+     made of. An LCD is reflective — a light backlit green ground
+     with dark ink — where the LED panel above is emissive. The
+     division is not decorative: the deck's SLIDES are LED (what the
+     device outputs), and the APP around them is the device's own LCD
+     readout. Two displays, two jobs, and you can tell which is which
+     without being told.
+
+     These values were repeated as literals across .lcd, .ghost and
+     the graphic-language plates before being named here. */
+  --lcd-ground-top: oklch(0.868 0.048 128);
+  --lcd-ground-bot: oklch(0.812 0.052 132);
+  --lcd-ink: oklch(0.30 0.045 140);
+  --lcd-dim: oklch(0.30 0.045 140 / 0.62);
+  --lcd-ghost: oklch(0.30 0.045 140 / 0.10);
+  --lcd-rule: oklch(0.2 0.05 130 / 0.22);
+
   /* Type scale, also in whole cells (12/8/4/3/2), so a baseline
      always coincides with a matrix row. Five sizes is the whole
      scale — the restriction is the point, not a starting set. */

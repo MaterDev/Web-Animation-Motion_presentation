@@ -211,7 +211,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .well { background: var(--well-floor); border-radius: 4px; padding: 4px; box-shadow: var(--recess); display: inline-block; }
 .lcd {
   position: relative; border-radius: 2px; padding: 10px 14px 8px; overflow: hidden;
-  background: linear-gradient(178deg, oklch(0.868 0.048 128), oklch(0.812 0.052 132));
+  background: linear-gradient(178deg, var(--lcd-ground-top), var(--lcd-ground-bot));
   box-shadow: inset 0 0 0 var(--hair) oklch(0.2 0.05 130 / 0.4);
 }
 .lcd::before {
@@ -228,8 +228,8 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
   font-family: var(--dot); font-weight: 700; letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums; line-height: 1;
 }
-.lcd .chars { color: oklch(0.30 0.045 140); position: relative; z-index: 2; }
-.lcd .ghost { color: oklch(0.30 0.045 140 / 0.10); position: absolute; left: 14px; top: 10px; z-index: 1; }
+.lcd .chars { color: var(--lcd-ink); position: relative; z-index: 2; }
+.lcd .ghost { color: var(--lcd-ghost); position: absolute; left: 14px; top: 10px; z-index: 1; }
 /* a slight per-topic colouring of the backlight itself, not just an
    accent drawn on top of it — sits below the pixel-grid/sheen
    overlays (z-index 3/4) so it still reads as the LCD's own tint,
@@ -733,6 +733,83 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    state and identity, never decorates */
 .screen-unit.is-link .screen-face { border-top: 2px solid var(--ct, var(--tint)); }
 
+/* ═══ LCD PANEL ═════════════════════════════════════════
+   A card, or a whole page header, built as a backlit LCD in a
+   recessed well — the same screen as the hardware readouts and the
+   T-06 hero, at panel scale. THIS is the app's card.
+
+   Why this and not the LED screen above: the LED panel is emissive
+   and dark, and it belongs to the deck's slides — it's what the
+   device outputs. The app is the device, so the app is made of the
+   device's own readout: reflective, backlit green, dark ink. Using
+   one for the other makes the app look like a slide, which is
+   exactly the confusion worth avoiding.
+
+   Structure is .lcd-panel > .well > .lcd > .lcd-body, so the
+   existing .lcd backlight, pixel grid, sheen and .wash tinting all
+   apply unchanged. */
+/* display:block on all three levels is load-bearing, not tidiness.
+   .lcd sets position/overflow but no display, so when a panel is
+   built from <span>s — which it is inside a link, to keep the markup
+   valid — the backlight gradient paints around inline content boxes
+   instead of filling the panel, and the card comes out black on a
+   dark page. */
+.lcd-panel { display: block; text-decoration: none; }
+.lcd-panel > .well { display: block; padding: 5px; }
+.lcd-panel .lcd { display: block; padding: 0; border-radius: 3px; }
+.lcd-body { position: relative; z-index: 2; padding: 15px 17px 16px; display: flex; flex-direction: column; gap: 8px; }
+
+/* type on an LCD: dot-matrix for the title, mono for labels, and
+   the system's own sans for anything that has to be read at speed —
+   all in LCD ink rather than the page's greyscale */
+.lcd-title {
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 21px; line-height: 1.1; letter-spacing: 0.01em;
+  color: var(--lcd-ink); text-transform: lowercase; margin: 0;
+}
+.lcd-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--lcd-dim);
+}
+.lcd-text { font-size: 12.5px; line-height: 1.6; color: var(--lcd-dim); margin: 0; }
+.lcd-rule { height: var(--hair); background: var(--lcd-rule); }
+
+/* Key/value readout — the MODEL / UNIT / SLIDES strip along the
+   bottom of the T-06 hero. Both halves in the dot face: on a real
+   readout the label is printed by the same matrix as the value, and
+   setting the label in a different family is the tell that it's a
+   web page pretending. */
+.lcd-kv { display: flex; flex-direction: column; gap: 3px; }
+.lcd-kv .k {
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700;
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--lcd-dim);
+}
+.lcd-kv .v {
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700;
+  font-size: 13px; letter-spacing: 0.04em; color: var(--lcd-ink);
+  font-variant-numeric: tabular-nums;
+}
+.lcd-strip { display: flex; align-items: flex-end; gap: calc(var(--u) * 3.5); flex-wrap: wrap; }
+
+/* Indicators drawn ON the screen are screen content, not hardware —
+   the same rule that governs slides. A moulded dome with a glow
+   halo sitting inside a flat backlit panel is the exact category
+   error T-06 fixed once already, so .led is flattened in here:
+   emissive, no bloom, no inner shadow. */
+.lcd .led { box-shadow: none; background: var(--c); }
+.lcd .led.off { background: color-mix(in oklch, var(--lcd-ink) 24%, transparent); box-shadow: none; }
+
+/* interactive panels get the lift/press a link needs, plus a real
+   focus ring — the well is the thing that moves, since on hardware
+   the screen doesn't float off its own bezel */
+.lcd-panel.is-link > .well {
+  transition: transform var(--dur-fast) var(--ease-standard),
+              box-shadow var(--dur-fast) var(--ease-standard);
+}
+.lcd-panel.is-link:hover > .well { transform: translateY(-3px); box-shadow: var(--recess), var(--lift-3); }
+.lcd-panel.is-link:active > .well { transform: translateY(-1px); }
+.lcd-panel.is-link:focus-visible > .well { outline: 2px solid var(--tint); outline-offset: 3px; }
+
 /* Dot-matrix at sub size. The scale's rule is that display and head
    are set in Doto and everything below hands off to mono, because a
    dot face stops resolving at projection distance. In-app, at
@@ -841,7 +918,7 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
    why the technical slides use it and the statement slides don't. */
 .led-readout {
   font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700;
-  background: linear-gradient(178deg, oklch(0.868 0.048 128), oklch(0.812 0.052 132));
+  background: linear-gradient(178deg, var(--lcd-ground-top), var(--lcd-ground-bot));
   color: oklch(0.28 0.05 140); position: relative; overflow: hidden;
   display: flex; align-items: center; gap: 16px; padding: 0 18px;
   box-shadow: inset 0 0 0 1px oklch(0.2 0.05 130 / 0.45);
