@@ -33,16 +33,28 @@ Every surface in this system is one of two screens. They are not interchangeable
 | Ground | backlit green (`--lcd-ground-top/bot`) | near-black (`--led-ground`) |
 | Ink | dark green (`--lcd-ink`, `--lcd-dim`) | light (`--led-ink`, `--led-dim`) |
 | Texture | fine pixel grid + a diagonal sheen | 6px cell matrix + edge vignette |
-| Components | `.well` › `.lcd`, `.lcd-panel`, `.lcd-*` | `.led-slide`, `.screen-unit` / `.screen-face` |
-| **Used for** | **the app itself** — every page, card, hero and readout | **the deck's slides**, and only those |
+| Components | `.lcd-chip`, `.well` › `.lcd`, `.lcd-panel`, `.lcd-*` | `.led-slide`, `.screen-unit` / `.screen-face` |
+| **Used for** | **readouts inside the app** — see the sizing rule below | **the deck's slides**, and only those |
 
-The reasoning is literal rather than aesthetic: **the app is the instrument, and the slides are what the instrument outputs.** An instrument's own chrome is its readout panel — reflective, backlit, dark ink, the thing you look *at*. What it drives is an emissive display — the thing you look *through*, in a dark room, from the back. Build a card out of the slide surface and the app starts looking like a deck; build a slide out of the LCD and it stops reading as a projected image.
+The reasoning is literal rather than aesthetic: **the app is the instrument, and the slides are what the instrument outputs.** An instrument's own chrome is its readout panel — reflective, backlit, dark ink, the thing you look *at*. What it drives is an emissive display — the thing you look *through*, in a dark room, from the back. Build a slide out of the LCD and it stops reading as a projected image.
 
-**The default is LCD.** If you're adding a surface to the app and you're unsure, it's LCD.
+#### How much LCD — the part that's easy to overdo
 
-#### Use the readout vocabulary, not generic UI
+A screen is only legible as a screen if the things around it aren't. Wrapping every card in `.lcd-panel` was tried and reverted: the whole app went one continuous green and the display stopped meaning anything.
 
-The failure mode isn't picking the wrong screen — it's picking neither and reaching for a plain card. A panel should carry the furniture a real readout carries, because that furniture *is* the aesthetic:
+**Reach for the small form first.**
+
+- **`.lcd-chip` — the default.** A datum on its own little screen: a code, a count, a status, a small pixel graphic. Lives inside an otherwise ordinary chassis card. This is the workhorse.
+- **`.lcd-panel` — earns its place.** Justified for exactly three things: a **hero with significant display-scale type**; a **callout** that wants to be read as an instrument talking back; and a **block of genuinely display-like content** — pixel art, an illustration, a cluster of readouts, a small chart. Not for general cards.
+- **Nested sub-panels** inside a larger `.lcd-panel` are fine and good — a group of related values, each in its own recessed area, the way a weather or stats readout is laid out. That's a display showing structured data, which is what it's for.
+
+The tell that you've overdone it: two adjacent LCD panels with ordinary prose in them and nothing display-like about either. The tell that you've got it right: the green reads as *lit*, because everything near it isn't.
+
+**Type inside an LCD doesn't all have to be pixel.** The dot face is for headers, values and labels. Sentences on an LCD ground are set in the normal sans at LCD ink colour — a paragraph in a dot-matrix face is the same illegibility problem §1.2 has always warned about, just on a green background.
+
+#### The readout vocabulary
+
+Whichever size you're using, carry the furniture a real readout carries — that furniture *is* the aesthetic:
 
 - **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 15`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
 - **`.lcd-strip`** — the row those sit in, along the bottom of a panel.

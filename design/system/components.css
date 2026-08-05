@@ -774,6 +774,31 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .lcd-text { font-size: 12.5px; line-height: 1.6; color: var(--lcd-dim); margin: 0; }
 .lcd-rule { height: var(--hair); background: var(--lcd-rule); }
 
+/* ── LCD CHIP — the small, and most-used, form ─────────────
+   A datum on its own little screen: a code, a count, a status, a
+   small pixel graphic. This is the form to reach for FIRST. A full
+   .lcd-panel earns its place for a hero, a callout, or a block of
+   genuinely display-like content; wrapping every card in one makes
+   the whole app read as a single green surface and the screen stops
+   meaning anything. A chip inside an ordinary chassis card is the
+   balanced default — the screen is a component, not the page. */
+.lcd-chip {
+  display: inline-block; flex: none;
+  background: var(--well-floor); border-radius: 4px; padding: 3px;
+  box-shadow: var(--recess);
+}
+.lcd-chip > .lcd { display: block; padding: 4px 8px; border-radius: 2px; }
+.lcd-chip .v {
+  position: relative; z-index: 2;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700;
+  font-size: 11px; letter-spacing: 0.08em; color: var(--lcd-ink);
+  font-variant-numeric: tabular-nums; text-transform: uppercase;
+  display: block; line-height: 1.2;
+}
+/* a chip sized to hold a mark or a scrap of pixel art rather than
+   text — the CLU3-style illustration slot */
+.lcd-chip.art > .lcd { padding: 0; display: grid; place-items: center; }
+
 /* Key/value readout — the MODEL / UNIT / SLIDES strip along the
    bottom of the T-06 hero. Both halves in the dot face: on a real
    readout the label is printed by the same matrix as the value, and
