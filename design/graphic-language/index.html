@@ -55,6 +55,23 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 /* ~0.9Hz — well under WCAG 2.3.1's 3Hz seizure threshold, same
    headroom SCOPE.md's own "fault blink" micro-animation uses */
 .gk-icon[data-topic="webgpu"]    { animation: gkPulse 1.1s steps(2, end) infinite; }
+
+.gk-sec-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-500); margin: 40px 0 8px; }
+.gk-sec-note { font-size: 13px; color: var(--hz-500); max-width: 62ch; margin: 0 0 18px; }
+
+/* active vs inactive — an inactive topic keeps its shape (you can
+   still tell what it is) but loses colour, contrast, and motion,
+   the same three things that make the active one legible from
+   across a room. Motion off via animation:none, not just paused —
+   inactive should read as "off," not "waiting." */
+.gk-lcd.inactive .wash { opacity: 0.06; filter: saturate(0.2); }
+.gk-lcd.inactive .gk-icon { opacity: 0.32; animation: none; }
+.gk-lcd.inactive .gk-plate { opacity: 0.35; }
+
+/* paired with its own section type — identical properties to
+   .sec-head h2 (components.css), reproduced here since this isn't
+   inside a .sec-head grid */
+.gk-pair-title { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900; letter-spacing: 0.01em; margin: 0; text-transform: lowercase; line-height: 1; }
 </style>
 </head>
 <body data-testid="graphic-language-page">
@@ -86,6 +103,57 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
     the tint sits almost directly on the LCD's own backlight, and the symbol is drawn in the
     same ink as everything else on screen, because this is the one place a section colour is
     genuinely signalling something — which stage is active — rather than decorating a panel.
+  </div>
+
+  <div class="gk-sec-label">Expanded visual language — prototype (webgpu)</div>
+  <p class="gk-sec-note">
+    Testing a fuller kit instead of one small glyph: a bigger, more detailed primary mark,
+    corner registration ticks (the same idea as the focus-bracket/crosshair marks elsewhere
+    in the system), and a scattered via-dot texture in the same shape vocabulary — a family
+    of related marks, not a single logo. One topic, before deciding whether to redo all
+    seven this way.
+  </p>
+  <div style="display:flex; gap: 32px; align-items:flex-end; flex-wrap:wrap" data-testid="gk-expanded-prototype">
+    <div style="width:140px">
+      <div class="gk-sec-label" style="margin:0 0 8px; opacity:.6">Current — single mark</div>
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:110px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true" style="width:44px;height:44px"></canvas></div></div>
+    </div>
+    <div style="width:220px">
+      <div class="gk-sec-label" style="margin:0 0 8px">Expanded — mark + registration + texture</div>
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:200px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas id="gkExpandedWebgpu" width="28" height="28" aria-hidden="true" style="width:120px;height:120px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="gk-sec-label">Active vs inactive — only one topic is current at a time</div>
+  <p class="gk-sec-note">
+    The chips above are all shown "on" for the catalogue. In the deck exactly one is current
+    at any moment — everything else should read as off, not just quieter.
+  </p>
+  <div style="display:flex; gap: 28px; flex-wrap: wrap" data-testid="gk-active-state">
+    <div style="width: 180px">
+      <div class="gk-sec-label" style="margin: 0 0 8px; opacity: 0.6">Inactive</div>
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd inactive" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div>
+    </div>
+    <div style="width: 180px">
+      <div class="gk-sec-label" style="margin: 0 0 8px">Active</div>
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="gk-sec-label">Paired with the section type — the mark next to its own title</div>
+  <p class="gk-sec-note">
+    How the badge actually sits next to a section heading, in the same Doto pixel face the
+    heading itself uses — colour carried into the type, not just the icon beside it.
+  </p>
+  <div style="display:flex; gap: 40px; flex-wrap: wrap; align-items: center" data-testid="gk-type-pairing">
+    <div style="display:flex; align-items:center; gap: 16px">
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:64px;width:64px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true" style="width:26px;height:26px"></canvas></div></div>
+      <h2 class="gk-pair-title" style="font-size: 44px; color: var(--tint-svg)">svg</h2>
+    </div>
+    <div style="display:flex; align-items:center; gap: 16px">
+      <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:64px;width:64px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true" style="width:26px;height:26px"></canvas></div></div>
+      <h2 class="gk-pair-title" style="font-size: 44px; color: var(--tint-webgpu)">webgpu</h2>
+    </div>
   </div>
 </div>
 
@@ -166,10 +234,85 @@ document.querySelectorAll('.gk-icon').forEach(cv => {
   if (!draw) return;
   const ctx = cv.getContext('2d');
   const grid = draw();
-  ctx.fillStyle = 'oklch(0.26 0.05 140)';
+  /* dark-green ink was tuned for the light LCD wash — nearly
+     invisible on .gk-icon-inline, which sits directly on the dark
+     slide chrome instead. Confirmed by actually looking at the
+     render, not assumed: it was there, just unreadable. */
+  ctx.fillStyle = cv.classList.contains('gk-icon-inline') ? 'oklch(0.75 0.01 265)' : 'oklch(0.26 0.05 140)';
   for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
     if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
 });
+
+/* ═══════════════════════════════════════════════════════
+   PROTOTYPE — expanded visual language, one topic (webgpu).
+   Same geometric-predicate approach as TOPIC_ICONS above, just at
+   a higher grid resolution and composed as three layered marks
+   (via texture, registration ticks, primary chip) instead of one.
+   The N-suffixed helpers take their size from the grid array
+   itself rather than the fixed module-level GRID constant, so this
+   can run at a different resolution without touching the originals.
+   ═══════════════════════════════════════════════════════ */
+function blankN(n) { return Array.from({ length: n }, () => Array(n).fill(false)); }
+function rectN(g, x0, y0, w, h) {
+  const n = g.length;
+  for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) {
+    const xi = Math.round(x), yi = Math.round(y);
+    if (xi >= 0 && xi < n && yi >= 0 && yi < n) g[yi][xi] = true;
+  }
+  return g;
+}
+function rectOutlineN(g, x0, y0, w, h, t = 1) {
+  rectN(g, x0, y0, w, t); rectN(g, x0, y0 + h - t, w, t);
+  rectN(g, x0, y0, t, h); rectN(g, x0 + w - t, y0, t, h);
+  return g;
+}
+function lineN(g, x0, y0, x1, y1) {
+  const n = g.length;
+  const dx = x1 - x0, dy = y1 - y0, steps = Math.max(Math.abs(dx), Math.abs(dy));
+  for (let i = 0; i <= steps; i++) {
+    const x = Math.round(x0 + (dx * i) / steps), y = Math.round(y0 + (dy * i) / steps);
+    if (x >= 0 && x < n && y >= 0 && y < n) g[y][x] = true;
+  }
+  return g;
+}
+
+const EXPANDED_GRID = 28;
+function webgpuExpandedPrimary() {
+  const g = blankN(EXPANDED_GRID);
+  rectN(g, 9, 9, 10, 10);              // chip body
+  rectOutlineN(g, 12, 12, 4, 4, 1);    // internal die outline
+  [11, 13, 15, 17].forEach(p => {      // 4 pins per side
+    lineN(g, p, 5, p, 9); lineN(g, p, 19, p, 23);
+    lineN(g, 5, p, 9, p); lineN(g, 19, p, 23, p);
+  });
+  return g;
+}
+function webgpuExpandedCorners() {
+  const g = blankN(EXPANDED_GRID);
+  const n = EXPANDED_GRID, m = 4;
+  lineN(g, 1, 1, 1 + m, 1);         lineN(g, 1, 1, 1, 1 + m);
+  lineN(g, n-2, 1, n-2-m, 1);       lineN(g, n-2, 1, n-2, 1+m);
+  lineN(g, 1, n-2, 1+m, n-2);       lineN(g, 1, n-2, 1, n-2-m);
+  lineN(g, n-2, n-2, n-2-m, n-2);   lineN(g, n-2, n-2, n-2, n-2-m);
+  return g;
+}
+function webgpuExpandedVias() {
+  const g = blankN(EXPANDED_GRID);
+  [[3,14],[24,7],[24,20],[7,24],[20,24],[3,7]].forEach(([x,y]) => { g[y][x] = true; });
+  return g;
+}
+const expandedCanvas = document.getElementById('gkExpandedWebgpu');
+if (expandedCanvas) {
+  const ctx = expandedCanvas.getContext('2d');
+  const drawLayer = (grid, alpha) => {
+    ctx.globalAlpha = alpha; ctx.fillStyle = 'oklch(0.26 0.05 140)';
+    for (let y = 0; y < EXPANDED_GRID; y++) for (let x = 0; x < EXPANDED_GRID; x++)
+      if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
+  };
+  drawLayer(webgpuExpandedVias(), 0.35);
+  drawLayer(webgpuExpandedCorners(), 0.55);
+  drawLayer(webgpuExpandedPrimary(), 1);
+}
 </script>
 
 </body>
