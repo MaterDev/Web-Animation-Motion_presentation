@@ -428,119 +428,9 @@ section { margin-bottom: calc(var(--u) * 12); }
     </div>
   </header>
 
-  <!-- ═══ WHAT CHANGED ═══════════════════════════════ -->
-  <section>
-    <div class="sec-head"><span class="idx">00</span><h2>what changed</h2><span class="rule"></span><span class="ref">T-05 → T-06</span></div>
-    <div class="grid-2">
-      <div>
-        <p class="lead">
-          Every component rule is identical to T-05 — nine materials, twelve
-          micro-animations, the glass optics, the Liquid Glass morph/tilt/concentric
-          set. This fork is tokens only, and the interesting part is that
-          <b>not all of them were a straight swap.</b>
-        </p>
-        <div class="note diff">
-          <b>Housing and tints are T-01's, not T-05's inverted.</b> T-05 inherited
-          light-tuned tints from T-02 — lower lightness, higher chroma, built to hold
-          against a bright ground. Flipping the base to dark without also flipping the
-          tint formula makes every section colour read muddy. T-06 uses T-01's
-          dark-tuned set instead: higher lightness, so colour pops off near-black the
-          way T-05's popped off near-white.
-        </div>
-        <div class="note diff">
-          <b>Elevation needed no changes at all.</b> DESIGN.md's original rule — shadow
-          reads as smudge on dark, so raised surfaces get lighter instead — turns out to
-          already be built into T-05's component CSS. Every plate and mat gradient runs
-          <code>hz-200 → hz-100</code> top to bottom, and on this ramp hz-200 actually
-          <i>is</i> lighter than hz-100. The outer drop shadows in <code>--lift-*</code>
-          fade to near-invisible against a dark ground, which is correct, not broken —
-          the inset top-edge highlight was always doing the real work.
-        </div>
-      </div>
-      <div>
-        <div class="note warn">
-          <b>Three recipes used absolute lightness and had to be retuned by hand.</b>
-          Rubber (<code>.mat-rubber</code>) and the grille bore
-          (<code>.mat-grille</code>) were anchored at a fixed L≈0.30–0.44 — darker than
-          T-05's L≈0.94 aluminium, so they read as recessed and light-absorbing. Against
-          this ramp's L≈0.22–0.28 aluminium, that same fixed value is <i>lighter</i> than
-          the metal around it: a black overmould rendering pale, a drilled hole reading
-          as a raised stud. Both are now anchored near-black instead of at a constant,
-          so they stay the darkest thing in the kit regardless of scheme.
-        </div>
-        <div class="note warn">
-          <b>The LCD well had the same problem.</b> <code>--well-floor</code> sat at
-          L 0.235 — clearly a recess below T-05's 0.94 chassis, but almost exactly
-          <i>inside</i> this ramp's 0.14–0.28 range, so a display well stopped reading
-          as a cavity. Dropped to L 0.085, below the darkest chassis surface in either
-          scheme.
-        </div>
-        <div class="note diff">
-          <b>The rule this generalises to:</b> a token pair is safe to fork by inversion
-          only if both sides are defined <i>relative</i> to the ramp. Anything written
-          as a bare <code>oklch(0.44 …)</code> instead of <code>var(--hz-200)</code> is a
-          light-mode assumption hiding in a dark-mode-agnostic-looking rule, and it will
-          not survive a fork unless it's checked by hand — this is exactly how three of
-          them got missed on the first pass through this file.
-        </div>
-      </div>
-    </div>
-
-    <h3 style="margin-top:36px">Usability pass — T-06 as the kept base</h3>
-    <p class="lead">
-      T-06 is now the only treatment carried forward; the rest are archived, not deleted
-      (still on disk in <code>design/treatments/</code>, just off the switcher). Everything
-      below was found and fixed against SCOPE.md/DESIGN.md's own stated commitments,
-      verified live in the browser rather than assumed from source.
-    </p>
-    <div class="grid-2">
-      <div>
-        <div class="note warn">
-          <b>Material labels were unreadable — fixed.</b> <code>.mat .tag</code>/<code>.mat
-          .use</code> pill backgrounds were a hardcoded near-white
-          (<code>oklch(1 0 0 / 0.78)</code>) inherited unchanged from T-05, paired with
-          text that correctly followed the ramp (<code>--hz-800</code>) — near-white on
-          near-white. Measured by sampling actual rendered pixels rather than judging by
-          eye: roughly <b>1.3:1</b> contrast, affecting 10 of 12 labelled tiles. The
-          working dark-pill treatment that only two tiles had (<code>.dark</code>) is now
-          the base rule for all of them; the now-redundant modifier was removed rather
-          than left as a dead, misleading class.
-        </div>
-        <div class="note warn">
-          <b>Two disconnected reduced-motion controls — merged.</b> The presenter unit's
-          "Reduced" button had no id and no handler; <code>#toggleRM</code> in the motion
-          section was the only one that worked. Both now read and write one shared
-          <code>body.rm</code> state, and the engaged state is visible on either button
-          (<code>.ibtn[aria-pressed='true']</code>), not just present in the DOM.
-        </div>
-      </div>
-      <div>
-        <div class="note diff">
-          <b>Four missing features restored.</b> Progress rail and overview grid (both in
-          DESIGN.md's Feature Set table — must-have and should-have respectively), the
-          slide-code indicator DESIGN.md calls "the highest-leverage detail for the
-          aesthetic," and the pacing-vs-budget LCD (<code>--dur</code> aside, the actual
-          <i>must-have</i> line item is "elapsed, per-slide, and pacing") — all present
-          through T-04, all quietly dropped when T-05 rebuilt this sheet around materials
-          and motion. See §08 and the presenter unit above.
-        </div>
-        <div class="note diff">
-          <b>Keyboard story, decided per-control rather than left implicit.</b> The
-          encoder, toggle, and morph were <code>&lt;span&gt;</code>/<code>&lt;div&gt;</code>
-          — confirmed by literally pressing Tab and watching focus skip over them, not by
-          reading the markup — now real <code>&lt;button&gt;</code>s with the correct
-          role/state (<code>role="switch"</code>, <code>aria-expanded</code>). The
-          specular-tilt panel deliberately did <i>not</i> get a keyboard path: it's ambient
-          material response, not a control, and forcing one on would have been decoration,
-          not access.
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ═══ MATERIALS ══════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">01</span><h2>materials</h2><span class="rule"></span><span class="ref">Fig. 1</span></div>
+    <div class="sec-head"><span class="idx">00</span><h2>materials</h2><span class="rule"></span><span class="ref">Fig. 1</span></div>
     <p class="lead">Eleven surfaces, nine of them distinct manufacturing processes. Hover any swatch — the specular sweep is how a real surface announces it's tilted into the light.</p>
 
     <div class="mat-grid" data-testid="material-set">
@@ -583,7 +473,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ GLASS ══════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">02</span><h2>glass</h2><span class="rule"></span><span class="ref">Fig. 2</span></div>
+    <div class="sec-head"><span class="idx">01</span><h2>glass</h2><span class="rule"></span><span class="ref">Fig. 2</span></div>
     <p class="lead">
       Earlier sheets rejected "glassmorphism" and that rejection stands — for the flat
       version. Real glass does four things the cliché doesn't: it <b>refracts</b> what's
@@ -633,7 +523,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ LIQUID GLASS MOTION ════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">03</span><h2>liquid glass motion</h2><span class="rule"></span><span class="ref">Fig. 3 · Apple, WWDC 2025</span></div>
+    <div class="sec-head"><span class="idx">02</span><h2>liquid glass motion</h2><span class="rule"></span><span class="ref">Fig. 3 · Apple, WWDC 2025</span></div>
     <p class="lead">
       Not water physics — Apple's actual system, shipped as "Liquid Glass" across
       iOS/macOS/iPadOS 26. <b>Sources: <a href="https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/" target="_blank" rel="noopener">Apple Newsroom</a>,
@@ -716,7 +606,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ MICRO-ANIMATIONS ═══════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">04</span><h2>micro-animations</h2><span class="rule"></span><span class="ref">Fig. 4 · 12 entries</span></div>
+    <div class="sec-head"><span class="idx">03</span><h2>micro-animations</h2><span class="rule"></span><span class="ref">Fig. 4 · 12 entries</span></div>
     <p class="lead">
       Every one is live. Triggers are marked — hover, click, or ambient. Durations and
       easing are stated so they can be implemented without guessing.
@@ -818,7 +708,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ MOTION TOKENS ══════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">05</span><h2>motion tokens</h2><span class="rule"></span><span class="ref">Three curves added</span></div>
+    <div class="sec-head"><span class="idx">04</span><h2>motion tokens</h2><span class="rule"></span><span class="ref">Three curves added</span></div>
     <table class="dur-table" data-testid="duration-table">
       <tr><th>Curve</th><th>Value</th><th>Use</th></tr>
       <tr><td>--ease-standard</td><td>0.2,0,0,1</td><td>Default. Slide advance, most state change.</td></tr>
@@ -839,7 +729,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ COLOUR ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">06</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
+    <div class="sec-head"><span class="idx">05</span><h2>colour</h2><span class="rule"></span><span class="ref">Unchanged since T-03</span></div>
     <div class="mono" style="margin-bottom:8px">Material chip — dark ground (current)</div>
     <div class="tints" data-testid="tint-set">
       <button class="tint-card" data-tint="var(--tint-video)"><div class="swatch" style="--sw:var(--tint-video)"></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></button>
@@ -869,40 +759,9 @@ section { margin-bottom: calc(var(--u) * 12); }
     </div>
   </section>
 
-  <!-- ═══ GRAPHIC LANGUAGE ═══════════════════════════
-       Moved out of "colour" — this isn't about the tint alone
-       anymore, it's the pairing of tint + pixel symbol that gives
-       each stage of the spectrum its own identity. Starting point
-       for what could grow into a fuller per-stage language later. -->
-  <section>
-    <div class="sec-head"><span class="idx">07</span><h2>graphic language</h2><span class="rule"></span><span class="ref">Fig. 7</span></div>
-    <p class="lead">
-      Each stage of the spectrum gets its own identity, not just its own colour — a tint and
-      a pixel symbol together, so a slide reads as "this stage" at a glance. Starting point:
-      the two elements that carry furthest at a distance, on the display they'll actually
-      appear on.
-    </p>
-    <div class="tints" data-testid="tint-set-key">
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-video)"></span><canvas class="gk-icon" data-topic="video" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-css)"></span><canvas class="gk-icon" data-topic="css" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-composite)"></span><canvas class="gk-icon" data-topic="composite" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-canvas)"></span><canvas class="gk-icon" data-topic="canvas" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgl)"></span><canvas class="gk-icon" data-topic="webgl" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
-      <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
-    </div>
-    <div class="note warn">
-      <b>Chip and key read differently on purpose.</b> Section 06's material chip is a flat
-      colour-mix over a neutral base — right for a chassis surface. Here the tint sits almost
-      directly on the LCD's own backlight, and the symbol is drawn in the same ink as
-      everything else on screen, because this is the one place a section colour is genuinely
-      signalling something — which stage is active — rather than decorating a panel.
-    </div>
-  </section>
-
   <!-- ═══ PRESENTER ══════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">08</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 5</span></div>
+    <div class="sec-head"><span class="idx">06</span><h2>presenter unit</h2><span class="rule"></span><span class="ref">Fig. 5</span></div>
     <div class="plate mat-blasted chamfer" style="padding:calc(var(--u)*6) calc(var(--u)*5)" data-testid="presenter-unit">
       <span class="screw tl"></span><span class="screw tr"></span>
       <span class="screw bl"></span><span class="screw br"></span>
@@ -929,7 +788,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
       <!-- FIXED (usability pass): this Reduced button used to be
            purely decorative — no id, no handler — while a second,
-           functioning reduced-motion control existed in section 04
+           functioning reduced-motion control existed in section 03
            with no visual link between them. One feature, one state
            now: this button and #toggleRM below both drive and
            reflect the same body.rm class. -->
@@ -952,7 +811,7 @@ section { margin-bottom: calc(var(--u) * 12); }
        now the only kept treatment, these needed a home again rather
        than staying missing by omission. -->
   <section>
-    <div class="sec-head"><span class="idx">09</span><h2>navigation &amp; annotation</h2><span class="rule"></span><span class="ref">Fig. 6</span></div>
+    <div class="sec-head"><span class="idx">07</span><h2>navigation &amp; annotation</h2><span class="rule"></span><span class="ref">Fig. 6</span></div>
     <p class="lead">Restored from T-04. The presenter unit above shows the control cluster; this is what those controls actually navigate.</p>
 
     <div class="grid-2">
@@ -994,7 +853,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 
   <!-- ═══ SLIDES ═════════════════════════════════════ -->
   <section>
-    <div class="sec-head"><span class="idx">10</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
+    <div class="sec-head"><span class="idx">08</span><h2>slide compositions</h2><span class="rule"></span><span class="ref">16:9</span></div>
     <div class="slide-cap">Layout · title</div>
     <div class="slide" style="margin-bottom:calc(var(--u)*5)">
       <div class="chrome-top"><span>WAM-2026</span><span>01 / 14</span></div>
@@ -1251,8 +1110,6 @@ function line(g, x0, y0, x1, y1) {
 }
 
 const ICONS = {
-  /* 00 what changed — revision arrow, up + stem */
-  changed: () => { const g = blank(); line(g,6,2,2,6); line(g,6,2,10,6); rect(g,5,6,2,5); return g; },
   /* 01 materials — stacked, unevenly-sized bands (a swatch stack) */
   materials: () => { const g = blank(); rect(g,2,2,8,2); rect(g,3,6,7,2); rect(g,2,9,6,2); return g; },
   /* 02 glass — diamond outline, refraction reads as a facet */
@@ -1271,47 +1128,7 @@ const ICONS = {
   crosshair: () => { let g = ring(blank(),5.5,5.5,4,1.4); line(g,5.5,0,5.5,3); line(g,5.5,8,5.5,11); line(g,0,5.5,3,5.5); line(g,8,5.5,11,5.5); return g; },
   /* 09 slide compositions — 16:9-ish frame outline */
   frame: () => rectOutline(blank(), 1, 3, 10, 6, 1.4),
-  /* 07 graphic language — an outlined chip beside a filled dot: the
-     swatch-plus-symbol pairing the section is actually about */
-  key: () => { const g = blank(); rectOutline(g,1,3,5,5,1); return circle(g,8.5,8.5,2.2); },
 };
-
-/* Distinct from ICONS above: those key the SHEET'S OWN section
-   nav (what changed, materials, glass...); these key the
-   PRESENTATION's content spectrum (video → webgpu) for the
-   graphic-language colour-key chips. Two different things that
-   both happen to be "seven-ish things with an icon," not the same
-   list twice. */
-const TOPIC_ICONS = {
-  /* video — a frame with a play mark, the baseline/pre-rendered case */
-  video: () => { const g = rectOutline(blank(),1,2,10,8,1.2); return triRight(g,5,4,4); },
-  /* css — cascading, shrinking bars: specificity stacking down */
-  css: () => { const g = blank(); rect(g,2,2,8,2); rect(g,2,6,6,2); rect(g,2,9,4,2); return g; },
-  /* composite — two offset layer outlines, the compositor's job */
-  composite: () => { const g = rectOutline(blank(),1,1,7,7,1); return rectOutline(g,4,4,7,7,1); },
-  /* svg — a bent path with anchor-point nodes at each vertex */
-  svg: () => { const g = blank(); line(g,1,9,5,3); line(g,5,3,10,7); circle(g,1,9,1); circle(g,5,3,1); return circle(g,10,7,1); },
-  /* canvas — a raster grid of discrete pixels, not a vector line */
-  canvas: () => { const g = blank(); rect(g,3,3,2,2); rect(g,7,3,2,2); rect(g,3,7,2,2); return rect(g,7,7,2,2); },
-  /* webgl — a faceted diamond (related to glass's, but split down
-     the middle — a cut gem/geometry read, not a flat facet) */
-  webgl: () => { const g = diamondOutline(blank(),5.5,5.5,5); return line(g,5.5,1,5.5,10); },
-  /* webgpu — an IC chip with pins on all four sides: the compute
-     payoff, deliberately the most technical-looking mark of the set */
-  webgpu: () => { const g = rect(blank(),4,4,4,4);
-    line(g,5,1,5,3); line(g,6,1,6,3); line(g,5,8,5,10); line(g,6,8,6,10);
-    line(g,1,5,3,5); line(g,1,6,3,6); line(g,8,5,10,5); line(g,8,6,10,6);
-    return g; },
-};
-document.querySelectorAll('.gk-icon').forEach(cv => {
-  const draw = TOPIC_ICONS[cv.dataset.topic];
-  if (!draw) return;
-  const ctx = cv.getContext('2d');
-  const grid = draw();
-  ctx.fillStyle = 'oklch(0.26 0.05 140)';
-  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
-    if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
-});
 
 /* which icon a section gets, matched on its own title text — kept
    as a keyword map so a re-worded heading degrades to a sane
@@ -1324,11 +1141,9 @@ document.querySelectorAll('.gk-icon').forEach(cv => {
    phrases are listed first so they win before their shorter
    substrings get a chance to match. */
 const ICON_BY_KEYWORD = [
-  ['what changed', 'changed'], ['material', 'materials'],
-  ['liquid', 'liquid'], ['glass', 'glass'],
-  ['micro-anim', 'spark'], ['motion token', 'dial'],
-  ['colour', 'colour'], ['graphic language', 'key'], ['presenter', 'play'],
-  ['navigation', 'crosshair'], ['slide', 'frame'],
+  ['material', 'materials'], ['liquid', 'liquid'], ['glass', 'glass'],
+  ['micro-anim', 'spark'], ['motion token', 'dial'], ['colour', 'colour'],
+  ['presenter', 'play'], ['navigation', 'crosshair'], ['slide', 'frame'],
 ];
 function iconFor(title) {
   const t = title.toLowerCase();
