@@ -664,6 +664,94 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .slide-cap { font-family: var(--mono); font-size: 9px; color: var(--hz-400); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: calc(var(--u)*1.5); }
 .slides-2 { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u)*3); }
 
+/* ═══ LED SLIDE SURFACE ═════════════════════════════════
+   The real slide treatment: content living inside a pixelated LED
+   panel rather than printed on a card. Distinct from .lcd above on
+   purpose — an LCD is reflective (light ground, dark ink, a sheen
+   layer), an LED panel is emissive (dark ground, lit ink, a bloom).
+   Both belong: the chassis has an LCD readout on it, and the thing
+   it's driving is an LED display. See tokens.css for the matrix
+   arithmetic every dimension here derives from.
+
+   Fixed 960×540 rather than aspect-ratio + relative units, because
+   the grid is quantised to a 6px cell — the whole system depends on
+   the stage being exactly one known size. Callers scale it with a
+   transform, which keeps every module a whole number of cells at
+   any display size instead of resolving to fractional pixels. */
+.led-slide {
+  position: relative; width: 960px; height: 540px; overflow: hidden;
+  background: var(--led-ground); color: var(--led-ink);
+  font-synthesis: none;
+}
+/* the matrix itself — unlit cells. Two 1px rules on a 6px pitch,
+   which is a real pixel grid rather than a texture that suggests
+   one; at full size you can count the cells against the type. */
+.led-slide::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+  background:
+    repeating-linear-gradient(90deg, oklch(1 0 0 / 0.045) 0 1px, transparent 1px var(--led-cell)),
+    repeating-linear-gradient(0deg,  oklch(1 0 0 / 0.045) 0 1px, transparent 1px var(--led-cell));
+}
+/* panel bloom — an emissive display is brightest at centre and
+   falls off into the bezel. Keeps a full-bleed dark slide from
+   reading as flat black paper. */
+.led-slide::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background: radial-gradient(120% 100% at 50% 45%, transparent 55%, oklch(0 0 0 / 0.34) 100%);
+}
+
+/* THE FIELD — 12 × 6 square modules inside the margin. The margin
+   is part of the composition, not leftover space, which is why it's
+   this generous and why nothing is allowed to bleed into it except
+   a deliberate full-bleed layer (.led-bleed). */
+.led-field {
+  position: absolute; inset: var(--led-margin-y) var(--led-margin-x);
+  display: grid; z-index: 2;
+  grid-template-columns: repeat(12, var(--led-module));
+  grid-template-rows: repeat(6, var(--led-module));
+}
+.led-bleed { position: absolute; inset: 0; z-index: 1; }
+
+/* TYPE — five sizes, all whole cells. Doto (the dot-matrix face) for
+   display and head sizes so large type is literally built from the
+   same pixels as the panel; mono/sans below that, where a dot face
+   stops being legible at projection distance. line-height is set in
+   whole cells too so successive baselines stay on matrix rows. */
+.led-display, .led-head {
+  font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900;
+  text-transform: lowercase; letter-spacing: 0.01em; margin: 0;
+}
+.led-display { font-size: var(--led-display); line-height: 72px; }
+.led-head    { font-size: var(--led-head);    line-height: 48px; }
+.led-sub     { font-family: var(--mono); font-size: var(--led-sub);   line-height: 30px; letter-spacing: 0.02em; margin: 0; text-transform: lowercase; }
+.led-body    { font-family: var(--sans); font-size: var(--led-body);  line-height: 30px; color: var(--led-dim); margin: 0; max-width: 34ch; }
+.led-micro   { font-family: var(--mono); font-size: var(--led-micro); line-height: 18px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--led-dim); margin: 0; }
+.led-lit { color: var(--tint); text-shadow: 0 0 12px color-mix(in oklch, var(--tint) 45%, transparent); }
+
+/* chrome — pinned to the margin band, deliberately outside the
+   field so it never competes with a composition for modules */
+.led-chrome { position: absolute; z-index: 3; font-family: var(--mono); font-size: var(--led-micro); line-height: 18px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--led-dim); }
+.led-chrome.top { top: 24px; left: var(--led-margin-x); right: var(--led-margin-x); display: flex; justify-content: space-between; }
+.led-chrome.bot { bottom: 24px; left: var(--led-margin-x); right: var(--led-margin-x); display: flex; justify-content: space-between; }
+
+/* a lit block — the emissive equivalent of a filled panel, used for
+   media wells and the map/quad cells */
+.led-cellblock { background: color-mix(in oklch, var(--tint) 22%, var(--led-ground)); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tint) 45%, transparent); position: relative; overflow: hidden; }
+
+/* GRID OVERLAY — the teaching layer, off by default. Draws the
+   module boundaries and shades the margin so the field's proportions
+   are visible against real content rather than described. */
+.led-slide .led-guides { position: absolute; inset: 0; z-index: 6; pointer-events: none; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
+.led-slide.guides .led-guides { opacity: 1; }
+.led-guides .margin { position: absolute; inset: 0; box-shadow: inset 0 0 0 1px oklch(0.75 0.16 25 / 0.5); }
+.led-guides .field {
+  position: absolute; inset: var(--led-margin-y) var(--led-margin-x);
+  background:
+    repeating-linear-gradient(90deg, oklch(0.75 0.16 25 / 0.34) 0 1px, transparent 1px var(--led-module)),
+    repeating-linear-gradient(0deg,  oklch(0.75 0.16 25 / 0.34) 0 1px, transparent 1px var(--led-module));
+  box-shadow: inset -1px -1px 0 oklch(0.75 0.16 25 / 0.34);
+}
+
 /* ═══ MISC WIDGETS ══════════════════════════════════════ */
 
 .meter { width: 100%; height: 10px; border-radius: 5px; background: var(--well-floor); box-shadow: var(--recess); overflow: hidden; position: relative; }

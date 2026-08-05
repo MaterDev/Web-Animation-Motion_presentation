@@ -10,10 +10,15 @@
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
-/* Every slide from SCOPE.md's content outline, scaled down in a
-   grid. Data and rendering are separate (per DESIGN.md §3.1) — the
-   SLIDES array below is the only place slide content lives; both
-   the grid thumbnail and the modal preview render from it. */
+/* The slide surface and the grid itself live in system/components.css
+   (.led-slide / .led-field) and system/tokens.css (the matrix
+   arithmetic) — they're system components, not page decoration, so
+   the presentation app can use the identical thing. Only the gallery
+   chrome around them is local to this page.
+
+   Data and rendering stay separate (per DESIGN.md §3.1): the SLIDES
+   array below is the only place slide content lives, and both the
+   thumbnail and the full-size preview render from it. */
 
 :root { --tint: var(--tint-webgpu); }
 
@@ -25,38 +30,43 @@
 .head h1 { font-size: clamp(36px, 6vw, 60px); margin-bottom: 10px; }
 p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*6); }
 
-/* ── thumbnail grid ──────────────────────────────────────
-   Each .slide is built at its real design size (960×540, the
-   deck's actual 16:9) and scaled down with a transform — not
-   shrunk via clamp()'s vw component, which would fight its own
-   minimum bound at small sizes and either overflow or wrap wrong.
-   That guarantees the thumbnail is pixel-faithful to the real
-   slide, not an approximation of it. */
+.sec-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-500); margin: 52px 0 8px; }
+.sec-note { font-size: 13.5px; color: var(--hz-500); max-width: 66ch; margin: 0 0 20px; }
+
+/* ── a framed stage: the LED panel sits in a bezel, the way the
+   physical unit does. Scaled by transform so the 6px matrix stays a
+   whole number of cells at every size (see components.css). ── */
+.stage-box { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; background: var(--well-floor); box-shadow: var(--recess), var(--lift-1); }
+.stage-box .led-slide { position: absolute; top: 0; left: 0; transform-origin: top left; }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: calc(var(--u)*2); }
+
+/* ── spec table for the grid arithmetic ── */
+.spec { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+.spec th { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--hz-400); text-align: left; padding: 0 0 10px; border-bottom: var(--hair) solid var(--hz-400); font-weight: 500; }
+.spec td { padding: 9px 0; border-bottom: var(--hair) solid var(--hz-300); color: var(--hz-600); vertical-align: top; }
+.spec td:first-child { font-family: var(--mono); font-size: 11.5px; color: var(--hz-900); width: 116px; }
+.spec td:nth-child(2) { font-family: var(--mono); font-size: 11.5px; color: var(--tint); width: 128px; font-variant-numeric: tabular-nums; }
+.spec tr:last-child td { border-bottom: 0; }
+
+/* ── thumbnail grid ── */
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u)*3); }
 .tile { display: block; border: 0; padding: 0; background: transparent; cursor: pointer; text-align: left; width: 100%; }
-.tile-frame {
-  display: block; width: 100%;
-  aspect-ratio: 16/9; border-radius: 6px; overflow: hidden; position: relative;
-  box-shadow: var(--edge), var(--lift-1);
-  transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard);
-}
+.tile-frame { display: block; width: 100%; aspect-ratio: 16/9; border-radius: 5px; overflow: hidden; position: relative; background: var(--well-floor); box-shadow: var(--edge), var(--lift-1); transition: box-shadow var(--dur-fast) var(--ease-standard), transform var(--dur-fast) var(--ease-standard); }
 .tile:hover .tile-frame { transform: translateY(-3px); box-shadow: var(--edge), var(--lift-3); }
 .tile:focus-visible .tile-frame { outline: 2px solid var(--tint); outline-offset: 2px; }
-.tile-frame .stage-960 { width: 960px; height: 540px; position: absolute; top: 0; left: 0; transform-origin: top left; }
+.tile-frame .led-slide { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .tile-cap { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
 .tile-cap .n { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); letter-spacing: 0.06em; flex: none; }
 .tile-cap .t { font-size: 11.5px; color: var(--hz-600); text-transform: lowercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tile-cap .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ct, var(--hz-400)); flex: none; }
 
-/* ── modal ────────────────────────────────────────────── */
-dialog {
-  border: 0; padding: 0; background: transparent; max-width: none; max-height: none;
-  width: 100%; height: 100%; margin: 0;
-}
+/* ── modal ── */
+dialog { border: 0; padding: 0; background: transparent; max-width: none; max-height: none; width: 100%; height: 100%; margin: 0; }
 dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px); }
 .modal-inner { width: 100%; height: 100%; display: grid; place-items: center; padding: calc(var(--u)*5); }
-.modal-stage { width: min(1200px, 92vw); aspect-ratio: 16/9; position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 30px 70px oklch(0 0 0 / 0.6); }
-.modal-stage .stage-960 { width: 960px; height: 540px; position: absolute; top: 0; left: 0; transform-origin: top left; }
+.modal-stage { width: min(1200px, 92vw); aspect-ratio: 16/9; position: relative; border-radius: 8px; overflow: hidden; background: var(--well-floor); box-shadow: 0 30px 70px oklch(0 0 0 / 0.6); }
+.modal-stage .led-slide { position: absolute; top: 0; left: 0; transform-origin: top left; }
 .modal-bar { position: fixed; top: calc(var(--u)*3); right: calc(var(--u)*3); display: flex; gap: 10px; z-index: 3; }
 
 @media (max-width: 1100px) { .grid { grid-template-columns: repeat(3, 1fr); } }
@@ -70,9 +80,73 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
   <div class="head"><h1>layouts</h1></div>
   <p class="dek">
-    All 15 slides from SCOPE.md's content outline, built as real <code>.slide</code>
-    components at 960×540 and scaled down — not approximated. Click a tile for a full-size
-    preview.
+    Every slide is content on a pixelated LED panel, composed on a modular grid quantised to
+    that panel's own matrix. Two ideas that only work together: Swedish modernist layout
+    discipline gives the compositions their structure, and the LED matrix gives that
+    structure a reason to land on exactly these numbers rather than arbitrary ones.
+  </p>
+
+  <div class="sec-label">The grid — 12 × 6 square modules on a 160 × 90 matrix</div>
+  <p class="sec-note">
+    The slide is a 960 × 540 panel of 6px LED cells — a 160 × 90 matrix. Margins take 8 cells
+    at the sides and 9 top and bottom, leaving a field of 144 × 72 cells that divides exactly
+    into <b>12 columns × 6 rows of 12 × 12-cell squares</b>. Every module is a true square,
+    every edge lands on a cell boundary, and nothing in a composition can fall between
+    pixels. Toggle the guides to see the field against a real slide.
+  </p>
+
+  <div class="controls">
+    <button class="ibtn primary" id="guideToggle" aria-pressed="false" data-testid="guide-toggle">Show grid guides</button>
+    <span class="mono" id="guideState" style="align-self:center">Guides: off</span>
+  </div>
+
+  <div class="grid-2" style="align-items:start;gap:calc(var(--u)*4)">
+    <div class="stage-box" id="anatomyBox" data-testid="grid-anatomy"></div>
+    <div>
+      <table class="spec" data-testid="grid-spec">
+        <tr><th>Unit</th><th>Value</th><th>In cells</th></tr>
+        <tr><td>stage</td><td>960 × 540</td><td>160 × 90 — the matrix</td></tr>
+        <tr><td>cell</td><td>6 px</td><td>1 — one LED pixel</td></tr>
+        <tr><td>margin x</td><td>48 px</td><td>8</td></tr>
+        <tr><td>margin y</td><td>54 px</td><td>9</td></tr>
+        <tr><td>field</td><td>864 × 432</td><td>144 × 72</td></tr>
+        <tr><td>module</td><td>72 × 72</td><td>12 × 12 — square</td></tr>
+        <tr><td>grid</td><td>12 × 6</td><td>no gutter</td></tr>
+      </table>
+      <div class="note diff" style="margin-top:18px">
+        <b>The margin is composition, not leftover.</b> 8 and 9 cells is a lot of empty
+        edge for a 16:9 frame, and that's the Swedish part: the void is an active element
+        that gives the type somewhere to sit rather than space nobody got round to using.
+        Only a deliberate full-bleed layer is allowed to cross it.
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-label">Why no gutter</div>
+  <p class="sec-note">
+    Columns butt directly against each other and spacing is made by <i>leaving a module
+    empty</i>, not by a gutter value. It means every gap in every composition is exactly one
+    module wide — the same distance everywhere, guaranteed by the structure rather than by
+    remembering to type the same number. It also keeps the arithmetic whole: a gutter would
+    put fractional cells between columns and break the one rule the whole system rests on.
+  </p>
+
+  <div class="sec-label">The type scale — five sizes, all whole cells</div>
+  <p class="sec-note">
+    Sizes are 12, 8, 4, 3 and 2 cells, with line-heights in whole cells too, so successive
+    baselines stay on matrix rows. Display and head sizes are set in Doto, the dot-matrix
+    face — at those sizes the type is literally built from the same pixels as the panel it
+    sits on. Below that a dot face stops being legible at projection distance, so it hands
+    off to mono and sans. Five sizes is the entire scale; the restriction is the point.
+  </p>
+  <div class="stage-box" id="typeBox" style="max-width:760px" data-testid="type-scale"></div>
+
+  <div class="sec-label">The compositions — all 15 slides</div>
+  <p class="sec-note">
+    Every slide from SCOPE.md's content outline, built as real <code>.led-slide</code>
+    components at 960 × 540 and scaled down, not approximated. Each one is asymmetric: content
+    takes a subset of the columns and the rest is deliberately empty. Click a tile for a
+    full-size preview; the guide toggle above applies to these too.
   </p>
 
   <div class="grid" id="grid" data-testid="layouts-grid"></div>
@@ -92,12 +166,15 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
    SLIDE DATA — the only place content lives. `layout` selects a
    render function below; `tint` (optional) is the section colour
    for technique slides, matching design/index.html's tint map.
+   `col`/`span` place the composition on the 12-column field —
+   authored per slide rather than derived, because which columns a
+   composition occupies IS the design decision here.
    ═══════════════════════════════════════════════════════ */
 const SLIDES = [
   { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'title',
     kicker: 'WAM-2026', h: 'web animation<br>&amp; motion', body: 'Thread demo already running full-bleed, no explanation yet.' },
   { n: '02', code: 'SL-02', title: 'the thesis', layout: 'statement',
-    kicker: 'Thesis', h: "a site's value is no longer<br>the content it holds" },
+    kicker: 'Thesis', h: "a site's value is<br>no longer the<br>content it holds" },
   { n: '03', code: 'SL-03', title: 'the map', layout: 'map',
     kicker: 'The Map', h: 'the spectrum',
     items: ['video / gif', 'css', 'composite', 'layout animation', 'svg', 'canvas', 'webgl', 'webgpu'] },
@@ -107,9 +184,9 @@ const SLIDES = [
     kicker: 'CSS', h: 'browser-managed motion', body: 'Layout → Paint → Composite, plus a live hover/transition demo.' },
   { n: '06', code: 'SL-06', title: 'cpu vs. gpu: compositing', layout: 'split-media', tint: 'var(--tint-composite)',
     kicker: 'Composite', h: 'transform vs. layout', body: 'GPU-cheap properties vs. layout-forcing ones, side by side, with a measured frame-time readout.' },
-  { n: '07', code: 'SL-07', title: 'layout animation', layout: 'split-media', tint: 'var(--hz-400)',
+  { n: '07', code: 'SL-07', title: 'layout animation', layout: 'split-media', tint: 'var(--led-ink)',
     kicker: 'Layout Animation', h: 'measure, then move', body: 'FLIP via Anime.js\'s layout API — a real UI element reflowing between two arrangements as one continuous move, not a cut.' },
-  { n: '08', code: 'SL-08', title: 'when motion earns its place', layout: 'triptych', tint: 'var(--hz-400)',
+  { n: '08', code: 'SL-08', title: 'when motion earns its place', layout: 'triptych', tint: 'var(--led-ink)',
     kicker: 'Motion Craft', h: 'restraint',
     items: ['no motion', 'well-judged', 'overdone'] },
   { n: '09', code: 'SL-09', title: 'svg animation', layout: 'split-media', tint: 'var(--tint-svg)',
@@ -118,111 +195,210 @@ const SLIDES = [
     kicker: 'Canvas', h: 'imperative pixels', body: 'Thousands of points, no DOM overhead, CPU-bound.' },
   { n: '11', code: 'SL-11', title: 'webgl', layout: 'split-media', tint: 'var(--tint-webgl)',
     kicker: 'WebGL', h: 'gpu shaders, real 3d', body: 'Tens of thousands of particles, reactive to the cursor.' },
-  { n: '12', code: 'SL-12', title: 'same tech, different surfaces', layout: 'quad', tint: 'var(--hz-400)',
-    kicker: 'Beyond the Browser', h: 'one build, four surfaces',
+  { n: '12', code: 'SL-12', title: 'same tech, different surfaces', layout: 'quad', tint: 'var(--led-ink)',
+    kicker: 'Beyond the Browser', h: 'one build,<br>four surfaces',
     items: ['broadcast lower-third', 'digital signage', 'ad creative', 'social video'] },
   { n: '13', code: 'SL-13', title: 'webgpu: the new layer', layout: 'split-media', tint: 'var(--tint-webgpu)',
     kicker: 'WebGPU', h: 'compute shaders', body: 'The particle count WebGL can\'t sustain — the payoff of the whole callback chain.' },
   { n: '14', code: 'SL-14', title: 'building the version without it', layout: 'quad', tint: 'var(--signal)',
-    kicker: 'Fallbacks', h: 'the degradation ladder',
+    kicker: 'Fallbacks', h: 'the degradation<br>ladder',
     items: ['full compute sim', 'webgl reduced', 'static poster', 'reduced-motion cross-fade'] },
   { n: '15', code: 'SL-15', title: 'close: full circle', layout: 'statement',
-    kicker: 'Close', h: 'the craft is the product' },
+    kicker: 'Close', h: 'the craft is<br>the product' },
 ];
 
-/* ── renderers — one per `layout` value ─────────────────── */
+const GUIDES = `<div class="led-guides"><span class="margin"></span><span class="field"></span></div>`;
+
+/* ── renderers — one per `layout` value ───────────────────
+   Each returns a full .led-slide. Placement is expressed as
+   grid-column / grid-row against the 12 × 6 field, so every
+   composition is stated in modules rather than pixels. */
 function renderSlide(s) {
-  const tint = s.tint ? `style="--tint:${s.tint}"` : '';
-  const top = `<div class="chrome-top"><span>${s.kicker || ''}</span><span>${s.n} / 15</span></div>`;
-  const bot = `<div class="chrome-bot"><span>${s.code}</span><span>Folklore</span></div>`;
+  const tint = s.tint ? `--tint:${s.tint};` : '';
+  const top = `<div class="led-chrome top"><span>${s.kicker || ''}</span><span>${s.n} / 15</span></div>`;
+  const bot = `<div class="led-chrome bot"><span>${s.code}</span><span>Folklore</span></div>`;
+  const shell = inner => `<div class="led-slide" style="${tint}">${top}${inner}${bot}${GUIDES}</div>`;
 
   if (s.layout === 'title') {
-    return `<div class="slide" ${tint}>${top}
-      <div class="body"><h4>${s.h}</h4><p>${s.body || ''}</p></div>${bot}</div>`;
+    /* cols 1–8, bottom-weighted: type sits low, the demo runs behind
+       it full-bleed. The four empty columns at the right are where
+       the thread demo actually resolves. */
+    return shell(`
+      <div class="led-bleed" style="background:radial-gradient(70% 90% at 78% 40%, color-mix(in oklch, var(--tint) 30%, transparent), transparent 70%)"></div>
+      <div class="led-field">
+        <div style="grid-column:1/9;grid-row:3/6;display:flex;flex-direction:column;justify-content:flex-end;gap:18px">
+          <h4 class="led-display led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
+        </div>
+      </div>`);
   }
   if (s.layout === 'statement') {
-    return `<div class="slide" ${tint} style="justify-content:center">
-      ${top}<div class="body" style="margin:auto 0"><h4 style="max-width:16ch">${s.h}</h4></div>${bot}</div>`;
+    /* cols 1–9, vertically centred. One element on the slide. */
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/10;grid-row:2/6;display:flex;align-items:center">
+          <h4 class="led-head">${s.h}</h4>
+        </div>
+      </div>`);
   }
   if (s.layout === 'map') {
+    /* title cols 1–4, list cols 6–12 — one empty module between
+       them, which is the entire spacing system in one gap. */
     const rows = s.items.map((t, i) =>
-      `<div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;color:var(--hz-600)">
-        <span style="width:16px;color:var(--hz-400)">0${i}</span>
-        <span style="flex:1;height:1px;background:var(--hz-300)"></span>
+      `<div style="display:flex;align-items:baseline;gap:12px;font-family:var(--mono);font-size:14px;line-height:24px;color:var(--led-dim)">
+        <span style="width:22px;color:color-mix(in oklch,var(--led-dim) 60%,transparent)">${String(i).padStart(2,'0')}</span>
         <span style="text-transform:lowercase">${t}</span>
       </div>`).join('');
-    return `<div class="slide" ${tint}>${top}
-      <div class="body"><h4 style="font-size:32px;margin-bottom:20px">${s.h}</h4>
-      <div style="display:flex;flex-direction:column;gap:8px;max-width:320px">${rows}</div></div>${bot}</div>`;
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/5;grid-row:1/4"><h4 class="led-head led-lit">${s.h}</h4></div>
+        <div style="grid-column:6/13;grid-row:1/7;display:flex;flex-direction:column;justify-content:center">${rows}</div>
+      </div>`);
   }
   if (s.layout === 'split-media') {
-    return `<div class="slide" ${tint}>${top}
-      <div class="body" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center">
-        <div><h4 style="font-size:30px">${s.h}</h4><p style="font-size:13px">${s.body || ''}</p></div>
-        <div style="aspect-ratio:1;border-radius:6px;position:relative;overflow:hidden;box-shadow:var(--recess);background:var(--hz-050)">
-          <div style="position:absolute;inset:0;background:linear-gradient(160deg,color-mix(in oklch,var(--tint) 45%,transparent),color-mix(in oklch,var(--tint) 16%,transparent))"></div>
+    /* type cols 1–5, media cols 7–13 — again one empty module
+       between. The media well is a whole number of modules, so it
+       can never be a slightly-off rectangle. */
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/6;grid-row:2/6;display:flex;flex-direction:column;justify-content:center;gap:16px">
+          <h4 class="led-head led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
         </div>
-      </div>${bot}</div>`;
+        <div class="led-cellblock" style="grid-column:7/13;grid-row:1/7"></div>
+      </div>`);
   }
   if (s.layout === 'triptych') {
-    const cols = s.items.map(t =>
-      `<div style="flex:1;border-radius:4px;background:var(--hz-050);box-shadow:var(--recess);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--hz-500);text-transform:uppercase;letter-spacing:0.08em">${t}</div>`
-    ).join('');
-    return `<div class="slide" ${tint}>${top}
-      <div class="body"><h4 style="font-size:30px;margin-bottom:16px">${s.h}</h4>
-      <div style="display:flex;gap:12px;height:120px">${cols}</div></div>${bot}</div>`;
+    /* title on its own row, three 4-module panels below */
+    const cols = s.items.map((t, i) =>
+      `<div class="led-cellblock" style="grid-column:${1 + i * 4}/${5 + i * 4};grid-row:3/6;display:grid;place-items:end start;padding:14px">
+        <span class="led-micro">${t}</span>
+      </div>`).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/7;grid-row:1/3"><h4 class="led-head led-lit">${s.h}</h4></div>
+        ${cols}
+      </div>`);
   }
   if (s.layout === 'quad') {
-    const cells = s.items.map(t =>
-      `<div style="border-radius:4px;background:var(--hz-050);box-shadow:var(--recess);display:grid;place-items:center;padding:8px;font-family:var(--mono);font-size:10px;color:var(--hz-500);text-transform:uppercase;letter-spacing:0.06em;text-align:center">${t}</div>`
-    ).join('');
-    return `<div class="slide" ${tint}>${top}
-      <div class="body"><h4 style="font-size:26px;margin-bottom:14px">${s.h}</h4>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;height:150px">${cells}</div></div>${bot}</div>`;
+    /* title cols 1–5, a 2 × 2 of 3-module panels at cols 7–13 */
+    const cells = s.items.map((t, i) => {
+      const c = 7 + (i % 2) * 3, r = 1 + Math.floor(i / 2) * 3;
+      return `<div class="led-cellblock" style="grid-column:${c}/${c + 3};grid-row:${r}/${r + 3};display:grid;place-items:end start;padding:12px">
+        <span class="led-micro" style="line-height:14px">${t}</span>
+      </div>`;
+    }).join('');
+    return shell(`
+      <div class="led-field">
+        <div style="grid-column:1/6;grid-row:2/6;display:flex;align-items:center"><h4 class="led-head led-lit">${s.h}</h4></div>
+        ${cells}
+      </div>`);
   }
-  return `<div class="slide" ${tint}>${top}<div class="body"><h4>${s.h || ''}</h4></div>${bot}</div>`;
+  return shell(`<div class="led-field"><div style="grid-column:1/9;grid-row:2/5"><h4 class="led-head">${s.h || ''}</h4></div></div>`);
 }
+
+/* ── the anatomy slide: a real composition, shipped with guides on
+   by default so the section reads as an explanation ── */
+function renderAnatomy() {
+  return `<div class="led-slide guides" data-testid="anatomy-slide">
+    <div class="led-chrome top"><span>Anatomy</span><span>12 × 6</span></div>
+    <div class="led-chrome bot"><span>960 × 540 · 6px cell</span><span>Folklore</span></div>
+    <div class="led-field">
+      <div style="grid-column:1/6;grid-row:2/5;display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <h4 class="led-head led-lit">the field</h4>
+        <p class="led-body">Twelve columns, six rows, every module a 12-cell square.</p>
+      </div>
+      <div class="led-cellblock" style="grid-column:7/13;grid-row:1/7;display:grid;place-items:center">
+        <span class="led-sub led-lit">6 × 6 modules</span>
+      </div>
+    </div>
+    ${GUIDES}
+  </div>`;
+}
+
+/* ── the type-scale specimen ── */
+function renderTypeScale() {
+  return `<div class="led-slide" data-testid="type-slide">
+    <div class="led-chrome top"><span>Type scale</span><span>5 sizes</span></div>
+    <div class="led-chrome bot"><span>all whole cells</span><span>Folklore</span></div>
+    <div class="led-field">
+      <div style="grid-column:1/13;grid-row:1/7;display:flex;flex-direction:column;justify-content:center;gap:10px">
+        <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">12 cells</span><span class="led-display led-lit">display</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">8 cells</span><span class="led-head">head</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">4 cells</span><span class="led-sub">sub · mono</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">3 cells</span><span class="led-body" style="color:var(--led-ink)">body · sans, the reading size</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">2 cells</span><span class="led-micro">micro · labels and chrome</span></div>
+      </div>
+    </div>
+    ${GUIDES}
+  </div>`;
+}
+
+/* ── scaling: every stage is authored at 960 wide and scaled with a
+   transform to whatever its container is. Doing it this way (rather
+   than sizing the slide in relative units) is what keeps the 6px
+   matrix and the 72px module in exact proportion at any display
+   size — a percentage-based slide would resolve modules to
+   fractional pixels and the whole premise would quietly stop being
+   true below full size. ── */
+function fitStage(container) {
+  const stage = container.querySelector('.led-slide');
+  if (!stage) return;
+  const apply = () => {
+    const w = container.getBoundingClientRect().width;
+    stage.style.transform = `scale(${w / 960})`;
+  };
+  apply();
+  new ResizeObserver(apply).observe(container);
+}
+
+const anatomyBox = document.getElementById('anatomyBox');
+const typeBox = document.getElementById('typeBox');
+anatomyBox.innerHTML = renderAnatomy();
+typeBox.innerHTML = renderTypeScale();
+fitStage(anatomyBox);
+fitStage(typeBox);
 
 const grid = document.getElementById('grid');
 const modal = document.getElementById('modal');
 const modalStage = document.getElementById('modalStage');
 
-const TILE_W = 240; // matches 4-column grid at this wrap width; scale is computed anyway
-SLIDES.forEach((s, i) => {
+SLIDES.forEach(s => {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'tile';
   btn.setAttribute('data-testid', `layout-tile-${s.code.toLowerCase()}`);
   btn.innerHTML = `
-    <span class="tile-frame">
-      <span class="stage-960" style="${s.tint ? `--tint:${s.tint};` : ''}">${renderSlide(s)}</span>
-    </span>
+    <span class="tile-frame">${renderSlide(s)}</span>
     <span class="tile-cap">
       <span class="n">${s.code}</span>
       <span class="dot" style="${s.tint ? `--ct:${s.tint}` : ''}"></span>
       <span class="t">${s.title}</span>
     </span>`;
-  // scale the 960-wide stage to fit the actual rendered frame width
-  const frame = btn.querySelector('.tile-frame');
-  const stage = btn.querySelector('.stage-960');
-  new ResizeObserver(() => {
-    const w = frame.getBoundingClientRect().width;
-    stage.style.transform = `scale(${w / 960})`;
-  }).observe(frame);
+  fitStage(btn.querySelector('.tile-frame'));
 
   btn.addEventListener('click', () => {
-    modalStage.innerHTML = `<span class="stage-960" style="${s.tint ? `--tint:${s.tint};` : ''}">${renderSlide(s)}</span>`;
-    const mstage = modalStage.querySelector('.stage-960');
-    const setScale = () => {
-      const w = modalStage.getBoundingClientRect().width;
-      mstage.style.transform = `scale(${w / 960})`;
-    };
+    modalStage.innerHTML = renderSlide(s);
+    if (guidesOn) modalStage.querySelector('.led-slide').classList.add('guides');
     modal.showModal();
-    requestAnimationFrame(setScale);
-    new ResizeObserver(setScale).observe(modalStage);
+    fitStage(modalStage);
   });
 
   grid.appendChild(btn);
+});
+
+/* ── guide toggle — the anatomy slide keeps its guides on
+   regardless, since that's the whole point of that figure ── */
+const guideToggle = document.getElementById('guideToggle');
+const guideState = document.getElementById('guideState');
+let guidesOn = false;
+guideToggle.addEventListener('click', () => {
+  guidesOn = !guidesOn;
+  guideToggle.setAttribute('aria-pressed', String(guidesOn));
+  guideToggle.textContent = guidesOn ? 'Hide grid guides' : 'Show grid guides';
+  guideState.textContent = `Guides: ${guidesOn ? 'on' : 'off'}`;
+  document.querySelectorAll('.tile .led-slide, #typeBox .led-slide, .modal-stage .led-slide')
+    .forEach(el => el.classList.toggle('guides', guidesOn));
 });
 
 document.getElementById('closeModal').addEventListener('click', () => modal.close());
