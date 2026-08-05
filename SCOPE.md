@@ -1,12 +1,16 @@
 # Web Animation & Motion — Presentation Scope
 
 **Presenter:** k (jclark@folklore.digital)
-**Presentation date:** Friday, August 7, 2026
-**Doc drafted:** August 3, 2026
+**Presentation date:** Friday, August 21, 2026
+**Doc drafted:** August 3, 2026 · **Last revised:** August 5, 2026
 
 ## Timeline
 
-Today is Monday; the talk is Friday — 4 working days. Scope decision: **build all demos live** (no video substitutions except the WebGPU fallback), on the basis that demo code will be AI-generated rather than hand-written, which compresses the build. Presentation chrome to be polished/branded, on the reasoning that a talk arguing craft is the differentiator should itself demonstrate craft.
+**Moved from August 7 to August 21** — roughly twelve working days from August 5 rather than four. This changes the plan in one specific way and not others: the build was never the thing most at risk, sequencing and rehearsal were, and those still need reserving. What the extra two weeks genuinely buys is room to prototype the two unproven items (layout-animation slide transitions, and the WebGPU compute sim at a real particle count) *before* they're load-bearing, instead of discovering their limits during the build.
+
+It also makes learning an unfamiliar stack a reasonable choice rather than a gamble — see Technical Approach.
+
+Scope decision, unchanged: **build all demos live** (no video substitutions except the WebGPU fallback), on the basis that demo code will be AI-generated rather than hand-written, which compresses the build. Presentation chrome to be polished/branded, on the reasoning that a talk arguing craft is the differentiator should itself demonstrate craft.
 
 ## Overview
 
@@ -158,18 +162,30 @@ Practical stance: design the motion system mobile-first — decide what's essent
 
 ## Technical Approach
 
-- **App shell:** React + Vite; slide state as an index, optionally one route per slide for deep-linking/reload during rehearsal.
+- **App shell: Svelte 5 + Bun.** Decided August 5, replacing the earlier React + Vite placeholder. Slide state as an index, optionally one route per slide for deep-linking/reload during rehearsal.
+  - **Why Svelte 5 over React here.** Two reasons that are specific to this build rather than general preference. First, Svelte compiles away, so there is very little framework sitting between the code and the DOM — which matters when nearly every slide is manipulating transforms, canvases and measured geometry, and a framework re-render landing mid-animation is a real failure mode. Second, the design system is already ~1,100 lines of hand-written vanilla CSS (`design/system/tokens.css` + `components.css`) that has to come across untouched; Svelte takes plain CSS as-is. React's genuine strengths — shared state across a large tree, ecosystem depth — are the ones a linear slide deck needs least.
+  - **Learning cost is accepted deliberately.** The presenter has not used Svelte before. With the date moved to the 21st this is a reasonable trade rather than a gamble, and it is confined to the shell: the demos are the risky part and they are mostly framework-agnostic (raw Canvas, Three.js, WGSL) by design. If Svelte turns out to be a fight, the shell is the cheapest layer in the build to rewrite.
+  - **Bun** as runtime, package manager and bundler. Low risk for a static client-side app, and fast enough to keep the rebuild loop tight during rehearsal week.
+  - **Not Tailwind.** The design system is token- and material-based vanilla CSS; a utility-first layer would fight it for no gain.
+  - **Not Tauri or Wails.** Both use the *system* webview (WKWebView on macOS), which is a different WebGPU implementation from Chrome's. The whole WebGPU section is currently de-risked by the decision to present in Chrome, and particle counts are to be tuned against that target — a system webview reintroduces exactly that risk in exchange for a window without an address bar. If a desktop shell is ever genuinely wanted, Electron at least bundles Chromium so parity holds. For a talk on the presenter's own laptop, Chrome in fullscreen is the answer.
 - **Navigation/fullscreen/preview:** native Fullscreen API, custom keyboard handlers, `BroadcastChannel`/`localStorage` sync for a speaker-view window.
 - **Per-technique demo tooling** — deliberately native to each technique rather than one shared abstraction, so the tech shown matches the tech being explained:
   - CSS section: plain CSS transitions/keyframes
   - Layout Animation section: Anime.js's layout animation API (https://animejs.com/documentation/layout) — a FLIP implementation over real measured DOM state
   - SVG section: plain SVG + CSS, or Anime.js for scripted path-morphing
   - Canvas section: raw Canvas 2D API, or p5.js for faster iteration
-  - WebGL section: Three.js (optionally via React Three Fiber)
+  - WebGL section: Three.js, used directly rather than through a framework wrapper (the React Three Fiber option is dropped with the move off React; Svelte's equivalents are less mature and this build doesn't need one)
   - WebGPU section: Three.js's experimental `WebGPURenderer`/TSL, letting the WebGL and WebGPU demos share one codebase
   - Video/GIF section: native `<video>`/`<img>`; optionally `ffmpeg.wasm` or Remotion to bake the thread demo to video live on stage
 - **JS animation, by default: Anime.js.** One library used deeply rather than several used shallowly — chosen over Framer Motion/GSAP so the deck's own tooling doesn't fragment. The only exceptions are WebGL and WebGPU, which need their own rendering pipelines (Three.js, WGSL) rather than a DOM animation library; everything else — SVG path work, the Layout Animation section, and the presentation chrome itself — runs on Anime.js.
-- **Presentation chrome (not content):** Anime.js's layout animation API drives the slide-to-slide transitions themselves, not just a progress bar and nav UI riding on top. Each slide's DOM measured before and after a navigation event, the transition animated as one continuous layout move — content reflowing into its new arrangement — rather than a cut or a generic wipe. If it holds up under real slide content this is the detail that makes the deck's own chrome distinctive rather than merely competent: the same technique slide 7 explains, used to move between the slides explaining it. Kept conceptually separate from the technique demos themselves so the audience isn't confused about which tech is doing what.
+- **Presentation chrome (not content):** the slide-to-slide transition is itself a layout animation — each slide's content measured before and after a navigation event and animated as one continuous move into its new arrangement, rather than a cut or a generic wipe. If it holds up under real slide content this is the detail that makes the deck's own chrome distinctive rather than merely competent: the same technique slide 7 explains, used to move between the slides explaining it. Kept conceptually separate from the technique demos so the audience isn't confused about which tech is doing what.
+
+  **Three candidate implementations, to be prototyped against real slide content before one is chosen.** They solve the same problem by different mechanisms, and the differences are not cosmetic:
+  - **View Transitions API** (`document.startViewTransition()` + `view-transition-name`) — the platform's own answer. Browser snapshots before and after and animates between them. Strongest thematic fit: a talk arguing the platform is capable enough to build crafted experiences, whose own chrome runs on the newest animation primitive the platform has. The usual objection is cross-browser support, and it does not apply here — the deck runs in Chrome on one known machine. **Current preference, added August 5.**
+  - **Anime.js layout API** — already prototyped and working in the design harness (`design/layouts/index.html`). Known-good, but carries a hard constraint documented in Risks below: it is incompatible with a CSS-transform-scaled slide.
+  - **Svelte's built-in `animate:flip`** — free with the framework choice above, worth an hour's evaluation on that basis alone, though it is the least proven of the three for whole-layout changes rather than list reordering.
+
+  The reason to prototype rather than pick on paper: the transform constraint that broke the Anime.js version may or may not apply to the other two, and *that* is the deciding factor, not feel. Whichever wins, only one ships — the point of standardising on Anime.js for JS animation was to stop the deck's tooling fragmenting, and that logic applies here too. Plain cross-fade remains the fallback.
 
 ## Inspiration & Reference
 
@@ -192,14 +208,16 @@ Practical stance: design the motion system mobile-first — decide what's essent
 
 ## Risks & Open Questions
 
-- **Timeline:** 4 working days remains the primary risk even with AI-generated demo code. The failure mode isn't "no demos," it's demos that each work in isolation but haven't been tuned to escalate against each other, or chrome polish eating the day before the talk. Recommend getting all demos rough and sequenced first, then polishing.
-- **Runtime is now the second risk.** 15 slides in 15-20 minutes leaves little slack. Slides 7, 8, and 14 are designated compressible (see Timing note in the outline), but that decision needs a timed rehearsal to make, not a guess.
-- **Rehearsal time is unscoped.** Worth reserving Thursday for running the talk end-to-end on the real machine, separate from build.
+- **Timeline is no longer the primary risk, but the failure mode it protects against hasn't changed.** Twelve working days is comfortable for the build. What the extra time does *not* automatically fix is the real hazard: demos that each work in isolation but were never tuned to escalate against each other, or chrome polish absorbing the last days. Get all demos rough and sequenced first, then polish — the same order that was right at four days, now with slack to actually follow it.
+- **The new primary risk is scope creep into the design system.** The extra fortnight makes it easy to keep refining the reference harness (which is already well past what the talk needs) instead of building the app. The design system is a means to the deck, not the deliverable.
+- **Runtime.** 15 slides in 15-20 minutes leaves little slack. Slides 7, 8, and 14 are designated compressible (see Timing note in the outline), but that decision needs a timed rehearsal to make, not a guess.
+- **Rehearsal time is unscoped.** Reserve at least the two days before the 21st for running the talk end-to-end on the real machine, separate from build. This was the right call at four days and it doesn't get less important with more of them.
+- **Unfamiliar framework.** Svelte 5 is a deliberate learning choice (see Technical Approach) and the risk is contained — the shell is the cheapest layer to rewrite and the demos are largely framework-agnostic. The thing to watch is runes-specific reactivity surprises landing mid-animation. Build one real slide end to end early, before committing the other fourteen to the pattern.
 - **Evidence caveats:** the AI-traffic-decline data is directionally solid but contested by Google; state it as "multiple studies show," not as settled fact.
 - **Slide 14 demands extra build work.** Showing four rungs of the degradation ladder side by side means actually building the reduced, static, and reduced-motion variants — not just describing them. Worth it (it's the credibility slide), but it's the one place where the talk's content and the app's engineering overlap most expensively.
 - **The deck should practice what slide 14 preaches.** A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks. Low cost to honour it in the presentation app; worth doing.
 - **Layout-animation-driven slide transitions are the highest-upside, least-proven build item.** Genuinely distinctive if it works — a deck whose own navigation demonstrates the technique it's teaching — but "animate real slide layouts into each other" has more surface area for visual bugs (overlapping text mid-transition, wrong measured state after a fast double-advance) than a standard slide/fade. Prototype this early against real slide content, not a toy example, and keep a plain cross-fade as a fallback transition if it doesn't hold up under rehearsal.
-- **Anime.js's layout animation is incompatible with a CSS-transform-scaled slide, which is the obvious way to fit a fixed-size slide to the window.** During a transition it takes each element out of flow and sets `position: fixed; left: 0; top: 0` plus a `translate` of the measured screen-space delta. A `transform` on any ancestor both re-roots that fixed positioning (a transformed element becomes the containing block for fixed descendants) and scales the translate, so elements fly to the wrong place and snap back at the end. Found and reproduced in the design harness — see the transition preview on the layouts page, which is rendered at true 1:1 for exactly this reason. **This shapes the app's architecture**: either size slides responsively so no scale transform is needed, or scale via a mechanism that doesn't create a containing block, or accept the cross-fade fallback. Decide this before building the chrome, not after.
+- **Anime.js's layout animation is incompatible with a CSS-transform-scaled slide, which is the obvious way to fit a fixed-size slide to the window.** During a transition it takes each element out of flow and sets `position: fixed; left: 0; top: 0` plus a `translate` of the measured screen-space delta. A `transform` on any ancestor both re-roots that fixed positioning (a transformed element becomes the containing block for fixed descendants) and scales the translate, so elements fly to the wrong place and snap back at the end. Found and reproduced in the design harness — see the transition preview on the layouts page, which is rendered at true 1:1 for exactly this reason. **This shapes the app's architecture**: either size slides responsively so no scale transform is needed, or scale via a mechanism that doesn't create a containing block, or accept the cross-fade fallback. Decide this before building the chrome, not after. Note that the layout grid is currently specified in fixed pixels quantised to a 6px LED cell (see `design/layouts/index.html`), which assumes a fixed-size slide — so "size slides responsively" is not a free swap and needs its own decision. **This is also the sharpest test to run against the other two transition candidates**: if View Transitions or `animate:flip` tolerate a scaled ancestor, that alone likely decides which one ships.
 
 ## Out of Scope
 
