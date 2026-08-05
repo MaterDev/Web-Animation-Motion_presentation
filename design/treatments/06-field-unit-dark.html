@@ -875,6 +875,66 @@ section { margin-bottom: calc(var(--u) * 12); }
     </div>
   </section>
 
+  <!-- ═══ SCROLLBARS ═════════════════════════════════ -->
+  <section>
+    <div class="sec-head"><span class="idx">08</span><h2>scrollbars</h2><span class="rule"></span><span class="ref">Fig. 7 · global</span></div>
+    <p class="lead">
+      The one piece of chrome the browser draws for you — and the one most likely to give
+      away that everything else was themed. It's built from parts this system already has
+      rather than invented: the track is a <b>well</b> (the same milled slot as
+      <code>.well</code>), and the thumb is the same injection-moulded plastic as
+      <code>.mat-toy</code> and the toggle knob — a slider physically riding in that slot.
+      Defined once in <code>tokens.css</code> against <code>*</code>, so every scrollable
+      region on every page in this system gets it without opting in.
+    </p>
+
+    <!-- min-width:0 on both cells: a grid item's default
+         min-width:auto is content-based, so the 760px strip inside
+         the right-hand demo blows its own track out and starves the
+         left one. Confirmed visually before fixing — the left plate
+         had collapsed to about a quarter width. -->
+    <div class="grid-2">
+      <div class="plate" data-testid="scrollbar-demo" style="min-width:0">
+        <span class="plate-id">SCROLL</span>
+        <p class="mono" style="margin:30px 0 10px">Vertical · scroll me</p>
+        <div style="height:150px;overflow:auto;background:var(--hz-050);box-shadow:var(--recess);border-radius:4px;padding:12px 14px">
+          <p style="font-size:13px;margin:0 0 10px">The thumb picks up <code>--tint</code> while you're actually dragging it, so the thing under your finger is the one element on screen carrying the section colour — the same rule every other engaged control in this system follows.</p>
+          <p style="font-size:13px;margin:0 0 10px">Track: <code>--well-floor</code> with an inset shadow, the recessed-slot recipe used for meters, rails and displays.</p>
+          <p style="font-size:13px;margin:0 0 10px">Thumb: a 2px transparent border with <code>background-clip:padding-box</code>, which is what gives it clearance inside the slot instead of filling it wall to wall.</p>
+          <p style="font-size:13px;margin:0">Width: 11px, close to the platform default on purpose. A fashionably thin 4px bar is harder to grab and reads as a website affectation, which is the opposite of the hardware premise.</p>
+        </div>
+      </div>
+
+      <div class="plate" data-testid="scrollbar-demo-xy" style="min-width:0">
+        <span class="plate-id">BOTH AXES</span>
+        <p class="mono" style="margin:30px 0 10px">Vertical + horizontal · note the corner</p>
+        <div style="height:150px;overflow:auto;background:var(--hz-050);box-shadow:var(--recess);border-radius:4px;padding:12px 14px">
+          <div style="width:760px">
+            <p class="mono" style="font-size:9px;margin:0 0 10px;white-space:nowrap">──── A REGION THAT OVERFLOWS ON BOTH AXES, SO THE CORNER PIECE IS VISIBLE ────</p>
+            <p style="font-size:13px;margin:0 0 10px">The corner where the two bars meet is a real, separately-drawn part (<code>::-webkit-scrollbar-corner</code>). Left unstyled it renders as a pale platform-grey square — a small thing that reliably breaks the illusion on a dark chassis, so it's filled with the same well floor as both tracks.</p>
+            <p style="font-size:13px;margin:0">Both axes are styled from the same rule; the height property covers the horizontal bar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note diff">
+      <b>No grip knurl on the thumb.</b> It was tried — it's the obvious move given the
+      knob and the toggle both have one — and cut for exactly the same reason the knurl
+      was calmed down on the knob earlier in this build: a repeating texture at 7px stops
+      reading as machining and starts reading as moiré. The bevel and the highlight carry
+      the material on their own at this size.
+    </div>
+    <div class="note warn">
+      <b>Firefox gets a deliberate floor, not a polyfill.</b> It exposes only
+      <code>scrollbar-width</code> and <code>scrollbar-color</code> — two colours, no
+      bevel, no per-state change. That's what it gets. Reimplementing a scrollbar in JS to
+      force pixel parity would mean overriding native scroll behaviour, which breaks
+      keyboard scrolling, momentum, and accessibility-tool integration to fix something
+      nobody is looking at. Right colours in the right places is the correct place to stop.
+    </div>
+  </section>
+
   <footer style="border-top:var(--hair) solid var(--hz-400);padding-top:26px;margin-top:70px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px">
     <span class="mono">T-06 · Field Unit (Dark)</span>
     <span class="mono">WAM-2026 · design system reference</span>
@@ -1112,6 +1172,9 @@ const ICONS = {
   crosshair: () => { let g = ring(blank(),5.5,5.5,4,1.4); line(g,5.5,0,5.5,3); line(g,5.5,8,5.5,11); line(g,0,5.5,3,5.5); line(g,8,5.5,11,5.5); return g; },
   /* 09 slide compositions — 16:9-ish frame outline */
   frame: () => rectOutline(blank(), 1, 3, 10, 6, 1.4),
+  /* 10 scrollbars — a tall empty track with a short thumb sitting
+     partway down it, which is the whole component in one glyph */
+  scrollbar: () => { const g = rectOutline(blank(), 4, 1, 4, 10, 1); return rect(g, 5, 4, 2, 4); },
 };
 
 /* which icon a section gets, matched on its own title text — kept
@@ -1127,7 +1190,8 @@ const ICONS = {
 const ICON_BY_KEYWORD = [
   ['material', 'materials'], ['liquid', 'liquid'], ['glass', 'glass'],
   ['micro-anim', 'spark'], ['motion token', 'dial'], ['colour', 'colour'],
-  ['presenter', 'play'], ['navigation', 'crosshair'], ['slide', 'frame'],
+  ['presenter', 'play'], ['navigation', 'crosshair'], ['scrollbar', 'scrollbar'],
+  ['slide', 'frame'],
 ];
 function iconFor(title) {
   const t = title.toLowerCase();

@@ -86,30 +86,63 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 /* ═══ STYLE-PREVIEW PANELS ══════════════════════════════════
    Each topic gets a real plate — the same anodised-plastic material
    as the hardware panels elsewhere in the system, not a bespoke
-   card — big enough to hold several distinct visual elements at
-   once: a spec-plate code, the pixel-type name in the topic's own
-   colour, the animated multi-part mark, a divider, a pattern swatch,
-   a sweep bar, and a mono motion readout. Every one of those varies
-   graphically per topic; none of them varies in timing or easing.
+   card — big enough to hold a whole kit of graphic elements at once.
+   Everything in a panel is a DESIGN element that varies per topic:
+   colour ramp, primary mark, secondary glyph set, rule/divider
+   treatment, pattern band, and the motif name itself. Nothing in a
+   panel varies in motion.
+
+   An earlier pass had a sweep/progress bar down here. Cut: a loading
+   bar carries no graphic identity, it's a UI widget borrowed from a
+   page that has something to load, and this page is about visual
+   motifs. Its slot went to elements that actually differentiate.
+
    --tint is scoped per-panel via inline style so every child below
    just reads var(--tint) — no --tint-X repeated seven times over. */
-.gk-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); gap: calc(var(--u) * 3); }
+.gk-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(276px, 1fr)); gap: calc(var(--u) * 3); }
 .gk-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .gk-code { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 18%, var(--hz-100)); padding: 3px 8px; border-radius: 3px; }
 .gk-panel-title { font-size: 22px; color: var(--tint); }
-.gk-divider { height: 8px; margin: 14px 0 12px; background: repeating-linear-gradient(90deg, var(--tint) 0 var(--hair), transparent var(--hair) 9px); opacity: 0.4; }
-.gk-panel-foot { display: flex; gap: 10px; align-items: center; margin-bottom: 9px; }
-.gk-spec { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; color: var(--hz-500); }
-.gk-spec b { color: var(--tint); font-weight: 500; }
+.gk-motif { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); margin-top: 10px; }
+.gk-motif b { color: var(--tint); font-weight: 500; }
+.gk-row { display: flex; gap: 8px; align-items: center; margin-top: 11px; }
 
-/* pattern swatch — a genuinely tileable, technique-inspired texture
-   (film ticks / cascading rules / offset grid / scattered nodes /
-   raster dither / facet cross-hatch / via lattice), but confined to
-   a small chip next to the sweep bar rather than behind anything.
-   Plain (non-repeating) radial-gradient + background-size tiles via
-   the default background-repeat, which sidesteps the single-origin
-   bug repeating-radial-gradient has without an explicit size. */
-.gk-pattern { width: 36px; height: 26px; border-radius: 3px; flex: 0 0 auto; background-color: var(--well-floor); box-shadow: var(--recess); }
+/* RULE TREATMENT — the divider itself is a per-topic motif rather
+   than one dotted rule reused seven times. Each is the topic's own
+   logic applied to a horizontal line: discrete film frames, a
+   stepped cascade, two offset strokes, anchor nodes on a path, a
+   raster dither, a facet zigzag, a bus trace with vias. Cheap to
+   author, and it's the element that does the most work — a rule
+   appears in every layout, so its treatment gets seen constantly. */
+.gk-rule { height: 9px; margin: 15px 0 3px; opacity: 0.75; }
+.gk-rule[data-topic="video"]     { background: repeating-linear-gradient(90deg, var(--tint) 0 8px, transparent 8px 12px); }
+.gk-rule[data-topic="css"]       { background: linear-gradient(var(--tint) 0 0) 0 0/33% 1px no-repeat, linear-gradient(var(--tint) 0 0) 33% 4px/33% 1px no-repeat, linear-gradient(var(--tint) 0 0) 100% 8px/34% 1px no-repeat; }
+.gk-rule[data-topic="composite"] { background: linear-gradient(var(--tint) 0 0) 0 2px/calc(100% - 6px) 2px no-repeat, linear-gradient(var(--tint) 0 0) 6px 6px/calc(100% - 6px) 2px no-repeat; }
+.gk-rule[data-topic="svg"]       { background: linear-gradient(var(--tint) 0 0) 0 4px/100% 1px no-repeat, radial-gradient(circle, var(--tint) 2px, transparent 2.5px) 0 0/32px 9px repeat-x; }
+.gk-rule[data-topic="canvas"]    { background: repeating-linear-gradient(90deg, var(--tint) 0 2px, transparent 2px 4px) 0 3px/100% 2px repeat-x, repeating-linear-gradient(90deg, transparent 0 2px, var(--tint) 2px 4px) 0 6px/100% 2px repeat-x; }
+.gk-rule[data-topic="webgl"]     { background: repeating-linear-gradient(60deg, var(--tint) 0 1px, transparent 1px 7px); }
+.gk-rule[data-topic="webgpu"]    { background: linear-gradient(var(--tint) 0 0) 0 4px/100% 2px no-repeat, radial-gradient(circle, var(--tint) 2.5px, transparent 3px) 0 0/16px 9px repeat-x; }
+
+/* TINT RAMP — four steps derived from the one tint token, so each
+   topic reads as a small palette rather than a single colour. Same
+   derivation for all seven (mix toward the housing floor and toward
+   white); the topics differ only in the seed tint. */
+.gk-ramp { display: flex; flex: 1 1 auto; height: 18px; border-radius: 3px; overflow: hidden; box-shadow: var(--recess); }
+.gk-ramp i { flex: 1; }
+.gk-ramp i:nth-child(1) { background: color-mix(in oklch, var(--tint) 30%, var(--hz-050)); }
+.gk-ramp i:nth-child(2) { background: color-mix(in oklch, var(--tint) 65%, var(--hz-050)); }
+.gk-ramp i:nth-child(3) { background: var(--tint); }
+.gk-ramp i:nth-child(4) { background: color-mix(in oklch, var(--tint) 62%, oklch(0.95 0.01 265)); }
+
+/* PATTERN BAND — the tileable technique-inspired texture, now a
+   full-width band rather than the 36px chip it was. Same textures,
+   enough room to actually read as a pattern; still confined to its
+   own strip rather than glued behind the mark, which is what made
+   the very first full-bleed version unusable. Plain (non-repeating)
+   radial-gradient + background-size tiles via the default
+   background-repeat, sidestepping the single-origin bug
+   repeating-radial-gradient has when given no explicit size. */
+.gk-pattern { height: 30px; border-radius: 3px; margin-top: 11px; background-color: var(--well-floor); box-shadow: var(--recess); }
 .gk-pattern[data-topic="video"]     { background-image: repeating-linear-gradient(90deg, var(--tint) 0 2px, transparent 2px 7px); opacity: 0.5; }
 .gk-pattern[data-topic="css"]       { background-image: repeating-linear-gradient(180deg, var(--tint) 0 1px, transparent 1px 5px); opacity: 0.5; }
 .gk-pattern[data-topic="composite"] { background-image: repeating-linear-gradient(45deg, var(--tint) 0 1px, transparent 1px 6px), repeating-linear-gradient(-45deg, var(--tint) 0 1px, transparent 1px 6px); opacity: 0.4; }
@@ -118,15 +151,20 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 .gk-pattern[data-topic="webgl"]     { background-image: repeating-linear-gradient(60deg, var(--tint) 0 1px, transparent 1px 6px), repeating-linear-gradient(-60deg, var(--tint) 0 1px, transparent 1px 6px); opacity: 0.4; }
 .gk-pattern[data-topic="webgpu"]    { background-image: radial-gradient(var(--tint) 1px, transparent 1.4px); background-size: 8px 8px; opacity: 0.5; }
 
-/* sweep bar — a second motion element in each panel, running the
-   same shared .liquid-fill class every other bar in the system uses.
-   An earlier pass gave each topic its own duration and easing here
-   (steps(8) for video, linear for svg, and so on); there was no
-   reason for a loading bar to move differently depending on which
-   topic it sat under, and it made seven panels that should read as
-   one family feel like seven unrelated widgets. */
-.gk-sweep { flex: 1 1 auto; position: relative; height: 8px; border-radius: 4px; background: var(--well-floor); box-shadow: var(--recess); overflow: hidden; }
-.gk-sweep .fill { position: absolute; inset: 1px auto 1px 1px; width: 6%; border-radius: 3px; background: var(--tint); }
+/* SECONDARY GLYPHS — three small supporting marks per topic, drawn
+   from the same predicate machinery as the primary mark. A real
+   identity is never one logo; it's a family, and the small marks are
+   what actually get used at caption and label size. Static: motion
+   belongs to the primary mark only, so a panel has one focal point
+   (see T-06 §03's "one focal point per moment" rule). */
+.gk-glyphs { display: flex; gap: 5px; flex: 0 0 auto; }
+/* Recessed well ground, not a tint mix. First pass tinted each
+   glyph chip by topic, which double-counted colour (the ramp right
+   next to it already carries that job) and made the seven sets read
+   at visibly different weights — webgl's pink chips shouted, video's
+   grey ones vanished. A neutral slot for all seven lets the glyph
+   shapes be the only variable, which is the point of showing them. */
+.gk-glyphs canvas { width: 20px; height: 20px; image-rendering: pixelated; border-radius: 2px; background: var(--well-floor); box-shadow: var(--recess); padding: 0; }
 </style>
 </head>
 <body data-testid="graphic-language-page">
@@ -163,62 +201,71 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 
   <div class="gk-sec-label">Expanded visual language — a style preview per topic</div>
   <p class="gk-sec-note">
-    A small kit per topic on one plate: the slide code, the name set in its own colour, a
-    multi-part mark, a divider, and a technique-inspired pattern swatch — film ticks,
-    cascading rules, an offset grid, scattered nodes, a raster dither, a facet lattice,
-    circuit vias. Every one of those is a graphic difference. The motion underneath them is
-    identical across all seven, which is what lets the set read as one family rather than
-    seven unrelated widgets.
+    A full kit per topic on one plate — six graphic elements, not one logo: the slide code,
+    the name in its own colour, the animated primary mark, a <b>rule treatment</b> (the
+    divider itself is a motif, since a rule appears in every layout and gets seen
+    constantly), three <b>secondary glyphs</b> deconstructing the primary mark for
+    caption-size use, a four-step <b>tint ramp</b> so each topic reads as a small palette
+    rather than one colour, and a <b>pattern band</b>. Every one of those differs per topic.
+    The motion underneath them is identical across all seven, which is what lets the set
+    read as one family rather than seven unrelated widgets.
   </p>
   <div class="gk-panels" data-testid="gk-expanded-set">
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-video)" data-testid="gk-panel-video">
       <div class="gk-panel-head"><span class="gk-code">SL-04</span><span class="gk-pair-title gk-panel-title">video</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="video" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="back" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="front" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="video" aria-hidden="true"></div><div class="gk-sweep" data-topic="video"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="video" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="video" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="video" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="video" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="video" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>film ticks · frame steps</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-css)" data-testid="gk-panel-css">
       <div class="gk-panel-head"><span class="gk-code">SL-05</span><span class="gk-pair-title gk-panel-title">css</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="css" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="css" aria-hidden="true"></div><div class="gk-sweep" data-topic="css"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="css" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="css" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="css" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="css" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="css" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>cascading rules · stepped</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-composite)" data-testid="gk-panel-composite">
       <div class="gk-panel-head"><span class="gk-code">SL-06</span><span class="gk-pair-title gk-panel-title">composite</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="composite" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="composite" aria-hidden="true"></div><div class="gk-sweep" data-topic="composite"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="composite" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="composite" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="composite" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="composite" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="composite" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>offset layers · doubled</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-svg)" data-testid="gk-panel-svg">
       <div class="gk-panel-head"><span class="gk-code">SL-09</span><span class="gk-pair-title gk-panel-title">svg</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="svg" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="svg" data-part="main" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="svg" aria-hidden="true"></div><div class="gk-sweep" data-topic="svg"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="svg" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="svg" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="svg" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="svg" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="svg" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>path nodes · anchored</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-canvas)" data-testid="gk-panel-canvas">
       <div class="gk-panel-head"><span class="gk-code">SL-10</span><span class="gk-pair-title gk-panel-title">canvas</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="canvas" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d4" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d5" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d6" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="canvas" aria-hidden="true"></div><div class="gk-sweep" data-topic="canvas"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="canvas" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="canvas" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="canvas" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="canvas" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="canvas" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>raster dither · checker</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-webgl)" data-testid="gk-panel-webgl">
       <div class="gk-panel-head"><span class="gk-code">SL-11</span><span class="gk-pair-title gk-panel-title">webgl</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="webgl" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgl" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgl"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="webgl" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="webgl" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="webgl" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="webgl" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="webgl" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>facet lattice · zigzag</b></div>
     </div>
     <div class="gk-panel plate mat-anodised" style="--tint:var(--tint-webgpu)" data-testid="gk-panel-webgpu">
       <div class="gk-panel-head"><span class="gk-code">SL-13</span><span class="gk-pair-title gk-panel-title">webgpu</span></div>
       <div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:148px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint)"></span><div style="position:relative;width:104px;height:104px;z-index:2"><canvas class="gk-reg" data-topic="webgpu" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="body" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="pins" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:104px;height:104px;image-rendering:pixelated"></canvas></div></div></div>
-      <div class="gk-divider"></div>
-      <div class="gk-panel-foot"><div class="gk-pattern" data-topic="webgpu" aria-hidden="true"></div><div class="gk-sweep" data-topic="webgpu"><span class="fill liquid-fill"></span></div></div>
-      <div class="gk-spec">motion <b>--ease-liquid</b> · shared, not per-topic</div>
+      <div class="gk-rule" data-topic="webgpu" aria-hidden="true"></div>
+      <div class="gk-row"><div class="gk-glyphs"><canvas class="gk-glyph" data-topic="webgpu" data-slot="1" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="webgpu" data-slot="2" width="12" height="12" aria-hidden="true"></canvas><canvas class="gk-glyph" data-topic="webgpu" data-slot="3" width="12" height="12" aria-hidden="true"></canvas></div><div class="gk-ramp" aria-hidden="true"><i></i><i></i><i></i><i></i></div></div>
+      <div class="gk-pattern" data-topic="webgpu" aria-hidden="true"></div>
+      <div class="gk-motif">motif <b>via grid · bus trace</b></div>
     </div>
   </div>
 
@@ -485,6 +532,71 @@ document.querySelectorAll('.gk-part').forEach(cv => {
   const draw = PART_DRAWS[cv.dataset.topic]?.[cv.dataset.part];
   if (!draw) return;
   paintGrid(cv.getContext('2d'), draw(), 1);
+});
+
+/* ═══════════════════════════════════════════════════════
+   SECONDARY GLYPHS — three supporting marks per topic at the
+   original 12x12 resolution (back on the small-grid helpers, not
+   the N-suffixed ones). A real identity is never a single logo;
+   it's a family, and at caption/label size these are what actually
+   get used. Each set is a deconstruction of its own primary mark —
+   one piece of it, one inversion of it, one abstraction of it —
+   rather than three unrelated icons, which is what keeps them
+   legible as belonging to the same topic.
+   ═══════════════════════════════════════════════════════ */
+const GLYPHS = {
+  video: [
+    /* a single frame, the sprocket strip, the play mark alone */
+    () => rectOutline(blank(), 2, 3, 8, 6, 1),
+    () => { const g = blank(); [1,4,7,10].forEach(y => rect(g, 2, y, 2, 2)); return g; },
+    () => triRight(blank(), 4, 3, 6),
+  ],
+  css: [
+    /* the cascade at rest, one rule, the step profile */
+    () => { const g = blank(); rect(g,2,2,8,1); rect(g,2,5,6,1); rect(g,2,8,4,1); return g; },
+    () => rect(blank(), 1, 5, 10, 2),
+    () => { const g = blank(); rect(g,2,8,3,2); rect(g,5,5,3,2); rect(g,8,2,3,2); return g; },
+  ],
+  composite: [
+    /* two layers apart, two layers overlapping, the offset alone */
+    () => { const g = rectOutline(blank(),1,1,5,5,1); return rectOutline(g,6,6,5,5,1); },
+    () => { const g = rectOutline(blank(),2,2,6,6,1); return rectOutline(g,4,4,6,6,1); },
+    () => { const g = blank(); rect(g,2,2,4,4); return rect(g,6,6,4,4); },
+  ],
+  svg: [
+    /* a bare node, the path without nodes, a closed path */
+    () => circle(blank(), 5.5, 5.5, 2.4),
+    () => { const g = blank(); line(g,1,9,5,3); return line(g,5,3,10,7); },
+    () => { const g = blank(); line(g,2,9,5,2); line(g,5,2,9,9); return line(g,9,9,2,9); },
+  ],
+  canvas: [
+    /* one pixel, a 2x2 quad, the dither field */
+    () => rect(blank(), 4, 4, 3, 3),
+    () => { const g = blank(); rect(g,2,2,3,3); rect(g,7,2,3,3); rect(g,2,7,3,3); return rect(g,7,7,3,3); },
+    () => { const g = blank(); for (let y=1;y<11;y++) for (let x=1;x<11;x++) if ((x+y)%2===0) g[y][x]=true; return g; },
+  ],
+  webgl: [
+    /* one triangle, the wireframe pair, the vertex trio */
+    () => { const g = blank(); line(g,2,9,5.5,2); line(g,5.5,2,9,9); return line(g,9,9,2,9); },
+    () => { const g = blank(); line(g,1,8,5,2); line(g,5,2,9,8); line(g,9,8,1,8); return line(g,5,2,5,8); },
+    () => { const g = blank(); circle(g,2,9,1.2); circle(g,9,9,1.2); return circle(g,5.5,2,1.2); },
+  ],
+  webgpu: [
+    /* the die alone, one pin pair, the via field */
+    () => rect(blank(), 3, 3, 6, 6),
+    () => { const g = blank(); rect(g,4,1,1,4); rect(g,7,1,1,4); return rect(g,3,5,6,4); },
+    () => { const g = blank(); [[2,2],[6,2],[10,2],[2,6],[6,6],[10,6],[2,10],[6,10],[10,10]].forEach(([x,y]) => circle(g,x,y,1)); return g; },
+  ],
+};
+document.querySelectorAll('.gk-glyph').forEach(cv => {
+  const set = GLYPHS[cv.dataset.topic];
+  const draw = set?.[Number(cv.dataset.slot) - 1];
+  if (!draw) return;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = 'oklch(0.82 0.01 265)';
+  const grid = draw();
+  for (let y = 0; y < GRID; y++) for (let x = 0; x < GRID; x++)
+    if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
 });
 </script>
 
