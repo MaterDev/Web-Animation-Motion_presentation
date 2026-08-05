@@ -18,6 +18,43 @@
 .crumb .sep { color: var(--hz-400); }
 .head h1 { font-size: clamp(36px, 6vw, 60px); margin-bottom: 10px; }
 p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*6); }
+
+/* spec plate — reuses the hardware nameplate language (.plate-id)
+   to tag each chip with the real SCOPE.md slide code it belongs to,
+   so this page reads as identity keys for actual slides, not an
+   abstract icon study. Sits above the pixel-grid/sheen overlays
+   (z-index 3/4) the same way .lcd .chars already does. */
+.gk-plate {
+  position: absolute; top: 7px; right: 9px; z-index: 2;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em;
+  color: oklch(0.30 0.045 140 / 0.65); text-transform: uppercase;
+}
+
+/* idle motion signature per topic — the point of a talk about web
+   animation is that even its own supporting material should
+   demonstrate motion carrying meaning, not just sit still next to
+   text about it. Each one is a genuinely different feel (breathe /
+   settle / drift / reveal / flicker / tilt / pulse), not the same
+   loop retimed seven ways. All ambient/decorative, so the global
+   prefers-reduced-motion rule in tokens.css stops every one of them
+   without any extra work here. */
+@keyframes gkBreathe { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes gkSettle  { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-2px); } 65% { transform: translateY(0.5px); } }
+@keyframes gkDrift   { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(1.5px, -1px); } }
+@keyframes gkReveal  { 0%, 100% { clip-path: inset(0 0 0 0); } 50% { clip-path: inset(0 55% 0 0); } }
+@keyframes gkFlicker { 0%, 100% { opacity: 1; } 8% { opacity: 0.4; } 16% { opacity: 1; } 45% { opacity: 0.7; } 52% { opacity: 1; } }
+@keyframes gkTilt    { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
+@keyframes gkPulse   { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.55; filter: brightness(1.3); } }
+
+.gk-icon[data-topic="video"]     { animation: gkBreathe 2.4s var(--ease-standard) infinite; }
+.gk-icon[data-topic="css"]       { animation: gkSettle 3.2s var(--ease-detent) infinite; }
+.gk-icon[data-topic="composite"] { animation: gkDrift 3.6s ease-in-out infinite; }
+.gk-icon[data-topic="svg"]       { animation: gkReveal 2.8s steps(6, end) infinite; }
+.gk-icon[data-topic="canvas"]    { animation: gkFlicker 2.6s steps(1, end) infinite; }
+.gk-icon[data-topic="webgl"]     { animation: gkTilt 3.4s ease-in-out infinite alternate; }
+/* ~0.9Hz — well under WCAG 2.3.1's 3Hz seizure threshold, same
+   headroom SCOPE.md's own "fault blink" micro-animation uses */
+.gk-icon[data-topic="webgpu"]    { animation: gkPulse 1.1s steps(2, end) infinite; }
 </style>
 </head>
 <body data-testid="graphic-language-page">
@@ -28,19 +65,20 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
   <div class="head"><h1>graphic language</h1></div>
   <p class="dek">
     Each stage of the presentation's technique spectrum gets its own identity, not just its
-    own colour — a tint and a pixel symbol together, so a slide reads as "this stage" at a
-    glance. Starting point: the two elements that carry furthest at a distance, on the
-    display they'll actually appear on.
+    own colour — a tint, a pixel symbol, a slide-code plate, and now a distinct idle motion
+    per topic, so a slide reads as "this stage" before anyone reads a word of it, on the
+    display it'll actually appear on. A talk about web animation should have its own
+    supporting material demonstrate the thing it argues for.
   </p>
 
   <div class="tints" data-testid="tint-set-key">
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-video)"></span><canvas class="gk-icon" data-topic="video" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-css)"></span><canvas class="gk-icon" data-topic="css" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-composite)"></span><canvas class="gk-icon" data-topic="composite" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-canvas)"></span><canvas class="gk-icon" data-topic="canvas" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgl)"></span><canvas class="gk-icon" data-topic="webgl" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-video)"></span><span class="gk-plate">SL-04</span><canvas class="gk-icon" data-topic="video" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-css)"></span><span class="gk-plate">SL-05</span><canvas class="gk-icon" data-topic="css" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-composite)"></span><span class="gk-plate">SL-06</span><canvas class="gk-icon" data-topic="composite" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-svg)"></span><span class="gk-plate">SL-09</span><canvas class="gk-icon" data-topic="svg" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-canvas)"></span><span class="gk-plate">SL-10</span><canvas class="gk-icon" data-topic="canvas" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgl)"></span><span class="gk-plate">SL-11</span><canvas class="gk-icon" data-topic="webgl" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:84px;padding:0;position:relative;overflow:hidden"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas class="gk-icon" data-topic="webgpu" width="12" height="12" aria-hidden="true"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
   </div>
   <div class="note warn">
     <b>Chip and key read differently on purpose.</b> A material chip (see the system
