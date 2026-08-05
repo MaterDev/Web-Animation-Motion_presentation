@@ -88,6 +88,42 @@
 
   --u: 8px;
   --hair: 1px;
+
+  /* ── slide surface: LED matrix + modular grid ─────────────
+     The deck's slides are treated as content on a pixelated LED
+     panel, and the layout grid is quantised to that panel's own
+     matrix — every margin, column and type size below is a whole
+     number of LED cells, so nothing in a composition can land
+     between pixels. That constraint is what ties the Swedish
+     modular-grid discipline to the hardware premise instead of
+     leaving them as two unrelated ideas.
+
+     The arithmetic, which is the whole reason these values and not
+     rounder-looking ones:
+       stage      960 × 540   (16:9, the deck's real design size)
+       cell         6px       → a 160 × 90 LED matrix
+       margin      48 / 54    → 8 cells side, 9 cells top/bottom
+       field      864 × 432   → 144 × 72 cells
+       module      72 × 72    → 12 × 12 cells, a true square
+       grid        12 × 6 modules, no gutter
+     12 × 72 + 48 + 48 = 960 and 6 × 72 + 54 + 54 = 540 exactly.
+     Change one of these and you have to re-derive the rest. */
+  --led-cell: 6px;
+  --led-module: 72px;
+  --led-margin-x: 48px;
+  --led-margin-y: 54px;
+  --led-ground: oklch(0.12 0.012 265);
+  --led-ink: oklch(0.90 0.015 265);
+  --led-dim: oklch(0.62 0.012 265);
+
+  /* Type scale, also in whole cells (12/8/4/3/2), so a baseline
+     always coincides with a matrix row. Five sizes is the whole
+     scale — the restriction is the point, not a starting set. */
+  --led-display: 72px;
+  --led-head: 48px;
+  --led-sub: 24px;
+  --led-body: 18px;
+  --led-micro: 12px;
 }
 
 @media (min-resolution: 2dppx) { :root { --hair: 0.5px; } }
