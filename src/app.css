@@ -1,0 +1,51 @@
+/* App-level CSS only. Everything visual — tokens, materials,
+   displays, type, the LED slide surface — comes from
+   design/system/*.css, loaded in app.html and served verbatim from
+   static/design/. This file holds the handful of rules that belong
+   to the app shell rather than the design system, so the boundary
+   between "the system" and "this app" stays legible. */
+
+/* SvelteKit renders into a wrapper div; the shell needs full height
+   to make a sticky topbar plus a filling content area work. */
+html, body { height: 100%; }
+
+a { color: var(--tint); }
+
+/* Prose defaults for the long-form document routes (Paper, and the
+   methodology section on Design). Scoped to .prose so the harness's
+   own pages, which arrive inside iframes with their own styling,
+   are untouched. */
+.prose { max-width: 74ch; }
+.prose h1 { font-size: clamp(34px, 5vw, 56px); margin: 0 0 calc(var(--u) * 2); }
+.prose h2 {
+  font-size: 22px; margin: calc(var(--u) * 6) 0 calc(var(--u) * 2);
+  padding-bottom: calc(var(--u) * 1.5);
+  border-bottom: var(--hair) solid var(--hz-300);
+}
+.prose h3 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--hz-600);
+  margin: calc(var(--u) * 4) 0 calc(var(--u) * 1.5);
+}
+.prose p, .prose li { color: var(--hz-600); font-size: 14.5px; line-height: 1.75; }
+.prose li { margin-bottom: calc(var(--u) * 1); }
+.prose ul, .prose ol { padding-left: calc(var(--u) * 3); margin: 0 0 calc(var(--u) * 2); }
+.prose strong { color: var(--hz-900); font-weight: 500; }
+.prose em { color: var(--hz-700); }
+.prose hr { border: 0; border-top: var(--hair) solid var(--hz-300); margin: calc(var(--u) * 5) 0; }
+.prose blockquote {
+  margin: 0 0 calc(var(--u) * 2); padding-left: calc(var(--u) * 2);
+  border-left: 2px solid var(--tint); color: var(--hz-500);
+}
+.prose table { width: 100%; border-collapse: collapse; margin: 0 0 calc(var(--u) * 3); font-size: 13px; }
+.prose th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--hz-400); text-align: left; font-weight: 500;
+  padding: 0 calc(var(--u) * 2) 10px 0; border-bottom: var(--hair) solid var(--hz-400);
+}
+.prose td {
+  padding: 10px calc(var(--u) * 2) 10px 0; border-bottom: var(--hair) solid var(--hz-300);
+  color: var(--hz-600); vertical-align: top;
+}
+.prose a { text-decoration: none; border-bottom: var(--hair) solid color-mix(in oklch, var(--tint) 45%, transparent); }
+.prose a:hover { border-bottom-color: var(--tint); }
