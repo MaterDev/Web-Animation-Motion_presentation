@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>T-06 — Field Unit (Dark)</title>
-<link rel="stylesheet" href="../vendor/fonts.css">
+<link rel="stylesheet" href="../system/fonts.css">
 <!-- Shared system — T-06 is the canonical source these were
      extracted from; edit design/system/*.css, not a copy here. -->
 <link rel="stylesheet" href="../system/tokens.css">
@@ -127,7 +127,7 @@ section { margin-bottom: calc(var(--u) * 12); }
    .giga-page so nothing outside the screen is affected. */
 /* every piece of text on the screen renders in Doto — its dots are
    what makes this read as glowing LCD segments rather than metal-
-   panel type wearing screen-coloured ink. 'ROND' 100 is Doto's own
+   panel type wearing screen-coloured ink. 'ROND' 0 is Doto's own
    axis for how circular each dot is; verified empirically (screen-
    shot at both ends) rather than assumed, since an axis tag typo is
    silently ignored, not an error. */
@@ -144,7 +144,7 @@ section { margin-bottom: calc(var(--u) * 12); }
 }
 .giga-page.is-active { visibility: visible; opacity: 1; pointer-events: auto; }
 .giga-page .brandline { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: calc(var(--u)*3); }
-.giga-page .brandline .mono { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; letter-spacing: 0.02em; color: oklch(0.36 0.05 140); text-shadow: none; }
+.giga-page .brandline .mono { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700; letter-spacing: 0.02em; color: oklch(0.36 0.05 140); text-shadow: none; }
 .giga-page .title-row { display: flex; align-items: flex-end; gap: calc(var(--u)*3); flex-wrap: wrap; }
 /* Doto at weight 900 runs much wider per glyph than the Inter the
    base h1 clamp() was tuned for — "field" alone overflowed the
@@ -152,15 +152,15 @@ section { margin-bottom: calc(var(--u) * 12); }
    it ran past the edge and the screen's overflow:hidden silently
    clipped it, rather than wrapping). A lower, screen-scoped clamp
    plus a break-word safety net keeps every word inside the glass. */
-.giga-page h1 { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 900; letter-spacing: 0; color: oklch(0.26 0.05 140); font-size: clamp(40px, 8vw, 132px); overflow-wrap: break-word; }
-.giga-page .sub { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; color: oklch(0.36 0.05 140); text-shadow: none; text-transform: uppercase; margin-top: calc(var(--u)*2.5); line-height: 1.9; }
+.giga-page h1 { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; letter-spacing: 0; color: oklch(0.26 0.05 140); font-size: clamp(40px, 8vw, 132px); overflow-wrap: break-word; }
+.giga-page .sub { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700; font-size: 11px; letter-spacing: 0.03em; color: oklch(0.36 0.05 140); text-shadow: none; text-transform: uppercase; margin-top: calc(var(--u)*2.5); line-height: 1.9; }
 .giga-page .lightpipe { margin-top: calc(var(--u)*3); max-width: 340px; background: oklch(0.2 0.05 130 / 0.22); }
 .giga-page .strip { display: flex; align-items: center; gap: calc(var(--u)*3.5); flex-wrap: wrap; margin-top: calc(var(--u)*4); padding-top: calc(var(--u)*3); border-top: var(--hair) solid oklch(0.2 0.05 130 / 0.25); }
-.giga-page .modline .k { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; color: oklch(0.42 0.05 140 / 0.75); }
-.giga-page .modline .v { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; color: oklch(0.28 0.05 140); }
+.giga-page .modline .k { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700; color: oklch(0.42 0.05 140 / 0.75); }
+.giga-page .modline .v { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700; color: oklch(0.28 0.05 140); }
 /* the clock — plain on-screen digits now, no separate LCD-in-LCD
    wrapper needed since the whole background already IS the LCD */
-.giga-clock { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: oklch(0.26 0.05 140); font-variant-numeric: tabular-nums; }
+.giga-clock { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 700; font-size: 15px; letter-spacing: 0.06em; color: oklch(0.26 0.05 140); font-variant-numeric: tabular-nums; }
 
 /* flatten every physical control inside the screen — a chrome knob,
    a slide switch, glossy LED beads and a keycap button sitting on
@@ -227,8 +227,8 @@ section { margin-bottom: calc(var(--u) * 12); }
   animation: gigaBob 1.6s steps(2) infinite;
 }
 @keyframes gigaBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-.giga-readout .idx { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-size: 15px; font-weight: 700; color: oklch(0.26 0.05 140); opacity: 0.7; display: block; }
-.giga-readout .title { font-family: var(--dot); font-variation-settings: 'ROND' 100; font-size: clamp(18px, 3.4vw, 30px); font-weight: 700; color: oklch(0.26 0.05 140); line-height: 1.25; display: block; max-width: 20ch; }
+.giga-readout .idx { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-size: 15px; font-weight: 700; color: oklch(0.26 0.05 140); opacity: 0.7; display: block; }
+.giga-readout .title { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-size: clamp(18px, 3.4vw, 30px); font-weight: 700; color: oklch(0.26 0.05 140); line-height: 1.25; display: block; max-width: 20ch; }
 
 /* Narrow screens: the row layout above measured out at a real
    390px viewport with the canvas (flex:none, sized off vw) wider

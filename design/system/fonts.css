@@ -1,0 +1,63 @@
+/* ═══════════════════════════════════════════════════════════════
+   WAM-2026 · FONTS
+   Part of the design system, not a generated artefact — this file is
+   the single declaration of the type stack, and both consumers read
+   it directly:
+
+   - the app  @imports it, so Vite resolves the url()s, bundles them
+     and content-hashes the woff2 files
+   - the harness sheets <link> it, and the same relative url()s
+     resolve on disk with no build step
+
+   The .woff2 files under ../vendor/fonts/ are copied out of the
+   @fontsource-variable packages by scripts/vendor.js. They are a
+   dependency materialised on disk, which is what lets the buildless
+   harness use them; the app never reaches into vendor/ for anything
+   else, it imports three and animejs from node_modules like normal.
+
+   Family names are the ones tokens.css asks for ('Inter', not
+   'Inter Variable'), so the tokens stay the source of truth for what
+   the type stack is and nothing downstream has to know these came
+   from Fontsource.
+
+   Doto uses the `full` file specifically, because the system drives
+   both its axes: weight and ROND.
+
+   ⚠ ROND 0 = SQUARE pixels. ROND 100 = round dots. The system wants
+   square — the whole premise is an LED pixel matrix, and round dots
+   read as a dot-matrix printer instead.
+
+   This bit off: while the fonts came from a Google Fonts URL that
+   requested only `Doto:wght@...`, the ROND axis wasn't in the file
+   at all, so the system's `font-variation-settings: 'ROND' 100` was
+   silently inert and everything rendered at Doto's square default.
+   Self-hosting the full variant exposed the axis, that setting took
+   effect for the first time, and every headline on the site quietly
+   turned round. Values are now ROND 0 everywhere, which is what the
+   design always looked like — but stated deliberately rather than
+   depending on a missing axis to be ignored.
+   ═══════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../vendor/fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 800;
+  src: url('../vendor/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Doto';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../vendor/fonts/doto-latin-full-normal.woff2') format('woff2-variations');
+}
