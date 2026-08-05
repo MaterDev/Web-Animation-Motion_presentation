@@ -46,15 +46,57 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 @keyframes gkTilt    { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(7deg); } }
 @keyframes gkPulse   { 0%, 100% { opacity: 1; filter: brightness(1); } 50% { opacity: 0.55; filter: brightness(1.3); } }
 
-.gk-icon[data-topic="video"], .gk-expanded[data-topic="video"]         { animation: gkBreathe 2.4s var(--ease-standard) infinite; }
-.gk-icon[data-topic="css"], .gk-expanded[data-topic="css"]             { animation: gkSettle 3.2s var(--ease-detent) infinite; }
-.gk-icon[data-topic="composite"], .gk-expanded[data-topic="composite"] { animation: gkDrift 3.6s ease-in-out infinite; }
-.gk-icon[data-topic="svg"], .gk-expanded[data-topic="svg"]             { animation: gkReveal 2.8s steps(6, end) infinite; }
-.gk-icon[data-topic="canvas"], .gk-expanded[data-topic="canvas"]       { animation: gkFlicker 2.6s steps(1, end) infinite; }
-.gk-icon[data-topic="webgl"], .gk-expanded[data-topic="webgl"]         { animation: gkTilt 3.4s ease-in-out infinite alternate; }
+/* small compact-key icons — the whole 12x12 bitmap is one shape, so
+   the whole element animates as one unit. Fine at that scale; you
+   can't tell "the whole icon" from "one part of it" when it's 34px. */
+.gk-icon[data-topic="video"]     { animation: gkBreathe 2.4s var(--ease-standard) infinite; }
+.gk-icon[data-topic="css"]       { animation: gkSettle 3.2s var(--ease-detent) infinite; }
+.gk-icon[data-topic="composite"] { animation: gkDrift 3.6s ease-in-out infinite; }
+.gk-icon[data-topic="svg"]       { animation: gkReveal 2.8s steps(6, end) infinite; }
+.gk-icon[data-topic="canvas"]    { animation: gkFlicker 2.6s steps(1, end) infinite; }
+.gk-icon[data-topic="webgl"]     { animation: gkTilt 3.4s ease-in-out infinite alternate; }
+.gk-icon[data-topic="webgpu"]    { animation: gkPulse 1.1s steps(2, end) infinite; }
+
+/* expanded marks — each is now DRAWN as separate layered canvases
+   (.gk-part, one per shape, plus a static .gk-reg for the corner
+   ticks) instead of one flat bitmap, specifically so the motion can
+   act on what the content actually depicts rather than wobbling the
+   whole picture uniformly: a frame jumping ahead, bars cascading in
+   one after another, layers popping in in sequence, dots flickering
+   independently, facets catching light out of phase with each
+   other, pins pulsing while the chip body itself stays put. */
+@keyframes gkAdvance { 0%, 72% { transform: translateX(0); } 74%, 100% { transform: translateX(3px); } }
+@keyframes gkPop     { 0%, 100% { opacity: 0.5; transform: scale(0.93); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes gkTwinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+.gk-part[data-topic="video"][data-part="front"] { animation: gkAdvance 2.2s steps(1, end) infinite; }
+
+.gk-part[data-topic="css"] { animation: gkSettle 2.4s var(--ease-detent) infinite; }
+.gk-part[data-topic="css"][data-part="bar2"] { animation-delay: 0.25s; }
+.gk-part[data-topic="css"][data-part="bar3"] { animation-delay: 0.5s; }
+
+.gk-part[data-topic="composite"] { animation: gkPop 3s ease-in-out infinite; }
+.gk-part[data-topic="composite"][data-part="sq2"] { animation-delay: 0.4s; }
+.gk-part[data-topic="composite"][data-part="sq3"] { animation-delay: 0.8s; }
+
+.gk-part[data-topic="svg"] { animation: gkReveal 2.8s steps(6, end) infinite; }
+
+.gk-part[data-topic="canvas"] { animation: gkTwinkle 1.8s steps(1, end) infinite; }
+.gk-part[data-topic="canvas"][data-part="d2"] { animation-delay: 0.3s; animation-duration: 2.1s; }
+.gk-part[data-topic="canvas"][data-part="d3"] { animation-delay: 0.6s; animation-duration: 1.5s; }
+.gk-part[data-topic="canvas"][data-part="d4"] { animation-delay: 0.9s; animation-duration: 2.4s; }
+.gk-part[data-topic="canvas"][data-part="d5"] { animation-delay: 1.2s; animation-duration: 1.7s; }
+.gk-part[data-topic="canvas"][data-part="d6"] { animation-delay: 1.5s; animation-duration: 2s; }
+
+.gk-part[data-topic="webgl"][data-part="tri1"] { animation: gkTilt 3.2s ease-in-out infinite alternate; }
+.gk-part[data-topic="webgl"][data-part="tri2"] { animation: gkTilt 2.6s ease-in-out infinite alternate-reverse; animation-delay: 0.3s; }
+
 /* ~0.9Hz — well under WCAG 2.3.1's 3Hz seizure threshold, same
-   headroom SCOPE.md's own "fault blink" micro-animation uses */
-.gk-icon[data-topic="webgpu"], .gk-expanded[data-topic="webgpu"]       { animation: gkPulse 1.1s steps(2, end) infinite; }
+   headroom SCOPE.md's own "fault blink" micro-animation uses.
+   Pins pulse; the chip body itself is drawn as part of .gk-reg's
+   sibling static layer and never animates — silicon doesn't flicker,
+   I/O does. */
+.gk-part[data-topic="webgpu"][data-part="pins"] { animation: gkPulse 1.1s steps(2, end) infinite; }
 
 .gk-sec-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-500); margin: 40px 0 8px; }
 .gk-sec-note { font-size: 13px; color: var(--hz-500); max-width: 62ch; margin: 0 0 18px; }
@@ -125,13 +167,13 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
     facet lattice, circuit vias — not one texture recoloured seven times.
   </p>
   <div class="tints" data-testid="gk-expanded-set">
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-video)"></span><span class="gk-plate">SL-04</span><canvas class="gk-expanded" data-topic="video" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-css)"></span><span class="gk-plate">SL-05</span><canvas class="gk-expanded" data-topic="css" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-composite)"></span><span class="gk-plate">SL-06</span><canvas class="gk-expanded" data-topic="composite" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-svg)"></span><span class="gk-plate">SL-09</span><canvas class="gk-expanded" data-topic="svg" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-canvas)"></span><span class="gk-plate">SL-10</span><canvas class="gk-expanded" data-topic="canvas" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgl)"></span><span class="gk-plate">SL-11</span><canvas class="gk-expanded" data-topic="webgl" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
-    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><canvas id="gkExpandedWebgpu" class="gk-expanded" data-topic="webgpu" width="28" height="28" aria-hidden="true" style="width:88px;height:88px;position:relative;z-index:2;image-rendering:pixelated"></canvas></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-video)"></span><span class="gk-plate">SL-04</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="video" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="back" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="video" data-part="front" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">00</div><div class="l">video</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-css)"></span><span class="gk-plate">SL-05</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="css" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="css" data-part="bar3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">01</div><div class="l">css</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-composite)"></span><span class="gk-plate">SL-06</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="composite" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="composite" data-part="sq3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">02</div><div class="l">composite</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-svg)"></span><span class="gk-plate">SL-09</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="svg" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="svg" data-part="main" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">03</div><div class="l">svg</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-canvas)"></span><span class="gk-plate">SL-10</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="canvas" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d3" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d4" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d5" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="canvas" data-part="d6" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">04</div><div class="l">canvas</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgl)"></span><span class="gk-plate">SL-11</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="webgl" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri1" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgl" data-part="tri2" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">05</div><div class="l">webgl</div></div></div>
+    <div class="tint-card" style="cursor:default"><div class="well" style="display:block;padding:4px"><div class="lcd gk-lcd" style="height:150px;padding:0;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center"><span class="wash" style="background:var(--tint-webgpu)"></span><span class="gk-plate">SL-13</span><div style="position:relative;width:88px;height:88px;z-index:2"><canvas class="gk-reg" data-topic="webgpu" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="body" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas><canvas class="gk-part" data-topic="webgpu" data-part="pins" width="28" height="28" aria-hidden="true" style="position:absolute;inset:0;width:88px;height:88px;image-rendering:pixelated"></canvas></div></div></div><div class="cap"><div class="n">06</div><div class="l">webgpu</div></div></div>
   </div>
 
   <div class="gk-sec-label">Active vs inactive — only one topic is current at a time</div>
@@ -314,57 +356,59 @@ function triRightN(g, x0, y0, size) {
 }
 
 const EXPANDED_GRID = 28;
-/* Each mark is an asymmetric arrangement of a few related shapes
-   with real negative space, not a single centred symmetric glyph —
-   the "vibe" is meant to come from the composition itself, not a
-   texture layered behind it (see the note above where the old
-   tiled-pattern approach used to live). */
-const EXPANDED_ICONS = {
-  video: () => {
-    const g = blankN(28);
-    rectOutlineN(g, 2, 2, 12, 9, 1.5);   // smaller frame, back-left
-    rectOutlineN(g, 9, 10, 17, 13, 2);   // larger frame, overlapping
-    return triRightN(g, 14, 14, 6);       // play mark inside the front frame
+/* Each mark is split into separately-drawn PARTS (one canvas per
+   part, stacked) rather than one flat bitmap, specifically so each
+   part can be animated independently in the <style> block above —
+   a frame jumping ahead, bars cascading, layers popping in one at a
+   time, dots flickering independently, facets out of phase, pins
+   pulsing while the body stays put. A part with no matching CSS
+   animation rule (video's "back" frame, webgpu's "body") just sits
+   still, which is itself part of the point for webgpu specifically. */
+const PART_DRAWS = {
+  video: {
+    back:  () => rectOutlineN(blankN(28), 2, 2, 12, 9, 1.5),
+    front: () => { const g = blankN(28); rectOutlineN(g, 9, 10, 17, 13, 2); return triRightN(g, 14, 14, 6); },
   },
-  css: () => {
-    const g = blankN(28);
-    rectN(g, 3, 4, 17, 3);   // cascading bars, each shifted right + down
-    rectN(g, 7, 12, 13, 3);
-    return rectN(g, 11, 20, 9, 3);
+  css: {
+    bar1: () => rectN(blankN(28), 3, 4, 17, 3),
+    bar2: () => rectN(blankN(28), 7, 12, 13, 3),
+    bar3: () => rectN(blankN(28), 11, 20, 9, 3),
   },
-  composite: () => {
-    const g = blankN(28);
-    rectOutlineN(g, 2, 2, 11, 11, 2);
-    rectOutlineN(g, 9, 8, 13, 13, 2);
-    return rectOutlineN(g, 15, 16, 9, 9, 2);
+  composite: {
+    sq1: () => rectOutlineN(blankN(28), 2, 2, 11, 11, 2),
+    sq2: () => rectOutlineN(blankN(28), 9, 8, 13, 13, 2),
+    sq3: () => rectOutlineN(blankN(28), 15, 16, 9, 9, 2),
   },
-  svg: () => {
-    const g = blankN(28);
-    lineN(g, 3, 24, 9, 15); lineN(g, 9, 15, 14, 18); lineN(g, 14, 18, 23, 5);
-    circleN(g, 3, 24, 1.8); circleN(g, 9, 15, 1.8); circleN(g, 14, 18, 1.8);
-    return circleN(g, 23, 5, 1.8);
+  svg: {
+    main: () => {
+      const g = blankN(28);
+      lineN(g, 3, 24, 9, 15); lineN(g, 9, 15, 14, 18); lineN(g, 14, 18, 23, 5);
+      circleN(g, 3, 24, 1.8); circleN(g, 9, 15, 1.8); circleN(g, 14, 18, 1.8);
+      return circleN(g, 23, 5, 1.8);
+    },
   },
-  canvas: () => {
-    const g = blankN(28);
-    circleN(g, 6, 8, 1.4); circleN(g, 12, 5, 0.9); circleN(g, 18, 11, 1.8);
-    circleN(g, 9, 17, 1.1); circleN(g, 22, 20, 1.4);
-    return circleN(g, 15, 23, 0.9);
+  canvas: {
+    d1: () => circleN(blankN(28), 6, 8, 1.4),
+    d2: () => circleN(blankN(28), 12, 5, 0.9),
+    d3: () => circleN(blankN(28), 18, 11, 1.8),
+    d4: () => circleN(blankN(28), 9, 17, 1.1),
+    d5: () => circleN(blankN(28), 22, 20, 1.4),
+    d6: () => circleN(blankN(28), 15, 23, 0.9),
   },
-  webgl: () => {
-    const g = blankN(28);
-    lineN(g, 4, 21, 13, 5); lineN(g, 13, 5, 19, 17); lineN(g, 19, 17, 4, 21);   // triangle, back-left
-    lineN(g, 15, 23, 21, 10); lineN(g, 21, 10, 26, 20);                          // triangle, front-right, smaller
-    return lineN(g, 26, 20, 15, 23);
+  webgl: {
+    tri1: () => { const g = blankN(28); lineN(g,4,21,13,5); lineN(g,13,5,19,17); return lineN(g,19,17,4,21); },
+    tri2: () => { const g = blankN(28); lineN(g,15,23,21,10); lineN(g,21,10,26,20); return lineN(g,26,20,15,23); },
   },
-  webgpu: () => {
-    const g = blankN(28);
-    rectN(g, 9, 9, 10, 10);              // chip body
-    rectOutlineN(g, 12, 12, 4, 4, 1);    // internal die outline
-    [11, 13, 15, 17].forEach(p => {      // 4 pins per side
-      lineN(g, p, 5, p, 9); lineN(g, p, 19, p, 23);
-      lineN(g, 5, p, 9, p); lineN(g, 19, p, 23, p);
-    });
-    return g;
+  webgpu: {
+    body: () => { const g = blankN(28); rectN(g, 9, 9, 10, 10); return rectOutlineN(g, 12, 12, 4, 4, 1); },
+    pins: () => {
+      const g = blankN(28);
+      [11, 13, 15, 17].forEach(p => {
+        lineN(g, p, 5, p, 9); lineN(g, p, 19, p, 23);
+        lineN(g, 5, p, 9, p); lineN(g, 19, p, 23, p);
+      });
+      return g;
+    },
   },
 };
 function regTicks() {
@@ -381,18 +425,20 @@ function webgpuVias() {
   [[3,14],[24,7],[24,20],[7,24],[20,24],[3,7]].forEach(([x,y]) => { g[y][x] = true; });
   return g;
 }
-document.querySelectorAll('.gk-expanded').forEach(cv => {
-  const draw = EXPANDED_ICONS[cv.dataset.topic];
-  if (!draw) return;
+function paintGrid(ctx, grid, alpha) {
+  ctx.globalAlpha = alpha; ctx.fillStyle = 'oklch(0.26 0.05 140)';
+  for (let y = 0; y < EXPANDED_GRID; y++) for (let x = 0; x < EXPANDED_GRID; x++)
+    if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
+}
+document.querySelectorAll('.gk-reg').forEach(cv => {
   const ctx = cv.getContext('2d');
-  const drawLayer = (grid, alpha) => {
-    ctx.globalAlpha = alpha; ctx.fillStyle = 'oklch(0.26 0.05 140)';
-    for (let y = 0; y < EXPANDED_GRID; y++) for (let x = 0; x < EXPANDED_GRID; x++)
-      if (grid[y][x]) ctx.fillRect(x, y, 1, 1);
-  };
-  if (cv.dataset.topic === 'webgpu') drawLayer(webgpuVias(), 0.35);
-  drawLayer(regTicks(), 0.55);
-  drawLayer(draw(), 1);
+  if (cv.dataset.topic === 'webgpu') paintGrid(ctx, webgpuVias(), 0.35);
+  paintGrid(ctx, regTicks(), 0.55);
+});
+document.querySelectorAll('.gk-part').forEach(cv => {
+  const draw = PART_DRAWS[cv.dataset.topic]?.[cv.dataset.part];
+  if (!draw) return;
+  paintGrid(cv.getContext('2d'), draw(), 1);
 });
 </script>
 
