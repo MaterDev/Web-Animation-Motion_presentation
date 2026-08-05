@@ -12,6 +12,7 @@
       code: 'MTH',
       title: 'methodology',
       note: 'Scope, design research, six treatments, extraction into a system — and why the process is built this way.',
+      status: 'written',
     },
     {
       href: '/design/treatments',
@@ -19,6 +20,7 @@
       title: 'treatments',
       meta: `${TREATMENTS.length}`,
       note: 'The competing directions, in the order they were made. Five superseded, one kept.',
+      status: 'all viewable',
     },
     {
       href: '/design/reference?sheet=sys',
@@ -26,6 +28,7 @@
       title: 'reference',
       meta: `${SHEETS.length}`,
       note: 'Live sheets — materials, motion, graphic language, layouts, and one demo per rendering technique.',
+      status: 'running code',
     },
   ];
 </script>

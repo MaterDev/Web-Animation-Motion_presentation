@@ -20,7 +20,38 @@ This document was written **before** the six treatments were built, and it did i
 
 **4. Motion collapsed to one curve.** Seven decorative curves were tried and cut. See Part 2.
 
+**5. There are two displays, and which one you use is a rule, not a preference.** See below — this is the single most load-bearing thing to get right, and the easiest to get backwards.
+
 **Kept treatment:** T-06 (Field Unit, dark). The other five are still in `design/treatments/` and viewable in the app at `/design/treatments`.
+
+### The two displays
+
+Every surface in this system is one of two screens. They are not interchangeable, and using the wrong one is the fastest way to make something look off-brand.
+
+| | **LCD** — reflective | **LED** — emissive |
+|---|---|---|
+| Ground | backlit green (`--lcd-ground-top/bot`) | near-black (`--led-ground`) |
+| Ink | dark green (`--lcd-ink`, `--lcd-dim`) | light (`--led-ink`, `--led-dim`) |
+| Texture | fine pixel grid + a diagonal sheen | 6px cell matrix + edge vignette |
+| Components | `.well` › `.lcd`, `.lcd-panel`, `.lcd-*` | `.led-slide`, `.screen-unit` / `.screen-face` |
+| **Used for** | **the app itself** — every page, card, hero and readout | **the deck's slides**, and only those |
+
+The reasoning is literal rather than aesthetic: **the app is the instrument, and the slides are what the instrument outputs.** An instrument's own chrome is its readout panel — reflective, backlit, dark ink, the thing you look *at*. What it drives is an emissive display — the thing you look *through*, in a dark room, from the back. Build a card out of the slide surface and the app starts looking like a deck; build a slide out of the LCD and it stops reading as a projected image.
+
+**The default is LCD.** If you're adding a surface to the app and you're unsure, it's LCD.
+
+#### Use the readout vocabulary, not generic UI
+
+The failure mode isn't picking the wrong screen — it's picking neither and reaching for a plain card. A panel should carry the furniture a real readout carries, because that furniture *is* the aesthetic:
+
+- **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 15`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
+- **`.lcd-strip`** — the row those sit in, along the bottom of a panel.
+- **`.led` inside `.lcd`** — status lamps, automatically flattened to screen content (no dome, no bloom). Same rule as slides: indicators drawn on a screen are graphics, not hardware.
+- **`.lcd.sm` / `.lcd.strip` in a `.well`** — small standalone readout chips (`12:04`, `06/14`, `RUNNING`), for data that belongs on its own little screen rather than inside a bigger one.
+- **`.lcd.amber`** — the caution backlight. A *second* backlight colour, so it means over-time or fault, never decoration.
+- **`.wash`** — tints the backlight itself rather than painting over it, so a tinted panel still reads as the same screen.
+
+`/design/reference?sheet=gfx` is the closest existing example of this vocabulary used properly, and is the reference to match.
 
 ---
 
