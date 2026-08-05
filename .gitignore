@@ -5,16 +5,28 @@ node_modules/
 dist/
 build/
 .vite/
+/.svelte-kit
+.output
+.netlify
+.vercel
+.wrangler
+
+# generated: copied from design/ and node_modules by scripts/
+static/design/
+design/vendor/
 
 # env
 .env
 .env.local
 .env.*.local
+.env.*
+!.env.example
 
 # tooling / scratch
 .playwright-mcp/
 test-results/
 playwright-report/
+vite.config.js.timestamp-*
 
 # editor / os
 .DS_Store

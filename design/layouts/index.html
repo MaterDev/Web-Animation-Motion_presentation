@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Layouts — WAM-2026</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200..800&family=JetBrains+Mono:wght@400;500;700&family=Doto:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../vendor/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
@@ -729,7 +727,7 @@ modal.addEventListener('click', e => { if (e.target === modal) modal.close(); })
 /* spring(), not createSpring() — the latter still works but logs a
    deprecation warning in v4. Caught from the real console, which is
    the only way that kind of thing surfaces. */
-import { createLayout, spring } from 'https://cdn.jsdelivr.net/npm/animejs@4/+esm';
+import { createLayout, spring } from '../vendor/anime.esm.js';
 
 const ARRS = ['arr-a', 'arr-b', 'arr-c', 'arr-d'];
 const field = document.getElementById('txField');
