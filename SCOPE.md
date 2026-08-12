@@ -1,6 +1,6 @@
 # Web Animation & Motion — Presentation Scope
 
-**Presenter:** k (jclark@folklore.digital)
+**Presenter:** Key Clark (hello@primatif.com)
 **Presentation date:** Friday, August 21, 2026
 **Doc drafted:** August 3, 2026 · **Last revised:** August 5, 2026
 
@@ -43,7 +43,7 @@ Custom-built app, not PowerPoint/Keynote, so animation/interaction examples run 
 
 ## The Thread Demo
 
-A single recurring visual runs through the entire deck: **a particle system that assembles into the Folklore brandmark.**
+A single recurring visual runs through the entire deck: **a particle system that assembles into a personal brandmark.**
 
 Why this concept:
 - **It escalates naturally.** Particle count and simulation fidelity are the exact axis on which these technologies differ — a handful of particles in SVG, more in Canvas, thousands in WebGL, millions via WebGPU compute shaders. The audience sees the capability jump rather than being told about it.
