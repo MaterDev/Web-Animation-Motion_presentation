@@ -328,7 +328,7 @@ const SLIDES = [
   { n: '12', code: 'SL-12', title: 'same tech, different surfaces', layout: 'quad', tint: 'var(--led-ink)',
     kicker: 'Beyond the Browser', h: 'one build,<br>four surfaces',
     items: ['broadcast lower-third', 'digital signage', 'ad creative', 'social video'] },
-  { n: '13', code: 'SL-13', title: 'webgpu: the new layer', layout: 'glass-bleed', tint: 'var(--tint-webgpu)',
+  { n: '13', code: 'SL-13', title: 'webgpu: the new layer', layout: 'led-bleed', tint: 'var(--tint-webgpu)',
     kicker: 'WebGPU', h: 'compute shaders', body: 'The particle count WebGL can\'t sustain — the payoff of the whole callback chain.',
     readout: [['1.2', 'm particles']] },
   { n: '14', code: 'SL-14', title: 'building the version without it', layout: 'ladder', tint: 'var(--signal)',
@@ -569,17 +569,24 @@ function renderSlide(s) {
       </div>`);
   }
 
-  /* 13 — the payoff slide. Full-bleed demo, glass card bottom-right,
-     one number on an LCD. The only slide that uses bleed and glass
-     together, which is what makes it land as the peak. */
-  if (s.layout === 'glass-bleed') {
+  /* 13 — the payoff slide. Full-bleed demo, a flat LED readout card
+     bottom-right, one number on an LCD.
+
+     Also carried glass, and for the same reason SL-01 dropped it:
+     it's a second, glossier material undercutting the one thing the
+     whole deck has been arguing — that everything here lives on a
+     pixel screen. Same swap as SL-01: .led-cellblock, registration
+     brackets, lit type, align-self:start so the box's height always
+     matches its content rather than trusting a guessed track. */
+  if (s.layout === 'led-bleed') {
     return shell(`
       <div class="led-bleed" style="background:radial-gradient(90% 120% at 40% 50%, color-mix(in oklch, var(--tint) 46%, transparent), transparent 70%)">${FIELDART}</div>
       <div class="led-field">
         ${readout(s.readout, 'grid-column:1/5;grid-row:1/2;height:56px')}
-        <div class="led-glass" style="grid-column:6/13;grid-row:4/7;display:flex;flex-direction:column;justify-content:center;gap:12px">
-          <h4 class="led-head" style="color:var(--led-ink)">${s.h}</h4>
-          <p class="led-body" style="color:oklch(0.86 0.01 265)">${s.body || ''}</p>
+        <div class="led-cellblock" style="grid-column:6/13;grid-row:4/7;align-self:start;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:22px 24px">
+          ${REG}
+          <h4 class="led-head led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
         </div>
       </div>`);
   }

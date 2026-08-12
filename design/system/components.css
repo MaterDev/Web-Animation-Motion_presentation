@@ -926,16 +926,26 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 /* ── ON-SCREEN FURNITURE ──────────────────────────────────
    What is allowed to appear ON a slide, and what isn't, is a real
    rule rather than a style preference: a slide is screen content,
-   so it gets emissive graphics, glass, and other displays. The
-   chassis materials — moulded plastic, chamfers, knurl, recessed
-   wells — stay off it. Putting a plastic bezel inside the screen is
-   the same category error T-06 already fixed once when the
-   screen-interior controls were reading as hardware.
+   so it gets emissive graphics and other displays. The chassis
+   materials — moulded plastic, chamfers, knurl, recessed wells —
+   stay off it. Putting a plastic bezel inside the screen is the same
+   category error T-06 already fixed once when the screen-interior
+   controls were reading as hardware.
 
-   Glass is the one material that crosses the line, and legitimately:
-   Apple's own premise for Liquid Glass is a layer floating over
-   content, which is exactly what a caption card over a running demo
-   is. So on a slide, glass is the overlay material. */
+   Glass was tried as the overlay material for a caption card over a
+   running demo (Apple's own premise for Liquid Glass is exactly
+   that: a layer floating over content) and removed from every slide
+   that used it — SL-01 and SL-13, both fixed in the same pass. Two
+   problems, not one: a frosted card is a second, glossier material
+   competing with "this is a pixel screen," which undercuts the
+   thing every slide is supposed to announce; and its box read as a
+   flex container inside a CSS grid cell, which defaults to
+   stretching to a fixed track rather than sizing to its content, so
+   real copy at real sizes silently overflowed past the card's own
+   painted edge. A flat `.led-cellblock` with registration brackets
+   and lit type is the overlay material now, everywhere — the
+   `.glass-*` chassis materials above are unaffected, this was only
+   ever about what sits on the screen. */
 
 /* an LCD readout embedded in the LED slide — a second, reflective
    display sitting inside the emissive one. Reads as instrumentation
@@ -960,27 +970,6 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 }
 .led-readout .v { font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; position: relative; z-index: 2; }
 .led-readout .k { font-family: var(--mono); font-weight: 500; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.62; position: relative; z-index: 2; }
-
-/* glass caption card — the overlay layer. Sits over a running demo
-   rather than beside it, which is the whole reason to reach for
-   glass instead of just another panel. */
-.led-glass {
-  position: relative; border-radius: 14px; padding: 24px 26px;
-  background: linear-gradient(150deg, oklch(1 0 0 / 0.16), oklch(1 0 0 / 0.04) 45%, oklch(1 0 0 / 0.12));
-  backdrop-filter: blur(10px) saturate(150%) brightness(1.05);
-  box-shadow:
-    inset 0 1.5px 0 oklch(1 0 0 / 0.55),
-    inset 0 -1.5px 0 oklch(1 0 0 / 0.22),
-    inset 2px 0 0 oklch(1 0 0 / 0.18),
-    inset -2px 0 0 oklch(1 0 0 / 0.18),
-    inset 0 0 26px -10px oklch(1 0 0 / 0.5),
-    0 14px 40px oklch(0 0 0 / 0.42);
-}
-.led-glass::before {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(122deg, oklch(1 0 0 / 0.34) 0 7%, transparent 22% 78%, oklch(1 0 0 / 0.16) 94% 100%);
-  mix-blend-mode: screen;
-}
 
 /* registration brackets — the same corner marks the graphic-language
    chips use, carried onto the slide so a media well reads as a
