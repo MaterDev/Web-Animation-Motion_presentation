@@ -1,6 +1,9 @@
 import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
+
+const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
 /* Config lives here rather than in a svelte.config.js — that's the
    current SvelteKit shape (verified against what `sv create`
@@ -17,6 +20,15 @@ import { defineConfig } from 'vite';
    `strict: true` makes the build fail if a route can't be
    prerendered, rather than silently shipping a broken page. */
 export default defineConfig({
+  server: {
+    // SvelteKit's default fs.allow only covers src/, .svelte-kit/ and
+    // node_modules — src/app.css @imports design/system/fonts.css,
+    // whose url()s resolve to design/vendor/fonts/*.woff2 (gitignored,
+    // built by `bun run vendor`). Those requests 403'd with "outside
+    // of Vite serving allow list" until the project root itself was
+    // added here; confirmed live in a browser, not assumed from docs.
+    fs: { allow: [projectRoot] },
+  },
   plugins: [
     sveltekit({
       compilerOptions: {

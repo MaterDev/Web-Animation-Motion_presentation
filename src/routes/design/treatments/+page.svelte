@@ -139,17 +139,21 @@
     border-top: var(--hair) solid var(--hz-300);
   }
 
-  /* ── list ── */
+  /* ── list ──
+     Each row carries its own inset edge/shadow rather than a hard
+     border, so a small gap reads as barely-there separation — two
+     shadows almost touching look like one continuous block. Gap and
+     padding both opened up from the first pass for that reason. */
   .list {
-    list-style: none; margin: 0; padding: calc(var(--u) * 1.5);
-    display: flex; flex-direction: column; gap: 4px;
+    list-style: none; margin: 0; padding: calc(var(--u) * 2);
+    display: flex; flex-direction: column; gap: calc(var(--u) * 1.75);
     border-right: var(--hair) solid var(--hz-300);
   }
   .row {
-    display: flex; flex-direction: column; gap: 5px; width: 100%;
+    display: flex; flex-direction: column; gap: 7px; width: 100%;
     text-align: left; cursor: pointer; border: 0;
-    padding: calc(var(--u) * 1.5) calc(var(--u) * 2);
-    border-radius: 5px; background: var(--hz-100);
+    padding: calc(var(--u) * 2) calc(var(--u) * 2.25);
+    border-radius: 6px; background: var(--hz-100);
     box-shadow: var(--edge);
     transition: background var(--dur-fast) var(--ease-standard),
                 box-shadow var(--dur-fast) var(--ease-standard);
