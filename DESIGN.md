@@ -626,8 +626,8 @@ Steps 1–4 are roughly a day and produce a working presentation tool with place
 
 ## Open Questions
 
-1. **Brandmark asset.** SCOPE.md §Dependencies needs Folklore vector path data for the particle target. It should also drive the app's own identity — a loading state that assembles the mark from particles would tie chrome and content together for near-zero extra cost.
-2. **Typeface licensing.** If commercial faces (Diatype, Suisse, Söhne, Berkeley Mono) are available under an existing Folklore licence, they meaningfully raise the ceiling. Otherwise Inter + JetBrains Mono + Doto is a genuinely strong free stack.
-3. **Existing Folklore brand guide.** SCOPE.md §Format says one is to be supplied. If it exists, it outranks this document — this is a proposal, and the section-tint system in particular should be checked against real brand colour before it's built.
+1. **Brandmark asset.** SCOPE.md §Dependencies needs personal vector path data for the particle target. It should also drive the app's own identity — a loading state that assembles the mark from particles would tie chrome and content together for near-zero extra cost.
+2. **Typeface licensing.** If commercial faces (Diatype, Suisse, Söhne, Berkeley Mono) are available under an existing personal licence, they meaningfully raise the ceiling. Otherwise Inter + JetBrains Mono + Doto is a genuinely strong free stack.
+3. **Existing personal brand guide.** SCOPE.md §Format says one is to be supplied. If it exists, it outranks this document — this is a proposal, and the section-tint system in particular should be checked against real brand colour before it's built.
 4. **Projector test.** The dark palette and hairline details are the two things most likely to fail on real projection hardware. Book time.
 5. **Nothing's `Ndot` licence.** Flagged `⚠︎ VERIFY` — confirm before shipping it.

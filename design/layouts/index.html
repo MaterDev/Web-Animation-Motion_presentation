@@ -241,7 +241,7 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
   <div class="tx-box" id="txBox" data-testid="transition-preview">
     <div class="led-slide" id="txStage" style="--tint:var(--tint-composite)">
       <div class="led-chrome top"><span id="txKicker">Arrangement A</span><span>07 / 15</span></div>
-      <div class="led-chrome bot"><span>SL-07 · layout animation</span><span>Folklore</span></div>
+      <div class="led-chrome bot"><span>SL-07 · layout animation</span><span>Key Clark</span></div>
       <div class="led-field arr-a" id="txField">
         <div data-lb="t"><h4 class="led-head led-lit" id="txTitle">measure,<br>then move</h4></div><!-- nowrap below: the docs flag text reflowing mid-transition as a known cause of jumping, since intermediate frames can hit a width the text wraps at even when both end states don't -->
         <div data-lb="1" class="led-cellblock"><span class="led-micro" style="position:absolute;left:12px;bottom:10px">one</span></div>
@@ -378,7 +378,7 @@ const FIELDART = `<span style="position:absolute;inset:0;background:
 function renderSlide(s) {
   const tint = s.tint ? `--tint:${s.tint};` : '';
   const top = `<div class="led-chrome top"><span>${s.kicker || ''}</span><span>${s.n} / 15</span></div>`;
-  const bot = `<div class="led-chrome bot"><span>${s.code}</span><span>Folklore</span></div>`;
+  const bot = `<div class="led-chrome bot"><span>${s.code}</span><span>Key Clark</span></div>`;
   const shell = inner => `<div class="led-slide" style="${tint}">${top}${inner}${bot}${GUIDES}</div>`;
 
   /* 01 — full-bleed demo with a glass title card floating over it.
@@ -598,7 +598,7 @@ function renderSlide(s) {
 function renderAnatomy() {
   return `<div class="led-slide guides" data-testid="anatomy-slide">
     <div class="led-chrome top"><span>Anatomy</span><span>12 × 6</span></div>
-    <div class="led-chrome bot"><span>960 × 540 · 6px cell</span><span>Folklore</span></div>
+    <div class="led-chrome bot"><span>960 × 540 · 6px cell</span><span>Key Clark</span></div>
     <div class="led-field">
       <div style="grid-column:1/6;grid-row:2/5;display:flex;flex-direction:column;justify-content:center;gap:16px">
         <h4 class="led-head led-lit">the field</h4>
@@ -616,7 +616,7 @@ function renderAnatomy() {
 function renderTypeScale() {
   return `<div class="led-slide" data-testid="type-slide">
     <div class="led-chrome top"><span>Type scale</span><span>5 sizes</span></div>
-    <div class="led-chrome bot"><span>all whole cells</span><span>Folklore</span></div>
+    <div class="led-chrome bot"><span>all whole cells</span><span>Key Clark</span></div>
     <div class="led-field">
       <div style="grid-column:1/13;grid-row:1/7;display:flex;flex-direction:column;justify-content:center;gap:10px">
         <div style="display:flex;align-items:baseline;gap:18px"><span class="led-micro" style="width:96px;flex:none;white-space:nowrap">12 cells</span><span class="led-display led-lit">display</span></div>

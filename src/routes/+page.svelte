@@ -44,7 +44,7 @@
       <div class="lcd">
         <div class="lcd-body hero-body">
           <div class="hero-top">
-            <span class="lcd-label">Folklore · Talk</span>
+            <span class="lcd-label">Key Clark · Talk</span>
             <span class="lcd-label">21 Aug 2026</span>
           </div>
 
