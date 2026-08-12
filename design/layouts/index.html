@@ -293,7 +293,7 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
    composition occupies IS the design decision here.
    ═══════════════════════════════════════════════════════ */
 const SLIDES = [
-  { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'glass-hero',
+  { n: '01', code: 'SL-01', title: 'title / cold open', layout: 'led-hero',
     kicker: 'WAM-2026', h: 'web animation<br>&amp; motion', body: 'Thread demo already running full-bleed, no explanation yet.' },
   { n: '02', code: 'SL-02', title: 'the thesis', layout: 'statement',
     kicker: 'Thesis', h: "a site's value is<br>no longer the<br>content it holds" },
@@ -381,16 +381,31 @@ function renderSlide(s) {
   const bot = `<div class="led-chrome bot"><span>${s.code}</span><span>Key Clark</span></div>`;
   const shell = inner => `<div class="led-slide" style="${tint}">${top}${inner}${bot}${GUIDES}</div>`;
 
-  /* 01 — full-bleed demo with a glass title card floating over it.
-     The one slide where type sits ON the artwork rather than beside
-     it, which is exactly the case glass exists for. */
-  if (s.layout === 'glass-hero') {
+  /* 01 — full-bleed demo with the title readout sitting directly on
+     the panel, not behind glass.
+
+     Glass was the first pass here and it broke two ways at once: a
+     frosted card is a second, glossier material competing with "this
+     is a pixel screen," which is the opposite of what a title slide
+     should announce; and its box was grid-stretched to a fixed
+     track (7 cols × 3 rows) sized for roughly two lines, but Doto at
+     72px doesn't fit "web animation" on one line at that width, so
+     it silently became three lines and the third one spilled past
+     the card's painted edge — confirmed live, not caught by reading
+     the code. Fixed at the source, not patched around: no glass, a
+     flat .led-cellblock (same lit-edge material every other media
+     well on these slides uses), sized wide enough for "web
+     animation" to actually fit on one line, and `align-self: start`
+     so the box's own height always matches its content instead of
+     being force-stretched to a track that was a guess. */
+  if (s.layout === 'led-hero') {
     return shell(`
       <div class="led-bleed" style="background:radial-gradient(80% 110% at 66% 45%, color-mix(in oklch, var(--tint) 42%, transparent), transparent 72%)">${FIELDART}</div>
       <div class="led-field">
-        <div class="led-glass" style="grid-column:1/8;grid-row:3/6;display:flex;flex-direction:column;justify-content:center;gap:14px">
-          <h4 class="led-display" style="color:var(--led-ink)">${s.h}</h4>
-          <p class="led-body" style="color:oklch(0.86 0.01 265)">${s.body || ''}</p>
+        <div class="led-cellblock" style="grid-column:1/12;grid-row:2/6;align-self:start;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:28px 30px">
+          ${REG}
+          <h4 class="led-display led-lit">${s.h}</h4>
+          <p class="led-body">${s.body || ''}</p>
         </div>
       </div>`);
   }
