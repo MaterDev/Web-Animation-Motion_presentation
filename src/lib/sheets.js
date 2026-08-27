@@ -42,7 +42,7 @@ export const SHEETS = [
     note: 'Per-topic tint, pixel marks, rule treatments, glyph sets, pattern bands',
     file: 'graphic-language/index.html',
   },
-  { group: 'Techniques', code: 'SL-04', name: 'Video / GIF', note: 'Baseline — pre-baked pixels', file: 'techniques/video.html', tint: 'var(--tint-video)' },
+  { group: 'Techniques', code: 'SL-04', name: 'Video / GIF', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
   { group: 'Techniques', code: 'SL-05', name: 'CSS', note: 'Browser-managed motion', file: 'techniques/css.html', tint: 'var(--tint-css)' },
   { group: 'Techniques', code: 'SL-06', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
   { group: 'Techniques', code: 'SL-09', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', tint: 'var(--tint-svg)' },

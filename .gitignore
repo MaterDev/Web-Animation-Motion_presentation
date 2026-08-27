@@ -32,3 +32,6 @@ vite.config.js.timestamp-*
 .DS_Store
 .idea/
 *.swp
+
+# claude code: machine-local settings (launch.json is shared, this is not)
+.claude/settings.local.json
