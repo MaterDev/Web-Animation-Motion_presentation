@@ -523,6 +523,118 @@ console.log(`vendor: @twemoji/svg → design/vendor/food.js (${Object.keys(food)
     (withCounters.length ? `, counters: ${withCounters.join('')}` : '') + ')');
 }
 
+/* ── AI history: the deck's one dataset ────────────────────
+   Read from scripts/data/ai-history.js, validated, laid out, and
+   emitted for the harness. The layout is computed HERE rather than in
+   the sheet for the same reason the map geometry will be: it is a pure
+   function of the data, it never changes between frames, and doing it
+   at load would put a solver on the critical path of a page someone is
+   presenting from.
+
+   Emitted as a SIDE-EFFECT GLOBAL, not an ES module export. The other
+   artifacts in this directory are `export const`, which is correct for
+   them — they are only consumed over localhost. This one is consumed by
+   design/techniques/svg.html, which has to keep opening from disk, and
+   `import` is blocked on file:// in both Chrome and Safari. */
+{
+  const data = await import(new URL('scripts/data/ai-history.js', root).href);
+  data.validate();   /* throws on an unsourced entry, an unknown edge id, or an out-of-range coordinate */
+
+  const { NODES, EDGES, LEVELS, ACTIVITY } = data;
+  const Y0 = Math.min(...NODES.map((n) => n.year));
+  const Y1 = Math.max(...NODES.map((n) => n.year));
+  const W = 1000, PAD = 46, AXIS = 366, TOP_MARGIN = 10;
+  const xOf = (year) => PAD + ((year - Y0) / (Y1 - Y0)) * (W - PAD * 2);
+
+  /* Lanes exist to stop labels colliding, so the gap that decides them
+     is a LABEL WIDTH expressed in years, not a number picked to look
+     right: ~86 units of monospace caption over an axis of 81 years in
+     (W - 2*PAD) units. Greedy lowest-free-lane over nodes in year
+     order — the standard interval assignment, and deterministic, which
+     matters because the sheet's filmstrip compares frames across runs. */
+  /* Derived from the widest label that will actually be drawn, not from
+     a constant: `short` is capped by the dataset's own SHORT_MAX, and
+     JetBrains Mono at the 9px the sheet uses advances ~5.4 units per
+     character in this coordinate space. Measured off the rendered
+     sheet, not taken from the font metrics, because the CSS size is
+     what decides it. */
+  const CHAR_U = 5.4, LABEL_PAD = 14;
+  const widest = Math.max(...NODES.map((n) => n.short.length));
+  const GAP_YEARS = (widest * CHAR_U + LABEL_PAD) / ((W - PAD * 2) / (Y1 - Y0));
+  const laneLastYear = [];
+  const byYear = [...NODES].sort((a, b) => a.year - b.year || a.id.localeCompare(b.id));
+  const pos = {};
+  for (const n of byYear) {
+    let lane = laneLastYear.findIndex((last) => n.year - last >= GAP_YEARS);
+    if (lane === -1) { lane = laneLastYear.length; laneLastYear.push(-Infinity); }
+    laneLastYear[lane] = n.year;
+    pos[n.id] = { id: n.id, year: n.year, short: n.short, label: n.label, place: n.place, level: n.level, lane,
+      x: Math.round(xOf(n.year) * 100) / 100 };
+  }
+  const lanes = laneLastYear.length;
+  const laneY = (lane) => Math.round((AXIS - (lane + 1) * (AXIS / (lanes + 1))) * 100) / 100;
+  for (const id in pos) pos[id].y = laneY(pos[id].lane);
+
+  /* Edges are drawn as arcs ABOVE the axis so the year ordering stays
+     readable underneath them. Height grows with the square root of the
+     span rather than linearly: a 40-year edge is only ~2.4x the arc of
+     a 7-year one, which keeps the long movements from leaving the box
+     while short ones stay visible. */
+  const arcs = EDGES.map((e) => {
+    const a = pos[e.from], b = pos[e.to];
+    const dx = Math.abs(b.x - a.x);
+    const lift = Math.min(150, 16 + Math.sqrt(dx) * 7.2);
+    /* Clamped to the frame. A cubic lies inside the convex hull of its
+       control points, so pinning the control ys inside the box is
+       enough to guarantee the drawn curve is too — and the first
+       version of this did not, which put four of the twenty-two arcs
+       up to 89 units above the top edge. The node assertion below did
+       not catch it because nodes were all inside; it was the arcs that
+       left. Both are checked now. */
+    const top = Math.max(TOP_MARGIN, Math.min(a.y, b.y) - lift);
+    const R2 = (v) => Math.round(v * 100) / 100;
+    return { ...e,
+      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+      d: `M${R2(a.x)} ${R2(a.y)}C${R2(a.x)} ${R2(top)} ${R2(b.x)} ${R2(top)} ${R2(b.x)} ${R2(b.y)}` };
+  }).sort((p, q) => p.year - q.year);
+
+  const bad = arcs.filter((a) => /NaN|Infinity|undefined/.test(a.d));
+  if (bad.length) {
+    console.error(`vendor: ${bad.length} lineage arcs produced non-finite path data`);
+    process.exit(1);
+  }
+  const inFrame = (x, y) => x >= 0 && x <= W && y >= 0 && y <= AXIS;
+  const outside = Object.values(pos).filter((n) => !inFrame(n.x, n.y));
+  if (outside.length) {
+    console.error(`vendor: ${outside.length} nodes project outside the ${W}x${AXIS} frame`);
+    process.exit(1);
+  }
+  /* Every control point, not just the endpoints — see the note on the
+     clamp above. */
+  const escaped = arcs.filter((a) => [...a.d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)]
+    .some((m) => !inFrame(+m[1], +m[2])));
+  if (escaped.length) {
+    console.error(`vendor: ${escaped.length} lineage arcs have control points outside the ${W}x${AXIS} frame`);
+    process.exit(1);
+  }
+
+  await writeFile(
+    new URL('ai-history.js', out),
+    '/* Generated by scripts/vendor.js from scripts/data/ai-history.js.\n' +
+      '   Sources are per-entry in that file; do not edit this copy.\n' +
+      '   A side-effect global, NOT an ES module: the SVG tearsheet has to\n' +
+      '   keep opening over file://, where import is blocked. */\n' +
+      'globalThis.AI_HISTORY = ' + JSON.stringify({
+        span: [Y0, Y1], frame: { w: W, h: AXIS, pad: PAD }, lanes,
+        nodes: byYear.map((n) => pos[n.id]), arcs, levels: LEVELS, activity: ACTIVITY,
+        geo: Object.fromEntries(NODES.map((n) => [n.id, [n.lon, n.lat]])),
+      }, null, 1) + ';\n'
+  );
+  console.log(`vendor: ai-history → design/vendor/ai-history.js ` +
+    `(${NODES.length} nodes ${Y0}–${Y1}, ${arcs.length} arcs, ${lanes} lanes, ` +
+    `widest label ${widest} chars → ${GAP_YEARS.toFixed(1)}y lane gap)`);
+}
+
 /* ── Fonts ─────────────────────────────────────────────────
    Latin subset only. The deck is English and the harness is
    internal; shipping latin-ext as well would roughly double the
