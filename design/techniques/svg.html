@@ -385,6 +385,23 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
   background: var(--sv-water); overflow: hidden; }
 .sv-sheet svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
 .sv-land { fill: var(--sv-land); stroke: var(--sv-edge); }
+.sv-stipple { fill: url(#sv-stipple); stroke: none; pointer-events: none; }
+/* Bathymetric banding: the pale shelves a chart prints just offshore.
+   Three strokes of the SAME coastline at decreasing width, drawn
+   UNDER the land fill so only the seaward half of each shows. It is a
+   drawing convention rather than depth data — there is no bathymetry
+   in Natural Earth — so it is stroked at fixed screen widths and it
+   is decorative, which is why the one-device-pixel criterion applies
+   to .sv-land's own stroke and not to these. */
+.sv-shelf { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.sv-shelf-1 { stroke: color-mix(in oklch, var(--sv-water) 62%, oklch(0.99 0 0)); stroke-width: 13; }
+.sv-shelf-2 { stroke: color-mix(in oklch, var(--sv-water) 78%, oklch(0.99 0 0)); stroke-width: 7.5; }
+.sv-shelf-3 { stroke: color-mix(in oklch, var(--sv-water) 90%, oklch(0.99 0 0)); stroke-width: 3; }
+/* Interior country borders, from the countries mesh — real data, and
+   meshed so shared arcs appear once and coastlines are excluded, which
+   is what stops every shoreline being drawn twice. */
+.sv-border { fill: none; stroke: var(--sv-edge); opacity: 0.55;
+  stroke-dasharray: 7 3 2 3; }
 .sv-grat { stroke: var(--sv-grid); fill: none; opacity: 0.5; }
 
 /* The locator. A survey sheet's index diagram marks where the next
@@ -493,6 +510,14 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
     <!-- populated by JS so the chain can be built stage by stage -->
     <filter id="pp-goo" x="-25%" y="-25%" width="150%" height="150%"
             color-interpolation-filters="sRGB"></filter>
+    <!-- Land tint for the survey sheet. A stipple rather than a flat
+         fill because a printed sheet is a halftone — and it is counter
+         -scaled every frame so the dots stay a constant size on the
+         page instead of growing into circles at depth. -->
+    <pattern id="sv-stipple" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="1.6" cy="1.6" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+      <circle cx="5.1" cy="5.1" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+    </pattern>
     <!-- The stage needs a filter of its own: the bench's chain is
          assembled and peeled back by whoever is reading it, and a stage
          sharing that id would change with it. Same three primitives,
@@ -788,7 +813,10 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       <div class="sv-sheet" id="svSheet" data-testid="frame-stage">
         <svg viewBox="0 0 1600 900" aria-label="A survey sheet zooming from the world to Dartmouth College, 1956">
           <g id="svCam">
+            <g id="svShelf"></g>
             <g id="svLand"></g>
+            <g id="svTex"></g>
+            <g id="svBord"></g>
             <g id="svGrat"></g>
             <g id="svMarks"></g>
           </g>
@@ -2289,8 +2317,26 @@ window.WAM = (function () {
      frame the level changes, which is exactly the frame that can least
      afford it. */
   const gLand = document.getElementById('svLand');
-  const layers = LV.map((l) => l.beyondMap ? null
-    : mk('path', { class: 'sv-land', d: l.d }, gLand));
+  const gShelf = document.getElementById('svShelf');
+  const gTex = document.getElementById('svTex');
+  const gBord = document.getElementById('svBord');
+  const stipple = document.getElementById('sv-stipple');
+  const layers = LV.map((l) => {
+    if (l.beyondMap) return null;
+    /* A level whose whole box is inland has no coastline to draw and no
+       water to draw it against — the ground is simply land. Painting
+       the usual blue sheet under an empty path is how the ocean ended
+       up covering New Hampshire. */
+    if (l.solidLand) return { solid: true };
+    const shelves = [1, 2, 3].map((n) =>
+      mk('path', { class: 'sv-shelf sv-shelf-' + n, d: l.d }, gShelf));
+    return {
+      land: mk('path', { class: 'sv-land', d: l.d }, gLand),
+      tex: mk('path', { class: 'sv-stipple', d: l.d }, gTex),
+      bord: l.borders ? mk('path', { class: 'sv-border', d: l.borders }, gBord) : null,
+      shelves,
+    };
+  });
 
   const gGrat = document.getElementById('svGrat');
   for (let x = 0; x <= W; x += 100) mk('line', { class: 'sv-grat', x1: x, x2: x, y1: 0, y2: HH }, gGrat);
@@ -2337,7 +2383,7 @@ window.WAM = (function () {
       '<div class="yr">' + target.year + '</div>' +
       '<div class="ttl">' + target.label + '</div>' +
       '<div class="meta">' + target.place + '<br>' +
-      'past the end of the map — no coastline within 60 km at this scale<br>' +
+      'past the end of the map — solid land, no coastline within 60 km<br>' +
       'the reticle is still centred; there is simply nothing left to draw</div>' +
       '</div>';
   }
@@ -2381,8 +2427,14 @@ window.WAM = (function () {
     const dpr = window.devicePixelRatio || 1;
     const D = (960 / W) * scale * c.k * dpr;
     const hair = (1 / D).toFixed(6);
-    for (const el of layers) if (el) el.style.strokeWidth = hair;
+    for (const L2 of layers) if (L2 && L2.land) {
+      L2.land.style.strokeWidth = hair;
+      if (L2.bord) L2.bord.style.strokeWidth = (1.6 / D).toFixed(6);
+    }
     for (const el of gGrat.children) el.style.strokeWidth = hair;
+    /* Counter-scale the halftone so the dots stay a constant size on
+       the page rather than becoming circles at depth. */
+    stipple.setAttribute('patternTransform', 'scale(' + (1 / c.k).toFixed(6) + ')');
 
     /* Only the level whose geometry is cut for this scale. Below its
        own k the coarse layer is still the honest one — 10m coastline
@@ -2390,7 +2442,18 @@ window.WAM = (function () {
        shoreline drawn with more points than the pixels can hold. */
     let show = 0;
     for (let i = 0; i < LV.length; i++) if (!LV[i].beyondMap && c.k >= LV[i].k * 0.7) show = i;
-    layers.forEach((el, i) => { if (el) el.style.display = i === show ? '' : 'none'; });
+    layers.forEach((L2, i) => {
+      if (!L2 || L2.solid) return;
+      const on = i === show ? '' : 'none';
+      L2.land.style.display = on; L2.tex.style.display = on;
+      if (L2.bord) L2.bord.style.display = on;
+      for (const sh of L2.shelves) sh.style.display = on;
+    });
+    /* The sheet's own ground is the water, so an all-land level has to
+       repaint it — otherwise the frame is an ocean with a coastline
+       drawn on top of nowhere. */
+    sheet.style.background = (layers[show] && layers[show].solid)
+      ? 'var(--sv-land)' : 'var(--sv-water)';
 
     /* Counter-scaled so the reticle and the site dots stay a constant
        size on the page rather than growing into shapes. */
@@ -2468,7 +2531,10 @@ window.WAM = (function () {
       '<span>100 units</span>';
 
     /* The record. Fades up exactly as the map runs out. */
-    const beyond = LV[LV.length - 1].beyondMap;
+    /* Featureless, not merely empty: the deepest box turns out to be
+       entirely inland rather than off the edge of the data, and either
+       way there is nothing left to draw there. */
+    const beyond = LV[LV.length - 1].beyondMap || LV[LV.length - 1].solidLand;
     const near = Math.max(0, Math.min(1, (c.at - (legs - 1)) / 1));
     record.hidden = !(beyond && near > 0.01);
     record.style.opacity = beyond ? near.toFixed(3) : 0;

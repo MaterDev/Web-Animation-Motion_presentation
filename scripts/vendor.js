@@ -271,7 +271,7 @@ for (const { entry, outfile, expect } of bundles) {
    geometry that still holds up at that scale, clipped to what is
    actually on screen there. */
 {
-  const { feature } = await import('topojson-client');
+  const { feature, mesh } = await import('topojson-client');
   const { geoMercator, geoPath } = await import('d3-geo');
   const data = await import(new URL('scripts/data/ai-history.js', root).href);
   const { NODES, LEVELS } = data;
@@ -310,9 +310,16 @@ for (const { entry, outfile, expect } of bundles) {
   const distortion = 1 / Math.cos((target.lat * Math.PI) / 180);
 
   const RES = { '110m': null, '50m': null, '10m': null };
+  const BORDERS = { '110m': null, '50m': null, '10m': null };
   for (const r in RES) {
     const topo = await Bun.file(new URL(`node_modules/world-atlas/land-${r}.json`, root)).json();
     RES[r] = feature(topo, topo.objects.land);
+    /* Interior borders only — mesh with a filter that keeps arcs shared
+       by two different countries and drops the ones shared with
+       nothing, which are the coastlines. Drawing the country outlines
+       instead would double every shoreline. */
+    const ctry = await Bun.file(new URL(`node_modules/world-atlas/countries-${r}.json`, root)).json();
+    BORDERS[r] = mesh(ctry, ctry.objects.countries, (a, b) => a !== b);
   }
 
   /* Coarsest geometry that survives the level, clipped to the level's
@@ -335,6 +342,7 @@ for (const { entry, outfile, expect } of bundles) {
   const layers = LEVELS.map((lv, i) => {
     const plan = { res: RES_FOR[Math.min(i, RES_FOR.length - 1)], digits: digitsFor(lv.k) };
     const p = base();
+    let clip = null;
     const [cx, cy] = at(lv.lon, lv.lat);
     if (i > 0) {
       /* HALF-widths. Writing W/k here rather than W/k/2 was a two-times
@@ -347,8 +355,9 @@ for (const { entry, outfile, expect } of bundles) {
          camera settles on it, and the crossfade starts early. */
       const MARGIN = 1.6;
       const hw = (W / lv.k) * 0.5 * MARGIN, hh = (HGT / lv.k) * 0.5 * MARGIN;
-      p.clipExtent([[Math.max(0, cx - hw), Math.max(0, cy - hh)],
-                    [Math.min(W, cx + hw), Math.min(HGT, cy + hh)]]);
+      clip = [[Math.max(0, cx - hw), Math.max(0, cy - hh)],
+              [Math.min(W, cx + hw), Math.min(HGT, cy + hh)]];
+      p.clipExtent(clip);
     }
     /* Coordinate precision is set on the PATH, not the projection —
        geoPath.digits(). Three decimals for the deep layers: at the
@@ -356,7 +365,41 @@ for (const { entry, outfile, expect } of bundles) {
        pixel and the coastline visibly snaps to a grid. */
     const path = geoPath(p);
     if (typeof path.digits === 'function') path.digits(plan.digits);
-    const d = path(RES[plan.res]) || '';
+    let d = path(RES[plan.res]) || '';
+
+    /* d3 emits the CLIP RECTANGLE as its own closed ring when it
+       decides the polygon being clipped contains the whole box. On a
+       MultiPolygon of four thousand rings that test gets it wrong, and
+       the symptom is silent and total: a bare four-point rectangle in
+       the path, filled under the nonzero rule, paints the entire frame
+       as land and the ocean vanishes. It did, at level 2, and only at
+       level 2 — the coastlines were still stroked correctly on top of
+       it, which is what made it look like a fill bug rather than a
+       geometry one.
+
+       A legitimate clip against a coast comes back as one ring that
+       runs along the shore and returns along the box edges — many
+       points, not four. So a STANDALONE bare rectangle is always the
+       bug, unless it is the only thing in the path, in which case the
+       box really is entirely inland and the sheet should be solid
+       land rather than solid water. Both cases are handled; neither
+       is guessed at. */
+    const subs = d.split(/(?=M)/).filter(Boolean);
+    const onBox = (v, lo, hi) => Math.abs(v - lo) < 0.01 || Math.abs(v - hi) < 0.01;
+    const isBoxRect = (sp) => {
+      const pts = [...sp.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+      if (pts.length < 4 || pts.length > 5 || !clip) return false;
+      return pts.every(([x, y]) => onBox(x, clip[0][0], clip[1][0]) && onBox(y, clip[0][1], clip[1][1]));
+    };
+    const rects = subs.filter(isBoxRect);
+    const kept = subs.filter((sp) => !isBoxRect(sp));
+    const solidLand = rects.length > 0 && kept.length === 0;
+    if (rects.length && !solidLand) d = kept.join('');
+
+    const bpath = geoPath(p);
+    if (typeof bpath.digits === 'function') bpath.digits(plan.digits);
+    const borders = bpath(BORDERS[plan.res]) || '';
+
     /* A level can outrun the map. Dartmouth is about 150 km inland, so
        by k=384 the clip box is ~60 km across and contains no Natural
        Earth geometry at all — the deepest level of this zoom is simply
@@ -364,9 +407,10 @@ for (const { entry, outfile, expect } of bundles) {
        about the subject, not a failure to fetch: the talk zooms out of
        geography and into a room. Marked, so the stage can render
        something else there rather than a blank plane. */
-    const beyondMap = d.length < 200;
-    return { label: lv.label, k: lv.k, res: plan.res, digits: plan.digits, beyondMap,
-      cx: Math.round(cx * 1000) / 1000, cy: Math.round(cy * 1000) / 1000, d: beyondMap ? '' : d };
+    const beyondMap = d.length < 200 && !solidLand;
+    return { label: lv.label, k: lv.k, res: plan.res, digits: plan.digits, beyondMap, solidLand,
+      cx: Math.round(cx * 1000) / 1000, cy: Math.round(cy * 1000) / 1000,
+      d: beyondMap ? '' : d, borders: beyondMap ? '' : borders };
   });
 
   const geo = {};
@@ -420,7 +464,8 @@ for (const { entry, outfile, expect } of bundles) {
   console.log(`vendor: Natural Earth → design/vendor/map.js (${Math.round(size / 1024)} KB, ` +
     `centred ${centre.toFixed(1)}° cut ${widest.cut.toFixed(1)}° (widest data gap ${widest.gap.toFixed(0)}°), ` +
     `layers ${layers.map((l) => l.beyondMap ? l.label.split(',')[0] + ':beyond-map'
-      : l.res + '@' + l.digits + 'dp:' + Math.round(l.d.length / 1024) + 'KB').join(' ')}, ` +
+      : l.res + '@' + l.digits + 'dp:' + Math.round((l.d.length + l.borders.length) / 1024) + 'KB' +
+        (l.solidLand ? ':solid-land' : '')).join(' ')}, ` +
     `Mercator stretch at ${target.label}: ${distortion.toFixed(2)}x)`);
 }
 
