@@ -174,6 +174,49 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .pp-stage.is-on .pp-n { color: var(--tint); }
 .pp-blob { fill: var(--ai-t2); }
 
+/* ── 3 · THE FRAME ────────────────────────────────
+   Three exclusive camera drivers, one scene. Radios in behaviour, but
+   drawn as the same segmented control as §4's chain so the rail reads
+   as one instrument across sections — the difference is that these are
+   mutually exclusive and §4's are cumulative, which the copy says. */
+.fr-set { display: flex; flex-direction: column; gap: 4px; }
+.fr-set + .fr-set { margin-top: 2px; }
+.fr-btn { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 5px;
+  cursor: pointer; font: inherit; text-align: left; width: 100%;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.fr-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.fr-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+.fr-btn .fr-k { color: var(--hz-400); font-variant-numeric: tabular-nums; }
+.fr-btn.is-on .fr-k { color: var(--tint); }
+
+/* vector-effect is a STATIC declaration, so it lives in CSS and is
+   switched by one class on the root. Writing it inline every frame the
+   way the inverse strategy must write stroke-width would charge it for
+   work it does not do, and the whole point of the comparison is which
+   strategy costs a per-frame write. */
+.fr-hair-vector .fr-land, .fr-hair-vector .fr-hair { vector-effect: non-scaling-stroke; }
+.fr-verdict { margin-top: calc(var(--u)*3); border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); padding: 13px 15px; }
+.fr-verdict h4 { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); margin-bottom: 8px; }
+.fr-verdict p { color: var(--hz-500); font-size: 12.5px; line-height: 1.6; max-width: 74ch; margin-bottom: 8px; }
+.fr-verdict p:last-child { margin-bottom: 0; }
+.fr-verdict b { color: var(--hz-800); font-weight: 500; }
+.fr-verdict table { border-collapse: collapse; margin: 4px 0 10px; font-family: var(--mono); font-size: 10px; }
+.fr-verdict th, .fr-verdict td { text-align: left; padding: 3px 14px 3px 0; color: var(--hz-500); }
+.fr-verdict th { color: var(--hz-400); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-size: 9px; }
+.fr-verdict td.fr-good { color: var(--tint); }
+.fr-verdict td.fr-bad { color: var(--hz-700); }
+
+.fr-land { fill: none; stroke: var(--ai-t2); stroke-width: 1; stroke-linejoin: round; }
+.fr-hair { stroke: var(--ai-now); stroke-width: 1; }
+.fr-pin { fill: var(--ai-now); }
+.fr-lab { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  fill: var(--ai-ink); text-anchor: middle; }
+
 .notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
 .notes p { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; margin-bottom: calc(var(--u)*2); }
@@ -273,6 +316,104 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
           </div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- ═══ 3 · THE FRAME ═══════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-frame">
+    <div class="fmt-head"><span class="fmt-tag">THE FRAME</span><h2>the camera, and what it costs to move it</h2></div>
+    <p class="fmt-case">
+      Zooming a vector scene is not zooming a picture. There is no camera object —
+      there are three different things people call one, and they are not
+      interchangeable. <b>Pick a driver below and the same scene is framed by a
+      different mechanism</b>: rewriting the root's <code>viewBox</code>, transforming
+      a group inside it, or handing the whole motion to the browser as a paused
+      animation and scrubbing its <code>currentTime</code>. The readouts are all
+      main-thread work — attribute writes, style and layout — which is the kind
+      of cost a frame meter can honestly see, unlike §4 below.
+    </p>
+
+    <div class="bench" data-testid="frame-bench">
+      <div class="bench-rail">
+        <span class="bench-h">camera driver</span>
+        <div class="fr-set" data-testid="frame-drivers">
+          <button class="fr-btn is-on" data-driver="viewbox" data-testid="frame-driver-viewbox"><span class="fr-k">A</span> root viewBox</button>
+          <button class="fr-btn" data-driver="group" data-testid="frame-driver-group"><span class="fr-k">B</span> nested g transform</button>
+          <button class="fr-btn" data-driver="waapi" data-testid="frame-driver-waapi"><span class="fr-k">C</span> paused WAAPI currentTime</button>
+        </div>
+        <span class="bench-h">hairline strategy</span>
+        <div class="fr-set" data-testid="frame-hairlines">
+          <button class="fr-btn" data-hair="none" data-testid="frame-hair-none"><span class="fr-k">—</span> none · scales with geometry</button>
+          <button class="fr-btn is-on" data-hair="vector" data-testid="frame-hair-vector"><span class="fr-k">✓</span> vector-effect</button>
+          <button class="fr-btn" data-hair="inverse" data-testid="frame-hair-inverse"><span class="fr-k">÷</span> inverse stroke-width</button>
+        </div>
+        <div class="fr-set" data-testid="frame-labels">
+          <button class="fr-btn is-on" data-billboard="1" data-testid="frame-billboard"><span class="fr-k">↺</span> counter-scale labels</button>
+        </div>
+        <div class="bench-read" data-testid="frame-readout">
+          <span>zoom <var id="frScale">—</var></span>
+          <span>hairline <var id="frHair">—</var></span>
+          <span>render <var id="frCost">—</var></span>
+          <span>clock <var id="frFloor">—</var></span>
+          <span>frame rate <var id="frFps">—</var></span>
+          <span>long tasks <var id="frLong">—</var></span>
+          <span class="warn" id="frWarn"></span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="frame-bench-stage">
+        <svg id="frSvg" viewBox="0 0 1000 500" aria-label="A hairline coastline scene under three camera drivers">
+          <g id="frCam">
+            <g id="frScene"></g>
+            <g id="frMarks"></g>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="fr-verdict" data-testid="frame-verdict">
+      <h4>what the bench answered</h4>
+      <p>
+        <b>The driver does not matter.</b> Across Chrome, Safari and Firefox, and
+        across repeated runs, no camera driver is reliably cheaper than another —
+        the ordering changes run to run and the whole spread sits inside the
+        sampling noise of a thirty-frame mean. All three hold full display cadence
+        with zero long tasks. That is a real answer, and it is not the one the
+        plan assumed: <b>this scene is nowhere near the cost of moving a camera</b>,
+        so the choice gets made on other grounds. Nested <code>g</code> wins them:
+        rewriting the root <code>viewBox</code> takes it away from responsive sizing
+        and from the QC filmstrip, and WAAPI cannot express a log-space zoom without
+        being handed sampled keyframes — which is the interpolation you gave it to do.
+      </p>
+      <p>
+        <b>The hairline strategy is the only control that moves the number</b>, and
+        the one that costs is the only one that works.
+      </p>
+      <table>
+        <tr><th>strategy</th><th>device px at ×1</th><th>at ×64</th><th>per-frame writes</th></tr>
+        <tr><td>none</td><td class="fr-bad">1</td><td class="fr-bad">84</td><td>0</td></tr>
+        <tr><td>vector-effect</td><td class="fr-bad">2</td><td class="fr-bad">2</td><td>0</td></tr>
+        <tr><td>inverse stroke-width</td><td class="fr-good">1</td><td class="fr-good">1</td><td>88</td></tr>
+      </table>
+      <p>
+        <code>vector-effect: non-scaling-stroke</code> is constant, but it pins to one
+        <b>CSS</b> pixel — which on any 2× display is two device pixels, and a hairline
+        that is two pixels wide is not a hairline. Only dividing the stroke width by the
+        zoom lands on one device pixel, and that has to be written every frame, on every
+        stroked element. It is still free here. It stops being free at map scale, which
+        is what §3's stage will have to answer.
+      </p>
+      <p>
+        <b>Neither reading came from a portable instrument.</b> The thickness above is
+        measured, but no single API measures it everywhere: Firefox implements
+        <code>getBBox({stroke:true})</code>, Chrome and Safari accept the argument and
+        silently ignore it, so a <code>try/catch</code> feature test passes in all three
+        and is wrong in two. Hit-testing the document works in Chrome and Safari and not
+        in Firefox, whose hit region for a non-scaling stroke is not the region it paints.
+        The readout says which instrument produced its number. The same caution applies
+        to the cost figure beside it — <code>performance.now()</code> is clamped to 1 ms
+        in Firefox and Safari and about 100 µs in Chrome, so the bench measures its own
+        clock and prints a bound rather than a fabricated zero.
+      </p>
     </div>
   </div>
 
@@ -523,6 +664,36 @@ window.WAM = (function () {
   const mq = matchMedia('(prefers-reduced-motion: reduce)');
   const demos = {};
 
+  /* performance.now() is NOT the same clock in every browser. Chromium
+     hands out roughly 5 µs; Firefox and WebKit clamp it to 1 ms as an
+     anti-fingerprinting measure. A per-frame cost averaged over N
+     frames therefore cannot resolve anything below clamp/N — which is
+     why an unqualified "0 µs/frame" in Safari and "13 µs/frame" in
+     Chrome is a browser difference in the CLOCK, not in the work.
+
+     Measured here rather than hardcoded, because the clamp is a
+     setting: it moves with privacy.reduceTimerPrecision, with cross
+     origin isolation, and between releases. A readout that quotes a
+     cost owes the reader this number beside it. */
+  let _res = 0;
+  function clockRes() {
+    if (_res) return _res;
+    /* Bounded by WALL TIME, not by iteration count. Under a 1 ms clamp
+       each distinct reading costs a millisecond of real time, so
+       "sample 40000 times" is forty seconds of blocked main thread —
+       which is what the first version of this did, and it hung the
+       sheet in both Firefox and Safari. Take whatever transitions fall
+       inside a few milliseconds instead. */
+    let min = Infinity;
+    const deadline = performance.now() + 4;
+    while (performance.now() < deadline) {
+      const a = performance.now();
+      const b = performance.now();
+      if (b > a && b - a < min) min = b - a;
+    }
+    return (_res = min === Infinity ? 1 : min);
+  }
+
   function clock(name, { render, dur = 6000, el, poster = 1 }) {
     let raf = 0, t0 = 0, visible = true, playing = false, t = 0;
 
@@ -532,17 +703,34 @@ window.WAM = (function () {
        compositor and is invisible from here. See the note in the §4
        readout; a frame-rate meter beside a filter reads the same with
        the filter on or off, which was verified rather than assumed. */
+    const COST_N = 30;
     let costAcc = 0, costN = 0, cost = 0;
+
+    /* Frame rate is tracked but deliberately NOT surfaced by default.
+       It is a valid instrument for main-thread work — attribute writes,
+       style, layout — and a useless one next to anything the compositor
+       rasterises. A demo opts in by reading .fps, and owes the reader a
+       statement of which kind of work it is measuring. */
+    let fpsLast = 0, fpsAcc = 0, fpsN = 0, fps = 0;
 
     function draw(v) {
       t = v;
       const a = performance.now();
       render(v);
       costAcc += performance.now() - a; costN++;
-      if (costN >= 30) { cost = costAcc / costN; costAcc = 0; costN = 0; }
+      if (costN >= COST_N) { cost = costAcc / costN; costAcc = 0; costN = 0; }
     }
     function frame(now) {
       if (!t0) t0 = now;
+      /* A frame over a third of a second is a stall, not a frame rate —
+         a tab switch, a GC pause. Averaging it in produces a confident
+         wrong number on a slide someone is reading aloud. */
+      const dt = fpsLast ? now - fpsLast : 0;
+      fpsLast = now;
+      if (dt > 0 && dt < 340) {
+        fpsAcc += dt; fpsN++;
+        if (fpsAcc >= 500) { fps = (fpsN * 1000) / fpsAcc; fpsAcc = 0; fpsN = 0; }
+      } else { fpsAcc = 0; fpsN = 0; }
       draw(((now - t0) % dur) / dur);
       if (playing && visible) raf = requestAnimationFrame(frame);
     }
@@ -551,7 +739,7 @@ window.WAM = (function () {
       playing = true; t0 = performance.now() - t * dur;
       raf = requestAnimationFrame(frame);
     }
-    function pause() { playing = false; cancelAnimationFrame(raf); raf = 0; }
+    function pause() { playing = false; cancelAnimationFrame(raf); raf = 0; fpsLast = 0; fpsAcc = 0; fpsN = 0; }
     function seek(v) { pause(); draw(v); }
 
     /* Browsers throttle rAF to ~1Hz in a background tab, and a demo
@@ -569,7 +757,11 @@ window.WAM = (function () {
     const api = {
       play, pause, seek, render: draw,
       get t() { return t; }, get playing() { return playing; },
-      get cost() { return cost; }, dur
+      get cost() { return cost; }, get fps() { return fps; },
+      /* Nothing below this is a measurement — it is the clock's floor. */
+      get costFloor() { return clockRes() / COST_N; },
+      resetMeters() { costAcc = 0; costN = 0; cost = 0; fpsAcc = 0; fpsN = 0; fps = 0; },
+      dur
     };
     demos[name] = api;
 
@@ -616,7 +808,7 @@ window.WAM = (function () {
     return strip;
   }
 
-  return { clock, filmstrip, demos, get reduced() { return mq.matches; } };
+  return { clock, filmstrip, demos, clockRes, get reduced() { return mq.matches; } };
 })();
 
 /* ── 4 · THE PIPELINE ─────────────────────────────────────────
@@ -747,6 +939,352 @@ window.WAM = (function () {
   /* buildChain ran before the clock's first frame, so the bbox it saw
      was five circles stacked at the origin. Position them, then measure. */
   demo.render(0.5); measureRegion();
+})();
+</script>
+
+<script>
+/* ── 3 · THE FRAME ────────────────────────────────────────────
+   One scene, three mechanisms people all call "the camera". The
+   scene is a stand-in for the map §3's stage will eventually carry —
+   deterministic midpoint-displaced polylines rather than a picture,
+   because what makes a camera expensive is point count and hairline
+   strokes, and this has both in map-like proportions. When the real
+   projected geometry lands it drops into the same slot.
+
+   Everything here is main-thread: attribute writes, style resolution,
+   layout. That is the one class of cost this sheet can measure from
+   inside the page, which is why §3 carries a frame rate and §4 does
+   not. See the note in §4's readout. */
+(function () {
+  const svg = document.getElementById('frSvg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const cam = document.getElementById('frCam');
+  const scene = document.getElementById('frScene');
+  const marks = document.getElementById('frMarks');
+  const VB = { w: 1000, h: 500 };
+
+  /* ── scene ──────────────────────────────────────────────────
+     Seeded LCG, not Math.random(): the geometry must be identical
+     across driver switches or a change in the readout could not be
+     attributed to the driver rather than to a new scene. */
+  let seed = 8134;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  /* Detail at four scales, each a quarter the size of the one above and
+     centred on the zoom target. A flat scene is the wrong stand-in for a
+     map: zoom into one and by ×8 the frame is empty, which makes a camera
+     bench look broken rather than deep. Real projected coastline has
+     structure at every scale, so this does too — and the four levels are
+     the same four the stage's semantic zoom will hang labels off.
+
+     Coordinates are emitted at 3 decimals rather than 2. At ×64 on a
+     1000-unit box, 2 decimals quantises to about a fifth of a device
+     pixel and the innermost level visibly snaps to a grid. */
+  const TARGET = { x: 470, y: 232 };
+  const LEVELS = 4, PER = 22, PTS = 40;
+  const strokes = [];
+  for (let lv = 0; lv < LEVELS; lv++) {
+    const span = { w: VB.w, h: VB.h };
+    const box = lv === 0
+      ? { x: 0, y: 0, w: span.w, h: span.h }
+      : { x: TARGET.x - span.w / (2 * Math.pow(4, lv)), y: TARGET.y - span.h / (2 * Math.pow(4, lv)),
+          w: span.w / Math.pow(4, lv), h: span.h / Math.pow(4, lv) };
+    const step = (box.w / 70);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('data-level', String(lv));
+    g.style.stroke = 'var(--ai-t' + Math.min(lv + 1, 3) + ')';
+    for (let i = 0; i < PER; i++) {
+      let x = box.x + rnd() * box.w, y = box.y + rnd() * box.h;
+      let vx = (rnd() - 0.5) * step * 2, vy = (rnd() - 0.5) * step * 2;
+      let d = 'M' + x.toFixed(3) + ' ' + y.toFixed(3);
+      for (let j = 1; j < PTS; j++) {
+        vx += (rnd() - 0.5) * step * 0.7; vy += (rnd() - 0.5) * step * 0.7;
+        x += vx; y += vy;
+        d += 'L' + x.toFixed(3) + ' ' + y.toFixed(3);
+      }
+      const el = document.createElementNS(NS, 'path');
+      el.setAttribute('class', 'fr-land');
+      el.setAttribute('d', d);
+      g.appendChild(el);
+      strokes.push(el);
+    }
+    scene.appendChild(g);
+  }
+
+  /* The measured hairline. A horizontal line's client rect height IS
+     its rendered stroke thickness in CSS px, so the readout below is a
+     measurement of what the browser actually drew rather than the
+     number this code asked for. Placed at the zoom target so it stays
+     on screen at every level. */
+  const ref = document.createElementNS(NS, 'line');
+  ref.setAttribute('class', 'fr-hair');
+  ref.setAttribute('x1', TARGET.x - 60); ref.setAttribute('x2', TARGET.x + 60);
+  ref.setAttribute('y1', TARGET.y); ref.setAttribute('y2', TARGET.y);
+  scene.appendChild(ref);   /* last child, so the hit-test probe below reaches it */
+  strokes.push(ref);
+
+  /* Screen-space marks: pin and label share one group, so the
+     billboard toggle moves both and the failure reads as "these marks
+     belong to the scene, not to the screen" rather than as a font bug. */
+  /* One pin per level, each offset by a quarter of that level's box, so
+     something labelled is in frame at every zoom rather than only at the
+     ends of the travel. */
+  const PINS = [{ x: 470, y: 232, t: 'target', lv: 3 }];
+  for (let lv = 0; lv < 3; lv++) {
+    const f = Math.pow(4, lv);
+    PINS.push({ x: TARGET.x + VB.w / (5 * f), y: TARGET.y - VB.h / (6 * f), t: 'level ' + lv, lv });
+  }
+  const markGs = PINS.map((p) => {
+    const g = document.createElementNS(NS, 'g');
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('class', 'fr-pin'); c.setAttribute('r', '2.6');
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('class', 'fr-lab'); tx.setAttribute('y', '-8');
+    tx.textContent = p.t;
+    g.append(c, tx); marks.appendChild(g);
+    return g;
+  });
+
+  /* ── camera path ────────────────────────────────────────────
+     Scale is interpolated in LOG space. Linear interpolation of k
+     spends almost the whole travel already zoomed in — the first half
+     of a 1→64 linear ramp covers 1→32, which is five of the six
+     doublings. Log space makes every doubling take the same time,
+     which is what "zooming at a constant rate" means to an eye. */
+  const K0 = 1, K1 = 64;
+  function camAt(t) {
+    const u = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);   /* rest at both ends */
+    const k = Math.exp(Math.log(K0) + (Math.log(K1) - Math.log(K0)) * u);
+    return { k, cx: VB.w / 2 + (TARGET.x - VB.w / 2) * u, cy: VB.h / 2 + (TARGET.y - VB.h / 2) * u };
+  }
+
+  /* ── drivers ────────────────────────────────────────────────
+     C's keyframes are SAMPLED FROM camAt, so all three drivers show
+     the same motion and the comparison is of mechanism only. Without
+     that, a two-keyframe WAAPI would interpolate scale linearly and
+     look like a different demo. */
+  const SAMPLES = 61;
+  function cssTransform(c) {
+    return 'translate(' + (VB.w / 2) + 'px, ' + (VB.h / 2) + 'px) scale(' + c.k +
+           ') translate(' + (-c.cx) + 'px, ' + (-c.cy) + 'px)';
+  }
+  function attrTransform(c) {
+    return 'translate(' + (VB.w / 2) + ' ' + (VB.h / 2) + ') scale(' + c.k.toFixed(4) +
+           ') translate(' + (-c.cx).toFixed(3) + ' ' + (-c.cy).toFixed(3) + ')';
+  }
+
+  let anim = null;
+  function buildAnim() {
+    if (anim) anim.cancel();
+    const frames = [];
+    for (let i = 0; i < SAMPLES; i++) frames.push({ transform: cssTransform(camAt(i / (SAMPLES - 1))) });
+    anim = cam.animate(frames, { duration: 1000, fill: 'both', easing: 'linear' });
+    anim.pause();
+  }
+
+  let driver = 'viewbox', hair = 'vector', billboard = true;
+  let cssW = 1000;
+  function readWidth() { cssW = svg.getBoundingClientRect().width || cssW; }
+  if ('ResizeObserver' in window) new ResizeObserver(readWidth).observe(svg);
+  readWidth();
+
+  /* Switching strategy is a one-off style change, not per-frame work.
+     Clearing the inline width on the way out of `inverse` matters: an
+     inline stroke-width outranks the stylesheet, so a stale one would
+     make vector-effect look like it had stopped working. */
+  function setHair(next) {
+    hair = next;
+    svg.classList.toggle('fr-hair-vector', hair === 'vector');
+    if (hair !== 'inverse') for (const el of strokes) el.style.strokeWidth = '';
+    demo.resetMeters();
+    demo.render(demo.t);
+  }
+
+  function setDriver(next) {
+    driver = next;
+    /* Leave no residue from the previous mechanism. A stale CSS
+       transform silently outranks the transform attribute, which would
+       make driver B look broken and the bug look like SVG's fault. */
+    if (anim) { anim.cancel(); anim = null; }
+    cam.style.transform = '';
+    cam.removeAttribute('transform');
+    svg.setAttribute('viewBox', '0 0 ' + VB.w + ' ' + VB.h);
+    if (driver === 'waapi') buildAnim();
+    longCount = 0; longMs = 0;
+    demo.resetMeters();
+    demo.render(demo.t);
+  }
+
+  /* ── render ─────────────────────────────────────────────────
+     Everything is set from t. Driver / hairline / billboard are bench
+     controls, not accumulated animation state, so calling render twice
+     at the same t still produces identical output. */
+  function render(t) {
+    const c = camAt(t);
+
+    if (driver === 'viewbox') {
+      svg.setAttribute('viewBox',
+        (c.cx - VB.w / 2 / c.k).toFixed(3) + ' ' + (c.cy - VB.h / 2 / c.k).toFixed(3) + ' ' +
+        (VB.w / c.k).toFixed(3) + ' ' + (VB.h / c.k).toFixed(3));
+    } else if (driver === 'group') {
+      cam.setAttribute('transform', attrTransform(c));
+    } else if (anim) {
+      anim.currentTime = t * 1000;
+    }
+
+    /* Device pixels per user unit, which is the only quantity that
+       decides how thick a stroke lands. Identical under A and B — the
+       viewBox shrinks by k, the group scales by k, and they meet in
+       the middle.
+
+       cssW is cached rather than read here. getBoundingClientRect
+       inside a render loop forces a synchronous layout every frame,
+       and this bench would then be reporting the cost of its own
+       instrument alongside the cost of the thing it is measuring. */
+    if (hair === 'inverse') {
+      const D = (cssW / VB.w) * c.k * (window.devicePixelRatio || 1);
+      /* One DEVICE pixel, not one CSS pixel — which is the whole
+         reason this strategy exists next to vector-effect, and the
+         only one of the three that actually achieves it. */
+      const w = (1 / D).toFixed(6);
+      for (const el of strokes) el.style.strokeWidth = w;
+    }
+
+    for (let i = 0; i < markGs.length; i++) {
+      const p = PINS[i];
+      markGs[i].setAttribute('transform', billboard
+        ? 'translate(' + p.x + ' ' + p.y + ') scale(' + (1 / c.k).toFixed(6) + ')'
+        : 'translate(' + p.x + ' ' + p.y + ')');
+    }
+  }
+
+  /* ── meters ─────────────────────────────────────────────────
+     A long task is a real main-thread stall, and unlike frame rate it
+     survives being read on a machine whose display is already the
+     bottleneck: at 75 Hz every driver can look identical while one of
+     them is spending 40 ms in a burst. Counted per driver, reset on
+     every switch. */
+  let longCount = 0, longMs = 0;
+  if ('PerformanceObserver' in window) {
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) { longCount++; longMs += e.duration; }
+      }).observe({ entryTypes: ['longtask'] });
+    } catch (_) { /* Safari has no longtask entry type; the readout says so */ }
+  }
+  const hasLong = 'PerformanceObserver' in window &&
+    (PerformanceObserver.supportedEntryTypes || []).includes('longtask');
+
+  const demo = WAM.clock('frame-bench-stage', { render, dur: 9000, el: svg, poster: 0.62 });
+
+  /* Measuring a stroke is harder than it looks, and the obvious way is
+     wrong: getBBox and getBoundingClientRect both report FILL geometry,
+     so a horizontal line measures zero pixels tall no matter how thick
+     it is drawn.
+
+     SVG2 added getBBox({stroke:true}) for exactly this. Firefox
+     implements it. Blink and WebKit accept the options object and
+     silently ignore it — so a try/catch feature test PASSES on all
+     three and returns a wrong answer on two of them. The honest test is
+     whether the stroked box is actually taller than the plain one.
+
+     Where it is a stub, the document is hit-tested instead: walk
+     outward from the line in one-device-pixel steps asking what is
+     painted there. That is accurate in Blink and WebKit and NOT in
+     Firefox, whose hit region for a sub-pixel or non-scaling stroke is
+     not the region it paints. The two instruments are exactly
+     complementary, each is checked against theory in the engine it
+     serves, and the readout says which one produced the number —
+     because an unattributed measurement is a claim. */
+  let instrument = null;
+  function pickInstrument() {
+    try {
+      if (ref.getBBox({ stroke: true }).height > ref.getBBox().height) return 'getBBox';
+    } catch (_) { /* older engines throw on the options argument */ }
+    return 'hit-test';
+  }
+
+  const SCAN = 64;
+  function measureHairline() {
+    const ctm = ref.getScreenCTM();
+    const box = svg.getBoundingClientRect();
+    if (!ctm || !box.width || box.bottom < 0 || box.top > innerHeight) return null;
+    const dpr = window.devicePixelRatio || 1;
+    if (!instrument) instrument = pickInstrument();
+
+    if (instrument === 'getBBox') {
+      return { px: ref.getBBox({ stroke: true }).height * ctm.d * dpr, capped: false };
+    }
+    const pt = svg.createSVGPoint();
+    pt.x = TARGET.x; pt.y = TARGET.y;
+    const o = pt.matrixTransform(ctm);
+    const x = o.x + 12;                     /* screen-space, so the probe clears the pin at every zoom */
+    if (x < box.left || x > box.right) return null;
+    const step = 1 / dpr;
+    if (document.elementFromPoint(x, o.y) !== ref) return { px: 0, capped: false };
+    let n = 1, capped = false;
+    for (const dir of [-1, 1]) {
+      for (let i = 1; i <= SCAN; i++) {
+        if (document.elementFromPoint(x, o.y + dir * i * step) !== ref) break;
+        n++;
+        if (i === SCAN) capped = true;
+      }
+    }
+    return { px: n, capped };
+  }
+
+  const scaleEl = document.getElementById('frScale');
+  const hairEl = document.getElementById('frHair');
+  const costEl = document.getElementById('frCost');
+  const floorEl = document.getElementById('frFloor');
+  const fpsEl = document.getElementById('frFps');
+  const longEl = document.getElementById('frLong');
+  const warnEl = document.getElementById('frWarn');
+
+  setInterval(() => {
+    scaleEl.textContent = '×' + camAt(demo.t).k.toFixed(1);
+    /* Measured, not computed: the rendered thickness of the reference
+       line, read back off the box the browser gave it. */
+    const m = measureHairline();
+    hairEl.textContent = m === null ? 'off screen'
+      : (m.capped ? '> ' : '') + m.px.toFixed(1) + ' · ' + instrument;
+    /* Below the floor there is no number to report, only a bound.
+       Printing "0 µs" there would read as "free, measured" when it
+       actually means "this clock cannot see it". */
+    const floor = demo.costFloor * 1000;
+    costEl.textContent = (demo.cost * 1000 <= floor)
+      ? '< ' + floor.toFixed(0) + ' µs/frame'
+      : (demo.cost * 1000).toFixed(0) + ' µs/frame';
+    floorEl.textContent = (WAM.clockRes() * 1000).toFixed(0) + ' µs → floor ' + floor.toFixed(0) + ' µs';
+    fpsEl.textContent = demo.fps ? demo.fps.toFixed(0) + ' fps' : '—';
+    longEl.textContent = hasLong ? longCount + ' · ' + longMs.toFixed(0) + ' ms' : 'not reported here';
+    warnEl.textContent = hair === 'inverse'
+      ? 'inverse writes stroke-width on ' + strokes.length + ' elements per frame — that cost is in the figure above'
+      : hair === 'vector'
+        ? 'vector-effect pins to one CSS pixel, so on this display it lands at dpr'
+        : 'no strategy — stroke-width is geometry and scales with it';
+  }, 500);
+
+  document.querySelectorAll('[data-driver]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-driver]').forEach((o) => o.classList.toggle('is-on', o === b));
+    setDriver(b.dataset.driver);
+  }));
+  document.querySelectorAll('[data-hair]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-hair]').forEach((o) => o.classList.toggle('is-on', o === b));
+    setHair(b.dataset.hair);
+  }));
+  const bbBtn = document.querySelector('[data-billboard]');
+  bbBtn.addEventListener('click', () => {
+    billboard = !billboard;
+    bbBtn.classList.toggle('is-on', billboard);
+    demo.render(demo.t);
+  });
+
+  addEventListener('resize', () => { readWidth(); demo.render(demo.t); });
+
+  svg.classList.add('fr-hair-vector');
+  demo.render(demo.t);
 })();
 </script>
 </body>
