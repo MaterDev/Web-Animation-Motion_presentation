@@ -361,7 +361,7 @@ export const NODES = [
   },
   {
     id: 'nobel-2024',
-    year: 2024, short: 'Nobel Prize in Physics',
+    year: 2024, short: 'Nobel Prize',
     label: 'Hopfield and Hinton share the Nobel Prize in Physics',
     place: 'Royal Swedish Academy of Sciences, Stockholm',
     lat: 59.3717, lon: 18.0518, level: 0,

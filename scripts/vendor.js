@@ -130,78 +130,108 @@ for (const { entry, outfile, expect } of bundles) {
   const { NODES, EDGES, LEVELS, ACTIVITY } = data;
   const Y0 = Math.min(...NODES.map((n) => n.year));
   const Y1 = Math.max(...NODES.map((n) => n.year));
-  const W = 1000, PAD = 46, AXIS = 366, TOP_MARGIN = 10;
-  const xOf = (year) => PAD + ((year - Y0) / (Y1 - Y0)) * (W - PAD * 2);
 
-  /* Lanes exist to stop labels colliding, so the gap that decides them
-     is a LABEL WIDTH expressed in years, not a number picked to look
-     right: ~86 units of monospace caption over an axis of 81 years in
-     (W - 2*PAD) units. Greedy lowest-free-lane over nodes in year
-     order — the standard interval assignment, and deterministic, which
-     matters because the sheet's filmstrip compares frames across runs. */
-  /* Derived from the widest label that will actually be drawn, not from
-     a constant: `short` is capped by the dataset's own SHORT_MAX, and
-     JetBrains Mono at the 9px the sheet uses advances ~5.4 units per
-     character in this coordinate space. Measured off the rendered
-     sheet, not taken from the font metrics, because the CSS size is
-     what decides it. */
-  const CHAR_U = 5.4, LABEL_PAD = 14;
-  const widest = Math.max(...NODES.map((n) => n.short.length));
-  const GAP_YEARS = (widest * CHAR_U + LABEL_PAD) / ((W - PAD * 2) / (Y1 - Y0));
-  const laneLastYear = [];
-  const byYear = [...NODES].sort((a, b) => a.year - b.year || a.id.localeCompare(b.id));
-  const pos = {};
-  for (const n of byYear) {
-    let lane = laneLastYear.findIndex((last) => n.year - last >= GAP_YEARS);
-    if (lane === -1) { lane = laneLastYear.length; laneLastYear.push(-Infinity); }
-    laneLastYear[lane] = n.year;
-    pos[n.id] = { id: n.id, year: n.year, short: n.short, label: n.label, place: n.place, level: n.level, lane,
-      x: Math.round(xOf(n.year) * 100) / 100 };
+  /* §2 is a chart recorder, so its geometry is emitted in the LED
+     slide's own coordinate space — 960x540 on a 6px cell. That is a
+     system constant (components.css .led-slide), not a number picked
+     here, which is what makes it safe to bake absolute coordinates in:
+     the slide is scaled by transform at display time, so every value
+     below stays a whole number of cells at any size.
+
+     Bands, all multiples of the 6px cell. The trace gets the most
+     height because it is the headline; the arcs get a shallow band
+     because they are the detail, and that ratio is the hierarchy. */
+  const S = { w: 960, h: 540, cell: 6, padX: 108,
+    traceTop: 84, traceBase: 258,      /* channel 1 — movements per year */
+    arcTop: 270, base: 342,            /* the register: events and the movements between them */
+    labelTop: 348, labelRows: 4, rowH: 24,
+    axis: 450, axisText: 468, readout: 486 };
+  const xOf = (year) => S.padX + ((year - Y0) / (Y1 - Y0)) * (S.w - S.padX * 2);
+  const R2 = (v) => Math.round(v * 100) / 100;
+
+  /* The trace. A chart recorder draws one continuous line and never
+     lifts the pen — including across the years where the value is
+     zero, which is the entire point: an absence has to be DRAWN to be
+     seen. The old staging hid what had not happened yet, so a decade
+     with no movement looked identical to a decade not yet reached. */
+  const act = new Map(ACTIVITY.map((a) => [a.year, a.magnitude]));
+  const trace = [];
+  for (let y = Y0; y <= Y1; y++) {
+    const m = act.get(y) || 0;
+    trace.push([R2(xOf(y)), R2(S.traceBase - m * (S.traceBase - S.traceTop))]);
   }
-  const lanes = laneLastYear.length;
-  const laneY = (lane) => Math.round((AXIS - (lane + 1) * (AXIS / (lanes + 1))) * 100) / 100;
-  for (const id in pos) pos[id].y = laneY(pos[id].lane);
+  const traceD = 'M' + trace.map(([x, y]) => x + ' ' + y).join('L');
 
-  /* Edges are drawn as arcs ABOVE the axis so the year ordering stays
-     readable underneath them. Height grows with the square root of the
-     span rather than linearly: a 40-year edge is only ~2.4x the arc of
-     a 7-year one, which keeps the long movements from leaving the box
-     while short ones stay visible. */
-  const arcs = EDGES.map((e) => {
+  /* Every event on one baseline — this is a strip chart, not a lane
+     diagram, so y carries nothing and x is time. Arcs lift above it. */
+  const nodes = [...NODES].sort((a, b) => a.year - b.year).map((n) => ({
+    id: n.id, year: n.year, short: n.short, label: n.label, place: n.place,
+    level: n.level, x: R2(xOf(n.year)),
+  }));
+  const pos = Object.fromEntries(nodes.map((n) => [n.id, n]));
+
+  const arcs = [...EDGES].sort((a, b) => a.year - b.year).map((e) => {
     const a = pos[e.from], b = pos[e.to];
     const dx = Math.abs(b.x - a.x);
-    const lift = Math.min(150, 16 + Math.sqrt(dx) * 7.2);
-    /* Clamped to the frame. A cubic lies inside the convex hull of its
-       control points, so pinning the control ys inside the box is
-       enough to guarantee the drawn curve is too — and the first
-       version of this did not, which put four of the twenty-two arcs
-       up to 89 units above the top edge. The node assertion below did
-       not catch it because nodes were all inside; it was the arcs that
-       left. Both are checked now. */
-    const top = Math.max(TOP_MARGIN, Math.min(a.y, b.y) - lift);
-    const R2 = (v) => Math.round(v * 100) / 100;
-    return { ...e,
-      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-      d: `M${R2(a.x)} ${R2(a.y)}C${R2(a.x)} ${R2(top)} ${R2(b.x)} ${R2(top)} ${R2(b.x)} ${R2(b.y)}` };
-  }).sort((p, q) => p.year - q.year);
+    /* Square root, so a fifty-year movement is only about twice the
+       arc of a twelve-year one and the long ones stay in the band. */
+    const lift = Math.min(S.base - S.arcTop, 12 + Math.sqrt(dx) * 6.2);
+    const top = S.base - lift;
+    return { ...e, x1: a.x, x2: b.x,
+      d: `M${a.x} ${S.base}C${a.x} ${R2(top)} ${b.x} ${R2(top)} ${b.x} ${S.base}` };
+  });
+
+  /* Only the twelve level-0 events get a standing label, and the rank
+     is the dataset's own — the same field §3's semantic zoom reads.
+     Laid out here because "which labels fit" is a layout question, and
+     answering it at load would mean measuring text in the browser on
+     the critical path. Anything that would collide is DROPPED rather
+     than overlapped, and the count is reported so a silent drop is
+     impossible to miss. */
+  /* 6.6 px per character is JetBrains Mono's 0.6em advance at the
+     11px these are set at — measured off the rendered sheet, since the
+     CSS size is what decides it, not the font's own metrics. */
+  /* Clear space stated as a rule rather than a pixel count: one and a
+     half character widths, which is a normal word gap and reads as
+     separation at projection distance. Picking a round 12 px instead
+     cost Transformer its place by two pixels, which is exactly the
+     kind of number that should not be decided by taste. */
+  const LABEL_CH = 6.6, LABEL_GAP = LABEL_CH * 1.5, LABEL_ROWS = S.labelRows, ROW_H = S.rowH;
+  const marked = nodes.filter((n) => n.level === 0);
+  /* A finite sentinel, not -Infinity: the tightest-fit comparison is
+     `slack < bestSlack`, and an infinite slack is never strictly less
+     than the infinite starting best, so every row was disqualified and
+     all twelve labels were dropped. */
+  const rowEnd = new Array(LABEL_ROWS).fill(-1e6);
+  const labels = [], dropped = [];
+  for (const n of marked) {
+    const wpx = n.short.length * LABEL_CH;
+    const left = n.x - wpx / 2;
+    /* Tightest fit, not first fit. First-fit packs everything into row
+       0 until it jams and leaves the lower rows empty, which both
+       wastes the band and drops labels that would have fitted — it
+       cost Transformer a place. Choosing the row whose last label ends
+       closest to this one keeps all four rows in play. */
+    let row = -1, bestSlack = Infinity;
+    for (let r = 0; r < LABEL_ROWS; r++) {
+      const slack = left - rowEnd[r];
+      if (slack >= LABEL_GAP && slack < bestSlack) { bestSlack = slack; row = r; }
+    }
+    if (row === -1) { dropped.push(n.short); continue; }
+    rowEnd[row] = left + wpx;
+    labels.push({ id: n.id, x: n.x, row, y: S.labelTop + row * ROW_H, w: R2(wpx), text: n.short });
+  }
 
   const bad = arcs.filter((a) => /NaN|Infinity|undefined/.test(a.d));
-  if (bad.length) {
-    console.error(`vendor: ${bad.length} lineage arcs produced non-finite path data`);
+  if (bad.length || /NaN|Infinity|undefined/.test(traceD)) {
+    console.error('vendor: §2 geometry produced non-finite path data');
     process.exit(1);
   }
-  const inFrame = (x, y) => x >= 0 && x <= W && y >= 0 && y <= AXIS;
-  const outside = Object.values(pos).filter((n) => !inFrame(n.x, n.y));
-  if (outside.length) {
-    console.error(`vendor: ${outside.length} nodes project outside the ${W}x${AXIS} frame`);
-    process.exit(1);
-  }
-  /* Every control point, not just the endpoints — see the note on the
-     clamp above. */
-  const escaped = arcs.filter((a) => [...a.d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)]
-    .some((m) => !inFrame(+m[1], +m[2])));
+  const escaped = [...arcs.flatMap((a) => [...a.d.matchAll(/(-?[\d.]+) (-?[\d.]+)/g)].map((m) => [+m[1], +m[2]])),
+                   ...trace]
+    .filter(([x, y]) => !(x >= 0 && x <= S.w && y >= 0 && y <= S.h));
   if (escaped.length) {
-    console.error(`vendor: ${escaped.length} lineage arcs have control points outside the ${W}x${AXIS} frame`);
+    console.error(`vendor: ${escaped.length} §2 control points fall outside the ${S.w}x${S.h} slide`);
     process.exit(1);
   }
 
@@ -212,14 +242,14 @@ for (const { entry, outfile, expect } of bundles) {
       '   A side-effect global, NOT an ES module: the SVG tearsheet has to\n' +
       '   keep opening over file://, where import is blocked. */\n' +
       'globalThis.AI_HISTORY = ' + JSON.stringify({
-        span: [Y0, Y1], frame: { w: W, h: AXIS, pad: PAD }, lanes,
-        nodes: byYear.map((n) => pos[n.id]), arcs, levels: LEVELS, activity: ACTIVITY,
-        geo: Object.fromEntries(NODES.map((n) => [n.id, [n.lon, n.lat]])),
-      }, null, 1) + ';\n'
+        span: [Y0, Y1], strip: S, nodes, arcs, labels, traceD,
+        levels: LEVELS, activity: ACTIVITY,
+      }) + ';\n'
   );
   console.log(`vendor: ai-history → design/vendor/ai-history.js ` +
-    `(${NODES.length} nodes ${Y0}–${Y1}, ${arcs.length} arcs, ${lanes} lanes, ` +
-    `widest label ${widest} chars → ${GAP_YEARS.toFixed(1)}y lane gap)`);
+    `(${nodes.length} events ${Y0}–${Y1}, ${arcs.length} movements, ` +
+    `${labels.length}/${marked.length} standing labels placed` +
+    (dropped.length ? ` — DROPPED (would collide): ${dropped.join(', ')}` : '') + ')');
 }
 
 /* ── World map: projected at build time ────────────────────
