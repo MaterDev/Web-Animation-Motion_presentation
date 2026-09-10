@@ -33,5 +33,15 @@ vite.config.js.timestamp-*
 .idea/
 *.swp
 
-# claude code: machine-local settings (launch.json is shared, this is not)
-.claude/settings.local.json
+# Tooling lives in its own private repo, symlinked in at the root:
+#   .claude    -> ~/Code/key-wam-claude      (jclarkfolklore/key-wam-claude)
+#   conductor  -> ~/Code/key-wam-conductor   (jclarkfolklore/key-wam-conductor)
+# This repo carries the talk, not the tooling. Same pattern as inspire-monorepo's
+# .claude and .specify. Sync both with ~/.claude/scripts/sync-personal.sh, which
+# discovers them through these symlinks.
+#
+# Extracted 2026-09-10 and removed from this repo's history in the same pass.
+# Until then conductor/ and .claude/ were committed here deliberately; that
+# reasoning now lives in each extracted repo's README.
+.claude
+conductor

@@ -3,13 +3,35 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SL-09 · SVG — WAM-2026</title>
+<title>SL-10 · SVG — WAM-2026</title>
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
-:root { --tint: var(--tint-svg); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+:root {
+  --tint: var(--tint-svg);
+  /* ── era ramp ──────────────────────────────────────────────
+     Replaces the food hues as sections rebuild. Hue is held at 145
+     because hue is already spent: it is the deck's sheet-identity
+     code (--tint-svg is hue 145), so a second hue here would compete
+     with it, and anything near 27 collides with --signal, which this
+     page already uses for a failing frame rate.
+
+     So lightness carries time and chroma stays low. Each step is
+     ~+0.12 L, which is above the threshold where adjacent levels read
+     as levels rather than as inconsistencies. The food palette this
+     replaced ran its lead green at chroma 0.16 against a section tint
+     of 0.05 — three times its own tint, which is why this sheet used
+     to read as a green demo rather than a green-tinted instrument.
+     Ceiling here is 0.10. */
+  --ai-t0:  oklch(0.46 0.05 145);   /* 1950s — floor */
+  --ai-t1:  oklch(0.58 0.07 145);   /* 1970s */
+  --ai-t2:  oklch(0.70 0.09 145);   /* 1990s */
+  --ai-t3:  oklch(0.82 0.08 145);   /* 2010s */
+  --ai-now: oklch(0.92 0.04 145);   /* the present */
+  --ai-ink: oklch(0.97 0.01 145);   /* the one accent, used at low extension */
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
@@ -17,62 +39,2680 @@
 .head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); display: grid; place-items: center; }
-.canvas-frame svg { width: 60%; max-width: 320px; }
-.canvas-frame .pending {
-  position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400);
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
+
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+.scene-stage { position: relative; border-radius: 8px; background: oklch(0.14 0.006 265); box-shadow: var(--recess); overflow: hidden; container-type: inline-size; }
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+.scene-note code { font-size: 9px; }
+
+/* ── 1 · THE TRADE ────────────────────────────────────────────
+   What a node buys and what it costs are one argument, so they run
+   side by side rather than as two full-width sections you scroll
+   between. Each column keeps its controls directly under its own
+   stage — a shared control strip would make it ambiguous which demo
+   a given button belongs to. */
+.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .two-up { grid-template-columns: 1fr; } }
+.col-h { font-size: 19px; letter-spacing: -0.01em; margin-bottom: 5px; }
+.col-p { color: var(--hz-500); font-size: 12.5px; line-height: 1.55; margin-bottom: 11px; min-height: 4.6em; }
+.col-p b { color: var(--hz-700); font-weight: 500; }
+.col-ctl { margin-top: 9px; border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+
+.node-stage, .ceil-stage { aspect-ratio: 16/10; }
+.node-stage svg, .ceil-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.edge { stroke: color-mix(in oklch, var(--ai-t3) 32%, transparent); stroke-width: 1; }
+.nd { cursor: pointer; }
+.nd circle { fill: var(--ai-t0); stroke: var(--ai-t3); stroke-width: 1.5;
+  transition: fill var(--dur-fast) var(--ease-standard), r var(--dur-base) var(--ease-standard); }
+.nd text { font-family: var(--mono); font-size: 5.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  fill: var(--ai-ink); text-anchor: middle; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
+/* pointer events hit the shape, not a rectangle — this is the bit
+   Canvas cannot do without hand-rolling hit testing */
+.nd:hover circle { fill: var(--tint); r: 9; }
+.nd:hover text { opacity: 1; }
+.nd:focus-visible circle { outline: none; stroke: oklch(0.98 0 0); stroke-width: 3; }
+
+/* the whole sheet restyled from OUTSIDE the graphic, by class */
+svg.sk-wire .nd circle { fill: none; }
+svg.sk-wire .edge { stroke-dasharray: 3 3; }
+svg.sk-solid .nd circle { fill: var(--ai-t3); stroke: none; }
+svg.sk-solid .edge { stroke: color-mix(in oklch, var(--ai-t3) 55%, transparent); }
+svg.sk-ghost .nd circle { fill: var(--ai-t0); stroke-opacity: 0.35; }
+svg.sk-ghost .edge { stroke-opacity: 0.25; }
+
+.sk-btns { padding: 8px; display: flex; gap: 5px; }
+.sk-btn { flex: 1; text-align: center; padding: 6px 4px; border-radius: 5px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--hz-600);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.sk-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.sk-btn.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); color: var(--hz-900); }
+.node-read { border-top: var(--hair) solid var(--hz-300); padding: 8px 11px; display: flex; gap: 16px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; color: var(--hz-500); }
+.node-read var { font-style: normal; color: var(--tint); }
+.node-read i { font-style: normal; color: var(--hz-700); }
+
+/* ── 2 · THE CEILING ──────────────────────────────────────── */
+.ceil-ctl { padding: 9px 11px 10px; display: flex; flex-direction: column; gap: 5px; }
+.ceil-ctl label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); }
+.ceil-ctl label var { font-style: normal; color: var(--tint); font-variant-numeric: tabular-nums; }
+.ceil-ctl input { width: 100%; accent-color: var(--tint); }
+.ceil-read { border-top: var(--hair) solid var(--hz-300); padding: 8px 11px; display: flex; align-items: baseline; gap: 12px; }
+.ceil-fps { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 26px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums; }
+.ceil-fps.is-bad { color: oklch(0.65 0.20 27); }
+.ceil-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); line-height: 1.6; }
+.ceil-sub b { color: var(--hz-800); font-weight: 400; }
+
+
+/* ── the bench ────────────────────────────────────────────────
+   Every section pairs a small cold "mechanism" panel with a large
+   stage. The size difference is the argument, so it is carried by
+   height and stated identically in all three sections rather than
+   re-chosen per section: bench 1000x200, stage 1000x625, a ratio of
+   ~1:3.1 that matches the rail:main split already used on the css
+   sheet. Stacked rather than side by side — at 1:3 across, the eye
+   lands on the stage and the mechanism silently becomes a sidebar,
+   whereas stacked the reading order IS the argument order.
+
+   The transport lives in the bench, never in the stage. Which panel
+   owns the control is what says which one is the instrument. */
+.bench { display: grid; grid-template-columns: 317px minmax(0, 1fr); gap: calc(var(--u)*3);
+  align-items: stretch; border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.bench-rail { padding: 11px 13px; display: flex; flex-direction: column; gap: 9px;
+  border-right: var(--hair) solid var(--hz-300); }
+.bench-stage { background: oklch(0.14 0.006 265); min-height: 200px; position: relative; }
+.bench-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bench-h { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); }
+.bench-read { margin-top: auto; display: flex; flex-direction: column; gap: 3px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; color: var(--hz-500); }
+.bench-read var { font-style: normal; color: var(--tint); font-variant-numeric: tabular-nums; }
+.bench-read i { font-style: normal; color: var(--hz-700); }
+.bench-read .warn { color: var(--hz-400); line-height: 1.5; }
+
+/* ── 4 · THE PIPELINE ─────────────────────────────────────────
+   Stage toggles are cumulative, not independent: the point is that a
+   filter is a GRAPH, so the reader watches blur alone, then the
+   threshold snapping it back to a hard edge, then the composite. An
+   independent set of checkboxes would show combinations that are not
+   pipeline stages and teach the wrong shape. */
+.pp-stages { display: flex; flex-direction: column; gap: 4px; }
+.pp-stage { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 5px;
+  cursor: pointer; font: inherit; text-align: left; width: 100%;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.pp-stage:hover { background: var(--hz-200); color: var(--hz-800); }
+.pp-stage.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+.pp-stage .pp-n { color: var(--hz-400); font-variant-numeric: tabular-nums; }
+.pp-stage.is-on .pp-n { color: var(--tint); }
+.pp-blob { fill: var(--ai-t2); }
+
+/* ── 2 · THE LINE ─────────────────────────────────────────────
+   Prefixed ln- because components.css owns 113 unscoped top-level
+   class names; a bare .dot or .note here would inherit system styling
+   silently and with no console error. */
+.ln-path { fill: none; stroke: var(--ai-now); stroke-width: 2.5; stroke-linecap: round; }
+.ln-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 70%, transparent); stroke-width: 2.5; }
+.ln-btns { display: flex; gap: 4px; }
+.ln-btn { flex: 1; text-align: center; padding: 6px 4px; border-radius: 5px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.ln-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.ln-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+
+/* The stage is a CHART RECORDER PRINTOUT — a seismograph roll, an ECG
+   strip, a plotter trace. It is its own product with its own trade
+   dress, and it deliberately looks nothing like the sheet around it:
+   warm paper and red pen inside a dark instrument harness, the same way
+   the css sheet's magazine is paper-light inside the same harness. A
+   stage that wears the site's own theme reads as another panel of the
+   site; a stage with its own reads as a thing being demonstrated.
+
+   The metaphor is not decoration either. A chart recorder's entire job
+   is dragging a pen along a one-dimensional coordinate onto moving
+   paper, which is what stroke-dashoffset is. The instrument and the
+   technique are the same object.
+
+   Everything below is scoped to .cr — no token here escapes into the
+   sheet, and nothing from the sheet's --ai-* ramp reaches in. */
+.cr {
+  --cr-paper:  oklch(0.945 0.028 82);    /* manila chart stock */
+  --cr-tint:   oklch(0.915 0.042 74);    /* the warmer band down the margins */
+  --cr-grid:   oklch(0.80 0.075 44);     /* the printed grid — orange-red, always */
+  --cr-grid-b: oklch(0.70 0.105 40);     /* every fifth line, heavier */
+  --cr-ink:    oklch(0.32 0.028 62);     /* graphite: printed plate type */
+  --cr-sub:    oklch(0.54 0.038 66);
+  --cr-pen:    oklch(0.50 0.205 28);     /* the pen. One colour, and it is the trace */
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--cr-paper); color: var(--cr-ink);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.5) inset, var(--shadow-2, 0 6px 20px oklch(0 0 0 / 0.35));
 }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); }
+.cr-sheet { position: relative; width: 960px; height: 540px; transform-origin: 0 0; }
+.cr-sheet svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+
+/* The printed grid. Real chart paper is ruled before anything is drawn
+   on it, so this is a background rather than geometry — it is the
+   product, not the data. 12px minor, 60px major. */
+/* Two rulings, not one. The first version printed the fine 12px grid
+   over the whole sheet at half opacity, which is roughly what real
+   chart paper looks like and completely wrong here — every label, the
+   axis figures and the footer all sat on top of it and became hard to
+   read. On a real recorder the fine ruling covers the RECORDING AREA
+   and the margins are plain, which is both more accurate and the fix:
+   the fine grid is confined to the trace band, and only a faint major
+   grid continues across the rest. */
+.cr-sheet::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg,  var(--cr-grid-b) 0 1px, transparent 1px 60px);
+  opacity: 0.28;
+}
+.cr-rule { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg,  var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(90deg, var(--cr-grid) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(0deg,  var(--cr-grid) 0 1px, transparent 1px 12px);
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+}
+/* Sprocket margins — the tractor-feed edge. The single cheapest mark
+   that says "this came out of a machine" rather than "this is a div". */
+.cr-sheet::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--cr-tint) 0 34px, transparent 34px calc(100% - 34px), var(--cr-tint) calc(100% - 34px)),
+    radial-gradient(circle at 17px 0, transparent 3.5px, transparent 0) ;
+  box-shadow: inset 34px 0 0 -33px var(--cr-grid), inset -34px 0 0 -33px var(--cr-grid);
+}
+.cr-sprockets { position: absolute; top: 0; bottom: 0; width: 34px; z-index: 4; pointer-events: none;
+  background-image: radial-gradient(circle, var(--cr-tint) 0 4px, var(--cr-grid) 4px 4.8px, transparent 5px);
+  background-size: 34px 30px; background-position: center 9px; opacity: 0.9; }
+.cr-sprockets.l { left: 0; } .cr-sprockets.r { right: 0; }
+
+.cr-grid-line { stroke: none; }
+.cr-axis { stroke: var(--cr-ink); stroke-width: 1; opacity: 0.55; }
+.cr-tick-t { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+  fill: var(--cr-sub); text-anchor: middle;
+  paint-order: stroke; stroke: var(--cr-paper); stroke-width: 3.5; stroke-linejoin: round; }
+
+/* Channel 1. Drawn continuously, INCLUDING across the years where the
+   value is zero — an absence has to be drawn to be seen, and a flat
+   trace is the most legible mark in the whole vocabulary of
+   instruments. Everybody knows what a flatline means. */
+.cr-trace { fill: none; stroke: var(--cr-pen); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+/* Secondary motion: a short wetter segment behind the nib, the way
+   fresh ink sits heavier before it dries. Cheap, and it is the
+   difference between a plot and something authored. */
+.cr-trail { fill: none; stroke: var(--cr-pen); stroke-width: 3.4; stroke-linecap: round; }
+
+.cr-arc { fill: none; stroke-width: 1.2; stroke-linecap: round; stroke: var(--cr-ink); opacity: 0.62; }
+.cr-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--cr-ink) 14%, transparent); stroke-width: 1; }
+.cr-ev { fill: color-mix(in oklch, var(--cr-ink) 26%, transparent); }
+.cr-ev-lit { fill: var(--cr-ink); }
+.cr-leader { stroke: color-mix(in oklch, var(--cr-ink) 30%, transparent); stroke-width: 1; }
+
+/* The pen carriage. One of them, not twenty-two markers — at any
+   instant exactly one thing on this stage is at peak value. */
+.cr-pen-line { stroke: var(--cr-ink); stroke-width: 1; opacity: 0.35; }
+.cr-nib { fill: var(--cr-pen); }
+
+/* Plate type: what is PRINTED on the stock, as opposed to what the pen
+   draws. Two different things on a real chart and they should not look
+   alike. */
+.cr-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.cr-mark { position: absolute; transform: translate(-50%, 0);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
+  color: color-mix(in oklch, var(--cr-ink) 42%, transparent);
+  /* Struck on the stock, so it knocks the ruling out behind itself
+     rather than competing with it. */
+  text-shadow: 0 0 3px var(--cr-paper), 0 0 5px var(--cr-paper), 0 0 7px var(--cr-paper); }
+.cr-mark.is-lit { color: var(--cr-ink); }
+
+.cr-head, .cr-year, .cr-strip { background: color-mix(in oklch, var(--cr-paper) 88%, transparent); }
+.cr-head { position: absolute; z-index: 4; pointer-events: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--cr-sub); }
+.cr-year { position: absolute; z-index: 4; pointer-events: none;
+  font-family: var(--mono); font-weight: 700; font-size: 42px; line-height: 42px;
+  letter-spacing: -0.01em; color: var(--cr-pen); font-variant-numeric: tabular-nums; }
+
+/* The strip a recorder prints along its own edge — struck type on the
+   same stock, not a second display. */
+.cr-strip { position: absolute; z-index: 4; display: flex; align-items: baseline; gap: 26px;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--cr-ink);
+  border-top: 1px solid color-mix(in oklch, var(--cr-ink) 22%, transparent); padding-top: 9px;
+  flex-wrap: nowrap; }
+.cr-strip > span { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.cr-strip > span.cr-ev-cell { flex: 1; min-width: 0; }
+.cr-strip .k { color: var(--cr-sub); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; flex: none; }
+.cr-strip .cr-ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── 4 · THE PIPELINE, stage ──────────────────────────────────
+   A BROADCAST WEATHER RADAR, and like §2's chart recorder it is its
+   own product with its own trade dress — a different world again, so
+   the sheet reads as three instruments demonstrated rather than three
+   panels of one website.
+
+   The choice is not decoration. A goo filter's entire visual behaviour
+   — separate cells that swell, touch and fuse into one mass with a
+   hard edge — is precipitation on a radar. Everyone has read one.
+   Nobody needs to be taught what merging cells mean, so the filter
+   graph gets to be the subject instead of the thing needing explained.
+
+   The precipitation ramp is the one piece of colour in this project
+   that is allowed to break the sheet's chroma ceiling, and it has to:
+   cyan-green-yellow-red IS the convention, it is what makes a radar
+   legible without a legend, and a tasteful low-chroma version of it
+   would be a worse graphic that merely matched the page better. Scoped
+   to .wx so it reaches nothing else. */
+.wx {
+  --wx-ground: oklch(0.17 0.045 250);   /* the unlit sweep field */
+  --wx-grid:   oklch(0.30 0.045 250);
+  --wx-coast:  oklch(0.72 0.030 230);
+  --wx-ink:    oklch(0.96 0.010 230);
+  --wx-sub:    oklch(0.68 0.025 235);
+  --wx-1: oklch(0.72 0.13 205);         /* light */
+  --wx-2: oklch(0.78 0.19 150);
+  --wx-3: oklch(0.86 0.17 105);
+  --wx-4: oklch(0.80 0.19 60);
+  --wx-5: oklch(0.62 0.23 27);          /* heaviest */
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--wx-ground); color: var(--wx-ink);
+  box-shadow: var(--recess);
+}
+.wx-screen { position: relative; width: 960px; height: 540px; transform-origin: 0 0; }
+.wx-screen svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+/* Scan lines. A broadcast graphic is a video signal before it is a
+   picture, and one 3px raster does more for that read than any amount
+   of styling on the marks themselves. */
+.wx-screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, oklch(0 0 0 / 0.16) 0 1px, transparent 1px 3px);
+}
+.wx-coast { fill: none; stroke: var(--wx-coast); stroke-width: 1; opacity: 0.55;
+  vector-effect: non-scaling-stroke; }
+.wx-grat { stroke: var(--wx-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.wx-site { fill: var(--wx-ink); }
+.wx-slabel { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; fill: var(--wx-ink); }
+
+.wx-chrome { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--wx-sub); }
+.wx-year { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 44px; line-height: 44px; color: var(--wx-ink);
+  font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px oklch(0 0 0 / 0.6); }
+/* The key every radar carries. It is also the legend for the filter:
+   each step is one more band the threshold has snapped to. */
+.wx-key { position: absolute; z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 0; }
+.wx-key i { display: block; width: 34px; height: 9px; }
+.wx-key .cap { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--wx-sub); }
+.wx-bar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 40px;
+  background: oklch(0.11 0.035 250 / 0.92);
+  border-top: 1px solid var(--wx-grid);
+  display: flex; align-items: center; gap: 26px; padding: 0 34px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--wx-ink); }
+.wx-bar > span { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.wx-bar > span.wx-hot { flex: 1; min-width: 0; }
+.wx-bar .k { color: var(--wx-sub); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; flex: none; }
+.wx-bar .wx-hot b { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── 3 · THE FRAME, stage ─────────────────────────────────────
+   A TOPOGRAPHIC SURVEY SHEET — cream stock, blue water, a brown
+   shoreline, black plate type and a red locator. Its own product with
+   its own trade dress, like §2's chart recorder and §4's radar, and a
+   third world again so the three stages never look like three panels
+   of the same page.
+
+   It earns the concept the same way the others do: a survey sheet is
+   the object whose entire premise is that the SAME place is published
+   at several scales, each carrying only the detail its scale can hold.
+   That is semantic zoom, named and in print, a century before anyone
+   wrote it in JavaScript. Scoped to .sv. */
+.sv {
+  --sv-water: oklch(0.885 0.048 224);
+  --sv-land:  oklch(0.960 0.022 86);
+  --sv-edge:  oklch(0.52 0.060 58);
+  --sv-grid:  oklch(0.74 0.045 62);
+  --sv-ink:   oklch(0.27 0.022 60);
+  --sv-sub:   oklch(0.50 0.032 64);
+  --sv-red:   oklch(0.50 0.200 28);
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--sv-land); color: var(--sv-ink);
+  box-shadow: var(--recess);
+}
+.sv-sheet { position: relative; width: 960px; height: 540px; transform-origin: 0 0;
+  background: var(--sv-water); overflow: hidden; }
+.sv-sheet svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+.sv-land { fill: var(--sv-land); stroke: var(--sv-edge); }
+.sv-stipple { fill: url(#sv-stipple); stroke: none; pointer-events: none; }
+/* Bathymetric banding: the pale shelves a chart prints just offshore.
+   Three strokes of the SAME coastline at decreasing width, drawn
+   UNDER the land fill so only the seaward half of each shows. It is a
+   drawing convention rather than depth data — there is no bathymetry
+   in Natural Earth — so it is stroked at fixed screen widths and it
+   is decorative, which is why the one-device-pixel criterion applies
+   to .sv-land's own stroke and not to these. */
+.sv-shelf { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.sv-shelf-1 { stroke: color-mix(in oklch, var(--sv-water) 62%, oklch(0.99 0 0)); stroke-width: 13; }
+.sv-shelf-2 { stroke: color-mix(in oklch, var(--sv-water) 78%, oklch(0.99 0 0)); stroke-width: 7.5; }
+.sv-shelf-3 { stroke: color-mix(in oklch, var(--sv-water) 90%, oklch(0.99 0 0)); stroke-width: 3; }
+/* Interior country borders, from the countries mesh — real data, and
+   meshed so shared arcs appear once and coastlines are excluded, which
+   is what stops every shoreline being drawn twice. */
+/* Divisions deepen with the zoom, the same way the labels do: nations
+   everywhere, states from the regional sheet, counties only once the
+   scale can hold them. The weights are a hierarchy — a county line
+   drawn like a national border would make sheet 3 unreadable.
+
+   The weight stays owned here and the crossfade owns only --fade, so
+   there is still exactly one place that says how dark a county line
+   is. The stage writes --fade per path; unset, it is 1. */
+.sv-border { fill: none; stroke: var(--sv-edge); opacity: calc(0.6 * var(--fade, 1));
+  stroke-dasharray: 7 3 2 3; }
+.sv-state { fill: none; stroke: var(--sv-edge); opacity: calc(0.45 * var(--fade, 1));
+  stroke-dasharray: 5 3; }
+.sv-county { fill: none; stroke: var(--sv-edge); opacity: calc(0.28 * var(--fade, 1)); }
+/* Place names, from the same division data — a boundary you cannot
+   name is decoration. Set apart from the event labels so the two never
+   read as one list: the events are the subject, these are the ground. */
+.sv-place { position: absolute; transform: translate(-50%, -50%);
+  font-family: var(--mono); letter-spacing: 0.12em; white-space: nowrap;
+  color: color-mix(in oklch, var(--sv-ink) 52%, transparent); text-transform: uppercase;
+  text-shadow: 0 0 3px var(--sv-land), 0 0 6px var(--sv-land); }
+.sv-place.r1 { font-size: 10px; letter-spacing: 0.2em; }
+.sv-place.r2 { font-size: 8.5px; color: color-mix(in oklch, var(--sv-ink) 36%, transparent); }
+.sv-grat { stroke: var(--sv-grid); fill: none; opacity: 0.5; }
+
+/* The locator. A survey sheet's index diagram marks where the next
+   sheet in the series sits — this is that mark, and it is what the
+   camera is flying into. */
+.sv-retic { stroke: var(--sv-red); fill: none; }
+.sv-retic-fill { fill: color-mix(in oklch, var(--sv-red) 12%, transparent); stroke: none; }
+.sv-site { fill: var(--sv-ink); }
+
+.sv-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.sv-lab { position: absolute; transform: translate(-50%, -100%);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
+  color: var(--sv-ink); text-shadow: 0 0 3px var(--sv-land), 0 0 6px var(--sv-land); }
+.sv-lab.is-target { color: var(--sv-red); font-weight: 700; }
+
+/* The cartouche every printed sheet carries: series, scale, projection,
+   datum. It is also, conveniently, exactly the set of facts this
+   section is about — so the furniture and the teaching are the same
+   object rather than one decorating the other. */
+.sv-plate { position: absolute; z-index: 4; background: color-mix(in oklch, var(--sv-land) 92%, transparent);
+  border: 1px solid var(--sv-edge); padding: 10px 13px;
+  font-family: var(--mono); font-size: 10px; line-height: 1.7; letter-spacing: 0.04em;
+  color: var(--sv-sub); }
+.sv-plate b { color: var(--sv-ink); font-weight: 400; }
+.sv-plate .t { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sv-ink);
+  display: block; margin-bottom: 5px; }
+.sv-scalebar { position: absolute; z-index: 4; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--sv-sub); }
+.sv-scalebar .bar { height: 6px; border: 1px solid var(--sv-ink); display: flex; }
+.sv-scalebar .bar i { display: block; height: 100%; }
+.sv-scalebar .bar i:nth-child(odd) { background: var(--sv-ink); }
+
+/* The record. The zoom outruns the map — Dartmouth is 150km inland, so
+   by the deepest level Natural Earth holds no geometry at all. That is
+   a fact about the subject rather than a gap to paper over: the piece
+   flies out of geography and lands on the document, which is the thing
+   it was looking for the whole time. */
+.sv-record { position: absolute; z-index: 5; inset: 0; display: grid; place-items: center;
+  background: color-mix(in oklch, var(--sv-land) 88%, transparent); }
+.sv-record .card { border: 1px solid var(--sv-edge); background: var(--sv-land);
+  padding: 26px 30px; max-width: 620px; box-shadow: 0 6px 26px oklch(0 0 0 / 0.18); }
+.sv-record .yr { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 40px; line-height: 1; color: var(--sv-red); font-variant-numeric: tabular-nums; }
+.sv-record .ttl { font-family: var(--sans); font-size: 19px; line-height: 1.3; color: var(--sv-ink);
+  margin: 10px 0 6px; }
+.sv-record .meta { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.05em;
+  color: var(--sv-sub); line-height: 1.7; }
+
+/* ── 3 · THE FRAME ────────────────────────────────
+   Three exclusive camera drivers, one scene. Radios in behaviour, but
+   drawn as the same segmented control as §4's chain so the rail reads
+   as one instrument across sections — the difference is that these are
+   mutually exclusive and §4's are cumulative, which the copy says. */
+.fr-set { display: flex; flex-direction: column; gap: 4px; }
+.fr-set + .fr-set { margin-top: 2px; }
+.fr-btn { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 5px;
+  cursor: pointer; font: inherit; text-align: left; width: 100%;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.fr-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.fr-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+.fr-btn .fr-k { color: var(--hz-400); font-variant-numeric: tabular-nums; }
+.fr-btn.is-on .fr-k { color: var(--tint); }
+
+/* vector-effect is a STATIC declaration, so it lives in CSS and is
+   switched by one class on the root. Writing it inline every frame the
+   way the inverse strategy must write stroke-width would charge it for
+   work it does not do, and the whole point of the comparison is which
+   strategy costs a per-frame write. */
+.fr-hair-vector .fr-land, .fr-hair-vector .fr-hair { vector-effect: non-scaling-stroke; }
+.fr-verdict { margin-top: calc(var(--u)*3); border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); padding: 13px 15px; }
+.fr-verdict h4 { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); margin-bottom: 8px; }
+.fr-verdict p { color: var(--hz-500); font-size: 12.5px; line-height: 1.6; max-width: 74ch; margin-bottom: 8px; }
+.fr-verdict p:last-child { margin-bottom: 0; }
+.fr-verdict b { color: var(--hz-800); font-weight: 500; }
+.fr-verdict table { border-collapse: collapse; margin: 4px 0 10px; font-family: var(--mono); font-size: 10px; }
+.fr-verdict th, .fr-verdict td { text-align: left; padding: 3px 14px 3px 0; color: var(--hz-500); }
+.fr-verdict th { color: var(--hz-400); font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; font-size: 9px; }
+.fr-verdict td.fr-good { color: var(--tint); }
+.fr-verdict td.fr-bad { color: var(--hz-700); }
+
+.fr-land { fill: none; stroke: var(--ai-t2); stroke-width: 1; stroke-linejoin: round; }
+.fr-hair { stroke: var(--ai-now); stroke-width: 1; }
+.fr-pin { fill: var(--ai-now); }
+.fr-lab { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  fill: var(--ai-ink); text-anchor: middle; }
+
 .notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
-
-/* draw-on stroke, real and live — the placeholder mark until the
-   thread-demo path data exists */
-.draw-path {
-  fill: none; stroke: var(--tint); stroke-width: 6; stroke-linecap: round;
-  stroke-dasharray: 300; stroke-dashoffset: 300;
-  animation: draw 2.4s var(--ease-standard) infinite alternate;
-}
-@keyframes draw { to { stroke-dashoffset: 0; } }
+.notes p { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; margin-bottom: calc(var(--u)*2); }
 </style>
 </head>
 <body data-testid="technique-svg">
 
+<!-- Every filter/marker/gradient definition lives here rather than inside the
+     stage that uses it. url(#id) resolves document-wide, so the QC filmstrip
+     can clone a stage as many times as it likes and every clone keeps
+     resolving against this one set instead of duplicating ids. Ids are
+     prefixed per section. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" data-testid="svg-defs">
+  <defs>
+    <!-- populated by JS so the chain can be built stage by stage -->
+    <filter id="pp-goo" x="-25%" y="-25%" width="150%" height="150%"
+            color-interpolation-filters="sRGB"></filter>
+    <!-- Land tint for the survey sheet. A stipple rather than a flat
+         fill because a printed sheet is a halftone — and it is counter
+         -scaled every frame so the dots stay a constant size on the
+         page instead of growing into circles at depth. -->
+    <pattern id="sv-stipple" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="1.6" cy="1.6" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+      <circle cx="5.1" cy="5.1" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+    </pattern>
+    <!-- The stage needs a filter of its own: the bench's chain is
+         assembled and peeled back by whoever is reading it, and a stage
+         sharing that id would change with it. Same three primitives,
+         fixed. -->
+    <filter id="wx-goo" x="-30%" y="-30%" width="160%" height="160%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+      <feColorMatrix in="b" type="matrix" result="g"
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
+      <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+    </filter>
+  </defs>
+</svg>
+
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-09">Techniques</a></div>
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-10">Techniques</a></div>
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
-  <div class="head"><span class="code">SL-09</span><h1>svg</h1></div>
+
+  <div class="head"><span class="code">SL-10</span><h1>svg</h1></div>
   <p class="dek">
-    Vector, DOM-based, path morphing. Each particle is a real DOM node — which is exactly
-    why the count stays low here and climbs at every stage after it.
+    The first technique on this spectrum where the picture is made of <b>elements</b>
+    rather than pixels. That single fact is what you are buying: the marks are in the DOM,
+    so CSS styles them, the pointer hits them, a screen reader can be told what they are —
+    and every one of them costs a node, which is also what you are paying. Every demo here
+    is built on <b>one dataset — the documented history of this field</b>, because a
+    technique shown on a coloured square teaches nothing about when to reach for it, and
+    because a sheet that argues its numbers are measured should be arguing it about
+    something real. Thirty events, twenty-two sourced movements between institutions,
+    1943 to today.
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <svg viewBox="0 0 200 120" aria-hidden="true">
-      <path class="draw-path" d="M10,60 C40,10 80,110 110,60 S170,10 190,60" />
-    </svg>
-    <span class="pending">Placeholder mark · thread-demo path data not wired in yet</span>
+  <!-- ═══ 1 · THE TRADE ═══════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-trade">
+    <div class="fmt-head"><span class="fmt-tag">THE TRADE</span><h2>what a node buys, and what it costs</h2></div>
+    <p class="fmt-case">
+      One decision explains most of this slide. Because every mark is a real element, CSS
+      reaches it, the pointer hits it and a screen reader can be told what it is — and
+      because every mark is a real element, the browser must style, lay out and paint each
+      one. <b>Both halves of that are demonstrated here rather than asserted</b>, and the
+      right-hand one is the whole reason the next slide exists. The graph is a lineage
+      fragment from the dataset the rest of this sheet runs on; the field beside it is what
+      happens when you try to plot everything at once.
+    </p>
+
+    <div class="two-up">
+      <section data-testid="fmt-node">
+        <h3 class="col-h">every mark is an element</h3>
+        <p class="col-p">
+          A canvas hands you one element and a bag of pixels. <b>SVG hands you a
+          document.</b> Hover any node — the pointer hits the <i>shape</i>, not its
+          bounding box, and nothing scripts that. The buttons restyle the whole graph from
+          <b>outside</b> it, by putting one class on the root.
+        </p>
+        <div class="scene-stage node-stage" data-testid="node-stage">
+          <svg id="netSvg" viewBox="0 0 320 200" role="img" aria-label="A lineage fragment, each node a separate element">
+            <g id="netEdges" stroke-linecap="round"></g>
+            <g id="netNodes"></g>
+          </svg>
+        </div>
+        <div class="col-ctl">
+          <div class="sk-btns" data-testid="node-skins">
+            <button class="sk-btn is-on" data-skin="" data-testid="skin-default">default</button>
+            <button class="sk-btn" data-skin="sk-wire" data-testid="skin-wire">wireframe</button>
+            <button class="sk-btn" data-skin="sk-solid" data-testid="skin-solid">solid</button>
+            <button class="sk-btn" data-skin="sk-ghost" data-testid="skin-ghost">ghosted</button>
+          </div>
+          <div class="node-read">
+            <span>elements <var id="netCount">—</var></span>
+            <span>under pointer <i id="netHover">none</i></span>
+            <span>label <i id="netLabel">—</i></span>
+          </div>
+        </div>
+      </section>
+
+      <section data-testid="fmt-ceiling">
+        <h3 class="col-h">what a node costs</h3>
+        <p class="col-p">
+          Each mark carries style resolution, layout participation and a paint record of its
+          own. <b>Drag the count up and watch where it stops being free.</b> This is the honest
+          reason §2 draws twenty-two arcs and not two thousand — measured on your machine,
+          not claimed.
+        </p>
+        <div class="scene-stage ceil-stage" data-testid="ceiling-stage">
+          <svg id="ceilSvg" viewBox="0 0 320 200" aria-hidden="true"></svg>
+        </div>
+        <div class="col-ctl">
+          <div class="ceil-ctl">
+            <label for="ceilN">nodes <var id="ceilNV">120</var></label>
+            <input type="range" id="ceilN" data-testid="ceiling-count" min="20" max="2600" step="20" value="120">
+          </div>
+          <div class="ceil-read">
+            <span class="ceil-fps" id="ceilFps" data-testid="ceiling-fps">—</span>
+            <span class="ceil-sub">frames / sec · <b id="ceilVerdict">measuring</b></span>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <div class="controls">
-    <button class="ibtn" disabled style="opacity:.5;cursor:not-allowed">▶ Particle → brandmark morph — not built yet</button>
+  <!-- ═══ 2 · THE LINE ════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-line">
+    <div class="fmt-head"><span class="fmt-tag">THE LINE</span><h2>a path is a one-dimensional space</h2></div>
+    <p class="fmt-case">
+      <code>stroke-dasharray</code> was designed to draw dashed lines, and it does.
+      But what it actually gives you is <b>a coordinate system that runs along the
+      path</b> — distance from the start, in user units, addressable. Set the dash
+      to the path's own length and there is exactly one dash; slide
+      <code>stroke-dashoffset</code> and you are moving the boundary between drawn
+      and not-drawn along that axis. <b>Nothing is being animated but one number</b>,
+      and no geometry changes. The same number, taken small and repeated, is a
+      marching-ants marquee. Same mechanism, same two properties.
+    </p>
+
+    <div class="bench" data-testid="line-bench">
+      <div class="bench-rail">
+        <span class="bench-h">one number</span>
+        <div class="ln-btns" data-testid="line-modes">
+          <button class="ln-btn is-on" data-mode="draw" data-testid="line-mode-draw">draw on</button>
+          <button class="ln-btn" data-mode="march" data-testid="line-mode-march">marching</button>
+        </div>
+        <div class="bench-read" data-testid="line-readout">
+          <span>getTotalLength <var id="lnLen">—</var></span>
+          <span>stroke-dasharray <var id="lnArray">—</var></span>
+          <span>stroke-dashoffset <var id="lnOff">—</var></span>
+          <span>drawn <var id="lnPct">—</var></span>
+          <span class="warn">the ghost behind is the same path, undashed — the geometry never changes</span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="line-bench-stage">
+        <svg id="lnSvg" viewBox="0 0 660 200" aria-label="One path, drawn by moving stroke-dashoffset">
+          <path id="lnGhost" class="ln-ghost" d=""></path>
+          <path id="lnLive" class="ln-path" d=""></path>
+        </svg>
+      </div>
+    </div>
+
+    <p class="fmt-case" style="margin-top:calc(var(--u)*4)">
+      Scaled up, that is a whole diagram. Every arc below is one movement between
+      two places in the history of this field — a person changing institutions, a
+      lab spinning out — and each is <b>drawn by the same single number</b> as the
+      year passes it. The marker riding each arc is rotated to the path's own
+      tangent, read back with <code>getPointAtLength</code>; the labels are real
+      HTML pushed into place through <code>getScreenCTM</code>, not SVG text.
+      <b>Watch the gaps</b> — and watch which one is not there. The longest
+      stretch where the axis advances and nothing draws sits on the first AI
+      winter. The <i>second</i> winter does not show up at all: people kept
+      changing institutions straight through it. A diagram of who moved where is
+      not a diagram of who was funded, and this one says so by failing to show
+      the thing you would expect it to. The gaps below are computed from the
+      dataset at load, not typed into this paragraph.
+    </p>
+
+    <p class="scene-note" id="lnGaps" data-testid="line-gaps" style="margin-top:calc(var(--u)*2)"></p>
+
+    <div class="cr" id="lnPaper">
+      <div class="cr-sheet" id="lnSlide" data-testid="line-stage">
+        <div class="cr-sprockets l"></div><div class="cr-sprockets r"></div>
+        <div class="cr-rule" id="lnRule"></div>
+        <svg viewBox="0 0 960 540" aria-label="A chart recorder drawing documented movements in the history of AI, 1943 to 2024">
+          <g id="lnGrid"></g>
+          <g id="lnArcs"></g>
+          <g id="lnEvents"></g>
+          <g id="lnTraceG"></g>
+          <g id="lnPen"></g>
+          <g id="lnAxisG"></g>
+        </svg>
+        <div class="cr-marks" id="lnMarks"></div>
+        <div class="cr-head" id="lnHead">model lr-22 · ch.1 movements per year · 1 div = 1 unit</div>
+        <div class="cr-year" id="lnYear">1943</div>
+        <div class="cr-strip" data-testid="line-strip">
+          <span class="cr-ev-cell"><span class="k">event</span> <span class="cr-ev-name" id="lnEvent">—</span></span>
+          <span><span class="k">rate</span> <span id="lnRate">—</span></span>
+          <span><span class="k">movements</span> <span id="lnDrawn">0</span>/<span id="lnTotal">—</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 3 · THE FRAME ═══════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-frame">
+    <div class="fmt-head"><span class="fmt-tag">THE FRAME</span><h2>the camera, and what it costs to move it</h2></div>
+    <p class="fmt-case">
+      Zooming a vector scene is not zooming a picture. There is no camera object —
+      there are three different things people call one, and they are not
+      interchangeable. <b>Pick a driver below and the same scene is framed by a
+      different mechanism</b>: rewriting the root's <code>viewBox</code>, transforming
+      a group inside it, or handing the whole motion to the browser as a paused
+      animation and scrubbing its <code>currentTime</code>. The readouts are all
+      main-thread work — attribute writes, style and layout — which is the kind
+      of cost a frame meter can honestly see, unlike §4 below.
+    </p>
+
+    <div class="bench" data-testid="frame-bench">
+      <div class="bench-rail">
+        <span class="bench-h">camera driver</span>
+        <div class="fr-set" data-testid="frame-drivers">
+          <button class="fr-btn is-on" data-driver="viewbox" data-testid="frame-driver-viewbox"><span class="fr-k">A</span> root viewBox</button>
+          <button class="fr-btn" data-driver="group" data-testid="frame-driver-group"><span class="fr-k">B</span> nested g transform</button>
+          <button class="fr-btn" data-driver="waapi" data-testid="frame-driver-waapi"><span class="fr-k">C</span> paused WAAPI currentTime</button>
+        </div>
+        <span class="bench-h">hairline strategy</span>
+        <div class="fr-set" data-testid="frame-hairlines">
+          <button class="fr-btn" data-hair="none" data-testid="frame-hair-none"><span class="fr-k">—</span> none · scales with geometry</button>
+          <button class="fr-btn is-on" data-hair="vector" data-testid="frame-hair-vector"><span class="fr-k">✓</span> vector-effect</button>
+          <button class="fr-btn" data-hair="inverse" data-testid="frame-hair-inverse"><span class="fr-k">÷</span> inverse stroke-width</button>
+        </div>
+        <div class="fr-set" data-testid="frame-labels">
+          <button class="fr-btn is-on" data-billboard="1" data-testid="frame-billboard"><span class="fr-k">↺</span> counter-scale labels</button>
+        </div>
+        <div class="bench-read" data-testid="frame-readout">
+          <span>zoom <var id="frScale">—</var> · dpr <var id="frDpr">—</var></span>
+          <span>hairline <var id="frHair">—</var></span>
+          <span>render <var id="frCost">—</var></span>
+          <span>clock <var id="frFloor">—</var></span>
+          <span>frame rate <var id="frFps">—</var></span>
+          <span>long tasks <var id="frLong">—</var></span>
+          <span class="warn" id="frWarn"></span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="frame-bench-stage">
+        <svg id="frSvg" viewBox="0 0 1000 500" aria-label="A hairline coastline scene under three camera drivers">
+          <g id="frCam">
+            <g id="frScene"></g>
+            <g id="frMarks"></g>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <div class="fr-verdict" data-testid="frame-verdict">
+      <h4>what the bench answered</h4>
+      <p>
+        <b>The driver does not matter.</b> Across Chrome, Safari and Firefox, and
+        across repeated runs, no camera driver is reliably cheaper than another —
+        the ordering changes run to run and the whole spread sits inside the
+        sampling noise of a thirty-frame mean. All three hold full display cadence
+        with zero long tasks. That is a real answer, and it is not the one the
+        plan assumed: <b>this scene is nowhere near the cost of moving a camera</b>,
+        so the choice gets made on other grounds. Nested <code>g</code> wins them:
+        rewriting the root <code>viewBox</code> takes it away from responsive sizing
+        and from the QC filmstrip, and WAAPI cannot express a log-space zoom without
+        being handed sampled keyframes — which is the interpolation you gave it to do.
+      </p>
+      <p>
+        <b>The hairline strategy is the only control that moves the number</b>, and
+        the one that costs is the only one that works. The middle column is the rule;
+        the third is one measurement of it. They only differ on a 2× display — which
+        is why the readout above prints the <code>dpr</code> it measured at, so the
+        live number and this table can be reconciled rather than read as a
+        contradiction.
+      </p>
+      <table>
+        <tr><th>strategy</th><th>what it actually pins to</th><th>measured at ×64, dpr 2</th><th>per-frame writes</th></tr>
+        <tr><td>none</td><td class="fr-bad">nothing — scales with the camera</td><td class="fr-bad">84 device px</td><td>0</td></tr>
+        <tr><td>vector-effect</td><td class="fr-bad">one CSS pixel</td><td class="fr-bad">2 device px</td><td>0</td></tr>
+        <tr><td>inverse stroke-width</td><td class="fr-good">one device pixel</td><td class="fr-good">1 device px</td><td>88</td></tr>
+      </table>
+      <p>
+        <code>vector-effect: non-scaling-stroke</code> is constant, but it pins to one
+        <b>CSS</b> pixel — which on any 2× display is two device pixels, and a hairline
+        that is two pixels wide is not a hairline. Only dividing the stroke width by the
+        zoom lands on one device pixel, and that has to be written every frame, on every
+        stroked element. It is still free here. It stops being free at map scale, which
+        is what §3's stage will have to answer.
+      </p>
+      <p>
+        <b>Neither reading came from a portable instrument.</b> The thickness above is
+        measured, but no single API measures it everywhere: Firefox implements
+        <code>getBBox({stroke:true})</code>, Chrome and Safari accept the argument and
+        silently ignore it, so a <code>try/catch</code> feature test passes in all three
+        and is wrong in two. Hit-testing the document works in Chrome and Safari and not
+        in Firefox, whose hit region for a non-scaling stroke is not the region it paints.
+        The readout says which instrument produced its number. The same caution applies
+        to the cost figure beside it — <code>performance.now()</code> is clamped to 1 ms
+        in Firefox and Safari and about 100 µs in Chrome, so the bench measures its own
+        clock and prints a bound rather than a fabricated zero.
+      </p>
+    </div>
+
+    <p class="fmt-case" style="margin-top:calc(var(--u)*5)">
+      A survey sheet is the object whose whole premise is that the same place gets
+      published at several scales, each carrying only the detail its scale can hold.
+      That is <b>semantic zoom, named and in print, a century before anyone wrote it
+      in JavaScript</b> — and it is why the labels below do not simply get bigger.
+      Each level admits a different set of them. The shoreline holds at one device
+      pixel the whole way down, by the strategy the bench above measured rather than
+      the one that looks like it should work. And the flight ends where the map does:
+      Dartmouth is a hundred and fifty kilometres inland, so past a certain scale
+      there is no coastline left to draw, and what is under the reticle stops being
+      geography and becomes <b>the record itself</b>.
+    </p>
+
+    <div class="sv" id="svPaper">
+      <div class="sv-sheet" id="svSheet" data-testid="frame-stage">
+        <svg viewBox="0 0 1600 900" aria-label="A survey sheet zooming from the world to Dartmouth College, 1956">
+          <g id="svCam">
+            <g id="svShelf"></g>
+            <g id="svLand"></g>
+            <g id="svTex"></g>
+            <g id="svBord"></g>
+            <g id="svGrat"></g>
+            <g id="svMarks"></g>
+          </g>
+        </svg>
+        <div class="sv-labels" id="svLabels"></div>
+        <div class="sv-plate" id="svPlate"></div>
+        <div class="sv-scalebar" id="svScale"></div>
+        <div class="sv-record" id="svRecord" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 4 · THE PIPELINE ═══════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-pipeline">
+    <div class="fmt-head"><span class="fmt-tag">THE PIPELINE</span><h2>a render pipeline, and no shader</h2></div>
+    <p class="fmt-case">
+      A filter in SVG is not an effect, it is a <b>graph</b> — primitives wired
+      input to output, declared in markup, evaluated by the browser's raster
+      pipeline. Build it up one stage at a time below. Blur alone smears the
+      alpha of overlapping shapes into one mass; the colour matrix then
+      multiplies that alpha hard enough to snap it back to a crisp edge, and two
+      circles become one body. <b>No path is interpolated anywhere in this</b> —
+      the topology change is free because it happens in raster space rather than
+      in geometry.
+    </p>
+
+    <div class="bench" data-testid="pipeline-bench">
+      <div class="bench-rail">
+        <span class="bench-h">filter graph</span>
+        <div class="pp-stages" data-testid="pipeline-stages">
+          <button class="pp-stage" data-stage="1" data-testid="pipeline-stage-blur"><span class="pp-n">1</span> feGaussianBlur</button>
+          <button class="pp-stage" data-stage="2" data-testid="pipeline-stage-matrix"><span class="pp-n">2</span> feColorMatrix</button>
+          <button class="pp-stage" data-stage="3" data-testid="pipeline-stage-composite"><span class="pp-n">3</span> feComposite</button>
+        </div>
+        <div class="bench-read" data-testid="pipeline-readout">
+          <span>chain <i id="ppChain">SourceGraphic</i></span>
+          <span>region <var id="ppRegion">—</var> device px</span>
+          <span>main-thread <var id="ppCost">—</var></span>
+          <span class="warn" id="ppWarn"></span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="pipeline-bench-stage">
+        <svg id="ppSvg" viewBox="0 0 660 200" aria-label="Four circles merging under a goo filter">
+          <g id="ppField"></g>
+        </svg>
+      </div>
+    </div>
+    <p class="fmt-case" style="margin-top:calc(var(--u)*5)">
+      Same three primitives, one screen up in scale. Each site below is a place
+      in the dataset, and its cell swells with <b>what is countable there</b> —
+      the events on record and the movements in and out, both as of the year on
+      the readout. Nothing is authored: no magnitude was chosen to make a shape.
+      Where sites are close enough that their cells touch, the threshold welds
+      them into one mass, and <b>that is the whole argument</b> — the topology
+      changes without a single path being interpolated, because it happens in
+      raster space rather than in geometry. Watch the 2010s: three separate
+      cells around the Bay become one body, and no code decided that.
+    </p>
+
+    <div class="wx" id="wxPaper">
+      <div class="wx-screen" id="wxSlide" data-testid="pipeline-stage">
+        <svg id="wxSvg" aria-label="Research activity as a radar-style density field over a world map, 1943 to 2024">
+          <g id="wxGrat"></g>
+          <g id="wxMap"></g>
+          <g id="wxField" filter="url(#wx-goo)"></g>
+          <g id="wxSites"></g>
+        </svg>
+        <div class="wx-chrome" id="wxChrome">lineage radar · composite reflectivity · activity per site</div>
+        <div class="wx-year" id="wxYear">1943</div>
+        <div class="wx-key" id="wxKeyEl">
+          <span class="cap" style="margin-right:8px">light</span>
+          <i style="background:var(--wx-1)"></i><i style="background:var(--wx-2)"></i>
+          <i style="background:var(--wx-3)"></i><i style="background:var(--wx-4)"></i>
+          <i style="background:var(--wx-5)"></i>
+          <span class="cap" style="margin-left:8px">heavy</span>
+        </div>
+        <div class="wx-bar" data-testid="pipeline-stage-bar">
+          <span class="wx-hot"><span class="k">strongest</span> <b id="wxHot">—</b></span>
+          <span><span class="k">cells</span> <span id="wxCells">0</span></span>
+          <span><span class="k">masses</span> <span id="wxMass">0</span></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="notes">
-    <h3>SCOPE.md · slide 09</h3>
+    <h3>SCOPE.md · slide 10</h3>
     <p>"SVG Animation — vector, DOM-based, path morphing; visual: thread demo as SVG — a
       low particle count (tens), each one a real DOM node, resolving into the brandmark
       via path morph/draw-on. Worth surfacing the DOM-node cost as the reason the count
       stays low."</p>
-    <p>The draw-on stroke above is real CSS (<code>stroke-dashoffset</code>), looping so
-      the technique is visible without interaction. The actual thread-demo particle field
-      and brandmark morph need the brandmark's vector path data — a dependency SCOPE.md
-      already flags as outstanding — so that part isn't built yet.</p>
+
+    <p><b>How this sheet is put together.</b> Four sections, each pairing a small cold
+      bench — the mechanism, with its numbers exposed — against one large stage. The three
+      stages are deliberately three unrelated products: a chart-recorder printout, a
+      topographic survey sheet and a broadcast weather radar. None of them looks like this
+      page, because a demo that wears the site's own clothes reads as another panel of the
+      site rather than as a thing being shown to you. All three read one dataset.</p>
+
+    <p><b>Measured, not claimed — including where that came out inconvenient.</b> §4's
+      bench does not report a frame time, because a rAF meter cannot see filter cost: it
+      reads the same with the filter on or off, which was established by probe rather than
+      assumed. §3's bench found no measurable difference between its three camera drivers
+      and says so, and its hairline readout names which of two instruments produced the
+      number, because neither works in all three browsers. Every readout on this page
+      states its own floor.</p>
+
+    <p><b>The data.</b> Thirty events between 1943 and 2024 and twenty-two movements
+      between institutions, in <code>scripts/data/ai-history.js</code>. Every entry carries
+      at least one checkable source and the build fails on one that does not. Edges are
+      documented movements — a person changing institutions, a lab spinning out, an
+      acquisition — never "influence": seven candidate edges were dropped rather than
+      asserted as interpretation, and that list is a comment at the foot of the file.
+      Sources are per-entry there rather than summarised here, because a citation that
+      cannot be traced to the claim it supports is decoration. They lean on the ACM A.M.
+      Turing Award profiles, the Nobel Prize archive, institutional histories at Toronto,
+      Stanford, UCL, MIT, Mila and IBM, the Computer History Museum, and Wikipedia where
+      it is used as a pointer to a primary document rather than as the source itself.</p>
+
+    <p><b>Credits.</b> Coastlines are <b>Natural Earth</b>, public domain, via
+      <code>world-atlas</code>, and US state and county divisions are the Census
+      Bureau's via <code>us-atlas</code>, also public domain; projected at build time
+      with <b>d3-geo</b> and <b>topojson-client</b>, neither of which is shipped to the
+      browser — the sheet receives path strings. Type is <b>Inter</b>, <b>JetBrains Mono</b> and <b>Doto</b>.
+      No animation library is used anywhere on this page: <code>render(t)</code> is the
+      timeline, which is the argument §2 is making, so importing a library to make it
+      would be conceding it.</p>
   </div>
 </div>
 
+<!-- Generated by scripts/vendor.js. Plain scripts, not modules, so
+     this sheet keeps opening over file:// — see the note in vendor.js. -->
+<script src="../vendor/ai-history.js"></script>
+<script src="../vendor/map.js"></script>
+
+<script>
+/* ── 1 · the network ──────────────────────────────────────────
+   Built from data rather than hand-authored markup so the node count
+   is honest and the labels stay in sync with the geometry. */
+(function () {
+  const svg = document.getElementById('netSvg');
+  if (!svg) return;
+  /* A real fragment of the sheet's one dataset rather than a hand-typed
+     array. Taken as the earliest movements until enough distinct places
+     accumulate, which yields a connected subgraph by construction — a
+     random sample of nodes would mostly draw isolated dots and the
+     "hover hits the shape" demonstration needs edges to hit.
+
+     Positioned here rather than at build time because this graph's box
+     is 320x200 and the build-time layout targets §2's 1000x366; one
+     layout cannot serve both, and re-deriving twelve positions is
+     cheap. */
+  const H = globalThis.AI_HISTORY;
+  const WANT = 12;
+  const NODES = [], EDGES = [];
+  if (H) {
+    const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
+    const picked = [], idx = {};
+    const take = (id) => { if (!(id in idx) && picked.length < WANT) { idx[id] = picked.length; picked.push(byId[id]); } };
+    const used = [];
+    for (const a of H.arcs) {
+      if (picked.length >= WANT && (!(a.from in idx) || !(a.to in idx))) continue;
+      take(a.from); take(a.to);
+      if (a.from in idx && a.to in idx) used.push(a);
+    }
+    const ys = picked.map((n) => n.year);
+    const [lo, hi] = [Math.min(...ys), Math.max(...ys)];
+    /* Lanes by first-fit on the same principle as the build-time
+       layout, just at this box's scale: nodes closer than this in
+       years would collide as circles. */
+    const GAP = (hi - lo) / 5.5;
+    const last = [], lane = {};
+    for (const n of [...picked].sort((a, b) => a.year - b.year)) {
+      let l = last.findIndex((v) => n.year - v >= GAP);
+      if (l === -1) { l = last.length; last.push(-Infinity); }
+      last[l] = n.year;
+      lane[n.id] = l;
+    }
+    /* Two passes, and it has to be two: the lane count is still growing
+       during the first, so computing y inside that loop spaced the
+       early nodes against a lane count of one or two and the late ones
+       against five. Same lane, different heights, and the collisions
+       looked like a layout that had no rule at all. */
+    const rows = Math.max(1, last.length - 1);
+    for (const n of picked) {
+      NODES[idx[n.id]] = {
+        x: 30 + ((n.year - lo) / (hi - lo || 1)) * 260,
+        y: 26 + lane[n.id] * (148 / rows),
+        t: n.short,
+      };
+    }
+    for (const a of used) EDGES.push([idx[a.from], idx[a.to]]);
+  }
+  if (!NODES.length) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const eg = document.getElementById('netEdges');
+  const ng = document.getElementById('netNodes');
+
+  EDGES.forEach(([a, b]) => {
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('class', 'edge');
+    l.setAttribute('x1', NODES[a].x); l.setAttribute('y1', NODES[a].y);
+    l.setAttribute('x2', NODES[b].x); l.setAttribute('y2', NODES[b].y);
+    eg.appendChild(l);
+  });
+
+  NODES.forEach((n, i) => {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'nd');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'listitem');
+    g.setAttribute('aria-label', n.t);
+    g.dataset.tag = n.t;
+    g.dataset.idx = String(i);
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', '6');
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', n.x); tx.setAttribute('y', n.y - 12);
+    tx.textContent = n.t;
+    g.appendChild(c); g.appendChild(tx);
+    ng.appendChild(g);
+  });
+
+  /* The readout reports what the DOM already knows — it is a window
+     onto the tree, not the mechanism. The highlight itself is CSS. */
+  const count = document.getElementById('netCount');
+  const hov = document.getElementById('netHover');
+  const lab = document.getElementById('netLabel');
+  count.textContent = svg.querySelectorAll('*').length;
+
+  svg.addEventListener('pointerover', (e) => {
+    const nd = e.target.closest('.nd');
+    hov.textContent = e.target.tagName;
+    lab.textContent = nd ? nd.dataset.tag : '—';
+  });
+  svg.addEventListener('pointerleave', () => { hov.textContent = 'none'; lab.textContent = '—'; });
+
+  document.querySelectorAll('.sk-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.sk-btn').forEach(o => o.classList.toggle('is-on', o === b));
+      svg.setAttribute('class', b.dataset.skin);
+    });
+  });
+})();
+
+/* ── 2 · the ceiling ──────────────────────────────────────────
+   A real node field, animated by CSS, with the frame rate measured
+   rather than asserted.
+
+   The nodes are rebuilt only when the count changes, and each carries
+   its own animation-delay so the field does not pulse in unison —
+   which would let the compositor coalesce work the demo is trying to
+   make visible. */
+(function () {
+  const svg = document.getElementById('ceilSvg');
+  const range = document.getElementById('ceilN');
+  const outN = document.getElementById('ceilNV');
+  const fpsEl = document.getElementById('ceilFps');
+  const verdict = document.getElementById('ceilVerdict');
+  if (!svg || !range) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const style = document.createElementNS(NS, 'style');
+  style.textContent =
+    '.pt{animation:ptFloat 3.2s ease-in-out infinite alternate}' +
+    '@keyframes ptFloat{to{transform:translateY(-14px)}}';
+  svg.appendChild(style);
+
+  /* Deterministic placement: Math.random() would reshuffle the field on
+     every slider nudge, so a change in frame rate could not be
+     attributed to the count rather than to a new layout. */
+  function build(n) {
+    while (svg.lastChild && svg.lastChild !== style) svg.removeChild(svg.lastChild);
+    let s = 20749;
+    const rnd = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('class', 'pt');
+      c.setAttribute('cx', (rnd() * 320).toFixed(1));
+      c.setAttribute('cy', (rnd() * 200).toFixed(1));
+      c.setAttribute('r', (0.9 + rnd() * 2.2).toFixed(2));
+      c.setAttribute('fill', 'var(--ai-t3)');
+      c.setAttribute('opacity', (0.3 + rnd() * 0.7).toFixed(2));
+      if (!reduce) c.style.animationDelay = (-rnd() * 3.2).toFixed(2) + 's';
+      frag.appendChild(c);
+    }
+    svg.appendChild(frag);
+  }
+
+  let n = +range.value;
+  build(n);
+  range.addEventListener('input', () => {
+    n = +range.value; outN.textContent = n; build(n);
+  });
+
+  /* Rolling window rather than an instantaneous delta: a single frame
+     time is mostly noise, and the number is being read aloud. */
+  let last = performance.now(), acc = 0, frames = 0, live = true;
+  /* Declared, not a named function expression: the observer below has
+     to be able to restart it, and a function expression's own name is
+     only in scope inside its body. */
+  function tick(now) {
+    const dt = now - last;
+    last = now;
+    /* A frame that took longer than a third of a second is not a frame
+       rate, it is a stall — a hidden tab, a tab switch, a GC pause.
+       Folding it into the average produces a confident, wrong number
+       on a slide someone is reading aloud. */
+    if (dt > 340) { acc = 0; frames = 0; if (live) requestAnimationFrame(tick); return; }
+    acc += dt; frames++;
+    if (acc >= 500) {
+      const fps = Math.round((frames * 1000) / acc);
+      fpsEl.textContent = fps;
+      fpsEl.classList.toggle('is-bad', fps < 45);
+      verdict.textContent = fps >= 55 ? 'free' : fps >= 45 ? 'holding' : fps >= 25 ? 'dropping frames' : 'unusable';
+      acc = 0; frames = 0;
+    }
+    if (live) requestAnimationFrame(tick);
+  }
+  tick(performance.now());
+
+  /* Browsers throttle rAF to roughly 1Hz in a background tab, so a
+     meter left running while the deck is not on screen reports ~1fps
+     and calls it unusable. Stop, say so, and restart from a clean
+     accumulator when the tab comes back. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      live = false;
+      fpsEl.textContent = '—';
+      fpsEl.classList.remove('is-bad');
+      verdict.textContent = 'paused — tab hidden';
+    } else if (!live) {
+      live = true; last = performance.now(); acc = 0; frames = 0;
+      requestAnimationFrame(tick);
+    }
+  });
+
+  /* Stop measuring — and stop animating hundreds of nodes — when the
+     section is nowhere near the viewport. */
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((es) => {
+      es.forEach(e => {
+        svg.style.visibility = e.isIntersecting ? '' : 'hidden';
+        if (e.isIntersecting && !live) { live = true; last = performance.now(); requestAnimationFrame(tick); }
+        else if (!e.isIntersecting) live = false;
+      });
+    }, { rootMargin: '160px' }).observe(svg);
+  }
+})();
+</script>
+
+<script>
+/* ── shared runtime ───────────────────────────────────────────
+   One namespace for every demo on this sheet. Deliberately not a
+   module: ES module imports are blocked on file:// in Chrome and
+   Safari, and these tearsheets are meant to open from disk.
+
+   The contract is render(t), t in [0,1], where EVERY visual attribute
+   is set from t alone — no accumulated state, idempotent, and nothing
+   render() touches may carry a CSS transition (a transition would make
+   a screenshot at t show a value that is on its way somewhere else).
+   Scrub, autoplay, the reduced-motion poster and the QC filmstrip are
+   then four callers of one function rather than four code paths. */
+window.WAM = (function () {
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const demos = {};
+
+  /* performance.now() is NOT the same clock in every browser. Chromium
+     hands out roughly 5 µs; Firefox and WebKit clamp it to 1 ms as an
+     anti-fingerprinting measure. A per-frame cost averaged over N
+     frames therefore cannot resolve anything below clamp/N — which is
+     why an unqualified "0 µs/frame" in Safari and "13 µs/frame" in
+     Chrome is a browser difference in the CLOCK, not in the work.
+
+     Measured here rather than hardcoded, because the clamp is a
+     setting: it moves with privacy.reduceTimerPrecision, with cross
+     origin isolation, and between releases. A readout that quotes a
+     cost owes the reader this number beside it. */
+  let _res = 0;
+  function clockRes() {
+    if (_res) return _res;
+    /* Bounded by WALL TIME, not by iteration count. Under a 1 ms clamp
+       each distinct reading costs a millisecond of real time, so
+       "sample 40000 times" is forty seconds of blocked main thread —
+       which is what the first version of this did, and it hung the
+       sheet in both Firefox and Safari. Take whatever transitions fall
+       inside a few milliseconds instead. */
+    let min = Infinity;
+    const deadline = performance.now() + 4;
+    while (performance.now() < deadline) {
+      const a = performance.now();
+      const b = performance.now();
+      if (b > a && b - a < min) min = b - a;
+    }
+    return (_res = min === Infinity ? 1 : min);
+  }
+
+  function clock(name, { render, dur = 6000, el, poster = 1 }) {
+    let raf = 0, t0 = 0, visible = true, playing = false, t = 0;
+
+    /* Rolling mean of the time spent INSIDE render(). This is the only
+       cost this sheet can honestly measure: it is main-thread work.
+       Raster — including every filter primitive — happens on the
+       compositor and is invisible from here. See the note in the §4
+       readout; a frame-rate meter beside a filter reads the same with
+       the filter on or off, which was verified rather than assumed. */
+    const COST_N = 30;
+    let costAcc = 0, costN = 0, cost = 0;
+
+    /* Frame rate is tracked but deliberately NOT surfaced by default.
+       It is a valid instrument for main-thread work — attribute writes,
+       style, layout — and a useless one next to anything the compositor
+       rasterises. A demo opts in by reading .fps, and owes the reader a
+       statement of which kind of work it is measuring. */
+    let fpsLast = 0, fpsAcc = 0, fpsN = 0, fps = 0;
+
+    function draw(v) {
+      t = v;
+      const a = performance.now();
+      render(v);
+      costAcc += performance.now() - a; costN++;
+      if (costN >= COST_N) { cost = costAcc / costN; costAcc = 0; costN = 0; }
+    }
+    function frame(now) {
+      if (!t0) t0 = now;
+      /* A frame over a third of a second is a stall, not a frame rate —
+         a tab switch, a GC pause. Averaging it in produces a confident
+         wrong number on a slide someone is reading aloud. */
+      const dt = fpsLast ? now - fpsLast : 0;
+      fpsLast = now;
+      if (dt > 0 && dt < 340) {
+        fpsAcc += dt; fpsN++;
+        if (fpsAcc >= 500) { fps = (fpsN * 1000) / fpsAcc; fpsAcc = 0; fpsN = 0; }
+      } else { fpsAcc = 0; fpsN = 0; }
+      draw(((now - t0) % dur) / dur);
+      if (playing && visible) raf = requestAnimationFrame(frame);
+    }
+    function play() {
+      if (mq.matches || playing || !visible) return;
+      playing = true; t0 = performance.now() - t * dur;
+      raf = requestAnimationFrame(frame);
+    }
+    function pause() { playing = false; cancelAnimationFrame(raf); raf = 0; fpsLast = 0; fpsAcc = 0; fpsN = 0; }
+    function seek(v) { pause(); draw(v); }
+
+    /* Browsers throttle rAF to ~1Hz in a background tab, and a demo
+       animating off-screen is pure waste on a page with several. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause(); else if (!mq.matches) play();
+    });
+    if (el && 'IntersectionObserver' in window) {
+      new IntersectionObserver((es) => es.forEach((e) => {
+        visible = e.isIntersecting;
+        if (visible && !mq.matches) play(); else pause();
+      }), { rootMargin: '160px' }).observe(el);
+    }
+
+    const api = {
+      play, pause, seek, render: draw,
+      get t() { return t; }, get playing() { return playing; },
+      get cost() { return cost; }, get fps() { return fps; },
+      /* Nothing below this is a measurement — it is the clock's floor. */
+      get costFloor() { return clockRes() / COST_N; },
+      resetMeters() { costAcc = 0; costN = 0; cost = 0; fpsAcc = 0; fpsN = 0; fps = 0; },
+      dur
+    };
+    demos[name] = api;
+
+    /* Reduced motion is not covered by the global CSS rule in
+       tokens.css — that rule cannot reach a rAF loop. Freeze on the
+       poster frame, and honour a change to the setting live. */
+    if (mq.matches) draw(poster); else play();
+    mq.addEventListener('change', () => {
+      if (mq.matches) { pause(); draw(poster); } else play();
+    });
+    return api;
+  }
+
+  /* Clone the stage at N values of t into one row in THIS document, so
+     CSS custom properties, @font-face and url(#…) filter refs all still
+     resolve. Screenshot once and the whole transformation is one image.
+     Serialising the SVG instead loses every one of those. */
+  function filmstrip(name, n = 12) {
+    const d = demos[name]; if (!d) return console.error('no demo: ' + name);
+    const stage = document.querySelector('[data-testid="' + name + '"]');
+    if (!stage) return console.error('no stage for: ' + name);
+    document.querySelector('.qc-strip')?.remove();
+    const was = d.t, wasPlaying = d.playing;
+    d.pause();
+    const strip = document.createElement('section');
+    strip.className = 'qc-strip'; strip.dataset.testid = 'qc-strip';
+    strip.style.cssText = 'display:flex;gap:6px;overflow:auto;padding:10px;margin:16px 0;background:var(--hz-050);border-radius:8px';
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      d.render(t);
+      const cell = document.createElement('div');
+      cell.style.cssText = 'flex:none;width:150px';
+      const clone = stage.cloneNode(true);
+      clone.removeAttribute('data-testid');
+      clone.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+      clone.style.cssText += ';width:150px;height:100px;min-height:0';
+      const cap = document.createElement('div');
+      cap.style.cssText = 'font:9px var(--mono);color:var(--hz-500);padding-top:4px';
+      cap.textContent = 't=' + t.toFixed(2);
+      cell.append(clone, cap); strip.append(cell);
+    }
+    document.querySelector('.notes').before(strip);
+    d.render(was); if (wasPlaying) d.play();
+    return strip;
+  }
+
+  return { clock, filmstrip, demos, clockRes, get reduced() { return mq.matches; } };
+})();
+
+/* ── 4 · THE PIPELINE ─────────────────────────────────────────
+   The filter's children are built from JS rather than declared in
+   markup, because the subject of this bench is that a filter IS a
+   chain — so the chain is assembled a link at a time and printed. */
+(function () {
+  const svg = document.getElementById('ppSvg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const field = document.getElementById('ppField');
+  const filter = document.getElementById('pp-goo');
+  const chainEl = document.getElementById('ppChain');
+  const regionEl = document.getElementById('ppRegion');
+  const costEl = document.getElementById('ppCost');
+  const warnEl = document.getElementById('ppWarn');
+
+  const N = 5, R = 26, cs = [];
+  for (let i = 0; i < N; i++) {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('r', R); c.setAttribute('class', 'pp-blob');
+    field.appendChild(c); cs.push(c);
+  }
+
+  let stage = 0;   /* 0 = none, 1 = blur, 2 = +matrix, 3 = +composite */
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function buildChain() {
+    filter.textContent = '';
+    const parts = ['SourceGraphic'];
+    if (stage >= 1) {
+      filter.append(el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 12, result: 'blur' }));
+      parts.push('blur(12)');
+    }
+    if (stage >= 2) {
+      /* Multiply alpha by 18 and subtract 7: everywhere the blurred
+         alpha crossed the threshold snaps back to opaque, everywhere
+         else falls to nothing. That step is the entire goo effect. */
+      filter.append(el('feColorMatrix', {
+        in: 'blur', type: 'matrix', result: 'goo',
+        values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7'
+      }));
+      parts.push('matrix(α×18−7)');
+    }
+    if (stage >= 3) {
+      filter.append(el('feComposite', { in: 'SourceGraphic', in2: 'goo', operator: 'atop' }));
+      parts.push('composite(atop)');
+    }
+    field.setAttribute('filter', stage > 0 ? 'url(#pp-goo)' : '');
+    chainEl.textContent = parts.join(' → ');
+    document.querySelectorAll('.pp-stage').forEach((b) => {
+      b.classList.toggle('is-on', +b.dataset.stage <= stage);
+    });
+    measureRegion();
+  }
+
+  /* The number that actually explains filter cost. A filter region is
+     rasterised at device resolution, so its area in device pixels — not
+     the blur radius — is what the GPU is asked to fill. */
+  function measureRegion() {
+    if (!stage) { regionEl.textContent = 'no filter'; return; }
+    const bb = field.getBBox();
+    const vb = svg.viewBox.baseVal;
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width || !bb.width) { regionEl.textContent = '—'; return; }
+    const scale = rect.width / vb.width;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.round(bb.width * 1.5 * scale * dpr);
+    const h = Math.round(bb.height * 1.5 * scale * dpr);
+    regionEl.textContent = w + ' × ' + h + ' · ' + ((w * h) / 1e6).toFixed(2) + ' MP';
+  }
+
+  function render(t) {
+    /* Beads on a wire rather than a ring. A ring in a 660x200 field
+       keeps the blobs apart for most of the cycle, so the merge — the
+       only thing this bench exists to show — barely reads. Strung
+       along the long axis they pass through full fusion every loop.
+
+       Gap runs 27 -> 96: at 27 against r=26 the neighbours overlap
+       enough for the threshold to weld them into one bar, at 96 they
+       are cleanly separate. Eased with a cosine so the demo RESTS at
+       both extremes instead of sliding continuously past the two
+       states worth looking at. */
+    const gap = 27 + 69 * (0.5 - 0.5 * Math.cos(t * Math.PI * 2));
+    for (let i = 0; i < N; i++) {
+      const o = i - (N - 1) / 2;
+      /* a little counter-phase bob, so the fused bar has a living edge
+         rather than reading as a rounded rectangle */
+      const bob = Math.sin(t * Math.PI * 4 + i * 1.7) * 9 * (1 - gap / 96);
+      cs[i].setAttribute('cx', (330 + o * gap).toFixed(2));
+      cs[i].setAttribute('cy', (100 + bob).toFixed(2));
+    }
+  }
+
+  const demo = WAM.clock('pipeline-bench-stage', {
+    render, dur: 5200, el: svg, poster: 0.5
+  });
+
+  document.querySelectorAll('.pp-stage').forEach((b) => {
+    b.addEventListener('click', () => {
+      const n = +b.dataset.stage;
+      stage = (stage === n) ? n - 1 : n;   /* click the active top stage to peel it back */
+      buildChain();
+    });
+  });
+
+  /* Report main-thread cost honestly, and say what it does not include.
+     A frame-rate readout here would print the same number with the
+     filter on or off — verified by probe — which on a sheet arguing
+     "measured, not claimed" would be a false number on screen. */
+  setInterval(() => {
+    /* Microseconds, not milliseconds: this render is a handful of
+       attribute writes and 3dp of ms rounds it to a flat 0.000, which
+       reads as "not measured" rather than "genuinely almost free". */
+    costEl.textContent = (demo.cost * 1000).toFixed(0) + ' µs/frame';
+    measureRegion();
+    warnEl.textContent = stage
+      ? 'raster is compositor work — not in that figure, and not visible to any in-page frame meter'
+      : '';
+  }, 500);
+
+  addEventListener('resize', measureRegion);
+  stage = 2; buildChain();
+  /* buildChain ran before the clock's first frame, so the bbox it saw
+     was five circles stacked at the origin. Position them, then measure. */
+  demo.render(0.5); measureRegion();
+})();
+</script>
+
+<script>
+/* ── 3 · THE FRAME ────────────────────────────────────────────
+   One scene, three mechanisms people all call "the camera". The
+   scene is a stand-in for the map §3's stage will eventually carry —
+   deterministic midpoint-displaced polylines rather than a picture,
+   because what makes a camera expensive is point count and hairline
+   strokes, and this has both in map-like proportions. When the real
+   projected geometry lands it drops into the same slot.
+
+   Everything here is main-thread: attribute writes, style resolution,
+   layout. That is the one class of cost this sheet can measure from
+   inside the page, which is why §3 carries a frame rate and §4 does
+   not. See the note in §4's readout. */
+(function () {
+  const svg = document.getElementById('frSvg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const cam = document.getElementById('frCam');
+  const scene = document.getElementById('frScene');
+  const marks = document.getElementById('frMarks');
+  const VB = { w: 1000, h: 500 };
+
+  /* ── scene ──────────────────────────────────────────────────
+     Seeded LCG, not Math.random(): the geometry must be identical
+     across driver switches or a change in the readout could not be
+     attributed to the driver rather than to a new scene. */
+  let seed = 8134;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+
+  /* Detail at four scales, each a quarter the size of the one above and
+     centred on the zoom target. A flat scene is the wrong stand-in for a
+     map: zoom into one and by ×8 the frame is empty, which makes a camera
+     bench look broken rather than deep. Real projected coastline has
+     structure at every scale, so this does too — and the four levels are
+     the same four the stage's semantic zoom will hang labels off.
+
+     Coordinates are emitted at 3 decimals rather than 2. At ×64 on a
+     1000-unit box, 2 decimals quantises to about a fifth of a device
+     pixel and the innermost level visibly snaps to a grid. */
+  const TARGET = { x: 470, y: 232 };
+  const LEVELS = 4, PER = 22, PTS = 40;
+  const strokes = [];
+  for (let lv = 0; lv < LEVELS; lv++) {
+    const span = { w: VB.w, h: VB.h };
+    const box = lv === 0
+      ? { x: 0, y: 0, w: span.w, h: span.h }
+      : { x: TARGET.x - span.w / (2 * Math.pow(4, lv)), y: TARGET.y - span.h / (2 * Math.pow(4, lv)),
+          w: span.w / Math.pow(4, lv), h: span.h / Math.pow(4, lv) };
+    const step = (box.w / 70);
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('data-level', String(lv));
+    g.style.stroke = 'var(--ai-t' + Math.min(lv + 1, 3) + ')';
+    for (let i = 0; i < PER; i++) {
+      let x = box.x + rnd() * box.w, y = box.y + rnd() * box.h;
+      let vx = (rnd() - 0.5) * step * 2, vy = (rnd() - 0.5) * step * 2;
+      let d = 'M' + x.toFixed(3) + ' ' + y.toFixed(3);
+      for (let j = 1; j < PTS; j++) {
+        vx += (rnd() - 0.5) * step * 0.7; vy += (rnd() - 0.5) * step * 0.7;
+        x += vx; y += vy;
+        d += 'L' + x.toFixed(3) + ' ' + y.toFixed(3);
+      }
+      const el = document.createElementNS(NS, 'path');
+      el.setAttribute('class', 'fr-land');
+      el.setAttribute('d', d);
+      g.appendChild(el);
+      strokes.push(el);
+    }
+    scene.appendChild(g);
+  }
+
+  /* The measured hairline. A horizontal line's client rect height IS
+     its rendered stroke thickness in CSS px, so the readout below is a
+     measurement of what the browser actually drew rather than the
+     number this code asked for. Placed at the zoom target so it stays
+     on screen at every level. */
+  const ref = document.createElementNS(NS, 'line');
+  ref.setAttribute('class', 'fr-hair');
+  ref.setAttribute('x1', TARGET.x - 60); ref.setAttribute('x2', TARGET.x + 60);
+  ref.setAttribute('y1', TARGET.y); ref.setAttribute('y2', TARGET.y);
+  scene.appendChild(ref);   /* last child, so the hit-test probe below reaches it */
+  strokes.push(ref);
+
+  /* Screen-space marks: pin and label share one group, so the
+     billboard toggle moves both and the failure reads as "these marks
+     belong to the scene, not to the screen" rather than as a font bug. */
+  /* One pin per level, each offset by a quarter of that level's box, so
+     something labelled is in frame at every zoom rather than only at the
+     ends of the travel. */
+  const PINS = [{ x: 470, y: 232, t: 'target', lv: 3 }];
+  for (let lv = 0; lv < 3; lv++) {
+    const f = Math.pow(4, lv);
+    PINS.push({ x: TARGET.x + VB.w / (5 * f), y: TARGET.y - VB.h / (6 * f), t: 'level ' + lv, lv });
+  }
+  const markGs = PINS.map((p) => {
+    const g = document.createElementNS(NS, 'g');
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('class', 'fr-pin'); c.setAttribute('r', '2.6');
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('class', 'fr-lab'); tx.setAttribute('y', '-8');
+    tx.textContent = p.t;
+    g.append(c, tx); marks.appendChild(g);
+    return g;
+  });
+
+  /* ── camera path ────────────────────────────────────────────
+     Scale is interpolated in LOG space. Linear interpolation of k
+     spends almost the whole travel already zoomed in — the first half
+     of a 1→64 linear ramp covers 1→32, which is five of the six
+     doublings. Log space makes every doubling take the same time,
+     which is what "zooming at a constant rate" means to an eye. */
+  const K0 = 1, K1 = 64;
+  function camAt(t) {
+    const u = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);   /* rest at both ends */
+    const k = Math.exp(Math.log(K0) + (Math.log(K1) - Math.log(K0)) * u);
+    return { k, cx: VB.w / 2 + (TARGET.x - VB.w / 2) * u, cy: VB.h / 2 + (TARGET.y - VB.h / 2) * u };
+  }
+
+  /* ── drivers ────────────────────────────────────────────────
+     C's keyframes are SAMPLED FROM camAt, so all three drivers show
+     the same motion and the comparison is of mechanism only. Without
+     that, a two-keyframe WAAPI would interpolate scale linearly and
+     look like a different demo. */
+  const SAMPLES = 61;
+  function cssTransform(c) {
+    return 'translate(' + (VB.w / 2) + 'px, ' + (VB.h / 2) + 'px) scale(' + c.k +
+           ') translate(' + (-c.cx) + 'px, ' + (-c.cy) + 'px)';
+  }
+  function attrTransform(c) {
+    return 'translate(' + (VB.w / 2) + ' ' + (VB.h / 2) + ') scale(' + c.k.toFixed(4) +
+           ') translate(' + (-c.cx).toFixed(3) + ' ' + (-c.cy).toFixed(3) + ')';
+  }
+
+  let anim = null;
+  function buildAnim() {
+    if (anim) anim.cancel();
+    const frames = [];
+    for (let i = 0; i < SAMPLES; i++) frames.push({ transform: cssTransform(camAt(i / (SAMPLES - 1))) });
+    anim = cam.animate(frames, { duration: 1000, fill: 'both', easing: 'linear' });
+    anim.pause();
+  }
+
+  let driver = 'viewbox', hair = 'vector', billboard = true;
+  let cssW = 1000;
+  function readWidth() { cssW = svg.getBoundingClientRect().width || cssW; }
+  if ('ResizeObserver' in window) new ResizeObserver(readWidth).observe(svg);
+  readWidth();
+
+  /* Switching strategy is a one-off style change, not per-frame work.
+     Clearing the inline width on the way out of `inverse` matters: an
+     inline stroke-width outranks the stylesheet, so a stale one would
+     make vector-effect look like it had stopped working. */
+  function setHair(next) {
+    hair = next;
+    svg.classList.toggle('fr-hair-vector', hair === 'vector');
+    if (hair !== 'inverse') for (const el of strokes) el.style.strokeWidth = '';
+    demo.resetMeters();
+    demo.render(demo.t);
+  }
+
+  function setDriver(next) {
+    driver = next;
+    /* Leave no residue from the previous mechanism. A stale CSS
+       transform silently outranks the transform attribute, which would
+       make driver B look broken and the bug look like SVG's fault. */
+    if (anim) { anim.cancel(); anim = null; }
+    cam.style.transform = '';
+    cam.removeAttribute('transform');
+    svg.setAttribute('viewBox', '0 0 ' + VB.w + ' ' + VB.h);
+    if (driver === 'waapi') buildAnim();
+    longCount = 0; longMs = 0;
+    demo.resetMeters();
+    demo.render(demo.t);
+  }
+
+  /* ── render ─────────────────────────────────────────────────
+     Everything is set from t. Driver / hairline / billboard are bench
+     controls, not accumulated animation state, so calling render twice
+     at the same t still produces identical output. */
+  function render(t) {
+    const c = camAt(t);
+
+    if (driver === 'viewbox') {
+      svg.setAttribute('viewBox',
+        (c.cx - VB.w / 2 / c.k).toFixed(3) + ' ' + (c.cy - VB.h / 2 / c.k).toFixed(3) + ' ' +
+        (VB.w / c.k).toFixed(3) + ' ' + (VB.h / c.k).toFixed(3));
+    } else if (driver === 'group') {
+      cam.setAttribute('transform', attrTransform(c));
+    } else if (anim) {
+      anim.currentTime = t * 1000;
+    }
+
+    /* Device pixels per user unit, which is the only quantity that
+       decides how thick a stroke lands. Identical under A and B — the
+       viewBox shrinks by k, the group scales by k, and they meet in
+       the middle.
+
+       cssW is cached rather than read here. getBoundingClientRect
+       inside a render loop forces a synchronous layout every frame,
+       and this bench would then be reporting the cost of its own
+       instrument alongside the cost of the thing it is measuring. */
+    if (hair === 'inverse') {
+      const D = (cssW / VB.w) * c.k * (window.devicePixelRatio || 1);
+      /* One DEVICE pixel, not one CSS pixel — which is the whole
+         reason this strategy exists next to vector-effect, and the
+         only one of the three that actually achieves it. */
+      const w = (1 / D).toFixed(6);
+      for (const el of strokes) el.style.strokeWidth = w;
+    }
+
+    for (let i = 0; i < markGs.length; i++) {
+      const p = PINS[i];
+      markGs[i].setAttribute('transform', billboard
+        ? 'translate(' + p.x + ' ' + p.y + ') scale(' + (1 / c.k).toFixed(6) + ')'
+        : 'translate(' + p.x + ' ' + p.y + ')');
+    }
+  }
+
+  /* ── meters ─────────────────────────────────────────────────
+     A long task is a real main-thread stall, and unlike frame rate it
+     survives being read on a machine whose display is already the
+     bottleneck: at 75 Hz every driver can look identical while one of
+     them is spending 40 ms in a burst. Counted per driver, reset on
+     every switch. */
+  let longCount = 0, longMs = 0;
+  if ('PerformanceObserver' in window) {
+    try {
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) { longCount++; longMs += e.duration; }
+      }).observe({ entryTypes: ['longtask'] });
+    } catch (_) { /* Safari has no longtask entry type; the readout says so */ }
+  }
+  const hasLong = 'PerformanceObserver' in window &&
+    (PerformanceObserver.supportedEntryTypes || []).includes('longtask');
+
+  const demo = WAM.clock('frame-bench-stage', { render, dur: 9000, el: svg, poster: 0.62 });
+
+  /* Measuring a stroke is harder than it looks, and the obvious way is
+     wrong: getBBox and getBoundingClientRect both report FILL geometry,
+     so a horizontal line measures zero pixels tall no matter how thick
+     it is drawn.
+
+     SVG2 added getBBox({stroke:true}) for exactly this. Firefox
+     implements it. Blink and WebKit accept the options object and
+     silently ignore it — so a try/catch feature test PASSES on all
+     three and returns a wrong answer on two of them. The honest test is
+     whether the stroked box is actually taller than the plain one.
+
+     Where it is a stub, the document is hit-tested instead: walk
+     outward from the line in one-device-pixel steps asking what is
+     painted there. That is accurate in Blink and WebKit and NOT in
+     Firefox, whose hit region for a sub-pixel or non-scaling stroke is
+     not the region it paints. The two instruments are exactly
+     complementary, each is checked against theory in the engine it
+     serves, and the readout says which one produced the number —
+     because an unattributed measurement is a claim. */
+  let instrument = null;
+  function pickInstrument() {
+    try {
+      if (ref.getBBox({ stroke: true }).height > ref.getBBox().height) return 'getBBox';
+    } catch (_) { /* older engines throw on the options argument */ }
+    return 'hit-test';
+  }
+
+  const SCAN = 64;
+  function measureHairline() {
+    const ctm = ref.getScreenCTM();
+    const box = svg.getBoundingClientRect();
+    if (!ctm || !box.width || box.bottom < 0 || box.top > innerHeight) return null;
+    const dpr = window.devicePixelRatio || 1;
+    if (!instrument) instrument = pickInstrument();
+
+    if (instrument === 'getBBox') {
+      return { px: ref.getBBox({ stroke: true }).height * ctm.d * dpr, capped: false };
+    }
+    const pt = svg.createSVGPoint();
+    pt.x = TARGET.x; pt.y = TARGET.y;
+    const o = pt.matrixTransform(ctm);
+    const x = o.x + 12;                     /* screen-space, so the probe clears the pin at every zoom */
+    if (x < box.left || x > box.right) return null;
+    const step = 1 / dpr;
+    if (document.elementFromPoint(x, o.y) !== ref) return { px: 0, capped: false };
+    let n = 1, capped = false;
+    for (const dir of [-1, 1]) {
+      for (let i = 1; i <= SCAN; i++) {
+        if (document.elementFromPoint(x, o.y + dir * i * step) !== ref) break;
+        n++;
+        if (i === SCAN) capped = true;
+      }
+    }
+    return { px: n, capped };
+  }
+
+  const scaleEl = document.getElementById('frScale');
+  const dprEl = document.getElementById('frDpr');
+  const hairEl = document.getElementById('frHair');
+  const costEl = document.getElementById('frCost');
+  const floorEl = document.getElementById('frFloor');
+  const fpsEl = document.getElementById('frFps');
+  const longEl = document.getElementById('frLong');
+  const warnEl = document.getElementById('frWarn');
+
+  setInterval(() => {
+    scaleEl.textContent = '×' + camAt(demo.t).k.toFixed(1);
+    /* Printed because two of the three strategies below are only
+       distinguishable when it is not 1, and a reader on a 1x display
+       would otherwise see the readout contradict the table. */
+    dprEl.textContent = (window.devicePixelRatio || 1).toFixed(2).replace(/\.?0+$/, '');
+    /* Measured, not computed: the rendered thickness of the reference
+       line, read back off the box the browser gave it. */
+    const m = measureHairline();
+    hairEl.textContent = m === null ? 'off screen'
+      : (m.capped ? '> ' : '') + m.px.toFixed(1) + ' · ' + instrument;
+    /* Below the floor there is no number to report, only a bound.
+       Printing "0 µs" there would read as "free, measured" when it
+       actually means "this clock cannot see it". */
+    const floor = demo.costFloor * 1000;
+    costEl.textContent = (demo.cost * 1000 <= floor)
+      ? '< ' + floor.toFixed(0) + ' µs/frame'
+      : (demo.cost * 1000).toFixed(0) + ' µs/frame';
+    floorEl.textContent = (WAM.clockRes() * 1000).toFixed(0) + ' µs → floor ' + floor.toFixed(0) + ' µs';
+    fpsEl.textContent = demo.fps ? demo.fps.toFixed(0) + ' fps' : '—';
+    longEl.textContent = hasLong ? longCount + ' · ' + longMs.toFixed(0) + ' ms' : 'not reported here';
+    warnEl.textContent = hair === 'inverse'
+      ? 'inverse writes stroke-width on ' + strokes.length + ' elements per frame — that cost is in the figure above'
+      : hair === 'vector'
+        ? 'vector-effect pins to one CSS pixel, so on this display it lands at dpr'
+        : 'no strategy — stroke-width is geometry and scales with it';
+  }, 500);
+
+  document.querySelectorAll('[data-driver]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-driver]').forEach((o) => o.classList.toggle('is-on', o === b));
+    setDriver(b.dataset.driver);
+  }));
+  document.querySelectorAll('[data-hair]').forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-hair]').forEach((o) => o.classList.toggle('is-on', o === b));
+    setHair(b.dataset.hair);
+  }));
+  const bbBtn = document.querySelector('[data-billboard]');
+  bbBtn.addEventListener('click', () => {
+    billboard = !billboard;
+    bbBtn.classList.toggle('is-on', billboard);
+    demo.render(demo.t);
+  });
+
+  addEventListener('resize', () => { readWidth(); demo.render(demo.t); });
+
+  svg.classList.add('fr-hair-vector');
+  demo.render(demo.t);
+})();
+</script>
+
+<script>
+/* ── 2 · THE LINE ─────────────────────────────────────────────
+   Two demos, one mechanism. The bench shows that dasharray/dashoffset
+   is a coordinate system along the path; the stage runs the same two
+   properties across 22 arcs at once.
+
+   Nothing here interpolates geometry. Every `d` is written once, at
+   load, from build-time layout — render(t) only ever touches two
+   numbers per path. That is the argument, so it has to be true. */
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+
+  /* ── the bench ────────────────────────────────────────────── */
+  (function () {
+    const live = document.getElementById('lnLive');
+    const ghost = document.getElementById('lnGhost');
+    if (!live) return;
+    /* A curve with a couple of reversals, so "distance along the path"
+       is visibly NOT "distance across the screen" — on a straight line
+       the two are the same and the demo teaches the wrong thing. */
+    const D = 'M40 150C120 20 180 190 260 100S380 10 450 120S560 180 620 60';
+    live.setAttribute('d', D); ghost.setAttribute('d', D);
+
+    const L = live.getTotalLength();
+    const lenEl = document.getElementById('lnLen');
+    const arrEl = document.getElementById('lnArray');
+    const offEl = document.getElementById('lnOff');
+    const pctEl = document.getElementById('lnPct');
+    lenEl.textContent = L.toFixed(1) + ' u';
+
+    let mode = 'draw';
+    const MARCH = 18;   /* dash + gap, in user units */
+
+    function render(t) {
+      let array, offset;
+      if (mode === 'draw') {
+        /* One dash as long as the whole path, and one gap the same.
+           The offset IS the pen: at L nothing has been drawn, at 0 all
+           of it has. Eased so the demo rests at both ends. */
+        const u = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+        array = L.toFixed(2) + ' ' + L.toFixed(2);
+        offset = L * (1 - u);
+      } else {
+        /* Identical properties, different magnitude. The offset runs
+           one full period per cycle so the loop is seamless. */
+        array = (MARCH * 0.55).toFixed(2) + ' ' + (MARCH * 0.45).toFixed(2);
+        offset = -t * MARCH;
+      }
+      live.style.strokeDasharray = array;
+      live.style.strokeDashoffset = offset.toFixed(2);
+      arrEl.textContent = array;
+      offEl.textContent = offset.toFixed(1);
+      pctEl.textContent = mode === 'draw'
+        ? (100 * (1 - offset / L)).toFixed(0) + '%'
+        : 'n/a — every dash is drawn';
+    }
+
+    const demo = WAM.clock('line-bench-stage', { render, dur: 5000, el: live, poster: 0.5 });
+    document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode]').forEach((o) => o.classList.toggle('is-on', o === b));
+      mode = b.dataset.mode;
+      demo.render(demo.t);
+    }));
+  })();
+
+  /* ── the stage: a chart recorder ──────────────────────────── */
+  (function () {
+    const slide = document.getElementById('lnSlide');
+    const paper = document.getElementById('lnPaper');
+    const H = globalThis.AI_HISTORY;
+    if (!slide) return;
+    if (!H) {
+      paper.insertAdjacentHTML('beforeend',
+        '<div style="padding:40px;text-align:center;font:11px var(--mono);color:var(--hz-500)">' +
+        'design/vendor/ai-history.js is missing — run <b>bun run vendor</b></div>');
+      return;
+    }
+    const svg = slide.querySelector('svg');
+    const S = H.strip;
+    const [Y0, Y1] = H.span;
+    const xOf = (y) => S.padX + ((y - Y0) / (Y1 - Y0)) * (S.w - S.padX * 2);
+
+    /* .led-slide is a fixed 960x540 by design — the grid depends on the
+       stage being exactly one known size — so it is scaled by transform
+       rather than reflowed. Every module stays a whole number of cells
+       at any display width, which is the entire reason for the fixed
+       size, and the wrapper takes the scaled height so the page still
+       flows around it. */
+    function fit() {
+      const k = paper.clientWidth / S.w;
+      slide.style.transform = 'scale(' + k + ')';
+      paper.style.height = Math.round(S.h * k) + 'px';
+    }
+    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(paper);
+    fit();
+
+    const grid = document.getElementById('lnGrid');
+    const gArcs = document.getElementById('lnArcs');
+    const gEvents = document.getElementById('lnEvents');
+    const gTrace = document.getElementById('lnTraceG');
+    const gPen = document.getElementById('lnPen');
+    const gAxis = document.getElementById('lnAxisG');
+    const marks = document.getElementById('lnMarks');
+    const yearEl = document.getElementById('lnYear');
+    const evEl = document.getElementById('lnEvent');
+    const drawnEl = document.getElementById('lnDrawn');
+    const rateEl = document.getElementById('lnRate');
+    document.getElementById('lnTotal').textContent = H.arcs.length;
+
+    const mk = (tag, attrs, parent) => {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      (parent || svg).appendChild(e);
+      return e;
+    };
+
+    /* Chart ruling, on the cell grid. Horizontal rules divide the trace
+       band into quarters the way a recorder's paper is pre-printed. */
+    /* No grid drawn here. Real chart paper is ruled before anything is
+       recorded on it, so the ruling is a CSS background on the stock —
+       the product — and the SVG carries only what the machine put
+       there. Drawing both in the same layer is what made the first
+       version read as a chart rather than as a chart RECORDING. */
+
+    /* Axis */
+    mk('line', { class: 'cr-axis', x1: S.padX, x2: S.w - S.padX, y1: S.axis, y2: S.axis }, gAxis);
+    for (let y = 1950; y <= Y1; y += 10) {
+      mk('line', { class: 'cr-axis', x1: xOf(y), x2: xOf(y), y1: S.axis, y2: S.axis + 6 }, gAxis);
+      const t = mk('text', { class: 'cr-tick-t', x: xOf(y), y: S.axisText + 8 }, gAxis);
+      t.textContent = y;
+    }
+
+    /* Everything unlit first, so frame 0 is a complete composition and
+       the year passes over a STABLE field. The previous staging hid
+       what had not happened yet, which made a decade with no movements
+       pixel-identical to a decade not yet reached — you cannot see a
+       gap in a field that is still filling. */
+    for (const a of H.arcs) mk('path', { class: 'cr-arc-ghost', d: a.d }, gArcs);
+    const arcs = H.arcs.map((a) => {
+      const el = mk('path', { class: 'cr-arc', d: a.d }, gArcs);
+      const L = el.getTotalLength();
+      el.style.strokeDasharray = L.toFixed(2) + ' ' + L.toFixed(2);
+      return { ...a, el, L };
+    });
+
+    const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
+    const events = H.nodes.map((n) => ({
+      ...n, el: mk('circle', { class: 'cr-ev', cx: n.x, cy: S.base, r: 3 }, gEvents),
+    }));
+
+    /* No ghost of the trace. The register beneath it IS pre-printed —
+       the stock arrives ruled, with the event scale and its plate type
+       already on it — but the paper ahead of a pen is blank, and
+       printing the recording before it happens is the one thing a
+       chart recorder cannot do. Frame 0 is a complete composition
+       regardless: it is a blank chart form, which is a real object. */
+    const trace = mk('path', { class: 'cr-trace', d: H.traceD }, gTrace);
+    const TL = trace.getTotalLength();
+    trace.style.strokeDasharray = TL.toFixed(2) + ' ' + TL.toFixed(2);
+    const trail = mk('path', { class: 'cr-trail', d: H.traceD }, gTrace);
+
+    const penLine = mk('line', { class: 'cr-pen-line', x1: 0, x2: 0, y1: S.traceTop - 12, y2: S.axis }, gPen);
+    const nib = mk('circle', { class: 'cr-nib', r: 4, cx: 0, cy: 0 }, gPen);
+
+    /* Standing labels for the twelve level-0 events, placed by the
+       build with leaders down to their own tick — DESIGN.md's callout
+       vocabulary, and the reason the labels no longer sit in the same
+       plane as the arcs fighting them for figure/ground. */
+    const labs = H.labels.map((l) => {
+      mk('line', { class: 'cr-leader', x1: l.x, x2: l.x, y1: S.base + 4, y2: l.y - 4 }, gEvents);
+      const d = document.createElement('div');
+      d.className = 'cr-mark';
+      d.textContent = l.text;
+      d.dataset.testid = 'line-mark-' + l.id;
+      d.style.left = (l.x / S.w * 100) + '%';
+      d.style.top = (l.y / S.h * 100) + '%';
+      marks.appendChild(d);
+      return { ...l, el: d };
+    });
+
+    /* Top left, in reading order and ahead of the trace it indexes.
+       It sat over the chrome row at first — 48px of Doto starting at
+       the chrome's own baseline — which is the kind of collision that
+       only shows up once the type is real. */
+    const pct = (v, d) => (v / d * 100) + '%';
+    /* The fine ruling covers the recording area only. */
+    const rule = document.getElementById('lnRule');
+    rule.style.top = pct(S.traceTop - 12, S.h);
+    rule.style.height = pct((S.base + 12) - (S.traceTop - 12), S.h);
+    document.getElementById('lnHead').style.left = pct(S.padX, S.w);
+    document.getElementById('lnHead').style.top = pct(18, S.h);
+    yearEl.style.right = pct(S.padX, S.w);
+    yearEl.style.top = pct(12, S.h);
+    const strip = document.querySelector('.cr-strip');
+    strip.style.left = pct(S.padX, S.w);
+    strip.style.right = pct(S.padX, S.w);
+    strip.style.top = pct(S.readout, S.h);
+
+    /* ── timing ───────────────────────────────────────────────
+       The pen's travel is eased, the year it prints is not. A recorder
+       drags its carriage smoothly and its counter steps in whole
+       units; running both off one linear ramp gave a smooth crawl
+       under a stepped label, which reads as neither.
+
+       HOLDS. The pen rests at each of the dataset's four zoom levels —
+       the same ranks §3 uses — so the piece has four rests rather than
+       being one 16-second ramp. Amateur motion never settles. */
+    const HOLD = 0.05, RESOLVE = 0.14;
+    const legs = H.levels.length - 1;
+    const LEG = (1 - RESOLVE - HOLD * (legs - 1)) / legs;
+
+    /* The travel is eased and the year it prints is not: a recorder
+       drags its carriage smoothly and its counter steps in whole
+       units. Running both off one linear ramp gave a smooth crawl
+       under a stepped label, which reads as neither.
+
+       Four rests rather than one continuous ramp — at each of the
+       dataset's own level boundaries, and then a long one at the end.
+       Returns the phase too, because the resolve has to be a state the
+       rest of render() can see, not a special case buried in here. */
+    function phaseAt(t) {
+      for (let i = 0; i < legs; i++) {
+        const a = i * (LEG + HOLD);
+        if (t < a + LEG) {
+          const p = Math.max(0, (t - a) / LEG);
+          /* --ease-ballistic sampled: damped, no overshoot. A pen
+             carriage is a needle, and that is the token named for it. */
+          const e = 1 - Math.pow(1 - p, 3);
+          return { year: Y0 + ((i + e) / legs) * (Y1 - Y0), resolve: 0 };
+        }
+        if (t < a + LEG + HOLD) return { year: Y0 + ((i + 1) / legs) * (Y1 - Y0), resolve: 0 };
+      }
+      /* The resolve. The paper stops, the pen lifts, and the readout
+         lands on its total — a payoff beat instead of an abstract loop,
+         which is the standard SCOPE.md sets for every stage in the deck. */
+      const p = Math.min(1, (t - (1 - RESOLVE)) / RESOLVE);
+      return { year: Y1, resolve: 1 - Math.pow(1 - p, 3) };
+    }
+
+    let lastEvent = null;
+    function render(t) {
+      const { year, resolve } = phaseAt(t);
+      const x = xOf(year);
+      const lift = 1 - resolve;
+
+      /* The trace is one number: how much of the paper the pen has
+         covered. Same mechanism as the bench, at scale. */
+      const frac = Math.max(0, Math.min(1, (x - S.padX) / (S.w - S.padX * 2)));
+      trace.style.strokeDashoffset = (TL * (1 - frac)).toFixed(2);
+
+      /* Trail: a short window of the trace immediately behind the pen.
+         Two dashes rather than one — a leading gap the length of the
+         undrawn remainder, then the visible tail. */
+      const TRAIL = 46;
+      const head = TL * frac;
+      trail.style.strokeDasharray = '0 ' + Math.max(0, head - TRAIL).toFixed(2) +
+        ' ' + Math.min(TRAIL, head).toFixed(2) + ' ' + TL.toFixed(2);
+      trail.style.opacity = (frac > 0.002 ? 0.9 : 0) * lift;
+
+      const pt = trace.getPointAtLength(head);
+      penLine.setAttribute('x1', x.toFixed(2)); penLine.setAttribute('x2', x.toFixed(2));
+      nib.setAttribute('cx', pt.x.toFixed(2)); nib.setAttribute('cy', pt.y.toFixed(2));
+      /* The lift: the carriage rises off the paper and the guide line
+         goes with it. Nothing else moves during the resolve. */
+      penLine.style.opacity = (0.5 * lift).toFixed(3);
+      nib.style.opacity = lift.toFixed(3);
+      nib.setAttribute('r', (4 * lift + 0.001).toFixed(2));
+
+      let done = 0, current = null;
+      for (const a of arcs) {
+        const p = Math.max(0, Math.min(1, (year - a.year) / 3));
+        a.el.style.strokeDashoffset = (a.L * (1 - p)).toFixed(2);
+        a.el.style.opacity = p > 0 ? (p < 1 ? 1 : 0.72) : 0;
+        if (p >= 1) done++;
+        if (p > 0 && p < 1) current = a;
+      }
+      drawnEl.textContent = done;
+
+      for (const e of events) {
+        const lit = year >= e.year;
+        e.el.setAttribute('class', lit ? 'ln-ev-lit' : 'ln-ev');
+        e.el.setAttribute('r', lit ? 4 : 2.5);
+      }
+      for (const l of labs) {
+        const n = events.find((e) => e.id === l.id);
+        l.el.classList.toggle('is-lit', year >= n.year);
+      }
+
+      /* The recorder prints what it is recording. One name at a time,
+         at readable size, instead of thirty labels fighting the arcs. */
+      const passed = events.filter((e) => e.year <= year);
+      const latest = passed.length ? passed[passed.length - 1] : null;
+      /* A register prints a record, not a paragraph. The dataset's
+         `what` is a full sourced sentence — up to two hundred
+         characters — and putting it here ellipsised away everything
+         after the first clause. So the strip prints the movement in the
+         form a log would keep it, kind and endpoints, and carries the
+         sourced sentence as its title. */
+      /* Where both ends sit in the same institution the movement is
+         internal, and "collab · Google → Google" reads as a no-op. Fall
+         back to the two events, which is what actually differs. */
+      const ends = current && [byId[current.from], byId[current.to]];
+      const rec = current
+        ? { text: current.kind + ' · ' + (ends[0].org === ends[1].org
+              ? ends[0].short + ' → ' + ends[1].short
+              : ends[0].org + ' → ' + ends[1].org),
+            full: current.what }
+        : latest
+          ? { text: latest.short, full: latest.label + ' · ' + latest.place }
+          : { text: '—', full: '' };
+      if (rec.text !== lastEvent) {
+        evEl.textContent = rec.text;
+        evEl.title = rec.full;
+        lastEvent = rec.text;
+      }
+
+      yearEl.textContent = Math.floor(year);
+      const a = H.activity.find((v) => v.year === Math.floor(year));
+      rateEl.textContent = a ? String(a.raw) : '—';
+    }
+
+    WAM.clock('line-stage', { render, dur: 18000, el: slide, poster: 1 });
+  })();
+})();
+</script>
+
+<script>
+/* ── 4 · THE PIPELINE, stage ──────────────────────────────────
+   The same three primitives as the bench above, one screen up in
+   scale, over the projected map. Every radius here is COUNTED from the
+   dataset — events on record at a site plus movements in and out of
+   it, both as of the year on the readout. No magnitude was authored to
+   make a shape, which matters because the fusions are the argument and
+   a tuned radius would be tuning the argument. */
+(function () {
+  const slide = document.getElementById('wxSlide');
+  const paper = document.getElementById('wxPaper');
+  const H = globalThis.AI_HISTORY, M = globalThis.WORLD_MAP;
+  if (!slide) return;
+  if (!H || !M) {
+    paper.insertAdjacentHTML('beforeend',
+      '<div style="padding:40px;text-align:center;font:11px var(--mono);color:var(--wx-sub)">' +
+      'design/vendor/map.js is missing — run <b>bun run vendor</b></div>');
+    return;
+  }
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('wxSvg');
+  const [Y0, Y1] = H.span;
+  /* Derived from where the data actually projects, not a constant. It
+     was hardcoded, and the moment the projection's central meridian
+     moved — it did, to put the sheet's seam over open ocean — the
+     window was pointing at the wrong ocean. A radar shows its coverage
+     area; this computes it. */
+  const VB = (function () {
+    const pts = Object.values(M.geo);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    const pad = 90;
+    let x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad;
+    let cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const w = x1 - x0, h = w * (540 / 960);
+    return { x: x0, y: cy - h / 2, w, h };
+  })();
+
+  svg.setAttribute('viewBox',
+    VB.x.toFixed(1) + ' ' + VB.y.toFixed(1) + ' ' + VB.w.toFixed(1) + ' ' + VB.h.toFixed(1));
+
+  function fit() {
+    const k = paper.clientWidth / 960;
+    slide.style.transform = 'scale(' + k + ')';
+    paper.style.height = Math.round(540 * k) + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(paper);
+  fit();
+
+  const mk = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  };
+
+  /* Graticule, on the projected plane. Drawn from the layer's own
+     coordinates rather than re-projected, because the camera never
+     moves on this stage — this one is a fixed coverage area. */
+  const grat = document.getElementById('wxGrat');
+  for (let x = Math.ceil(VB.x / 60) * 60; x <= VB.x + VB.w; x += 60) mk('line', { class: 'wx-grat', x1: x, x2: x, y1: VB.y, y2: VB.y + VB.h }, grat);
+  for (let y = Math.ceil(VB.y / 60) * 60; y <= VB.y + VB.h; y += 60) mk('line', { class: 'wx-grat', x1: VB.x, x2: VB.x + VB.w, y1: y, y2: y }, grat);
+
+  mk('path', { class: 'wx-coast', d: M.layers[0].d }, document.getElementById('wxMap'));
+
+  /* One cell per SITE, not per event: co-located events share a place,
+     and it is places that accumulate. Keyed by projected position so
+     two entries at the same institution land in one cell rather than
+     two stacked ones. */
+  const sites = new Map();
+  for (const n of H.nodes) {
+    const g = M.geo[n.id];
+    if (!g) continue;
+    const key = g[0].toFixed(1) + ',' + g[1].toFixed(1);
+    if (!sites.has(key)) sites.set(key, { x: g[0], y: g[1], org: n.org, events: [], deg: [] });
+    sites.get(key).events.push(n);
+  }
+  /* Degree, counted. An arc contributes to both ends in the year it
+     happened — that is the movement arriving somewhere and leaving
+     somewhere else, and both are activity. */
+  const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
+  for (const a of H.arcs) {
+    for (const id of [a.from, a.to]) {
+      const g = M.geo[id]; if (!g) continue;
+      const key = g[0].toFixed(1) + ',' + g[1].toFixed(1);
+      if (sites.has(key)) sites.get(key).deg.push(a.year);
+    }
+  }
+  const field = document.getElementById('wxField');
+  const sitesG = document.getElementById('wxSites');
+  const RAMP = ['--wx-1', '--wx-2', '--wx-3', '--wx-4', '--wx-5'];
+  const cells = [...sites.values()].map((st) => ({
+    ...st,
+    blob: mk('circle', { cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 0 }, field),
+    dot: mk('circle', { class: 'wx-site', cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 1.4 }, sitesG),
+  }));
+
+  const yearEl = document.getElementById('wxYear');
+  const hotEl = document.getElementById('wxHot');
+  const cellsEl = document.getElementById('wxCells');
+  const massEl = document.getElementById('wxMass');
+  const pct = (v, d) => (v / d * 100) + '%';
+  document.getElementById('wxChrome').style.cssText += ';left:' + pct(34, 960) + ';top:' + pct(18, 540);
+  yearEl.style.cssText += ';right:' + pct(34, 960) + ';top:' + pct(14, 540);
+  document.getElementById('wxKeyEl').style.cssText += ';left:' + pct(34, 960) + ';bottom:' + pct(58, 540);
+
+  /* Two blobs belong to one mass when they overlap — the same
+     condition the threshold uses to weld them, so this count is a
+     reading of the picture rather than a second opinion about it.
+     Union-find over the cells present this year. */
+  function massCount(live) {
+    const parent = live.map((_, i) => i);
+    const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    for (let i = 0; i < live.length; i++) {
+      for (let j = i + 1; j < live.length; j++) {
+        const d = Math.hypot(live[i].x - live[j].x, live[i].y - live[j].y);
+        if (d < (live[i].r + live[j].r) * 0.92) parent[find(i)] = find(j);
+      }
+    }
+    return new Set(live.map((_, i) => find(i))).size;
+  }
+
+  function render(t) {
+    /* Eased so the field rests at both ends rather than sliding past
+       the two states worth looking at — diffuse, and collapsed. */
+    const u = t;
+    const year = Y0 + u * (Y1 - Y0);
+    yearEl.textContent = Math.floor(year);
+
+    const live = [];
+    let hot = null;
+    for (const c of cells) {
+      const n = c.events.filter((e) => e.year <= year).length;
+      const d = c.deg.filter((y) => y <= year).length;
+      const w = n + d;
+      /* sqrt, so a site with nine units is three times the RADIUS and
+         nine times the area of one with one — area is what the eye
+         reads as quantity, and a linear radius would overstate it. */
+      const r = w ? 5.5 + Math.sqrt(w) * 5.2 : 0;
+      c.blob.setAttribute('r', r.toFixed(2));
+      c.blob.style.fill = w ? 'var(' + RAMP[Math.min(RAMP.length - 1, w - 1)] + ')' : 'none';
+      c.dot.style.opacity = w ? 0.85 : 0.18;
+      if (w) { live.push({ x: c.x, y: c.y, r, w, org: c.org }); if (!hot || w > hot.w) hot = { w, org: c.org }; }
+    }
+    cellsEl.textContent = live.length;
+    massEl.textContent = live.length ? massCount(live) : 0;
+    hotEl.textContent = hot ? hot.org + ' · ' + hot.w + ' units' : '—';
+  }
+
+  WAM.clock('pipeline-stage', { render, dur: 15000, el: slide, poster: 1 });
+})();
+</script>
+
+<script>
+/* ── 3 · THE FRAME, stage ─────────────────────────────────────
+   The camera the bench chose, on the map the build projected. Nested
+   <g transform> rather than the root viewBox, for the reasons the
+   bench's verdict panel gives — not because it measured faster, which
+   it did not, but because the viewBox belongs to responsive sizing and
+   to the filmstrip's clones. */
+(function () {
+  const sheet = document.getElementById('svSheet');
+  const paper = document.getElementById('svPaper');
+  const H = globalThis.AI_HISTORY, M = globalThis.WORLD_MAP;
+  if (!sheet) return;
+  if (!H || !M) {
+    paper.insertAdjacentHTML('beforeend',
+      '<div style="padding:40px;text-align:center;font:11px var(--mono);color:var(--sv-sub)">' +
+      'design/vendor/map.js is missing — run <b>bun run vendor</b></div>');
+    return;
+  }
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = sheet.querySelector('svg');
+  const cam = document.getElementById('svCam');
+  const W = M.frame.w, HH = M.frame.h;
+  const LV = M.layers;
+
+  /* How far below its nominal k a level is swapped in. Below its own k
+     the coarse layer is still the honest one — 10m coastline shown at
+     world scale is not more accurate, it is the same shoreline drawn
+     with more points than the pixels can hold — and 0.7 is where the
+     difference between the two goes under a pixel. */
+  const SWITCH = 0.7;
+  /* How much wider than its viewport the build cut each level. Read
+     from the map rather than retyped, because vendor.js chose it and a
+     crossfade that started earlier than the geometry reaches would
+     fade in a layer with a visible rectangular edge. */
+  const MARGIN = M.margin;
+  const smoothstep = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+
+  let scale = 1;
+  function fit() {
+    scale = paper.clientWidth / 960;
+    sheet.style.transform = 'scale(' + scale + ')';
+    paper.style.height = Math.round(540 * scale) + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(paper);
+  fit();
+
+  const mk = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  };
+
+  /* One path per level, all present, only one shown. Swapping the `d`
+     of a single path instead would re-parse a 240 KB string on the
+     frame the level changes, which is exactly the frame that can least
+     afford it. */
+  const gLand = document.getElementById('svLand');
+  const gShelf = document.getElementById('svShelf');
+  const gTex = document.getElementById('svTex');
+  const gBord = document.getElementById('svBord');
+  const stipple = document.getElementById('sv-stipple');
+  const layers = LV.map((l) => {
+    if (l.beyondMap) return null;
+    /* A level whose whole box is inland has no coastline to draw and no
+       water to draw it against — the ground is simply land. Painting
+       the usual blue sheet under an empty path is how the ocean ended
+       up covering New Hampshire. */
+    if (l.solidLand) return { solid: true };
+    const shelves = [1, 2, 3].map((n) =>
+      mk('path', { class: 'sv-shelf sv-shelf-' + n, d: l.d }, gShelf));
+    return {
+      land: mk('path', { class: 'sv-land', d: l.d }, gLand),
+      tex: mk('path', { class: 'sv-stipple', d: l.d }, gTex),
+      bord: l.borders ? mk('path', { class: 'sv-border', d: l.borders }, gBord) : null,
+      state: l.states ? mk('path', { class: 'sv-state', d: l.states }, gBord) : null,
+      county: l.counties ? mk('path', { class: 'sv-county', d: l.counties }, gBord) : null,
+      shelves,
+    };
+  });
+
+  /* Place names, one pool for every level; which ones are eligible is
+     decided per frame by the level that is showing. */
+  const placeLayer = document.getElementById('svLabels');
+  const places = LV.flatMap((l, i) => (l.named || []).map((n) => {
+    const d = document.createElement('div');
+    d.className = 'sv-place r' + n.r;
+    d.textContent = n.n;
+    placeLayer.appendChild(d);
+    return { ...n, level: i, el: d };
+  }));
+
+
+
+  const gGrat = document.getElementById('svGrat');
+  for (let x = 0; x <= W; x += 100) mk('line', { class: 'sv-grat', x1: x, x2: x, y1: 0, y2: HH }, gGrat);
+  for (let y = 0; y <= HH; y += 100) mk('line', { class: 'sv-grat', x1: 0, x2: W, y1: y, y2: y }, gGrat);
+
+  /* The reticle: the index mark that says where the next sheet in the
+     series sits. It is drawn in map units and counter-scaled every
+     frame so it stays a constant size on the page — a mark that grew
+     with the zoom would stop being a locator and become a shape. */
+  const gMarks = document.getElementById('svMarks');
+  const tgt = LV[LV.length - 1];
+  const retic = mk('g', {}, gMarks);
+  mk('circle', { class: 'sv-retic-fill', cx: 0, cy: 0, r: 26 }, retic);
+  mk('circle', { class: 'sv-retic', cx: 0, cy: 0, r: 26 }, retic);
+  mk('line', { class: 'sv-retic', x1: -38, x2: -12, y1: 0, y2: 0 }, retic);
+  mk('line', { class: 'sv-retic', x1: 12, x2: 38, y1: 0, y2: 0 }, retic);
+  mk('line', { class: 'sv-retic', x1: 0, x2: 0, y1: -38, y2: -12 }, retic);
+  mk('line', { class: 'sv-retic', x1: 0, x2: 0, y1: 12, y2: 38 }, retic);
+
+  const sites = H.nodes.filter((n) => M.geo[n.id]).map((n) => {
+    const g = M.geo[n.id];
+    const dot = mk('circle', { class: 'sv-site', cx: g[0], cy: g[1], r: 3 }, gMarks);
+    const lab = document.createElement('div');
+    lab.className = 'sv-lab';
+    lab.textContent = n.short;
+    lab.dataset.testid = 'frame-label-' + n.id;
+    document.getElementById('svLabels').appendChild(lab);
+    return { ...n, x: g[0], y: g[1], dot, lab };
+  });
+  /* Dartmouth is what the flight is for, so it is marked as the target
+     rather than being one label among thirty. */
+  const target = sites.find((n) => n.id === 'dartmouth');
+  if (target) target.lab.classList.add('is-target');
+
+  /* Measure every label once, rather than estimating its width from a
+     character advance. Three passes at guessing the metrics of
+     uppercase mono with tracking each left labels touching; offsetWidth
+     is the browser's own answer, it is unaffected by the ancestor
+     transform because it is layout rather than paint, and it converts
+     to sheet units by one constant. Measured, not claimed — the same
+     rule the rest of this sheet is held to.
+
+     One forced layout at init, then never again. */
+  const U0 = W / 960;
+  for (const n of sites) { n.labW = n.lab.offsetWidth * U0; n.labH = n.lab.offsetHeight * U0; }
+  for (const pl of places) {
+    pl.w = pl.el.offsetWidth * U0; pl.h = pl.el.offsetHeight * U0;
+    pl.el.style.display = 'none';
+  }
+
+  const plate = document.getElementById('svPlate');
+  const scaleBar = document.getElementById('svScale');
+  const record = document.getElementById('svRecord');
+  plate.style.cssText += ';left:22px;top:22px';
+  scaleBar.style.cssText += ';left:22px;bottom:22px';
+
+  if (target) {
+    record.innerHTML =
+      '<div class="card">' +
+      '<div class="yr">' + target.year + '</div>' +
+      '<div class="ttl">' + target.label + '</div>' +
+      '<div class="meta">' + target.place + '<br>' +
+      'past the end of the map — solid land, no coastline within 60 km<br>' +
+      'the reticle is still centred; there is simply nothing left to draw</div>' +
+      '</div>';
+  }
+
+  /* Log-space zoom. Linear interpolation of k spends almost the whole
+     flight already deep: the first half of a 1→384 linear ramp covers
+     1→192, which is seven of the eight doublings. In log space every
+     doubling takes the same time, which is what a constant rate of
+     zoom means to an eye — and it is also what makes the level changes
+     land evenly instead of all at once at the start. */
+  const HOLD = 0.08;
+  const legs = LV.length - 1;
+  const LEG = (1 - HOLD * legs) / legs;
+  function camAt(t) {
+    for (let i = 0; i < legs; i++) {
+      const a = i * (LEG + HOLD);
+      if (t < a + LEG) {
+        const p = Math.max(0, (t - a) / LEG);
+        const e = 1 - Math.pow(1 - p, 3);
+        const k = Math.exp(Math.log(LV[i].k) + (Math.log(LV[i + 1].k) - Math.log(LV[i].k)) * e);
+        return { k, cx: LV[i].cx + (LV[i + 1].cx - LV[i].cx) * e,
+                 cy: LV[i].cy + (LV[i + 1].cy - LV[i].cy) * e, at: i + e };
+      }
+      if (t < a + LEG + HOLD) return { k: LV[i + 1].k, cx: LV[i + 1].cx, cy: LV[i + 1].cy, at: i + 1 };
+    }
+    const last = LV[LV.length - 1];
+    return { k: last.k, cx: last.cx, cy: last.cy, at: legs };
+  }
+
+  function render(t) {
+    const c = camAt(t);
+    cam.setAttribute('transform',
+      'translate(' + (W / 2) + ' ' + (HH / 2) + ') scale(' + c.k.toFixed(5) +
+      ') translate(' + (-c.cx).toFixed(4) + ' ' + (-c.cy).toFixed(4) + ')');
+
+    /* Device pixels per map unit. The sheet is 960 CSS px for a
+       1600-unit box, scaled again by the page fit, then by the camera
+       — every one of those multiplies. Inverse stroke-width, not
+       vector-effect: the bench measured vector-effect landing at 2
+       device px on a 2x display, and the criterion is one. */
+    const dpr = window.devicePixelRatio || 1;
+    const D = (960 / W) * scale * c.k * dpr;
+    const hair = (1 / D).toFixed(6);
+    for (const L2 of layers) if (L2 && L2.land) {
+      L2.land.style.strokeWidth = hair;
+      if (L2.bord) L2.bord.style.strokeWidth = (1.6 / D).toFixed(6);
+      if (L2.state) L2.state.style.strokeWidth = (1.3 / D).toFixed(6);
+      if (L2.county) L2.county.style.strokeWidth = (1 / D).toFixed(6);
+    }
+    for (const el of gGrat.children) el.style.strokeWidth = hair;
+    /* Counter-scale the halftone so the dots stay a constant size on
+       the page rather than becoming circles at depth. */
+    stipple.setAttribute('patternTransform', 'scale(' + (1 / c.k).toFixed(6) + ')');
+
+    /* Only the level whose geometry is cut for this scale. SWITCH is
+       declared at the top of the stage, with the reason it is 0.7. */
+    let show = 0;
+    for (let i = 0; i < LV.length; i++) if (!LV[i].beyondMap && c.k >= LV[i].k * SWITCH) show = i;
+
+    /* Ground swaps hard; divisions cross-fade.
+
+       The ground can swap on one frame because the 0.7 is chosen so
+       that it is the same shoreline at a scale where the difference
+       between the two resolutions is under a pixel — there is nothing
+       to see. Division lines are the opposite case: a county mesh has
+       no coarse version to be confused with, so switching it on at
+       full strength puts several thousand lines on the sheet between
+       one frame and the next, and that reads as a fault in the paper
+       rather than as detail arriving.
+
+       The band costs nothing extra, because the build already pays for
+       it. vendor.js cuts each level with MARGIN 1.6, so a level's
+       geometry covers the frame from k/1.6 upward while the swap does
+       not happen until k*0.7 — everything between is a window where
+       both levels are complete and either may be drawn. That margin is
+       there for this: see the comment at scripts/vendor.js:401. */
+    const enter = (l) => smoothstep(
+      (Math.log(c.k) - Math.log(l.k / MARGIN)) /
+      (Math.log(l.k * SWITCH) - Math.log(l.k / MARGIN)));
+
+    layers.forEach((L2, i) => {
+      if (!L2 || L2.solid) return;
+      const on = i === show ? '' : 'none';
+      L2.land.style.display = on; L2.tex.style.display = on;
+      for (const sh of L2.shelves) sh.style.display = on;
+
+      /* In as this level's own band opens, out as the next one's does.
+         The min is what makes the handover continuous: at any k the two
+         adjacent levels' weights sum to 1 across the overlap, so the
+         total ink on the sheet never jumps. */
+      const nx = LV[i + 1];
+      const w = Math.min(
+        i === 0 ? 1 : enter(LV[i]),
+        (nx && !nx.beyondMap && !nx.solidLand) ? 1 - enter(nx) : 1);
+      for (const p of [L2.bord, L2.state, L2.county]) {
+        if (!p) continue;
+        p.style.display = w > 0.002 ? '' : 'none';
+        p.style.setProperty('--fade', w.toFixed(4));
+      }
+    });
+    /* The sheet's own ground is the water, so an all-land level has to
+       repaint it — otherwise the frame is an ocean with a coastline
+       drawn on top of nowhere. */
+    sheet.style.background = (layers[show] && layers[show].solid)
+      ? 'var(--sv-land)' : 'var(--sv-water)';
+
+    /* Counter-scaled so the reticle and the site dots stay a constant
+       size on the page rather than growing into shapes. */
+    const inv = (1 / c.k);
+    retic.setAttribute('transform',
+      'translate(' + tgt.cx + ' ' + tgt.cy + ') scale(' + inv.toFixed(6) + ')');
+    retic.style.opacity = c.at >= legs - 0.02 ? 0 : 1;
+
+    /* Semantic zoom: a level admits a rank, and ranks below it drop
+       out. This is the dataset's own `level` field — the same one §2's
+       standing labels read — so the two sections agree about which
+       events are landmarks. */
+    const lvl = Math.min(LV.length - 1, Math.floor(c.at + 0.35));
+
+    /* Semantic zoom is not "show more labels as you go in". A level
+       admits only what it can HOLD, which means two filters, and the
+       first version only had the first one: rank gates which events are
+       eligible, and then collision decides which of those actually get
+       drawn. Without the second, sheet 2 offered twenty-four eligible
+       labels into one corner of the Northeast and printed all of them
+       on top of each other.
+
+       Priority is rank, then year — so a landmark keeps its label and
+       the thing that loses is always the more minor of two, rather than
+       whichever happened to come later in the array. The target is
+       placed first unconditionally: it is what the flight is for. */
+    /* Hiding a label has to clear its position too. A label culled by the
+       collision pass keeps whatever left/top the previous frame gave it,
+       which is invisible on screen and makes render(t) non-idempotent —
+       the same t reached from two different frames produces two different
+       outerHTMLs. Caught by the acceptance check, not by looking. */
+    const hide = (el) => {
+      el.style.display = 'none';
+      el.style.left = ''; el.style.top = '';
+    };
+
+    const cand = [];
+    for (const n of sites) {
+      const sx = (W / 2) + (n.x - c.cx) * c.k;
+      const sy = (HH / 2) + (n.y - c.cy) * c.k;
+      n.dot.setAttribute('r', (3 * inv).toFixed(5));
+      const inFrame = sx > -60 && sx < W + 60 && sy > -40 && sy < HH + 40;
+      const eligible = inFrame && n.level <= lvl;
+      n.dot.style.display = inFrame ? '' : 'none';
+      if (eligible) cand.push({ n, sx, sy });
+      else hide(n.lab);
+    }
+    cand.sort((a, b) => (a.n === target ? -1 : b.n === target ? 1
+      : a.n.level - b.n.level || a.n.year - b.n.year));
+
+    /* Boxes in the sheet's own 1600x900 space — and the conversion is
+       the whole trick. The labels are HTML sized in CSS pixels, but sx
+       and sy are map units, and the sheet draws a 1600-unit box into
+       960 CSS px. Comparing a 6.6px character advance directly against
+       map units understated every box by 1.667x, which is why the first
+       cull still left labels touching. */
+    const U = W / 960;
+    const PAD = 4 * U;
+    const placed = [];
+    for (const c2 of cand) {
+      const w = c2.n.labW + PAD * 2, h = c2.n.labH;
+      const box = { l: c2.sx - w / 2, r: c2.sx + w / 2, t: c2.sy - 10 - h, b: c2.sy - 10 + PAD };
+      const hit = placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b);
+      if (hit) { hide(c2.n.lab); continue; }
+      placed.push(box);
+      c2.n.lab.style.display = '';
+      c2.n.lab.style.left = (c2.sx / W * 100) + '%';
+      c2.n.lab.style.top = ((c2.sy - 10) / HH * 100) + '%';
+    }
+
+    /* Place names run through the same cull, but AFTER the events — so
+       when a county name and a landmark want the same square inch, the
+       landmark keeps it. The ground never displaces the subject. */
+    for (const pl of places) {
+      if (pl.level !== show) { hide(pl.el); continue; }
+      const sx = (W / 2) + (pl.x - c.cx) * c.k;
+      const sy = (HH / 2) + (pl.y - c.cy) * c.k;
+      if (sx < 40 || sx > W - 40 || sy < 30 || sy > HH - 30) { hide(pl.el); continue; }
+      const w = pl.w + PAD * 2, h = pl.h + PAD;
+      const box = { l: sx - w / 2, r: sx + w / 2, t: sy - h / 2, b: sy + h / 2 };
+      if (placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b)) {
+        hide(pl.el); continue;
+      }
+      placed.push(box);
+      pl.el.style.display = '';
+      pl.el.style.left = (sx / W * 100) + '%';
+      pl.el.style.top = (sy / HH * 100) + '%';
+    }
+
+    const L = LV[Math.min(LV.length - 1, Math.round(c.at))];
+    plate.innerHTML =
+      '<span class="t">sheet ' + (Math.round(c.at) + 1) + ' of ' + LV.length + '</span>' +
+      '<b>' + L.label + '</b><br>' +
+      'scale &nbsp;<b>×' + (c.k < 10 ? c.k.toFixed(2) : Math.round(c.k)) + '</b><br>' +
+      'source&nbsp; <b>' + (L.beyondMap ? 'none at this scale' : 'natural earth ' + L.res) + '</b><br>' +
+      'projection <b>mercator, ' + M.distortion.toFixed(2) + '× at target</b>';
+
+    /* A scale bar is the one piece of map furniture that must be
+       recomputed rather than drawn once — that is the whole point of
+       it. 100 map units, measured in CSS px at the current zoom. */
+    const px = 100 * (960 / W) * c.k;
+    scaleBar.innerHTML = '<span class="bar" style="width:' + Math.min(150, px).toFixed(0) + 'px">' +
+      '<i style="width:25%"></i><i style="width:25%"></i><i style="width:25%"></i><i style="width:25%"></i></span>' +
+      '<span>100 units</span>';
+
+    /* The record. Fades up exactly as the map runs out. */
+    /* Featureless, not merely empty: the deepest box turns out to be
+       entirely inland rather than off the edge of the data, and either
+       way there is nothing left to draw there. */
+    const beyond = LV[LV.length - 1].beyondMap || LV[LV.length - 1].solidLand;
+    const near = Math.max(0, Math.min(1, (c.at - (legs - 1)) / 1));
+    record.hidden = !(beyond && near > 0.01);
+    record.style.opacity = beyond ? near.toFixed(3) : 0;
+  }
+
+  WAM.clock('frame-stage', { render, dur: 20000, el: sheet, poster: 1 });
+})();
+</script>
 </body>
 </html>

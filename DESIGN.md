@@ -10,7 +10,7 @@
 
 ## Revision — where this actually landed (5 Aug 2026)
 
-This document was written **before** the six treatments were built, and it did its job: it set the problem, the constraints, and the starting direction. Building against it then changed four things materially. Rather than silently rewriting the original — the treatments only make sense as a record if the brief they were answering is still legible — the deltas are stated here, and the affected sections below carry pointers back to this one.
+This document was written **before** the six treatments were built, and it did its job: it set the problem, the constraints, and the starting direction. Building against it then changed several things materially. Rather than silently rewriting the original — the treatments only make sense as a record if the brief they were answering is still legible — the deltas are stated here, and the affected sections below carry pointers back to this one.
 
 **1. The premise moved from "instrument housing" to "content on an LED panel."** Part 0 proposed a machined instrument enclosure. Five treatments in, the stronger idea turned out to be that a slide *is a display*: an emissive dark ground with a visible pixel matrix, rather than a printed card sitting in a metal case. The housing survives as the app's chassis — top bar, bezels, plates — but the slide surface itself is a screen. This produced the `.led-slide` / `.screen-unit` components and the rule that governs both: **on-screen elements are emissive graphics and glass; chassis materials (moulded plastic, chamfers, knurl, wells) stay off the screen.**
 
@@ -23,6 +23,12 @@ This document was written **before** the six treatments were built, and it did i
 **5. There are two displays, and which one you use is a rule, not a preference.** See below — this is the single most load-bearing thing to get right, and the easiest to get backwards.
 
 **6. The material question mostly dissolved.** §1.4 treats surface material as the primary carrier of the aesthetic, and an open question through the treatments was how far to push plastic and glass against anodised aluminium. Once the screens arrived, that stopped mattering much: the displays carry the identity, and the chassis is deliberately quiet around them. Of the eleven material recipes in §1.4, nine now appear only in T-06's own materials catalogue, which documents them; `.mat-anodised` is the only one doing real work in the app. They're kept rather than pruned — the catalogue is part of the record of how the system got here, and it costs nothing but a section on one sheet. **The live distinction is screen vs. chassis, not metal vs. plastic.**
+
+**7. The stack moved off React, so all of Part 3 is a superseded proposal.** This document specifies a React app — `useDeck`/`useSync`/`useTimer`, `dangerouslySetInnerHTML`, JSX-free deck data, a `src/deck` · `src/runtime` · `src/ui` · `src/demos` tree. **None of that was built and none of those directories exist.** The shell is SvelteKit 2 / Svelte 5 runes on Bun, decided 5 Aug 2026 — SCOPE.md:166 owns that decision and the reasoning for it. Part 3, the file-structure block in Part 5, and Part 6's step 1 are kept as the record of what was proposed; read them as history, not as instructions. **`conductor/tech-stack.md` is the single source of truth for what actually runs.**
+
+What survived the port is the part that was never framework-specific, and it is the load-bearing half: data and UI strictly separated, a slide as a plain serialisable structure, lazy-loaded demos behind a registry, the iframe-per-heavy-demo escape hatch and the reason for it (the ~16 concurrent WebGL context cap). The dependency rule still holds; only the directory names in it are wrong.
+
+**Part 1 and Part 2 are unaffected.** The visual language and the motion system are current, and are what the treatments and the technique sheets are actually built against.
 
 **Kept treatment:** T-06 (Field Unit, dark). The other five are still in `design/treatments/` and viewable in the app at `/design/treatments`.
 
@@ -58,7 +64,7 @@ The tell that you've overdone it: two adjacent LCD panels with ordinary prose in
 
 Whichever size you're using, carry the furniture a real readout carries — that furniture *is* the aesthetic:
 
-- **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 15`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
+- **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 16`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
 - **`.lcd-strip`** — the row those sit in, along the bottom of a panel.
 - **`.led` inside `.lcd`** — status lamps, automatically flattened to screen content (no dome, no bloom). Same rule as slides: indicators drawn on a screen are graphics, not hardware.
 - **`.lcd.sm` / `.lcd.strip` in a `.well`** — small standalone readout chips (`12:04`, `06/14`, `RUNNING`), for data that belongs on its own little screen rather than inside a bigger one.
@@ -96,7 +102,7 @@ The reconciliation is to give each half a **job**, not a percentage.
 - **The chrome is the housing.** Monochrome, precise, technical, quiet. Teenage Engineering and Nothing own this layer entirely. Greyscale, hairline rules, dot-matrix and mono labels, alphanumeric slide codes, dimension marks. It never competes with the demo.
 - **The content is the exposed internals.** This is where the Nintendo/iMac candy palette lives — as **tinted translucent panels** through which you see the working demo, and as **one saturated section colour per technique**.
 
-Crucially, colour is then **informational, not decorative** — a Dieter Rams / Teenage Engineering principle rather than a Nintendo one. Each of the seven techniques on the spectrum owns a tint. The audience learns the colour code implicitly over 14 slides, so by the WebGPU payoff they know where they are on the ladder without reading a label. That satisfies both halves of the reference set honestly:
+Crucially, colour is then **informational, not decorative** — a Dieter Rams / Teenage Engineering principle rather than a Nintendo one. Each of the seven techniques on the spectrum owns a tint. The audience learns the colour code implicitly over 16 slides, so by the WebGPU payoff they know where they are on the ladder without reading a label. That satisfies both halves of the reference set honestly:
 
 **Candy palette, applied with Swiss discipline.**
 
@@ -104,10 +110,10 @@ Crucially, colour is then **informational, not decorative** — a Dieter Rams / 
 
 SCOPE.md §Risks, final bullet: *"A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks."*
 
-The app is itself evidence for slides 7 and 13. Therefore:
+The app is itself evidence for slides 9 and 15. Therefore:
 
 - Every chrome animation honours `prefers-reduced-motion`.
-- Chrome motion obeys the frequency/intensity rule from SCOPE.md §Motion Craft — slide advance happens ~14 times in 20 minutes and must stay restrained; the cold open happens once and can be lavish.
+- Chrome motion obeys the frequency/intensity rule from SCOPE.md §Motion Craft — slide advance happens ~15 times in 20 minutes and must stay restrained; the cold open happens once and can be lavish.
 - No chrome animation gates interaction. Pressing `→` twice fast must land on slide 3, never queue or block.
 - The static state is built first and motion layered on (SCOPE.md §Fallbacks).
 
@@ -157,13 +163,18 @@ One per rung of the spectrum, ordered so that **chroma and lightness climb with 
 
 | # | Section | Token | Value | Reference |
 |---|---|---|---|---|
-| 0 | Video / GIF | `--tint-video` | `oklch(0.55 0.03 265)` | N64 "Smoke" — near-grey, deliberately inert |
+| 0 | Video · GIF | `--tint-video` | `oklch(0.55 0.03 265)` | N64 "Smoke" — near-grey, deliberately inert |
 | 1 | CSS | `--tint-css` | `oklch(0.68 0.13 235)` | GBC Atomic Purple's blue cast |
 | 2 | Composite | `--tint-composite` | `oklch(0.72 0.16 195)` | N64 Ice Blue |
 | 3 | SVG | `--tint-svg` | `oklch(0.75 0.18 145)` | N64 Jungle Green |
 | 4 | Canvas | `--tint-canvas` | `oklch(0.80 0.17 95)` | iMac Lime |
 | 5 | WebGL | `--tint-webgl` | `oklch(0.74 0.19 55)` | iMac Tangerine / TE orange |
 | 6 | WebGPU | `--tint-webgpu` | `oklch(0.70 0.26 320)` | iMac Grape / Atomic Purple — peak chroma |
+
+**Slides 4 and 5 (Video, GIF) share rung 0.** The split into two slides is an argument
+about formats, not an extra rung on the capability ladder — both are pre-baked pixels, and
+giving GIF its own tint would imply a step up in capability it does not have. Seven tints,
+seven techniques, sixteen slides.
 
 `⚠︎ VERIFY` These are *derived from* the named products, not sampled from them. If exact fidelity matters, sample from reference photography and re-fit to the ramp.
 
@@ -339,9 +350,9 @@ Directly from SCOPE.md §Motion Craft:
 
 **Functional layer** — fast, subtle, near-invisible. Slide advance, nav hover, panel open, presenter-view updates, focus rings. Happens constantly; must be restrained.
 
-**Experiential layer** — authored, memorable, rare. The cold open (slide 1), the section-change moment when the tint shifts, the WebGPU reveal (slide 12), the close. Happens a handful of times; earns the flourish.
+**Experiential layer** — authored, memorable, rare. The cold open (slide 1), the section-change moment when the tint shifts, the WebGPU reveal (slide 14), the close. Happens a handful of times; earns the flourish.
 
-The failure mode to avoid is precisely the one SCOPE.md names: applying experiential-scale motion to slide advance. Advancing happens ~14 times in 20 minutes plus rehearsal — probably 200+ times before the talk is delivered. It must be *fast*.
+The failure mode to avoid is precisely the one SCOPE.md names: applying experiential-scale motion to slide advance. Advancing happens ~15 times in 20 minutes plus rehearsal — probably 200+ times before the talk is delivered. It must be *fast*.
 
 ### 2.2 Duration tokens
 
@@ -419,17 +430,23 @@ Substitute, don't delete (SCOPE.md §Accessibility):
 - Slide transitions become a pure cross-fade — no translate. The audience still sees *that* something changed.
 - Ambient chrome motion (the idle pulse on the record indicator, any looping background) stops entirely.
 - The thread demo drops to the reduced-motion rung of the ladder.
-- **A visible indicator appears in the chrome when reduced motion is active** — because the presenter will want to demonstrate this live during slide 13. This turns an accessibility feature into a demo asset.
+- **A visible indicator appears in the chrome when reduced motion is active** — because the presenter will want to demonstrate this live during slide 15. This turns an accessibility feature into a demo asset.
 
 ### 2.6 Performance
 
-- Animate **`transform` and `opacity` only** in the chrome. The deck cannot afford chrome-induced jank during a talk whose slide 6 is literally about jank.
+- Animate **`transform` and `opacity` only** in the chrome. The deck cannot afford chrome-induced jank during a talk whose slide 7 is literally about jank.
 - `will-change` applied narrowly and removed after — a permanently promoted layer costs memory, and with WebGL contexts already competing (SCOPE.md §Architecture) that matters.
 - Chrome animation must not run while a demo is initialising. A heavy WebGL mount will drop frames; overlapping a transition with it guarantees a visible stutter at exactly the wrong moment. **Sequence: transition completes → demo mounts.**
 
 ---
 
 ## Part 3 — Architecture
+
+> **Superseded — see Revision item 7.** This part specifies a React app that was
+> never built. The shell is SvelteKit 2 / Svelte 5 runes on Bun; the directories
+> named below do not exist. The *principles* here did survive the port — kept as
+> the record of what was proposed and why. `conductor/tech-stack.md` is the
+> single source of truth for what runs.
 
 ### 3.1 Principle: data and UI are separate
 
@@ -444,7 +461,7 @@ DECK DATA  ──▶  RUNTIME  ──▶  UI / CHROME
 - **Runtime** owns navigation state, step state, timing, sync, and demo lifecycle. It knows nothing about visual design.
 - **UI** renders data via named layouts and renders chrome. It holds no deck content.
 
-The payoff: slide content can be reordered, rewritten, or cut on Thursday night without touching component code — which matters given SCOPE.md's 4-day timeline and the explicit note that slides 7 and 13 may be cut after a timed rehearsal.
+The payoff: slide content can be reordered, rewritten, or cut on Thursday night without touching component code — which matters given SCOPE.md's 4-day timeline and the explicit note that slides 8, 9 and 15 may be cut after a timed rehearsal.
 
 ### 3.2 Slide schema
 
@@ -473,7 +490,7 @@ interface Slide {
   steps?: number;             // incremental builds within the slide
   notes?: string;             // speaker notes (HTML)
   budgetSeconds?: number;     // planned pacing, drives the rehearsal timer
-  compressible?: boolean;     // SCOPE.md marks slides 7 and 13 as cuttable
+  compressible?: boolean;     // SCOPE.md marks slides 8, 9 and 15 as cuttable
 }
 ```
 
@@ -498,7 +515,7 @@ Lazy imports mean a demo's code isn't even parsed until its slide is near — wh
 
 Hybrid, per the default I flagged earlier:
 
-- **`inline` (default).** The slide renders into the stage element in the main document. Fast, shares fonts and tokens, transitions are trivial, React state is available.
+- **`inline` (default).** The slide renders into the stage element in the main document. Fast, shares fonts and tokens, transitions are trivial, component state is available. *(Written as "React state"; see Revision item 7.)*
 - **`iframe` (opt-in per slide).** A sandboxed document. Reserved for the heavy WebGL/WebGPU demos.
 
 The iframe path exists to solve a real, named risk: SCOPE.md §Architecture flags that browsers cap concurrent WebGL contexts at ~16 and that exhausting them crashes the tab mid-talk. An iframe gets its own context budget and, more importantly, **tearing down the iframe reliably reclaims the GPU resources**, which manual Three.js disposal often does not do completely. For a 20-minute live talk with no second take, that reliability is worth the plumbing.
@@ -557,13 +574,13 @@ Everything a presenter reaches for reflexively. Grouped by build priority.
 |---|---|
 | Overview grid | `O` or `Esc` — thumbnails, click to jump. Invaluable in Q&A |
 | Help overlay | `?` — shortcut list. You will forget your own bindings under pressure |
-| Perf HUD | FPS/frame-time. **Slide 6 needs this as content anyway** — build once, use twice |
-| Reduced-motion toggle | Force it on/off from the chrome. **Slide 13 demo asset** |
-| Degradation-rung switch | Force WebGPU/WebGL/static/reduced. **Slide 13 shows four rungs side by side** |
-| Autoplay / loop | For the kiosk and billboard panels on slide 11 |
+| Perf HUD | FPS/frame-time. **Slide 7 needs this as content anyway** — build once, use twice |
+| Reduced-motion toggle | Force it on/off from the chrome. **Slide 15 demo asset** |
+| Degradation-rung switch | Force WebGPU/WebGL/static/reduced. **Slide 15 shows four rungs side by side** |
+| Autoplay / loop | For the kiosk and billboard panels on slide 13 |
 | Safe mode | Boot flag disabling all live demos, posters only. Insurance |
 
-Note the pattern: three "app features" are also **slide content**. Building the perf HUD, the reduced-motion toggle, and the rung switcher as real chrome features means slides 6 and 13 largely build themselves. SCOPE.md §Risks calls slide 13 "the one place where the talk's content and the app's engineering overlap most expensively" — this is how that cost gets recovered.
+Note the pattern: three "app features" are also **slide content**. Building the perf HUD, the reduced-motion toggle, and the rung switcher as real chrome features means slides 7 and 15 largely build themselves. SCOPE.md §Risks calls slide 15 "the one place where the talk's content and the app's engineering overlap most expensively" — this is how that cost gets recovered.
 
 ### Nice-to-have
 
@@ -595,6 +612,10 @@ Reusable components expose a `testId?: string` prop and derive children from it.
 
 ### File structure
 
+> **Superseded — see Revision item 7.** None of these directories exist. The
+> real layout is in `conductor/tech-stack.md`. Kept because the dependency rule
+> below still holds; only the names are wrong.
+
 ```
 src/
   design/      tokens.css, reset.css, type.css   — no components
@@ -612,7 +633,7 @@ The dependency rule: `deck/` imports nothing. `runtime/` imports `deck/`. `ui/` 
 
 Deliberately sequenced so the app is *presentable* early and improves, rather than being complete only at the end. SCOPE.md §Risks names the real failure mode: "chrome polish eating the day before the talk."
 
-1. **Skeleton** — Vite + React + TS, tokens, reset, type scale. Placeholder deck of 14 stub slides carrying the real titles and sections.
+1. **Skeleton** — ~~Vite + React + TS~~ Vite + SvelteKit + JSDoc-checked JS (Revision item 7), tokens, reset, type scale. Placeholder deck of stub slides carrying the real titles and sections. *(Said 14; SCOPE.md's outline owns the count and it is 16.)*
 2. **Runtime** — navigation, steps, deep links, keyboard. Ugly but complete. *The deck is now navigable end to end.*
 3. **Chrome v1** — stage, progress rail, slide codes, section tints. The design language lands here.
 4. **Presenter view** — sync, notes, timers. *Rehearsal becomes possible — do this before demos, not after.*
