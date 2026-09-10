@@ -53,10 +53,16 @@
 
   <!-- title so the sheet is announced rather than being an
        unlabelled embedded document -->
+  <!-- `allow` is opt-in per feature and defaults to denied inside an
+       iframe, so without it SL-04's camera toggle fails with a
+       NotAllowedError that looks identical to the user refusing the
+       browser prompt. Scoped to same-origin, which is all the sheets
+       ever are. -->
   <iframe
     class="frame"
     src={base(active.file)}
     title={`${active.code} — ${active.name}`}
+    allow="camera 'self'"
     data-testid="reference-frame"
   ></iframe>
 </div>
