@@ -3,57 +3,619 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SL-05 · CSS — WAM-2026</title>
+<title>SL-06 · Layout / CSS — WAM-2026</title>
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
 :root { --tint: var(--tint-css); }
-
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
-
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-
 .head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
 
-/* the "little canvas area" — a bounded, chamfered demo stage at the
-   deck's own 16:9, so what you build here is a preview of the real
-   slide, not a differently-shaped sandbox */
-.canvas-frame {
-  aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative;
-  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden;
-  display: grid; place-items: center; margin-bottom: calc(var(--u)*3);
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+/* ── the pipeline rig ───────────────────────────────────────
+   Property chips on the left, the four-stage pipeline and a live
+   specimen on the right. Picking a property lights the stages that
+   actually re-run for it and animates the specimen with that same
+   property, so the diagram and the motion can't disagree. */
+.pipe { display: grid; grid-template-columns: 232px 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .pipe { grid-template-columns: 1fr; } }
+
+.pl-rail { border: var(--hair) solid var(--hz-300); border-radius: 8px; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.pl-rail-head { padding: 10px 12px; border-bottom: var(--hair) solid var(--hz-300); background: var(--hz-100); }
+.pl-rail-head b { display: block; font-size: 12.5px; font-weight: 500; color: var(--hz-800); text-transform: lowercase; }
+.pl-rail-head span { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); margin-top: 2px; }
+.pl-props { padding: 9px; display: flex; flex-direction: column; gap: 5px; }
+.pl-prop {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; border-radius: 5px; cursor: pointer; font: inherit; text-align: left;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
 }
-.canvas-frame .demo-mount { position: absolute; inset: 0; display: grid; place-items: center; }
+.pl-prop:hover { background: var(--hz-200); }
+.pl-prop:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.pl-prop code { font-family: var(--mono); font-size: 11px; background: none; border: 0; padding: 0; color: var(--hz-700); }
+.pl-prop .n { font-family: var(--mono); font-size: 9px; color: var(--hz-500); font-variant-numeric: tabular-nums; }
+.pl-prop.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); }
+.pl-prop.is-on code, .pl-prop.is-on .n { color: var(--hz-900); }
 
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); }
+.pl-main { display: flex; flex-direction: column; gap: 16px; }
+.pl-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pl-stage {
+  position: relative; overflow: hidden; border-radius: 8px; padding: 14px 12px 12px;
+  background: var(--hz-050); border: var(--hair) solid var(--hz-300);
+  transition: opacity var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard);
+}
+.pl-stage[data-run="0"] { opacity: 0.34; }
+.pl-stage[data-run="1"] { border-color: color-mix(in oklch, var(--tint) 45%, var(--hz-300)); }
+.pl-stage .ix { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; color: var(--hz-400); }
+.pl-stage .nm { display: block; font-size: 15px; color: var(--hz-800); margin-top: 4px; text-transform: lowercase; }
+.pl-stage .ds { display: block; font-family: var(--mono); font-size: 8.5px; line-height: 1.5; color: var(--hz-500); margin-top: 5px; }
+.pl-stage .skip { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-500); background: oklch(0 0 0 / 0.55); }
+.pl-stage[data-run="1"] .skip { display: none; }
+/* the pulse is the point: it re-fires every cycle, so an expensive
+   property visibly re-runs these stages on every single frame */
+.pl-stage .pulse { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--tint); transform: scaleX(0); transform-origin: left; }
+.pl-stage[data-run="1"] .pulse { animation: plsweep 1.5s linear infinite; }
+@keyframes plsweep { 0% { transform: scaleX(0); } 55% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: 0; } }
+.pl-stage:nth-child(1) .pulse { animation-delay: 0ms; }
+.pl-stage:nth-child(2) .pulse { animation-delay: 110ms; }
+.pl-stage:nth-child(3) .pulse { animation-delay: 220ms; }
+.pl-stage:nth-child(4) .pulse { animation-delay: 330ms; }
+@media (prefers-reduced-motion: reduce) { .pl-stage .pulse { animation: none !important; transform: scaleX(1); } }
 
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
-.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.pl-readout { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 11px 14px; border-radius: 8px; background: var(--hz-050); border: var(--hair) solid var(--hz-300); }
+.pl-cost { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
+.pl-cost b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.pl-why { font-family: var(--mono); font-size: 9.5px; line-height: 1.6; color: var(--hz-500); flex: 1; min-width: 200px; }
 
-/* ── the actual demo: hover/transition box ──────────────
-   SL-05's content: browser-managed motion, transitions/keyframes,
-   the render pipeline. This is the live hover/transition half —
-   the pipeline diagram is a separate build (see notes below). */
+.pl-stageview { position: relative; height: 190px; border-radius: 8px; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.pl-track { position: absolute; left: 22px; right: 22px; top: 50%; height: 64px; transform: translateY(-50%); border-radius: 6px; background: var(--well-floor); box-shadow: var(--recess); }
+/* the specimen animates with whichever property is selected — the
+   motion looks near-identical, which is exactly the lesson: cost is
+   invisible until you measure it (SL-07 does the measuring) */
+.pl-box {
+  position: absolute; left: 34px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 6px;
+  background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 72%, white), var(--tint));
+  box-shadow: 0 6px 14px color-mix(in oklch, var(--tint) 35%, transparent);
+}
+.pl-box[data-p="transform"] { animation: pbTransform 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="opacity"]   { animation: pbOpacity 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="left"]      { animation: pbLeft 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="width"]     { animation: pbWidth 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="background-color"] { background: color-mix(in oklch, var(--tint) 78%, white); animation: pbBg 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="box-shadow"]{ animation: pbShadow 1.5s var(--ease-standard) infinite alternate; }
+@keyframes pbTransform { to { transform: translateX(var(--travel, 300px)); } }
+@keyframes pbOpacity   { to { opacity: 0.15; } }
+@keyframes pbLeft      { to { left: calc(10px + var(--travel, 300px)); } }
+@keyframes pbWidth     { to { width: calc(40px + var(--travel, 300px)); } }
+@keyframes pbBg        { to { background-color: oklch(0.78 0.19 35); } }
+@keyframes pbShadow    { to { box-shadow: 0 6px 44px 16px color-mix(in oklch, var(--tint) 60%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .pl-box { animation: none !important; } }
+
+.pl-caption { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+
+/* ── example grid — same container vocabulary as SL-05, so the two
+   baseline sheets read as one system rather than two ── */
+.card-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u)*3); align-items: start;
+  --stage-bg: oklch(0.90 0.004 265);
+  --stage-bg-2: oklch(0.85 0.005 265);
+  --stage-ink: oklch(0.32 0.012 265);
+  --stage-dim: oklch(0.48 0.01 265);
+  --stage-chip: oklch(0.965 0.002 265);
+  --stage-line: oklch(0.74 0.006 265);
+}
+@media (max-width: 900px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .card-grid { grid-template-columns: 1fr; } }
+.scene-card { display: flex; flex-direction: column; gap: 8px; }
+.scene-stage {
+  aspect-ratio: 4/5; border-radius: 8px; position: relative; overflow: hidden;
+  background: var(--stage-bg); box-shadow: var(--recess); display: grid; place-items: center;
+}
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+.demo-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.demo-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+/* placeholder ground — clearly unbuilt, never a blank rectangle that
+   could be mistaken for a broken demo */
+.ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 0 18px; }
+.ph .mk { width: 26px; height: 26px; border-radius: 5px; border: 1.5px dashed var(--stage-line); }
+.ph b { font-size: 12px; font-weight: 500; color: var(--stage-ink); text-transform: lowercase; }
+.ph span { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--stage-dim); }
+.demo-code { font-family: var(--mono); font-size: 9.5px; line-height: 1.7; color: var(--hz-500); background: var(--hz-050); border: var(--hair) solid var(--hz-300); border-radius: 6px; padding: 9px 11px; white-space: pre; overflow-x: auto; }
+.demo-code b { color: var(--tint); font-weight: 400; }
+
 .demo-box {
-  width: 160px; height: 100px; border-radius: 10px;
+  width: 150px; height: 92px; border-radius: 10px;
   background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 70%, white), var(--tint));
   box-shadow: 0 10px 24px color-mix(in oklch, var(--tint) 30%, transparent);
-  display: grid; place-items: center;
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: oklch(0.99 0 0);
-  text-transform: uppercase;
-  cursor: pointer;
+  display: grid; place-items: center; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: oklch(0.99 0 0); text-transform: uppercase;
   transform: translateY(0) scale(1);
   transition: transform 240ms var(--ease-standard), box-shadow 240ms var(--ease-standard), border-radius 240ms var(--ease-standard);
 }
-.demo-box:hover { transform: translateY(-8px) scale(1.04); border-radius: 16px; box-shadow: 0 20px 36px color-mix(in oklch, var(--tint) 40%, transparent); }
+.demo-box:hover, .demo-box:focus-visible { transform: translateY(-8px) scale(1.04); border-radius: 16px; box-shadow: 0 20px 36px color-mix(in oklch, var(--tint) 40%, transparent); }
 .demo-box:active { transform: translateY(-2px) scale(0.98); transition-duration: 90ms; }
+
+.kf-box {
+  width: 92px; height: 92px; border-radius: 12px;
+  background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 72%, white), var(--tint));
+  box-shadow: 0 10px 24px color-mix(in oklch, var(--tint) 30%, transparent);
+  animation: kfLoop 2.6s var(--ease-standard) infinite;
+}
+@keyframes kfLoop {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); border-radius: 12px; }
+  30%  { transform: translateY(-34px) rotate(0deg) scale(1.06); border-radius: 26px; }
+  55%  { transform: translateY(0) rotate(180deg) scale(0.94); border-radius: 12px; }
+  80%  { transform: translateY(-14px) rotate(180deg) scale(1.02); border-radius: 20px; }
+  100% { transform: translateY(0) rotate(360deg) scale(1); border-radius: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .kf-box { animation: none; } }
+
+/* ── TIMELESS ────────────────────────────────────────────────
+   A fictional newsweekly, used so the examples are page fragments
+   rather than coloured boxes in a vacuum. The borrowed part is the
+   newsweekly *grammar* — heavy serif masthead, one rationed red,
+   hairline rules, small-caps section tags — not any real title's
+   trade dress. Paper-light inside the dark harness, so it reads as a
+   website being demonstrated rather than as deck chrome. */
+.mag { --paper: oklch(0.955 0.004 85); --ink: oklch(0.24 0.012 265); --sub: oklch(0.52 0.01 265);
+       --rule: oklch(0.80 0.006 265); --red: oklch(0.55 0.21 27);
+       --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+       background: var(--paper); display: block; }
+.mag * { box-sizing: border-box; }
+.mg-mast { font-family: var(--serif); font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+.mg-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); }
+.mg-hed { font-family: var(--serif); font-weight: 700; color: var(--ink); line-height: 1.12; }
+.mg-dek { font-size: 11.5px; line-height: 1.5; color: var(--sub); }
+.mg-rule { height: 1px; background: var(--rule); }
+.mg-lines { display: flex; flex-direction: column; gap: 6px; }
+.mg-lines i { display: block; height: 4px; border-radius: 2px; background: var(--rule); }
+
+/* 1 · cover compresses into a sticky masthead, driven by scroll position */
+.mg-scroll { position: absolute; inset: 0; overflow: hidden; }
+/* The page is carried past a pinned masthead on a timer. The keyframes
+   are the ones you would bind to animation-timeline: scroll() in
+   production — only the timeline differs — which is the actual lesson
+   of scroll-driven animation: the declaration is the same, you just
+   change what is driving it. Driving it from the clock here means the
+   card demonstrates itself on a slide instead of waiting to be poked. */
+.mg-page { padding-top: 72px; animation: autoScroll 9s var(--ease-standard) infinite; }
+@keyframes autoScroll { 0%, 10% { transform: translateY(0); } 52%, 66% { transform: translateY(-168px); } 100% { transform: translateY(0); } }
+.mg-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px; background: var(--paper); border-bottom: 2px solid var(--red); overflow: hidden;
+  height: 72px; animation: mastPack 9s var(--ease-standard) infinite; }
+.mg-bar .mg-mast { font-size: 30px; animation: mastType 9s var(--ease-standard) infinite; }
+.mg-bar .issue { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--sub); }
+@keyframes mastPack { 0%, 10% { height: 72px; } 52%, 66% { height: 30px; } 100% { height: 72px; } }
+@keyframes mastType { 0%, 10% { font-size: 30px; } 52%, 66% { font-size: 14px; } 100% { font-size: 30px; } }
+.mg-hero { height: 168px; background: linear-gradient(150deg, oklch(0.42 0.07 250), oklch(0.30 0.05 265)); position: relative; }
+.mg-hero .cl { position: absolute; left: 10px; bottom: 9px; right: 10px; }
+.mg-hero .mg-hed { color: oklch(0.99 0 0); font-size: 22px; }
+
+/* 2 · each card animates as it enters the scroller's view */
+.mg-feed { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.mg-card { display: grid; grid-template-columns: 66px 1fr; gap: 11px; padding-bottom: 11px; border-bottom: 1px solid var(--rule);
+  animation: cardIn 7s var(--ease-standard) infinite; }
+.mg-card .thumb { width: 66px; height: 66px; border-radius: 3px; background: linear-gradient(150deg, oklch(0.66 0.09 45), oklch(0.44 0.10 20)); }
+.mg-card:nth-child(2n) .thumb { background: linear-gradient(150deg, oklch(0.60 0.08 190), oklch(0.38 0.07 240)); }
+.mg-card:nth-child(3n) .thumb { background: linear-gradient(150deg, oklch(0.68 0.10 120), oklch(0.42 0.08 150)); }
+.mg-card .mg-hed { font-size: 14.5px; margin: 3px 0 4px; }
+@keyframes cardIn {
+  0%   { opacity: 0; transform: translateY(16px); }
+  16%  { opacity: 1; transform: none; }
+  74%  { opacity: 1; transform: none; }
+  90%, 100% { opacity: 0; transform: translateY(-10px); }
+}
+.mg-card:nth-child(1) { animation-delay: 0s; }   .mg-card:nth-child(2) { animation-delay: .16s; }
+.mg-card:nth-child(3) { animation-delay: .32s; } .mg-card:nth-child(4) { animation-delay: .48s; }
+.mg-card:nth-child(5) { animation-delay: .64s; } .mg-card:nth-child(6) { animation-delay: .80s; }
+
+/* 3 · ticker — transform only, so it never touches layout */
+.mg-tick { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.mg-tick .plate { flex: 1; padding: 16px; }
+.mg-tick .belt { border-top: 2px solid var(--red); background: var(--paper); overflow: hidden; padding: 10px 0; }
+.mg-tick .run { display: inline-flex; gap: 26px; white-space: nowrap; animation: crawl 14s linear infinite; }
+.mg-tick .run span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.mg-tick .run b { color: var(--red); }
+@keyframes crawl { to { transform: translateX(-50%); } }
+
+/* 4 · section tabs — :checked retints the whole fragment */
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #b5342a; }
+.mg-sect { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  --accent: var(--red); animation: sectCycle 9s steps(1, end) infinite; }
+@keyframes sectCycle {
+  0%   { --accent: oklch(0.55 0.21 27); }
+  33%  { --accent: oklch(0.55 0.16 240); }
+  66%  { --accent: oklch(0.52 0.15 150); }
+  100% { --accent: oklch(0.55 0.21 27); }
+}
+/* the loop is a default, not a cage: the moment a tab is chosen the
+   animation is dropped and :checked owns the accent again */
+.mg-sect:has(input:checked) { animation: none; }
+.mg-tabs label { animation: tabCycle 9s steps(1, end) infinite; }
+.mg-tabs label[for="sc-b"] { animation-delay: -6s; }
+.mg-tabs label[for="sc-c"] { animation-delay: -3s; }
+@keyframes tabCycle {
+  0%, 33% { color: oklch(0.99 0 0); background: var(--accent); border-color: var(--accent); }
+  34%, 100% { color: var(--sub); background: transparent; border-color: var(--rule); }
+}
+.mg-sect:has(input:checked) .mg-tabs label { animation: none; }
+.mg-sect:has(#sc-b:checked) { --accent: oklch(0.55 0.16 240); }
+.mg-sect:has(#sc-c:checked) { --accent: oklch(0.52 0.15 150); }
+.mg-sect input { position: absolute; opacity: 0; pointer-events: none; }
+.mg-tabs { display: flex; gap: 5px; }
+.mg-tabs label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 11px; border-radius: 3px; cursor: pointer; color: var(--sub); border: 1px solid var(--rule);
+  transition: color 260ms var(--ease-standard), border-color 260ms var(--ease-standard), background 260ms var(--ease-standard); }
+.mg-sect:has(#sc-a:checked) label[for="sc-a"],
+.mg-sect:has(#sc-b:checked) label[for="sc-b"],
+.mg-sect:has(#sc-c:checked) label[for="sc-c"] { color: oklch(0.99 0 0); background: var(--accent); border-color: var(--accent); }
+.mg-sect .band { height: 3px; background: var(--accent); transition: background 300ms var(--ease-standard); }
+.mg-sect .mg-tag { color: var(--accent); transition: color 300ms var(--ease-standard); }
+.mg-sect .swatch { height: 74px; border-radius: 3px; background: color-mix(in oklch, var(--accent) 26%, var(--paper));
+  border-left: 3px solid var(--accent); transition: background 320ms var(--ease-standard), border-color 320ms var(--ease-standard); }
+
+/* 5 · contents flyout — opens on focus-within, entries cascade */
+.mg-toc { position: absolute; inset: 0; padding: 16px; }
+.mg-toc .btn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 13px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper); color: var(--ink); cursor: pointer; }
+.mg-toc .panel { margin-top: 12px; border-top: 2px solid var(--red); padding-top: 12px;
+  display: flex; flex-direction: column; gap: 11px; }
+.mg-toc .panel li { list-style: none; display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--serif); font-size: 14px; color: var(--ink);
+  opacity: 0; transform: translateX(-8px); transition: opacity 320ms var(--ease-standard), transform 320ms var(--ease-standard);
+  animation: tocCycle 4.2s var(--ease-standard) infinite; }
+@keyframes tocCycle {
+  0%, 2%    { opacity: 0; transform: translateX(-8px); }
+  16%, 60%  { opacity: 1; transform: none; }
+  80%, 100% { opacity: 0; transform: translateX(-8px); }
+}
+.mg-toc .panel li:nth-child(1) { animation-delay: 0s; }   .mg-toc .panel li:nth-child(2) { animation-delay: .05s; }
+.mg-toc .panel li:nth-child(3) { animation-delay: .10s; } .mg-toc .panel li:nth-child(4) { animation-delay: .15s; }
+.mg-toc .panel li:nth-child(5) { animation-delay: .20s; }
+.mg-toc:focus-within .panel li { animation: none; }
+.mg-toc .panel li em { font-family: var(--mono); font-size: 9.5px; font-style: normal; color: var(--sub); }
+.mg-toc:focus-within .panel li { opacity: 1; transform: none; }
+.mg-toc:focus-within .panel li:nth-child(1) { transition-delay: 40ms; }
+.mg-toc:focus-within .panel li:nth-child(2) { transition-delay: 90ms; }
+.mg-toc:focus-within .panel li:nth-child(3) { transition-delay: 140ms; }
+.mg-toc:focus-within .panel li:nth-child(4) { transition-delay: 190ms; }
+.mg-toc:focus-within .panel li:nth-child(5) { transition-delay: 240ms; }
+
+/* 6 · the one real layout animation CSS can do unaided: 0fr → 1fr */
+.mg-exp { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; gap: 11px; overflow-y: auto; scrollbar-width: none; }
+.mg-exp::-webkit-scrollbar { display: none; }
+.mg-exp input { position: absolute; opacity: 0; pointer-events: none; }
+.mg-item { border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+.mg-item label { display: block; cursor: pointer; }
+.mg-item .mg-hed { font-size: 15px; margin: 4px 0 0; transition: color 240ms var(--ease-standard); }
+.mg-item:has(input:checked) .mg-hed { color: var(--red); }
+.mg-item .drawer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 380ms var(--ease-standard);
+  animation: drawerCycle 10.5s var(--ease-standard) infinite; }
+@keyframes drawerCycle {
+  0%, 4%    { grid-template-rows: 0fr; }
+  10%, 28%  { grid-template-rows: 1fr; }
+  34%, 100% { grid-template-rows: 0fr; }
+}
+.mg-item:nth-of-type(2) .drawer { animation-delay: -7s; }
+.mg-item:nth-of-type(3) .drawer { animation-delay: -3.5s; }
+.mg-exp:has(input:checked) .drawer { animation: none; }
+.mg-item:has(input:checked) .drawer { grid-template-rows: 1fr; }
+.mg-item .drawer > div { overflow: hidden; }
+.mg-item .drawer p { font-size: 11.5px; line-height: 1.6; color: var(--sub); margin: 6px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-bar, .mg-bar .mg-mast, .mg-card, .mg-tick .run, .mg-page,
+  .mg-sect, .mg-tabs label, .mg-toc .panel li, .mg-item .drawer { animation: none !important; }
+  .mg-toc .panel li { opacity: 1; transform: none; transition: none; }
+  .mg-item .drawer { transition: none; }
+}
+
+/* ── BEYOND LAYOUT ───────────────────────────────────────────
+   The magazine section shows CSS animating an interface. This one
+   shows it as a drawing instrument: compositing, interference and
+   gradient geometry, where the animation IS the artwork rather than
+   a transition between two states of a document. Bigger canvases,
+   two up, because these are meant to be looked at. */
+.art-grid { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u)*3); }
+.art-grid .vf-card { grid-column: 1 / -1; }
+.art-grid .vf-card .scene-stage { aspect-ratio: 92/29; }
+@media (max-width: 760px) { .art-grid { grid-template-columns: 1fr; } }
+.art-grid .scene-stage { aspect-ratio: 1/1; background: oklch(0.14 0.006 265); container-type: inline-size; }
+
+/* 1 · GOO — the blur+contrast threshold trick. Blur smears the blobs
+   into each other, then a huge contrast snaps the midtones back to a
+   hard edge, so overlapping circles fuse and separate like liquid.
+   No SVG, no canvas: two filter functions doing metaballs. */
+.goo { position: absolute; inset: 0; background: oklch(0.14 0.006 265); filter: blur(11px) contrast(26); }
+.goo i { position: absolute; display: block; border-radius: 50%; background: oklch(0.72 0.19 25); }
+.goo i:nth-child(1) { width: 92px; height: 92px; left: 34%; top: 36%; animation: gooA 7s var(--ease-standard) infinite; }
+.goo i:nth-child(2) { width: 66px; height: 66px; left: 20%; top: 24%; background: oklch(0.70 0.17 40); animation: gooB 9s var(--ease-standard) infinite; }
+.goo i:nth-child(3) { width: 54px; height: 54px; left: 56%; top: 54%; background: oklch(0.74 0.16 15); animation: gooC 6.4s var(--ease-standard) infinite; }
+.goo i:nth-child(4) { width: 44px; height: 44px; left: 46%; top: 18%; background: oklch(0.76 0.15 50); animation: gooD 8.2s var(--ease-standard) infinite; }
+@keyframes gooA { 0%,100% { transform: translate(0,0) } 50% { transform: translate(26px, 34px) } }
+@keyframes gooB { 0%,100% { transform: translate(0,0) } 50% { transform: translate(74px, 52px) } }
+@keyframes gooC { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-58px,-40px) } }
+@keyframes gooD { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-34px, 76px) } }
+
+/* 2 · MOIRÉ — two identical rulings, one rotating against the other.
+   The pattern on screen is in neither layer; it is the interference
+   between them, which is why it moves far faster than the rotation
+   that causes it. Op-art, drawn by the compositor. */
+.moire { position: absolute; inset: 0; overflow: hidden; background: oklch(0.13 0.006 265); }
+.moire span { position: absolute; inset: -46%;
+  background: repeating-radial-gradient(circle at 50% 50%, oklch(0.92 0.03 250) 0 1.6px, transparent 1.6px 7px); }
+.moire span:nth-child(1) { animation: moireA 34s linear infinite; }
+.moire span:nth-child(2) { mix-blend-mode: difference; animation: moireB 21s linear infinite; }
+@keyframes moireA { to { transform: rotate(360deg); } }
+@keyframes moireB { 0% { transform: rotate(0) translateX(9px) scale(1.03); } 100% { transform: rotate(-360deg) translateX(9px) scale(1.03); } }
+
+/* 3 · TIMELESS — an abstract type poster, not a word on a screen.
+   Swiss-poster construction: one asymmetric grid, a small set of
+   sizes, flush-left ragged-right, a lot of deliberate air. Every
+   element is type — display word, vertical spine, ghosted numeral,
+   mono metadata, a dot-matrix rule — and every one carries its own
+   motion at its own period, so the composition is always in flux
+   without any single thing dominating.
+
+   The display word is the only chromatic element: a conic gradient
+   painted through the letterforms with background-clip, turning
+   because the angle is a registered @property. Unregistered, an
+   angle is a keyword and cannot interpolate. */
+@property --holo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+.holo { position: absolute; inset: 0; overflow: hidden; padding: 22px;
+  background: oklch(0.105 0.008 268); color: oklch(0.72 0.01 265);
+  --hi: oklch(0.94 0.01 265); --dim: oklch(0.46 0.012 265);
+  font-synthesis: none; }
+
+/* top register — mono metadata over a rule that wipes */
+.holo .ho-reg { position: absolute; left: 22px; right: 22px; top: 20px; display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); }
+.holo .ho-reg + hr { position: absolute; left: 22px; right: 22px; top: 36px; height: 1px; border: 0; margin: 0;
+  background: oklch(0.55 0.01 265 / 0.55); transform-origin: left; animation: pWipe 6s var(--ease-standard) infinite; }
+@keyframes pWipe { 0% { transform: scaleX(0); } 40%, 60% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: .35; } }
+
+/* the ghosted numeral, set enormous and hollow so it reads as
+   texture and structure rather than as information */
+.holo .ho-num { position: absolute; right: -20px; bottom: -9%; margin: 0; line-height: .78;
+  font-family: var(--sans); font-weight: 900; font-size: 40cqw; letter-spacing: -0.06em;
+  color: transparent; -webkit-text-stroke: 1.5px oklch(0.62 0.012 265 / 0.26);
+  animation: pNum 14s var(--ease-standard) infinite; }
+@keyframes pNum { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-14px,-10px) scale(1.06); } }
+
+/* the vertical spine, running bottom-to-top up the left margin */
+.holo .ho-spine { position: absolute; left: 22px; top: 52px; bottom: 74px; writing-mode: vertical-rl; transform: rotate(180deg);
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--dim);
+  animation: pSpine 9s var(--ease-standard) infinite; }
+@keyframes pSpine { 0%,100% { transform: rotate(180deg) translateY(0); opacity: .75; } 50% { transform: rotate(180deg) translateY(14px); opacity: 1; } }
+
+/* the display word */
+.holo .ho-blk { position: absolute; left: 52px; right: 22px; top: 30%; }
+.holo .ho-word { position: relative; display: flex; animation: holoBreathe 9s var(--ease-standard) infinite; transform-origin: left center; }
+.holo .ho-word > s {
+  text-decoration: none; display: inline-block;
+  font-family: var(--sans); font-weight: 800; font-size: 15cqw;
+  letter-spacing: -0.045em; line-height: .92; text-transform: uppercase;
+  background: conic-gradient(from var(--holo),
+    oklch(0.80 0.20 20), oklch(0.86 0.18 90), oklch(0.83 0.19 165),
+    oklch(0.78 0.21 250), oklch(0.83 0.20 320), oklch(0.80 0.20 20));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: holoSpin 6s linear infinite, holoFloat 3.6s var(--ease-standard) infinite;
+}
+.holo .ho-word > s:nth-child(1) { animation-delay: 0s, 0s; }
+.holo .ho-word > s:nth-child(2) { animation-delay: 0s, .09s; }
+.holo .ho-word > s:nth-child(3) { animation-delay: 0s, .18s; }
+.holo .ho-word > s:nth-child(4) { animation-delay: 0s, .27s; }
+.holo .ho-word > s:nth-child(5) { animation-delay: 0s, .36s; }
+.holo .ho-word > s:nth-child(6) { animation-delay: 0s, .45s; }
+.holo .ho-word > s:nth-child(7) { animation-delay: 0s, .54s; }
+.holo .ho-word > s:nth-child(8) { animation-delay: 0s, .63s; }
+@keyframes holoSpin { to { --holo: 360deg; } }
+@keyframes holoFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-9px) rotate(-3deg); } }
+@keyframes holoBreathe { 0%, 100% { transform: scale(1) skewX(0deg); } 50% { transform: scale(1.035) skewX(-2deg); } }
+
+/* chromatic ghost, offset under a screen blend */
+.holo .ho-ghost { position: absolute; left: 0; top: 0; pointer-events: none; mix-blend-mode: screen; filter: blur(1.4px); opacity: .45;
+  font-family: var(--sans); font-weight: 800; font-size: 15cqw; letter-spacing: -0.045em; line-height: .92;
+  text-transform: uppercase; color: oklch(0.62 0.24 320); animation: holoGhost 5.2s var(--ease-standard) infinite; }
+@keyframes holoGhost { 0%, 100% { transform: translate(-6px, 3px); } 50% { transform: translate(6px, -3px); } }
+
+/* the kicker under the word: a rule that draws, then a tracked line */
+.holo .ho-kick { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.holo .ho-kick i { display: block; height: 1px; background: oklch(0.60 0.012 265 / .7); transform-origin: left; animation: pWipe 6s var(--ease-standard) infinite .4s; }
+.holo .ho-kick b { font-family: var(--mono); font-weight: 400; font-size: 8.5px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--hi); }
+
+/* mono body block, flush left, ragged right */
+.holo .ho-body { position: absolute; left: 52px; bottom: 44px; width: 46%; white-space: nowrap;
+  font-family: var(--mono); font-size: 8.5px; line-height: 1.9; letter-spacing: 0.04em; color: var(--dim); }
+.holo .ho-body span { display: block; animation: pLine 7s var(--ease-standard) infinite; }
+.holo .ho-body span:nth-child(2) { animation-delay: .5s; }
+.holo .ho-body span:nth-child(3) { animation-delay: 1s; }
+@keyframes pLine { 0%, 70%, 100% { opacity: .55; } 12%, 58% { opacity: 1; } }
+
+/* dot-matrix rule along the foot — Doto, the deck's third voice */
+.holo .ho-dots { position: absolute; left: 22px; right: 22px; bottom: 20px; display: flex; justify-content: space-between;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-size: 13px; color: oklch(0.58 0.012 265); }
+.holo .ho-dots u { text-decoration: none; animation: pDot 2.4s steps(1) infinite; }
+.holo .ho-dots u:nth-child(3n+2) { animation-delay: .3s; }
+.holo .ho-dots u:nth-child(3n+3) { animation-delay: .6s; }
+@keyframes pDot { 0%, 49% { opacity: .28; } 50%, 100% { opacity: 1; } }
+
+/* the two surface passes that tie it together */
+.holo em { position: absolute; inset: -20%; pointer-events: none; mix-blend-mode: overlay;
+  background: linear-gradient(105deg, transparent 40%, oklch(1 0 0 / 0.5) 50%, transparent 60%);
+  animation: holoSheen 4.4s var(--ease-standard) infinite; }
+@keyframes holoSheen { 0% { transform: translateX(-115%); } 55%, 100% { transform: translateX(115%); } }
+.holo .ho-scan { position: absolute; inset: 0; pointer-events: none; opacity: 0.16;
+  background: repeating-linear-gradient(0deg, oklch(1 0 0 / 0.5) 0 1px, transparent 1px 4px);
+  animation: holoScan 7s linear infinite; }
+@keyframes holoScan { to { transform: translateY(4px); } }
+
+/* 4 · APERTURE — scroll-driven, built from the two things that recur
+   most in award-winning work: a drifting multi-colour gradient field,
+   and a mask that reveals rather than a layer that slides.
+
+   The word sits ON the field, behind the plate, so scrolling reads it
+   out through the opening — the type reveal and the mask are the same
+   gesture rather than two effects stacked. It tracks out as it goes.
+   A fixed mono HUD frames the whole thing so the card is a composition
+   at every scroll position, not just at the ends.
+
+   The mask radius is a registered @property; a bare custom property
+   in a mask-image would step rather than interpolate. */
+@property --ap { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+/* The timeline is NAMED rather than scroll(nearest): .pin has
+   overflow: hidden, which makes it a scroll container, so `nearest`
+   would resolve to the pin — which never scrolls — instead of .depth. */
+.depth { position: absolute; inset: 0; overflow-y: auto; scrollbar-width: none;
+  background: oklch(0.10 0.012 268); scroll-timeline: --apScroll block; }
+.depth::-webkit-scrollbar { display: none; }
+.depth .ap-rail { position: sticky; top: 0; z-index: 9; height: 3px; background: oklch(0.86 0.18 320); transform-origin: left;
+  animation: dProg linear both; animation-timeline: --apScroll; }
+@keyframes dProg { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.depth .ap-pin { position: sticky; top: 0; height: 100%; margin-top: -3px; overflow: hidden; }
+.depth .ap-spacer { height: 260%; }
+
+/* the field: four blurred colour bodies drifting on their own clocks,
+   so it stays alive whether or not anything is scrolling */
+.depth .ap-field { position: absolute; inset: 0; background: oklch(0.12 0.02 280); }
+.depth .ap-field i { position: absolute; display: block; border-radius: 50%; filter: blur(30px); opacity: 0.95; }
+.depth .ap-field i:nth-child(1) { width: 62%; height: 62%; left: -8%; top: -6%; background: oklch(0.62 0.24 322); animation: apA 11s var(--ease-standard) infinite; }
+.depth .ap-field i:nth-child(2) { width: 58%; height: 58%; right: -10%; top: 8%; background: oklch(0.66 0.22 34); animation: apB 13s var(--ease-standard) infinite; }
+.depth .ap-field i:nth-child(3) { width: 66%; height: 66%; left: 6%; bottom: -14%; background: oklch(0.60 0.20 232); animation: apC 9.5s var(--ease-standard) infinite; }
+.depth .ap-field i:nth-child(4) { width: 44%; height: 44%; right: 6%; bottom: -6%; background: oklch(0.74 0.19 168); animation: apD 15s var(--ease-standard) infinite; }
+@keyframes apA { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24%, 18%) scale(1.18); } }
+@keyframes apB { 0%,100% { transform: translate(0,0) scale(1.1); } 50% { transform: translate(-22%, 26%) scale(0.9); } }
+@keyframes apC { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(18%, -22%) scale(1.22); } }
+@keyframes apD { 0%,100% { transform: translate(0,0) scale(1.05); } 50% { transform: translate(-26%, -16%) scale(0.86); } }
+
+.depth .ap-grain { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: overlay; opacity: 0.45;
+  background:
+    repeating-linear-gradient(0deg, oklch(0 0 0 / 0.5) 0 1px, transparent 1px 3px),
+    repeating-conic-gradient(from 0deg at 50% 48%, oklch(1 0 0 / 0.09) 0deg 2deg, transparent 2deg 8deg); }
+
+/* the word, printed on the field and read out through the opening */
+.depth .ap-word { position: absolute; left: 0; right: 0; top: 46%; text-align: center; transform: translateY(-50%);
+  font-family: var(--sans); font-weight: 250; font-size: 13cqw; line-height: 1; text-transform: uppercase;
+  color: oklch(0.14 0.02 280); white-space: nowrap;
+  animation: apWord linear both; animation-timeline: --apScroll; }
+@keyframes apWord { from { letter-spacing: -0.01em; } to { letter-spacing: 0.34em; } }
+
+/* the plate: opaque, with a hole scroll opens through it */
+.depth .ap-plate { position: absolute; inset: 0; background: oklch(0.10 0.012 268);
+  -webkit-mask-image: radial-gradient(circle at 50% 46%, transparent 0 var(--ap), #000 calc(var(--ap) + 8%));
+  mask-image: radial-gradient(circle at 50% 46%, transparent 0 var(--ap), #000 calc(var(--ap) + 8%));
+  animation: apOpen linear both; animation-timeline: --apScroll; }
+@keyframes apOpen { from { --ap: 0%; } to { --ap: 108%; } }
+
+/* the HUD — fixed, mono, present at every scroll position */
+.depth .ap-hud { position: absolute; inset: 16px; pointer-events: none;
+  color: oklch(0.93 0.01 265); font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em; text-transform: uppercase;
+  mix-blend-mode: hard-light; }
+.depth .ap-hud i { position: absolute; width: 12px; height: 12px; border: 1px solid oklch(1 0 0 / 0.55); }
+.depth .ap-hud i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.depth .ap-hud i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.depth .ap-hud i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; }
+.depth .ap-hud i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+.depth .ap-hud b { position: absolute; left: 20px; top: 1px; font-weight: 400; }
+.depth .ap-hud u { position: absolute; right: 20px; top: 1px; text-decoration: none; opacity: .75; }
+.depth .ap-hud s { position: absolute; left: 20px; bottom: 1px; text-decoration: none; opacity: .75; }
+
+/* tick column on the right, with a marker riding the same timeline */
+.depth .ap-ticks { position: absolute; right: 22px; top: 22%; bottom: 22%; width: 9px; pointer-events: none;
+  background: repeating-linear-gradient(180deg, oklch(1 0 0 / 0.42) 0 1px, transparent 1px 9px); mix-blend-mode: hard-light; }
+.depth .ap-ticks em { position: absolute; left: -5px; top: 0; width: 19px; height: 1.5px; background: oklch(0.95 0.15 320);
+  animation: apMark linear both; animation-timeline: --apScroll; }
+@keyframes apMark { to { transform: translateY(calc(451px * 0.56)); } }
+
+.depth .ap-hint { position: absolute; left: 0; right: 0; bottom: 30px; text-align: center; z-index: 7;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em; text-transform: uppercase; color: oklch(0.92 0.02 300 / 0.8);
+  animation: dHint linear both; animation-timeline: --apScroll; animation-range: 0 90px; }
+@keyframes dHint { to { opacity: 0; } }
+
+/* 5 · VARIABLE — the only effect on this page that lives inside the
+   font file. No filter, no gradient, no mask: font-variation-settings
+   hands the engine two axis values and it interpolates the glyph
+   OUTLINES between them. Nothing else here can change the shape of a
+   letterform itself.
+
+   Both rows animate; the difference between them is the point.
+
+   Doto carries a second axis, ROND — 0 is a square pixel, 100 a round
+   dot — and its advance widths are identical at every setting of both
+   axes (measured: 288px at wght 100/900 x ROND 0/100). So the matrix
+   never moves. The dots change shape in place.
+
+   Inter has only wght here, but its advance widths DO track weight.
+   Measured on the row as it renders: the six letters total 213px at
+   wght 120 and 232px at 900. So every letter shoves its neighbours as
+   it swells, and the row re-runs layout on every frame. Same declaration, same
+   engine; one is free and one is the expensive case the pipeline
+   diagram at the top of this page prices out.
+
+   Both keyframes must list the same axes in the same order, or the
+   property falls back to discrete steps instead of interpolating. */
+.vf { position: absolute; inset: 0; overflow: hidden; padding: 22px 26px;
+  background: oklch(0.105 0.008 268); display: flex; flex-direction: column; justify-content: space-between; }
+.vf .vf-reg { display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.22em; text-transform: uppercase; color: oklch(0.50 0.012 265); }
+.vf .vf-rows { display: flex; flex-direction: column; gap: 10px; }
+.vf .vf-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; }
+.vf .vf-cap { font-family: var(--mono); font-size: 8px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: oklch(0.52 0.012 265); text-align: right; line-height: 1.85; white-space: nowrap; }
+.vf .vf-cap b { display: block; font-weight: 400; color: oklch(0.90 0.01 265); }
+
+/* row 1 — Doto, both axes, on a fixed matrix */
+.vf .vf-dot { display: flex; font-family: var(--dot); font-size: 11.5cqw; line-height: 1; letter-spacing: 0.05em; }
+.vf .vf-dot s { text-decoration: none; display: inline-block; animation: vfDot 3.4s var(--ease-standard) infinite; }
+@keyframes vfDot {
+  0%, 100% { font-variation-settings: 'wght' 200, 'ROND' 0;   color: oklch(0.44 0.09 62); }
+  50%      { font-variation-settings: 'wght' 900, 'ROND' 100; color: oklch(0.87 0.19 70); }
+}
+
+/* row 2 — Inter, weight only; the metrics move with it */
+.vf .vf-ink { display: flex; font-family: var(--sans); font-size: 7.4cqw; line-height: 1.05; letter-spacing: -0.025em; }
+.vf .vf-ink s { text-decoration: none; display: inline-block; color: oklch(0.93 0.01 265);
+  animation: vfInk 3.4s var(--ease-standard) infinite; }
+@keyframes vfInk {
+  0%, 100% { font-variation-settings: 'wght' 120; }
+  50%      { font-variation-settings: 'wght' 900; }
+}
+/* one stagger table, both rows — the wave travels across each word */
+.vf s:nth-child(1) { animation-delay: 0s; }
+.vf s:nth-child(2) { animation-delay: .13s; }
+.vf s:nth-child(3) { animation-delay: .26s; }
+.vf s:nth-child(4) { animation-delay: .39s; }
+.vf s:nth-child(5) { animation-delay: .52s; }
+.vf s:nth-child(6) { animation-delay: .65s; }
+.vf hr { border: 0; margin: 0; height: 1px; background: oklch(0.42 0.01 265 / 0.8); }
+
+@media (prefers-reduced-motion: reduce) {
+  .goo i, .moire span, .holo .ho-word, .holo .ho-word > s, .holo .ho-ghost, .holo em, .holo .ho-scan,
+  .holo .ho-num, .holo .ho-spine, .holo hr, .holo .ho-kick i, .holo .ho-body span, .holo .ho-dots u,
+  .depth .ap-rail, .depth .ap-field i, .depth .ap-plate, .depth .ap-word, .depth .ap-ticks em,
+  .vf .vf-dot s, .vf .vf-ink s { animation: none !important; }
+}
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 68ch; color: var(--hz-500); font-size: 13.5px; }
 </style>
 </head>
 <body data-testid="technique-css">
@@ -61,41 +623,407 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 <div class="wrap">
   <div class="crumb" id="crumb">
     <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
-    <a href="../index.html#sl-05">Techniques</a>
+    <a href="../index.html#sl-06">Techniques</a>
   </div>
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
 
-  <div class="head">
-    <span class="code">SL-05</span>
-    <h1>css</h1>
-  </div>
+  <div class="head"><span class="code">SL-06</span><h1>layout / css</h1></div>
   <p class="dek">
-    Browser-managed motion — transitions and keyframes, plus the render pipeline
-    (Layout → Paint → Composite) that makes some of them expensive and some nearly free.
+    Motion the browser runs for you. Two quite different jobs share one engine, and this
+    slide keeps them apart. First <b>CSS for layout</b> — animating a page's own structure,
+    driven by scroll position and by the selectors already describing state. Then <b>CSS as
+    a drawing instrument</b> — the same declarations pointed at elements that aren't
+    structure at all, where what comes out is a picture rather than an interface. You
+    declare the start and the end; the engine works out the frames either way.
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <div class="demo-mount">
-      <div class="demo-box" data-testid="css-demo-box" tabindex="0">hover</div>
+  <!-- ═══ THE PIPELINE ══════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-pipeline">
+    <div class="fmt-head"><span class="fmt-tag">PIPELINE</span><h2>what a frame costs</h2></div>
+    <p class="fmt-case">
+      Every frame the browser paints runs the same four stages, in order. The saving is that
+      <b>a change doesn't always have to start at the beginning.</b> Change something
+      geometric and the engine must re-run layout, then repaint, then recomposite. Change
+      only a colour and layout is skipped. Change <code>transform</code> or
+      <code>opacity</code> and both layout and paint are skipped — the work is handed to the
+      compositor, which is a different thread with a copy of the layer already on the GPU.
+      Pick a property and watch which stages re-run. <b>The same four stages price both
+      halves of this slide</b> — laying a page out and drawing a picture are the same
+      pipeline, just entered at different points.
+    </p>
+
+    <div class="pipe">
+      <div class="pl-rail">
+        <div class="pl-rail-head"><b>animate this</b><span>stages it re-runs</span></div>
+        <div class="pl-props" id="plProps" data-testid="pipeline-props"></div>
+      </div>
+
+      <div class="pl-main">
+        <div class="pl-stages" id="plStages" data-testid="pipeline-stages"></div>
+        <div class="pl-readout">
+          <span class="pl-cost">cost · <b id="plCost">—</b></span>
+          <span class="pl-why" id="plWhy">—</span>
+        </div>
+        <div class="pl-stageview">
+          <div class="pl-track"></div>
+          <div class="pl-box" id="plBox" data-p="transform"></div>
+        </div>
+        <p class="pl-caption">
+          The specimen animates with the selected property. Note how little the
+          <i>motion</i> differs — the cost is invisible from the outside, which is exactly
+          why SL-07 measures it instead of describing it.
+        </p>
+      </div>
     </div>
   </div>
 
-  <div class="controls">
-    <button class="ibtn" disabled style="opacity:.5;cursor:not-allowed">▶ Pipeline diagram — not built yet</button>
+  <!-- ═══ TIMELESS ═════════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-examples">
+    <div class="fmt-head"><span class="fmt-tag">CSS FOR LAYOUT</span><h2>timeless, a magazine animated</h2></div>
+    <p class="fmt-case">
+      <b>Here CSS is animating layout.</b> Six fragments of a fictional newsweekly, because a
+      technique shown on a coloured square teaches nothing about where you would actually
+      reach for it. Every element below is doing a page's job — a masthead, a drawer, a
+      nav, a story feed — and what moves is its <b>position, size, stacking and
+      disclosure</b>. <b>Nothing here runs a line of JavaScript.</b> The top row is driven by
+      scroll position and the clock; the bottom row entirely by selectors that were already
+      describing state — <code>:checked</code>, <code>:focus-within</code>,
+      <code>:has()</code>. Scroll inside the first two; the rest respond to hover, focus and
+      click.
+    </p>
+
+    <div class="card-grid">
+      <!-- row 1 · the page reads itself -->
+      <div class="scene-card" data-testid="ex-cover">
+        <div class="scene-stage mag">
+          <div class="mg-scroll">
+            <div class="mg-page">
+            <div class="mg-hero"><div class="cl"><span class="mg-tag" style="color:oklch(0.85 0.14 60)">The Long View</span>
+              <div class="mg-hed">The Century That Refused to End</div></div></div>
+            <div style="padding:10px">
+              <p class="mg-dek">A survey of the decade’s unfinished arguments, and the institutions still trying to settle them.</p>
+              <div class="mg-rule" style="margin:9px 0"></div>
+              <div class="mg-lines"><i style="width:100%"></i><i style="width:96%"></i><i style="width:99%"></i><i style="width:72%"></i>
+                <i style="width:98%"></i><i style="width:91%"></i><i style="width:99%"></i><i style="width:64%"></i>
+                <i style="width:97%"></i><i style="width:88%"></i><i style="width:94%"></i><i style="width:58%"></i></div>
+            </div>
+            </div>
+            <div class="mg-bar"><span class="mg-mast">TIMELESS</span><span class="issue">VOL XI · 14</span></div>
+          </div>
+        </div>
+        <span class="scene-label">cover → masthead · scroll()</span>
+        <span class="scene-note">The page runs past a pinned masthead, which packs down as it goes. These are the keyframes you would bind to <code>animation-timeline: scroll()</code> in production — driven from the clock here so the card demonstrates itself. Same declaration, different timeline.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-feed">
+        <div class="scene-stage mag">
+          <div class="mg-scroll">
+            <div class="mg-feed">
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Politics</span><div class="mg-hed">The Quiet Redistricting</div><p class="mg-dek">Four states, one map, and a decade of consequences.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Science</span><div class="mg-hed">What the Ice Kept</div><p class="mg-dek">Core samples are rewriting a settled timeline.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Culture</span><div class="mg-hed">Everyone’s Second Album</div><p class="mg-dek">On the economics of the difficult follow-up.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Business</span><div class="mg-hed">The Warehouse Belt</div><p class="mg-dek">Where the logistics boom actually landed.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Health</span><div class="mg-hed">Sleep, Reconsidered</div><p class="mg-dek">The eight-hour rule was never a finding.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">World</span><div class="mg-hed">The Strait in Winter</div><p class="mg-dek">Shipping lanes, and the politics of a thaw.</p></div></div>
+            </div>
+          </div>
+        </div>
+        <span class="scene-label">story feed · view() + stagger</span>
+        <span class="scene-note">Six stories arriving on staggered delays — one animation, one incrementing <code>animation-delay</code>, no index maths. Bind the same keyframes to <code>animation-timeline: view()</code> and each element's own position drives it instead of the clock.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-ticker">
+        <div class="scene-stage mag">
+          <div class="mg-tick">
+            <div class="plate">
+              <span class="mg-tag">Live</span>
+              <div class="mg-hed" style="font-size:15px;margin:5px 0 7px">The Wire</div>
+              <div class="mg-rule" style="margin-bottom:8px"></div>
+              <div class="mg-lines"><i style="width:94%"></i><i style="width:100%"></i><i style="width:78%"></i><i style="width:96%"></i><i style="width:62%"></i></div>
+            </div>
+            <div class="belt"><div class="run">
+              <span><b>Markets</b> — indices close mixed on revised guidance</span>
+              <span><b>Filed</b> — committee returns the transport bill</span>
+              <span><b>Weather</b> — an unusually warm front holds</span>
+              <span><b>Markets</b> — indices close mixed on revised guidance</span>
+              <span><b>Filed</b> — committee returns the transport bill</span>
+              <span><b>Weather</b> — an unusually warm front holds</span>
+            </div></div>
+          </div>
+        </div>
+        <span class="scene-label">the wire · infinite keyframes</span>
+        <span class="scene-note">A crawl on a loop, moved with <code>transform</code> alone — so it runs on the compositor and costs nothing per frame. The strip is duplicated so the wrap has nothing to reveal.</span>
+      </div>
+
+      <!-- row 2 · the reader works the page -->
+      <div class="scene-card" data-testid="ex-sections">
+        <div class="scene-stage mag">
+          <div class="mg-sect">
+            <input type="radio" name="sc" id="sc-a"><input type="radio" name="sc" id="sc-b"><input type="radio" name="sc" id="sc-c">
+            <div class="mg-tabs"><label for="sc-a">Politics</label><label for="sc-b">Science</label><label for="sc-c">Culture</label></div>
+            <div class="band"></div>
+            <div><span class="mg-tag">This Week</span>
+              <div class="mg-hed" style="font-size:14px;margin-top:3px">The Section Retints</div></div>
+            <div class="swatch"></div>
+            <div class="mg-lines"><i style="width:100%"></i><i style="width:88%"></i><i style="width:95%"></i><i style="width:60%"></i></div>
+          </div>
+        </div>
+        <span class="scene-label">sections · :checked + custom properties</span>
+        <span class="scene-note">The accent cycles on its own — a registered <code>@property</code>, so a custom property can actually interpolate. Click a tab and the loop drops away: they are radio inputs, and <code>:checked</code> pins the accent from then on.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-contents">
+        <div class="scene-stage mag">
+          <div class="mg-toc" tabindex="-1">
+            <button class="btn">Contents ▾</button>
+            <ul class="panel">
+              <li><span>The Long View</span><em>p. 12</em></li>
+              <li><span>The Quiet Redistricting</span><em>p. 18</em></li>
+              <li><span>What the Ice Kept</span><em>p. 24</em></li>
+              <li><span>Everyone’s Second Album</span><em>p. 31</em></li>
+              <li><span>Letters</span><em>p. 40</em></li>
+            </ul>
+          </div>
+        </div>
+        <span class="scene-label">contents · :focus-within + cascade</span>
+        <span class="scene-note">The contents cascade open and closed unprompted. Tab to the button or click it and <code>:focus-within</code> takes over, holding the panel open for as long as focus is anywhere inside — the accessible behaviour coming free is the point.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-expand">
+        <div class="scene-stage mag">
+          <div class="mg-exp">
+            <span class="mg-tag">Dispatches</span>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">The Warehouse Belt</div></label>
+              <div class="drawer"><div><p>Two decades of distribution capacity arrived in places with no plan for it. What the map looks like once the leases turn over.</p></div></div></div>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">Sleep, Reconsidered</div></label>
+              <div class="drawer"><div><p>The eight-hour figure entered the literature as an average and left it as a prescription. Researchers are unpicking the difference.</p></div></div></div>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">The Strait in Winter</div></label>
+              <div class="drawer"><div><p>A shipping lane that stays open three weeks longer each decade, and the quiet diplomacy following it north.</p></div></div></div>
+          </div>
+        </div>
+        <span class="scene-label">expand · :has() + 0fr → 1fr</span>
+        <span class="scene-note">The drawers open in turn on a loop. <code>grid-template-rows: 0fr → 1fr</code> animates to the content's real height — the one genuine layout animation CSS manages unaided, and the exact point where the next slide picks up. Click a headline and <code>:has()</code> takes the wheel.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ CSS AS A DRAWING INSTRUMENT ══════════════════ -->
+  <div class="fmt-section" data-testid="fmt-art">
+    <div class="fmt-head"><span class="fmt-tag">NOT LAYOUT AT ALL</span><h2>css as a drawing instrument</h2></div>
+    <p class="fmt-case">
+      <b>Same engine, opposite job.</b> Nothing here is being laid out. These elements carry no
+      structural meaning — they are circles, rulings, glyphs and gradient stops used as
+      <b>pigment</b>, and what comes out is an image rather than an interface. The drawing is
+      done by filter compositing, pattern interference, gradient geometry, a scroll timeline
+      and the axes inside a variable font: no canvas, no SVG, no WebGL, and <b>no script
+      drawing a single frame</b>.
+      (One exception, stated plainly — the aperture card uses a few lines of JS to
+      <i>move the scrollbar</i>, because CSS has no way to animate scroll position. Every
+      frame it produces is still CSS reading that position.) Worth knowing where this
+      ceiling actually sits, because <b>a surprising amount of what gets reached for later in
+      this deck is reachable here</b> — and the cases that genuinely aren't are what earn
+      Canvas and WebGL their slides.
+    </p>
+
+    <div class="art-grid">
+      <div class="scene-card" data-testid="art-goo">
+        <div class="scene-stage"><div class="goo"><i></i><i></i><i></i><i></i></div></div>
+        <span class="scene-label">metaballs · blur + contrast</span>
+        <span class="scene-note">Four circles under <code>filter: blur(11px) contrast(26)</code>. The blur smears them together, then the contrast snaps the midtones back to a hard edge — so where they overlap they fuse, and where they part they draw a liquid neck between. Metaballs from two filter functions.</span>
+      </div>
+
+      <div class="scene-card" data-testid="art-moire">
+        <div class="scene-stage"><div class="moire"><span></span><span></span></div></div>
+        <span class="scene-label">moiré · interference</span>
+        <span class="scene-note">Two identical concentric rulings, one rotating slowly against the other under <code>mix-blend-mode: difference</code>. The pattern you see exists in neither layer — it's the interference between them, which is why it races while the rotation crawls.</span>
+      </div>
+
+      <div class="scene-card" data-testid="art-holo">
+        <div class="scene-stage"><div class="holo"><h2 class="ho-num">06</h2><div class="ho-reg"><span>WAM-2026</span><span>Layout / CSS</span></div><hr><div class="ho-spine">Selectors · Scroll · State</div><div class="ho-blk"><div class="ho-word"><s>T</s><s>i</s><s>m</s><s>e</s><s>l</s><s>e</s><s>s</s><s>s</s></div><div class="ho-ghost">Timeless</div><div class="ho-kick"><i></i><b>No Script</b></div></div><div class="ho-body"><span>conic-gradient / clip: text</span><span>@property → animatable angle</span><span>eight glyphs · eight offsets</span></div><div class="ho-dots"><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u></div><em></em><div class="ho-scan"></div></div></div>
+        <span class="scene-label">holographic type · background-clip</span>
+        <span class="scene-note">A conic gradient painted through the letterforms with <code>background-clip: text</code> — the sweep only turns because the angle is registered via <code>@property</code>; unregistered, it would jump. Layered over it: each glyph floats and tilts on its own stagger, a chromatic ghost drifts behind under a screen blend, and a sheen rakes across. Five cycles at different periods, so the loop never visibly repeats.</span>
+      </div>
+
+      <div class="scene-card" data-testid="art-depth">
+        <div class="scene-stage">
+          <div class="depth"><div class="ap-rail"></div><div class="ap-pin"><div class="ap-field"><i></i><i></i><i></i><i></i></div><div class="ap-grain"></div><div class="ap-word">Aperture</div><div class="ap-plate"></div><div class="ap-hud"><i></i><i></i><i></i><i></i><b>Aperture</b><u>f/1.4</u><s>Mask · scroll()</s></div><div class="ap-ticks"><em></em></div><div class="ap-hint" id="depthHint">auto · scroll anytime</div></div><div class="ap-spacer"></div></div>
+        </div>
+        <span class="scene-label">aperture · scroll() mask</span>
+        <span class="scene-note">Genuinely scroll-driven — a script eases the scrollbar, standing in for your finger; scroll it yourself and the loop steps aside, then picks up from wherever you left it. Scroll widens a hole in an opaque plate, so the colour field is <b>revealed</b> rather than moved: the mask radius rides a <code>scroll()</code> timeline, and it can interpolate at all only because it is a registered <code>@property</code>. Closed it reads as a titled plate, open it reads as the field — never a blank frame at either end, and the field drifts on its own clock regardless.</span>
+      </div>
+
+      <div class="scene-card vf-card" data-testid="art-variable">
+        <div class="scene-stage">
+          <div class="vf">
+            <div class="vf-reg"><span>Variable font &middot; two axes</span><span>wght 100&ndash;900 &middot; ROND 0&ndash;100</span></div>
+            <div class="vf-rows">
+              <div class="vf-row">
+                <div class="vf-dot"><s>M</s><s>O</s><s>T</s><s>I</s><s>O</s><s>N</s></div>
+                <div class="vf-cap"><b>Doto &middot; wght + ROND</b>square pixel &rarr; round dot<br>advance widths identical &middot; no reflow</div>
+              </div>
+              <hr>
+              <div class="vf-row">
+                <div class="vf-ink"><s>M</s><s>o</s><s>t</s><s>i</s><s>o</s><s>n</s></div>
+                <div class="vf-cap"><b>Inter &middot; wght</b>213px &rarr; 232px as it swells<br>metrics move &middot; layout re-runs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="scene-label">variable axes &middot; font-variation-settings</span>
+        <span class="scene-note">The only effect here that lives inside the <b>font file</b>. No filter, no gradient, no mask &mdash; <code>font-variation-settings</code> hands the engine two axis values and it interpolates the glyph <b>outlines</b> between them, the one thing on this page that can change the shape of a letterform itself. Doto carries a second axis, <code>ROND</code>: 0 is a square pixel, 100 a round dot. Its advance widths are identical at every setting of both axes, so the matrix never moves and only the dots change shape. Inter's widths <i>do</i> track weight &mdash; these six letters total 213px at <code>wght 120</code> and 232px at 900 &mdash; so each letter shoves its neighbours as it swells and the row re-runs layout every frame. Same declaration, same engine: one is free, the other is the expensive case the diagram at the top of this page prices out.</span>
+      </div>
+    </div>
   </div>
 
   <div class="notes">
-    <h3>SCOPE.md · slide 05</h3>
-    <p style="max-width:62ch;color:var(--hz-500);font-size:13.5px">
-      "CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
-      Layout → Paint → Composite; visual: animated pipeline diagram + simple live hover/transition demo."
-    </p>
-    <p style="max-width:62ch;color:var(--hz-500);font-size:13.5px">
-      The hover/transition box above is real and live — that's the "simple live demo" half.
-      The animated Layout → Paint → Composite pipeline diagram is a separate build, not started yet.
-    </p>
+    <h3>SCOPE.md · slide 06</h3>
+    <p>"CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
+      Layout → Paint → Composite; visual: animated pipeline diagram + simple live
+      hover/transition demo (generic, not the thread demo — keep this one legible)."</p>
+    <p>Both halves are real. The pipeline diagram is interactive rather than a static
+      graphic: the stage map, the cost readout and the moving specimen are driven from one
+      property table, so the diagram cannot drift out of step with what the specimen is
+      animating. Kept generic per the scope note — no thread demo here.</p>
+    <p>The examples were rebuilt around <b>Timeless</b>, a fictional newsweekly, after the
+      first pass proved that a technique demonstrated on a coloured square teaches nothing
+      about when to reach for it. The masthead, the section tabs and the contents flyout are
+      page fragments; the CSS is the point but the context is what makes it legible. The
+      identity is deliberately its own — the reusable part of the genre is its grammar, not
+      any real title's trade dress.</p>
+    <p><b>Every card runs itself.</b> A demo that has to be poked is a dead demo from the
+      back of a room, so each fragment loops its own technique unprompted. On the three
+      state-driven cards the loop is a default rather than a cage: the moment you click a
+      tab, focus the contents button or open a story, the animation is dropped and the real
+      selector — <code>:checked</code>, <code>:focus-within</code>, <code>:has()</code> —
+      takes over. The two scroll-linked cards run from the clock instead, using the same
+      keyframes you would bind to <code>scroll()</code> or <code>view()</code> in
+      production; only the timeline differs, which is the actual lesson.</p>
+    <p>Two boundaries are held on purpose. <b>SL-07</b> measures what this sheet only
+      models: cost. <b>SL-08</b> owns animating between two arbitrary measured layouts —
+      which is why the expand example stops at <code>0fr → 1fr</code>, the one layout
+      animation CSS manages unaided, rather than reflowing the whole grid.</p>
   </div>
 </div>
+
+<script>
+/* ── the aperture card drives its own scrollbar ───────────────
+   CSS can animate almost everything on this page, but it cannot
+   animate scroll position — there is no property for it. Rather than
+   fake the effect with a translate (which would stop being a
+   demonstration of scroll-driven animation), a script eases the
+   scrollbar instead, exactly as a finger would. The animation itself
+   is still entirely CSS reading scroll().
+
+   The drive is INCREMENTAL rather than a function of elapsed time:
+   each frame it reads where the scrollbar actually is and nudges it
+   on. That is what lets a stray wheel gesture interrupt without
+   breaking anything — after a short beat the loop simply carries on
+   from wherever the finger left it, with no jump to re-phase. A clock
+   -based version would have to solve for the matching time offset, or
+   snap. Speed is scaled by sin(π·u) so it slows into both turns. */
+(function () {
+  const el = document.querySelector('.depth');
+  const hint = document.getElementById('depthHint');
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  let dir = 1;               // +1 opening, -1 closing
+  let held = 0;              // auto-drive suspended until this timestamp
+  let last = performance.now();
+
+  /* Programmatic scrollTop writes don't fire these, so the loop can't
+     suspend itself — only a real gesture does. */
+  ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(ev =>
+    el.addEventListener(ev, () => {
+      held = performance.now() + 1600;
+      if (hint) hint.textContent = 'yours · resumes';
+    }, { passive: true }));
+
+  (function tick(now) {
+    const dt = Math.min(64, now - last);
+    last = now;
+    const max = el.scrollHeight - el.clientHeight;
+    if (max > 0 && now >= held) {
+      const u = Math.min(1, Math.max(0, el.scrollTop / max));
+      const ease = 0.22 + 0.78 * Math.sin(Math.PI * u);   // slow at both ends
+      el.scrollTop += dir * (max / 3600) * dt * ease;
+      if (el.scrollTop >= max - 0.5) dir = -1;
+      else if (el.scrollTop <= 0.5) dir = 1;
+    }
+    requestAnimationFrame(tick);
+  })(performance.now());
+})();
+
+/* One table drives the chips, the stage map, the cost readout and the
+   specimen. Splitting them would let the diagram claim one thing while
+   the animation did another — the single failure this page cannot
+   afford, since its whole job is teaching what the stages mean. */
+const STAGES = [
+  { ix: '01', nm: 'style',     ds: 'resolve which rules apply' },
+  { ix: '02', nm: 'layout',    ds: 'compute geometry + position' },
+  { ix: '03', nm: 'paint',     ds: 'rasterise pixels into layers' },
+  { ix: '04', nm: 'composite', ds: 'assemble layers on the GPU' },
+];
+
+const PROPS = [
+  { p: 'transform',        runs: [1, 0, 0, 1], why: 'Handed straight to the compositor. The layer is already rasterised on the GPU — moving it costs a matrix multiply, not a repaint.' },
+  { p: 'opacity',          runs: [1, 0, 0, 1], why: 'Compositor-only, same as transform. The layer is blended at a different alpha; nothing is re-rasterised.' },
+  { p: 'background-color', runs: [1, 0, 1, 1], why: 'Geometry is unchanged, so layout is skipped — but the pixels are wrong now, so the layer must be repainted every frame.' },
+  { p: 'box-shadow',       runs: [1, 0, 1, 1], why: 'Repaint only. Cheap in principle, but a large blur radius is one of the most expensive things you can ask the rasteriser to do.' },
+  { p: 'width',            runs: [1, 1, 1, 1], why: 'Changes the box model, so every following element may move too. Layout runs on the main thread — the same thread as your JS.' },
+  { p: 'left',             runs: [1, 1, 1, 1], why: 'Position is a layout property even when nothing else moves. This is the classic jank source, and the one SL-07 races against transform.' },
+];
+
+const stagesEl = document.getElementById('plStages');
+const propsEl = document.getElementById('plProps');
+const costEl = document.getElementById('plCost');
+const whyEl = document.getElementById('plWhy');
+const boxEl = document.getElementById('plBox');
+
+stagesEl.innerHTML = STAGES.map(s => `
+  <div class="pl-stage" data-run="1" data-testid="stage-${s.nm}">
+    <span class="ix">${s.ix}</span><span class="nm">${s.nm}</span><span class="ds">${s.ds}</span>
+    <span class="skip">skipped</span><span class="pulse"></span>
+  </div>`).join('');
+
+propsEl.innerHTML = PROPS.map((d, i) => `
+  <button class="pl-prop${i === 0 ? ' is-on' : ''}" data-i="${i}" data-testid="prop-${d.p}">
+    <code>${d.p}</code><span class="n">${d.runs.reduce((a, b) => a + b, 0)}/4</span>
+  </button>`).join('');
+
+function select(i) {
+  const d = PROPS[i];
+  [...propsEl.children].forEach((el, k) => el.classList.toggle('is-on', k === i));
+  [...stagesEl.children].forEach((el, k) => { el.dataset.run = d.runs[k]; });
+
+  const n = d.runs.reduce((a, b) => a + b, 0);
+  const compositorOnly = !d.runs[1] && !d.runs[2];
+  costEl.textContent = `${n} of 4 · ${compositorOnly ? 'compositor thread' : 'main thread, every frame'}`;
+  whyEl.textContent = d.why;
+
+  // restart the specimen so the change is visible immediately rather
+  // than at the end of the current 1.5s cycle
+  boxEl.style.animation = 'none';
+  boxEl.removeAttribute('style');
+  void boxEl.offsetWidth;
+  boxEl.dataset.p = d.p;
+}
+
+propsEl.addEventListener('click', e => {
+  const b = e.target.closest('.pl-prop');
+  if (b) select(+b.dataset.i);
+});
+
+/* the specimen's travel is measured from the track, so the box lands
+   inside it at any width rather than at a hardcoded pixel guess */
+function sizeTravel() {
+  const track = document.querySelector('.pl-track');
+  if (!track) return;
+  boxEl.style.setProperty('--travel', Math.max(80, track.clientWidth - 76) + 'px');
+}
+new ResizeObserver(sizeTravel).observe(document.querySelector('.pl-stageview'));
+sizeTravel();
+select(0);
+</script>
 
 </body>
 </html>

@@ -3,13 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SL-09 · SVG — WAM-2026</title>
+<title>SL-10 · SVG — WAM-2026</title>
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
-:root { --tint: var(--tint-svg); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+:root {
+  --tint: var(--tint-svg);
+  /* ── Good n'Healthy ────────────────────────────────────────
+     One palette for every demo on this sheet. Hues are picked so a
+     food reads as itself before any label does: greens for produce,
+     amber for fruit and energy, water-blue for hydration, coral for
+     fat. Kept whole while the demos below are rebuilt — the hues are
+     the decision, and re-deriving them per demo is how a sheet ends
+     up with five greens. */
+  --gn-leaf:   oklch(0.74 0.16 145);
+  --gn-sprout: oklch(0.85 0.15 128);
+  --gn-forest: oklch(0.27 0.05 155);
+  --gn-amber:  oklch(0.82 0.14 68);
+  --gn-coral:  oklch(0.68 0.17 32);
+  --gn-water:  oklch(0.74 0.11 205);
+  --gn-cream:  oklch(0.95 0.03 95);
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
@@ -17,62 +33,363 @@
 .head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); display: grid; place-items: center; }
-.canvas-frame svg { width: 60%; max-width: 320px; }
-.canvas-frame .pending {
-  position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400);
-}
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
+
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+.scene-stage { position: relative; border-radius: 8px; background: oklch(0.14 0.006 265); box-shadow: var(--recess); overflow: hidden; container-type: inline-size; }
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+.scene-note code { font-size: 9px; }
+
+/* ── 1 · THE TRADE ────────────────────────────────────────────
+   What a node buys and what it costs are one argument, so they run
+   side by side rather than as two full-width sections you scroll
+   between. Each column keeps its controls directly under its own
+   stage — a shared control strip would make it ambiguous which demo
+   a given button belongs to. */
+.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+@media (max-width: 900px) { .two-up { grid-template-columns: 1fr; } }
+.col-h { font-size: 19px; letter-spacing: -0.01em; margin-bottom: 5px; }
+.col-p { color: var(--hz-500); font-size: 12.5px; line-height: 1.55; margin-bottom: 11px; min-height: 4.6em; }
+.col-p b { color: var(--hz-700); font-weight: 500; }
+.col-ctl { margin-top: 9px; border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+
+.node-stage, .ceil-stage { aspect-ratio: 16/10; }
+.node-stage svg, .ceil-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.edge { stroke: color-mix(in oklch, var(--gn-leaf) 32%, transparent); stroke-width: 1; }
+.nd { cursor: pointer; }
+.nd circle { fill: var(--gn-forest); stroke: var(--gn-leaf); stroke-width: 1.5;
+  transition: fill var(--dur-fast) var(--ease-standard), r var(--dur-base) var(--ease-standard); }
+.nd text { font-family: var(--mono); font-size: 5.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  fill: var(--gn-cream); text-anchor: middle; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
+/* pointer events hit the shape, not a rectangle — this is the bit
+   Canvas cannot do without hand-rolling hit testing */
+.nd:hover circle { fill: var(--tint); r: 9; }
+.nd:hover text { opacity: 1; }
+.nd:focus-visible circle { outline: none; stroke: oklch(0.98 0 0); stroke-width: 3; }
+
+/* the whole sheet restyled from OUTSIDE the graphic, by class */
+svg.sk-wire .nd circle { fill: none; }
+svg.sk-wire .edge { stroke-dasharray: 3 3; }
+svg.sk-solid .nd circle { fill: var(--gn-leaf); stroke: none; }
+svg.sk-solid .edge { stroke: color-mix(in oklch, var(--gn-leaf) 55%, transparent); }
+svg.sk-ghost .nd circle { fill: var(--gn-forest); stroke-opacity: 0.35; }
+svg.sk-ghost .edge { stroke-opacity: 0.25; }
+
+.sk-btns { padding: 8px; display: flex; gap: 5px; }
+.sk-btn { flex: 1; text-align: center; padding: 6px 4px; border-radius: 5px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--hz-600);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.sk-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.sk-btn.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); color: var(--hz-900); }
+.node-read { border-top: var(--hair) solid var(--hz-300); padding: 8px 11px; display: flex; gap: 16px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; color: var(--hz-500); }
+.node-read var { font-style: normal; color: var(--tint); }
+.node-read i { font-style: normal; color: var(--hz-700); }
+
+/* ── 2 · THE CEILING ──────────────────────────────────────── */
+.ceil-ctl { padding: 9px 11px 10px; display: flex; flex-direction: column; gap: 5px; }
+.ceil-ctl label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); }
+.ceil-ctl label var { font-style: normal; color: var(--tint); font-variant-numeric: tabular-nums; }
+.ceil-ctl input { width: 100%; accent-color: var(--tint); }
+.ceil-read { border-top: var(--hair) solid var(--hz-300); padding: 8px 11px; display: flex; align-items: baseline; gap: 12px; }
+.ceil-fps { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 26px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums; }
+.ceil-fps.is-bad { color: oklch(0.65 0.20 27); }
+.ceil-sub { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); line-height: 1.6; }
+.ceil-sub b { color: var(--hz-800); font-weight: 400; }
+
+
 .notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
-
-/* draw-on stroke, real and live — the placeholder mark until the
-   thread-demo path data exists */
-.draw-path {
-  fill: none; stroke: var(--tint); stroke-width: 6; stroke-linecap: round;
-  stroke-dasharray: 300; stroke-dashoffset: 300;
-  animation: draw 2.4s var(--ease-standard) infinite alternate;
-}
-@keyframes draw { to { stroke-dashoffset: 0; } }
+.notes p { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; margin-bottom: calc(var(--u)*2); }
 </style>
 </head>
 <body data-testid="technique-svg">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-09">Techniques</a></div>
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-10">Techniques</a></div>
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
-  <div class="head"><span class="code">SL-09</span><h1>svg</h1></div>
+
+  <div class="head"><span class="code">SL-10</span><h1>svg</h1></div>
   <p class="dek">
-    Vector, DOM-based, path morphing. Each particle is a real DOM node — which is exactly
-    why the count stays low here and climbs at every stage after it.
+    The first technique on this spectrum where the picture is made of <b>elements</b>
+    rather than pixels. That single fact is what you are buying: the marks are in the DOM,
+    so CSS styles them, the pointer hits them, a screen reader can be told what they are —
+    and every one of them costs a node, which is also what you are paying. Every demo here
+    is built as one fictional product, <b>Good n’Healthy</b>, because a technique shown on a
+    coloured square teaches nothing about when to reach for it.
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <svg viewBox="0 0 200 120" aria-hidden="true">
-      <path class="draw-path" d="M10,60 C40,10 80,110 110,60 S170,10 190,60" />
-    </svg>
-    <span class="pending">Placeholder mark · thread-demo path data not wired in yet</span>
-  </div>
+  <!-- ═══ 1 · THE TRADE ═══════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-trade">
+    <div class="fmt-head"><span class="fmt-tag">THE TRADE</span><h2>what a node buys, and what it costs</h2></div>
+    <p class="fmt-case">
+      One decision explains most of this slide. Because every mark is a real element, CSS
+      reaches it, the pointer hits it and a screen reader can be told what it is — and
+      because every mark is a real element, the browser must style, lay out and paint each
+      one. <b>Both halves of that are demonstrated here rather than asserted</b>, and the
+      right-hand one is the whole reason the next slide exists. The graph is Good n’Healthy's
+      food-group tree; the field beside it is what happens when you try to plot every logged
+      item at once.
+    </p>
 
-  <div class="controls">
-    <button class="ibtn" disabled style="opacity:.5;cursor:not-allowed">▶ Particle → brandmark morph — not built yet</button>
+    <div class="two-up">
+      <section data-testid="fmt-node">
+        <h3 class="col-h">every mark is an element</h3>
+        <p class="col-p">
+          A canvas hands you one element and a bag of pixels. <b>SVG hands you a
+          document.</b> Hover a food group — the pointer hits the <i>shape</i>, not its
+          bounding box, and nothing scripts that. The buttons restyle the whole graph from
+          <b>outside</b> it, by putting one class on the root.
+        </p>
+        <div class="scene-stage node-stage" data-testid="node-stage">
+          <svg id="netSvg" viewBox="0 0 320 200" role="img" aria-label="A food group network, each node a separate element">
+            <g id="netEdges" stroke-linecap="round"></g>
+            <g id="netNodes"></g>
+          </svg>
+        </div>
+        <div class="col-ctl">
+          <div class="sk-btns" data-testid="node-skins">
+            <button class="sk-btn is-on" data-skin="" data-testid="skin-default">default</button>
+            <button class="sk-btn" data-skin="sk-wire" data-testid="skin-wire">wireframe</button>
+            <button class="sk-btn" data-skin="sk-solid" data-testid="skin-solid">solid</button>
+            <button class="sk-btn" data-skin="sk-ghost" data-testid="skin-ghost">ghosted</button>
+          </div>
+          <div class="node-read">
+            <span>elements <var id="netCount">—</var></span>
+            <span>under pointer <i id="netHover">none</i></span>
+            <span>label <i id="netLabel">—</i></span>
+          </div>
+        </div>
+      </section>
+
+      <section data-testid="fmt-ceiling">
+        <h3 class="col-h">what a node costs</h3>
+        <p class="col-p">
+          Each mark carries style resolution, layout participation and a paint record of its
+          own. <b>Drag the count up and watch where it stops being free.</b> This is the honest
+          reason Good n’Healthy plots a sample rather than every logged item — measured on your
+          machine, not claimed.
+        </p>
+        <div class="scene-stage ceil-stage" data-testid="ceiling-stage">
+          <svg id="ceilSvg" viewBox="0 0 320 200" aria-hidden="true"></svg>
+        </div>
+        <div class="col-ctl">
+          <div class="ceil-ctl">
+            <label for="ceilN">nodes <var id="ceilNV">120</var></label>
+            <input type="range" id="ceilN" data-testid="ceiling-count" min="20" max="2600" step="20" value="120">
+          </div>
+          <div class="ceil-read">
+            <span class="ceil-fps" id="ceilFps" data-testid="ceiling-fps">—</span>
+            <span class="ceil-sub">frames / sec · <b id="ceilVerdict">measuring</b></span>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <div class="notes">
-    <h3>SCOPE.md · slide 09</h3>
+    <h3>SCOPE.md · slide 10</h3>
     <p>"SVG Animation — vector, DOM-based, path morphing; visual: thread demo as SVG — a
       low particle count (tens), each one a real DOM node, resolving into the brandmark
       via path morph/draw-on. Worth surfacing the DOM-node cost as the reason the count
       stays low."</p>
-    <p>The draw-on stroke above is real CSS (<code>stroke-dashoffset</code>), looping so
-      the technique is visible without interaction. The actual thread-demo particle field
-      and brandmark morph need the brandmark's vector path data — a dependency SCOPE.md
-      already flags as outstanding — so that part isn't built yet.</p>
+    <p>The DOM-node cost is surfaced as a <b>measurement</b> rather than an assertion —
+      section two is a live FPS readout against a node count you control, so the ceiling
+      is demonstrated on the audience's own machine rather than claimed. That also sets up
+      slide 11 without needing to argue for it.</p>
+    <p><b>What is here, and what is not.</b> Sections three (four production
+      screens) and four (path morphing) were removed to be rebuilt. What remains is the
+      argument this sheet is actually for: a node is an element, and elements have a
+      price. The credits that were here covered artwork and libraries those sections
+      used — Twemoji, Flubber, Inter glyph outlines — and none of them are loaded by this
+      page any more, so the attribution goes back in alongside whatever replaces them.</p>
   </div>
 </div>
+
+<script>
+/* ── 1 · the network ──────────────────────────────────────────
+   Built from data rather than hand-authored markup so the node count
+   is honest and the labels stay in sync with the geometry. */
+(function () {
+  const svg = document.getElementById('netSvg');
+  if (!svg) return;
+  const NODES = [
+    { x: 42,  y: 58,  t: 'plate' },   { x: 96,  y: 34,  t: 'veg' },
+    { x: 96,  y: 96,  t: 'protein' }, { x: 150, y: 62,  t: 'leafy' },
+    { x: 150, y: 128, t: 'fish' },    { x: 208, y: 38,  t: 'spinach' },
+    { x: 208, y: 96,  t: 'lentils' }, { x: 208, y: 152, t: 'salmon' },
+    { x: 264, y: 66,  t: 'iron' },    { x: 264, y: 124, t: 'omega-3' },
+    { x: 42,  y: 138, t: 'fruit' },   { x: 96,  y: 162, t: 'berries' },
+  ];
+  const EDGES = [[0,1],[0,2],[0,10],[1,3],[2,3],[2,4],[3,5],[3,6],[4,7],[6,8],[7,9],[10,11],[4,6]];
+  const NS = 'http://www.w3.org/2000/svg';
+  const eg = document.getElementById('netEdges');
+  const ng = document.getElementById('netNodes');
+
+  EDGES.forEach(([a, b]) => {
+    const l = document.createElementNS(NS, 'line');
+    l.setAttribute('class', 'edge');
+    l.setAttribute('x1', NODES[a].x); l.setAttribute('y1', NODES[a].y);
+    l.setAttribute('x2', NODES[b].x); l.setAttribute('y2', NODES[b].y);
+    eg.appendChild(l);
+  });
+
+  NODES.forEach((n, i) => {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'nd');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'listitem');
+    g.setAttribute('aria-label', n.t);
+    g.dataset.tag = n.t;
+    g.dataset.idx = String(i);
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', '6');
+    const tx = document.createElementNS(NS, 'text');
+    tx.setAttribute('x', n.x); tx.setAttribute('y', n.y - 12);
+    tx.textContent = n.t;
+    g.appendChild(c); g.appendChild(tx);
+    ng.appendChild(g);
+  });
+
+  /* The readout reports what the DOM already knows — it is a window
+     onto the tree, not the mechanism. The highlight itself is CSS. */
+  const count = document.getElementById('netCount');
+  const hov = document.getElementById('netHover');
+  const lab = document.getElementById('netLabel');
+  count.textContent = svg.querySelectorAll('*').length;
+
+  svg.addEventListener('pointerover', (e) => {
+    const nd = e.target.closest('.nd');
+    hov.textContent = e.target.tagName;
+    lab.textContent = nd ? nd.dataset.tag : '—';
+  });
+  svg.addEventListener('pointerleave', () => { hov.textContent = 'none'; lab.textContent = '—'; });
+
+  document.querySelectorAll('.sk-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.sk-btn').forEach(o => o.classList.toggle('is-on', o === b));
+      svg.setAttribute('class', b.dataset.skin);
+    });
+  });
+})();
+
+/* ── 2 · the ceiling ──────────────────────────────────────────
+   A real node field, animated by CSS, with the frame rate measured
+   rather than asserted.
+
+   The nodes are rebuilt only when the count changes, and each carries
+   its own animation-delay so the field does not pulse in unison —
+   which would let the compositor coalesce work the demo is trying to
+   make visible. */
+(function () {
+  const svg = document.getElementById('ceilSvg');
+  const range = document.getElementById('ceilN');
+  const outN = document.getElementById('ceilNV');
+  const fpsEl = document.getElementById('ceilFps');
+  const verdict = document.getElementById('ceilVerdict');
+  if (!svg || !range) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const style = document.createElementNS(NS, 'style');
+  style.textContent =
+    '.pt{animation:ptFloat 3.2s ease-in-out infinite alternate}' +
+    '@keyframes ptFloat{to{transform:translateY(-14px)}}';
+  svg.appendChild(style);
+
+  /* Deterministic placement: Math.random() would reshuffle the field on
+     every slider nudge, so a change in frame rate could not be
+     attributed to the count rather than to a new layout. */
+  function build(n) {
+    while (svg.lastChild && svg.lastChild !== style) svg.removeChild(svg.lastChild);
+    let s = 20749;
+    const rnd = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < n; i++) {
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('class', 'pt');
+      c.setAttribute('cx', (rnd() * 320).toFixed(1));
+      c.setAttribute('cy', (rnd() * 200).toFixed(1));
+      c.setAttribute('r', (0.9 + rnd() * 2.2).toFixed(2));
+      c.setAttribute('fill', 'var(--gn-leaf)');
+      c.setAttribute('opacity', (0.3 + rnd() * 0.7).toFixed(2));
+      if (!reduce) c.style.animationDelay = (-rnd() * 3.2).toFixed(2) + 's';
+      frag.appendChild(c);
+    }
+    svg.appendChild(frag);
+  }
+
+  let n = +range.value;
+  build(n);
+  range.addEventListener('input', () => {
+    n = +range.value; outN.textContent = n; build(n);
+  });
+
+  /* Rolling window rather than an instantaneous delta: a single frame
+     time is mostly noise, and the number is being read aloud. */
+  let last = performance.now(), acc = 0, frames = 0, live = true;
+  /* Declared, not a named function expression: the observer below has
+     to be able to restart it, and a function expression's own name is
+     only in scope inside its body. */
+  function tick(now) {
+    const dt = now - last;
+    last = now;
+    /* A frame that took longer than a third of a second is not a frame
+       rate, it is a stall — a hidden tab, a tab switch, a GC pause.
+       Folding it into the average produces a confident, wrong number
+       on a slide someone is reading aloud. */
+    if (dt > 340) { acc = 0; frames = 0; if (live) requestAnimationFrame(tick); return; }
+    acc += dt; frames++;
+    if (acc >= 500) {
+      const fps = Math.round((frames * 1000) / acc);
+      fpsEl.textContent = fps;
+      fpsEl.classList.toggle('is-bad', fps < 45);
+      verdict.textContent = fps >= 55 ? 'free' : fps >= 45 ? 'holding' : fps >= 25 ? 'dropping frames' : 'unusable';
+      acc = 0; frames = 0;
+    }
+    if (live) requestAnimationFrame(tick);
+  }
+  tick(performance.now());
+
+  /* Browsers throttle rAF to roughly 1Hz in a background tab, so a
+     meter left running while the deck is not on screen reports ~1fps
+     and calls it unusable. Stop, say so, and restart from a clean
+     accumulator when the tab comes back. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      live = false;
+      fpsEl.textContent = '—';
+      fpsEl.classList.remove('is-bad');
+      verdict.textContent = 'paused — tab hidden';
+    } else if (!live) {
+      live = true; last = performance.now(); acc = 0; frames = 0;
+      requestAnimationFrame(tick);
+    }
+  });
+
+  /* Stop measuring — and stop animating hundreds of nodes — when the
+     section is nowhere near the viewport. */
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver((es) => {
+      es.forEach(e => {
+        svg.style.visibility = e.isIntersecting ? '' : 'hidden';
+        if (e.isIntersecting && !live) { live = true; last = performance.now(); requestAnimationFrame(tick); }
+        else if (!e.isIntersecting) live = false;
+      });
+    }, { rootMargin: '160px' }).observe(svg);
+  }
+})();
+</script>
 
 </body>
 </html>

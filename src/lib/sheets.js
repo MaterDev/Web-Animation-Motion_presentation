@@ -42,13 +42,14 @@ export const SHEETS = [
     note: 'Per-topic tint, pixel marks, rule treatments, glyph sets, pattern bands',
     file: 'graphic-language/index.html',
   },
-  { group: 'Techniques', code: 'SL-04', name: 'Video / GIF', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
-  { group: 'Techniques', code: 'SL-05', name: 'CSS', note: 'Browser-managed motion', file: 'techniques/css.html', tint: 'var(--tint-css)' },
-  { group: 'Techniques', code: 'SL-06', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
-  { group: 'Techniques', code: 'SL-09', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', tint: 'var(--tint-svg)' },
-  { group: 'Techniques', code: 'SL-10', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
-  { group: 'Techniques', code: 'SL-11', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
-  { group: 'Techniques', code: 'SL-13', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
+  { group: 'Techniques', code: 'SL-06', name: 'Layout / CSS', note: 'Layout animated by selectors + scroll', file: 'techniques/css.html', tint: 'var(--tint-css)' },
+  { group: 'Techniques', code: 'SL-10', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', tint: 'var(--tint-svg)' },
+  { group: 'Techniques', code: 'SL-05', name: 'GIF', note: 'Baseline — pre-baked, no player', file: 'techniques/gif/index.html', tint: 'var(--tint-video)' },
+  { group: 'Techniques', code: 'SL-04', name: 'Video', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
+  { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
+  { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
+  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
+  { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
 ];
 
 /* The six treatments, in the order they were made. Kept reachable
