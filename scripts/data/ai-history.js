@@ -42,7 +42,7 @@
 export const NODES = [
   {
     id: 'mcculloch-pitts',
-    year: 1943,
+    year: 1943, short: 'McCulloch–Pitts neuron',
     label: 'A Logical Calculus of the Ideas Immanent in Nervous Activity',
     place: 'Chicago, Illinois',
     lat: 41.8781, lon: -87.6298, level: 1,
@@ -53,7 +53,7 @@ export const NODES = [
   },
   {
     id: 'turing-mind',
-    year: 1950,
+    year: 1950, short: 'Turing, "Machinery"',
     label: 'Turing, "Computing Machinery and Intelligence"',
     place: 'University of Manchester, England',
     lat: 53.4668, lon: -2.2339, level: 0,
@@ -63,7 +63,7 @@ export const NODES = [
   },
   {
     id: 'logic-theorist',
-    year: 1956,
+    year: 1956, short: 'Logic Theorist',
     label: 'The Logic Theorist runs on JOHNNIAC',
     place: 'RAND Corporation, Santa Monica, California',
     lat: 34.0141, lon: -118.4917, level: 2,
@@ -75,7 +75,7 @@ export const NODES = [
   },
   {
     id: 'dartmouth',
-    year: 1956,
+    year: 1956, short: 'Dartmouth workshop',
     label: 'Dartmouth Summer Research Project on Artificial Intelligence',
     place: 'Dartmouth College, Hanover, New Hampshire',
     lat: 43.7044, lon: -72.2887, level: 0,
@@ -87,7 +87,7 @@ export const NODES = [
   },
   {
     id: 'perceptron',
-    year: 1958,
+    year: 1958, short: 'Perceptron',
     label: 'Rosenblatt’s perceptron',
     place: 'Cornell Aeronautical Laboratory, Buffalo, New York',
     lat: 42.9403, lon: -78.7369, level: 0,
@@ -98,7 +98,7 @@ export const NODES = [
   },
   {
     id: 'mit-ai-project',
-    year: 1959,
+    year: 1959, short: 'MIT AI Project',
     label: 'McCarthy and Minsky found the MIT Artificial Intelligence Project',
     place: 'MIT, Cambridge, Massachusetts',
     lat: 42.3601, lon: -71.0942, level: 1,
@@ -109,7 +109,7 @@ export const NODES = [
   },
   {
     id: 'sail',
-    year: 1963,
+    year: 1963, short: 'Stanford AI Project',
     label: 'McCarthy founds the Stanford AI Project (SAIL from 1971)',
     place: 'Stanford University, Stanford, California',
     lat: 37.4275, lon: -122.1697, level: 1,
@@ -120,7 +120,7 @@ export const NODES = [
   },
   {
     id: 'eliza',
-    year: 1966,
+    year: 1966, short: 'ELIZA',
     label: 'Weizenbaum publishes ELIZA',
     place: 'MIT, Cambridge, Massachusetts',
     lat: 42.3601, lon: -71.0942, level: 1,
@@ -130,7 +130,7 @@ export const NODES = [
   },
   {
     id: 'sri-ai-center',
-    year: 1966,
+    year: 1966, short: 'SRI AI Center',
     label: 'Charles Rosen founds SRI’s Artificial Intelligence Center',
     place: 'Stanford Research Institute, Menlo Park, California',
     lat: 37.4562, lon: -122.1769, level: 2,
@@ -141,7 +141,7 @@ export const NODES = [
   },
   {
     id: 'perceptrons-book',
-    year: 1969,
+    year: 1969, short: '"Perceptrons"',
     label: 'Minsky and Papert, "Perceptrons"',
     place: 'MIT Press, Cambridge, Massachusetts',
     lat: 42.3601, lon: -71.0942, level: 1,
@@ -151,7 +151,7 @@ export const NODES = [
   },
   {
     id: 'prolog',
-    year: 1972,
+    year: 1972, short: 'Prolog',
     label: 'Colmerauer and Roussel build the first Prolog',
     place: 'Université d’Aix-Marseille, Luminy, France',
     lat: 43.2317, lon: 5.4406, level: 2,
@@ -161,7 +161,7 @@ export const NODES = [
   },
   {
     id: 'neocognitron',
-    year: 1980,
+    year: 1980, short: 'Neocognitron',
     label: 'Fukushima publishes the neocognitron',
     place: 'NHK Broadcasting Science Research Laboratories, Kinuta, Setagaya, Tokyo',
     lat: 35.6318, lon: 139.6199, level: 1,
@@ -173,7 +173,7 @@ export const NODES = [
   },
   {
     id: 'xcon',
-    year: 1980,
+    year: 1980, short: 'R1/XCON',
     label: 'McDermott’s R1/XCON configures VAX orders',
     place: 'Carnegie Mellon University, Pittsburgh, Pennsylvania',
     lat: 40.4433, lon: -79.9436, level: 2,
@@ -185,7 +185,7 @@ export const NODES = [
   },
   {
     id: 'hopfield',
-    year: 1982,
+    year: 1982, short: 'Hopfield networks',
     label: 'Hopfield networks',
     place: 'Caltech, Pasadena, California',
     lat: 34.1377, lon: -118.1253, level: 1,
@@ -195,7 +195,7 @@ export const NODES = [
   },
   {
     id: 'pdp-backprop',
-    year: 1986,
+    year: 1986, short: 'Backpropagation',
     label: 'Rumelhart, Hinton and Williams, "Learning representations by back-propagating errors"',
     place: 'UC San Diego, La Jolla, California',
     lat: 32.8801, lon: -117.2340, level: 0,
@@ -207,7 +207,7 @@ export const NODES = [
   },
   {
     id: 'lecun-zip',
-    year: 1989,
+    year: 1989, short: 'ConvNets on ZIP codes',
     label: 'LeCun applies backpropagation to handwritten ZIP codes',
     place: 'AT&T Bell Laboratories, Holmdel, New Jersey',
     lat: 40.3907, lon: -74.1793, level: 1,
@@ -218,7 +218,7 @@ export const NODES = [
   },
   {
     id: 'udem-bengio',
-    year: 1993,
+    year: 1993, short: 'Bengio to Montréal',
     label: 'Bengio joins the Université de Montréal faculty',
     place: 'Université de Montréal, Montreal, Quebec',
     lat: 45.5048, lon: -73.6131, level: 2,
@@ -229,7 +229,7 @@ export const NODES = [
   },
   {
     id: 'lstm',
-    year: 1997,
+    year: 1997, short: 'LSTM',
     label: 'Hochreiter and Schmidhuber publish LSTM',
     place: 'Lugano, Switzerland',
     lat: 46.0037, lon: 8.9511, level: 1,
@@ -240,7 +240,7 @@ export const NODES = [
   },
   {
     id: 'deep-blue',
-    year: 1997,
+    year: 1997, short: 'Deep Blue',
     label: 'Deep Blue defeats Kasparov',
     place: 'Equitable Center, New York City',
     lat: 40.7620, lon: -73.9818, level: 0,
@@ -252,7 +252,7 @@ export const NODES = [
   },
   {
     id: 'gatsby',
-    year: 1998,
+    year: 1998, short: 'Gatsby Unit',
     label: 'Hinton founds the Gatsby Computational Neuroscience Unit',
     place: 'University College London, England',
     lat: 51.5246, lon: -0.1339, level: 2,
@@ -263,7 +263,7 @@ export const NODES = [
   },
   {
     id: 'deep-belief-nets',
-    year: 2006,
+    year: 2006, short: 'Deep belief nets',
     label: '"A fast learning algorithm for deep belief nets"',
     place: 'University of Toronto, Ontario',
     lat: 43.6629, lon: -79.3957, level: 1,
@@ -274,7 +274,7 @@ export const NODES = [
   },
   {
     id: 'imagenet',
-    year: 2009,
+    year: 2009, short: 'ImageNet',
     label: 'ImageNet is published at CVPR',
     place: 'Princeton University, New Jersey',
     lat: 40.3431, lon: -74.6551, level: 0,
@@ -284,7 +284,7 @@ export const NODES = [
   },
   {
     id: 'deepmind',
-    year: 2010,
+    year: 2010, short: 'DeepMind',
     label: 'DeepMind Technologies founded',
     place: 'London, England',
     lat: 51.5074, lon: -0.1278, level: 0,
@@ -296,7 +296,7 @@ export const NODES = [
   },
   {
     id: 'google-brain',
-    year: 2011,
+    year: 2011, short: 'Google Brain',
     label: 'The Google Brain project starts inside Google X',
     place: 'Google, Mountain View, California',
     lat: 37.4220, lon: -122.0841, level: 1,
@@ -307,7 +307,7 @@ export const NODES = [
   },
   {
     id: 'alexnet',
-    year: 2012,
+    year: 2012, short: 'AlexNet',
     label: 'AlexNet wins ILSVRC',
     place: 'University of Toronto, Ontario',
     lat: 43.6629, lon: -79.3957, level: 0,
@@ -318,7 +318,7 @@ export const NODES = [
   },
   {
     id: 'openai',
-    year: 2015,
+    year: 2015, short: 'OpenAI',
     label: 'OpenAI announced',
     place: 'San Francisco, California',
     lat: 37.7620, lon: -122.4116, level: 0,
@@ -328,7 +328,7 @@ export const NODES = [
   },
   {
     id: 'transformer',
-    year: 2017,
+    year: 2017, short: 'Transformer',
     label: '"Attention Is All You Need"',
     place: 'Google, Mountain View, California',
     lat: 37.4220, lon: -122.0841, level: 0,
@@ -338,7 +338,7 @@ export const NODES = [
   },
   {
     id: 'anthropic',
-    year: 2021,
+    year: 2021, short: 'Anthropic',
     label: 'Anthropic founded',
     place: 'San Francisco, California',
     lat: 37.7749, lon: -122.4194, level: 1,
@@ -349,7 +349,7 @@ export const NODES = [
   },
   {
     id: 'chatgpt',
-    year: 2022,
+    year: 2022, short: 'ChatGPT',
     label: 'ChatGPT released',
     place: 'San Francisco, California',
     lat: 37.7620, lon: -122.4116, level: 0,
@@ -361,7 +361,7 @@ export const NODES = [
   },
   {
     id: 'nobel-2024',
-    year: 2024,
+    year: 2024, short: 'Nobel Prize in Physics',
     label: 'Hopfield and Hinton share the Nobel Prize in Physics',
     place: 'Royal Swedish Academy of Sciences, Stockholm',
     lat: 59.3717, lon: 18.0518, level: 0,
@@ -638,6 +638,11 @@ export const ACTIVITY = deriveActivity(NODES, EDGES);
 /* ── validate ─────────────────────────────────────────────────────────
    Runs at build time and throws, because a silently-empty sources array
    is the one defect that survives visual QC: the map still draws. */
+/** Longest a `short` label may be. The §2 stage derives its lane count
+ *  from this number; raising it without re-checking the layout is how
+ *  labels start colliding. */
+export const SHORT_MAX = 24;
+
 export function validate() {
   const problems = [];
   const seen = new Set();
@@ -650,6 +655,13 @@ export function validate() {
     if (!(n.lat >= -90 && n.lat <= 90)) problems.push(`node ${n.id} lat out of range: ${n.lat}`);
     if (!(n.lon >= -180 && n.lon <= 180)) problems.push(`node ${n.id} lon out of range: ${n.lon}`);
     if (!(n.year >= 1943 && n.year <= 2024)) problems.push(`node ${n.id} year out of range: ${n.year}`);
+    /* `label` is the full, sourced form and stays long. `short` is the
+       one that gets drawn, and the diagram lays out lanes from an
+       assumed label width — so the cap is enforced here rather than
+       trusted. Exceed it and the lane packing silently under-counts
+       and the labels overlap. */
+    if (!n.short) problems.push(`node ${n.id} has no short label`);
+    else if (n.short.length > SHORT_MAX) problems.push(`node ${n.id} short label is ${n.short.length} chars (max ${SHORT_MAX}): ${n.short}`);
   }
 
   for (const e of EDGES) {

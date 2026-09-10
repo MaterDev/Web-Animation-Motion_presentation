@@ -174,6 +174,60 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .pp-stage.is-on .pp-n { color: var(--tint); }
 .pp-blob { fill: var(--ai-t2); }
 
+/* ── 2 · THE LINE ─────────────────────────────────────────────
+   Prefixed ln- because components.css owns 113 unscoped top-level
+   class names; a bare .dot or .note here would inherit system styling
+   silently and with no console error. */
+.ln-path { fill: none; stroke: var(--ai-now); stroke-width: 2.5; stroke-linecap: round; }
+.ln-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 70%, transparent); stroke-width: 2.5; }
+.ln-btns { display: flex; gap: 4px; }
+.ln-btn { flex: 1; text-align: center; padding: 6px 4px; border-radius: 5px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.ln-btn:hover { background: var(--hz-200); color: var(--hz-800); }
+.ln-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+
+.ln-stage { position: relative; border-radius: 8px; background: oklch(0.14 0.006 265);
+  box-shadow: var(--recess); overflow: hidden; margin-top: calc(var(--u)*3); }
+.ln-stage svg { display: block; width: 100%; height: auto; }
+/* The whole diagram is present from the first frame, unlit. Drawing
+   is a pass of TIME over territory that was always there — which is
+   the same relationship the bench states between its ghost path and
+   its live one, and it means frame 0 is a complete composition rather
+   than an empty box. */
+.ln-arc { fill: none; stroke-width: 1.6; stroke-linecap: round; }
+.ln-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 55%, transparent);
+  stroke-width: 1; }
+.ln-node { transition: none; }
+.ln-axis { stroke: color-mix(in oklch, var(--ai-t1) 55%, transparent); stroke-width: 1; }
+.ln-tick { stroke: color-mix(in oklch, var(--ai-t1) 40%, transparent); stroke-width: 1; }
+.ln-tick-t { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
+  fill: var(--hz-500); text-anchor: middle; }
+.ln-node { fill: var(--ai-now); }
+.ln-head { fill: var(--ai-ink); }
+
+/* The label layer is HTML, not <text>. Real text nodes in the document
+   flow get the system's font stack, subpixel positioning and wrapping
+   for free, and can be read by a screen reader in reading order —
+   none of which SVG <text> gives you. The price is that their position
+   has to be pushed from the SVG's own coordinate space every frame,
+   which is what getScreenCTM is for. */
+.ln-labels { position: absolute; inset: 0; pointer-events: none; }
+.ln-lab { position: absolute; transform: translate(-50%, -100%);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; white-space: nowrap;
+  color: var(--ai-ink); text-shadow: 0 0 6px oklch(0.14 0.006 265), 0 0 3px oklch(0.14 0.006 265); }
+.ln-lab b { font-weight: 400; color: var(--hz-500); }
+
+.ln-year { position: absolute; right: 14px; bottom: 10px;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 44px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums;
+  opacity: 0.85; pointer-events: none; }
+.ln-count { position: absolute; right: 16px; bottom: 58px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hz-500); pointer-events: none; }
+
 /* ── 3 · THE FRAME ────────────────────────────────
    Three exclusive camera drivers, one scene. Radios in behaviour, but
    drawn as the same segmented control as §4's chain so the rail reads
@@ -316,6 +370,74 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
           </div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- ═══ 2 · THE LINE ════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-line">
+    <div class="fmt-head"><span class="fmt-tag">THE LINE</span><h2>a path is a one-dimensional space</h2></div>
+    <p class="fmt-case">
+      <code>stroke-dasharray</code> was designed to draw dashed lines, and it does.
+      But what it actually gives you is <b>a coordinate system that runs along the
+      path</b> — distance from the start, in user units, addressable. Set the dash
+      to the path's own length and there is exactly one dash; slide
+      <code>stroke-dashoffset</code> and you are moving the boundary between drawn
+      and not-drawn along that axis. <b>Nothing is being animated but one number</b>,
+      and no geometry changes. The same number, taken small and repeated, is a
+      marching-ants marquee. Same mechanism, same two properties.
+    </p>
+
+    <div class="bench" data-testid="line-bench">
+      <div class="bench-rail">
+        <span class="bench-h">one number</span>
+        <div class="ln-btns" data-testid="line-modes">
+          <button class="ln-btn is-on" data-mode="draw" data-testid="line-mode-draw">draw on</button>
+          <button class="ln-btn" data-mode="march" data-testid="line-mode-march">marching</button>
+        </div>
+        <div class="bench-read" data-testid="line-readout">
+          <span>getTotalLength <var id="lnLen">—</var></span>
+          <span>stroke-dasharray <var id="lnArray">—</var></span>
+          <span>stroke-dashoffset <var id="lnOff">—</var></span>
+          <span>drawn <var id="lnPct">—</var></span>
+          <span class="warn">the ghost behind is the same path, undashed — the geometry never changes</span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="line-bench-stage">
+        <svg id="lnSvg" viewBox="0 0 660 200" aria-label="One path, drawn by moving stroke-dashoffset">
+          <path id="lnGhost" class="ln-ghost" d=""></path>
+          <path id="lnLive" class="ln-path" d=""></path>
+        </svg>
+      </div>
+    </div>
+
+    <p class="fmt-case" style="margin-top:calc(var(--u)*4)">
+      Scaled up, that is a whole diagram. Every arc below is one movement between
+      two places in the history of this field — a person changing institutions, a
+      lab spinning out — and each is <b>drawn by the same single number</b> as the
+      year passes it. The marker riding each arc is rotated to the path's own
+      tangent, read back with <code>getPointAtLength</code>; the labels are real
+      HTML pushed into place through <code>getScreenCTM</code>, not SVG text.
+      <b>Watch the gaps</b> — and watch which one is not there. The longest
+      stretch where the axis advances and nothing draws sits on the first AI
+      winter. The <i>second</i> winter does not show up at all: people kept
+      changing institutions straight through it. A diagram of who moved where is
+      not a diagram of who was funded, and this one says so by failing to show
+      the thing you would expect it to. The gaps below are computed from the
+      dataset at load, not typed into this paragraph.
+    </p>
+
+    <p class="scene-note" id="lnGaps" data-testid="line-gaps" style="margin-top:calc(var(--u)*2)"></p>
+
+    <div class="ln-stage" data-testid="line-stage">
+      <svg id="lnMap" viewBox="0 0 1000 406" aria-label="Documented movements in the history of AI, 1943 to 2024, drawn on a year axis">
+        <g id="lnAxis"></g>
+        <g id="lnArcs"></g>
+        <g id="lnNodes"></g>
+        <g id="lnHeads"></g>
+      </svg>
+      <div class="ln-labels" id="lnLabels" data-testid="line-labels"></div>
+      <div class="ln-count" data-testid="line-count"><span id="lnDrawn">0</span> / <span id="lnTotal">—</span> movements</div>
+      <div class="ln-year" id="lnYear" data-testid="line-year">1943</div>
     </div>
   </div>
 
@@ -651,6 +773,10 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
   }
 })();
 </script>
+
+<!-- Generated by scripts/vendor.js. A plain script, not a module, so
+     this sheet keeps opening over file:// — see the note in vendor.js. -->
+<script src="../vendor/ai-history.js"></script>
 
 <script>
 /* ── shared runtime ───────────────────────────────────────────
@@ -1294,6 +1420,256 @@ window.WAM = (function () {
 
   svg.classList.add('fr-hair-vector');
   demo.render(demo.t);
+})();
+</script>
+
+<script>
+/* ── 2 · THE LINE ─────────────────────────────────────────────
+   Two demos, one mechanism. The bench shows that dasharray/dashoffset
+   is a coordinate system along the path; the stage runs the same two
+   properties across 22 arcs at once.
+
+   Nothing here interpolates geometry. Every `d` is written once, at
+   load, from build-time layout — render(t) only ever touches two
+   numbers per path. That is the argument, so it has to be true. */
+(function () {
+  const NS = 'http://www.w3.org/2000/svg';
+
+  /* ── the bench ────────────────────────────────────────────── */
+  (function () {
+    const live = document.getElementById('lnLive');
+    const ghost = document.getElementById('lnGhost');
+    if (!live) return;
+    /* A curve with a couple of reversals, so "distance along the path"
+       is visibly NOT "distance across the screen" — on a straight line
+       the two are the same and the demo teaches the wrong thing. */
+    const D = 'M40 150C120 20 180 190 260 100S380 10 450 120S560 180 620 60';
+    live.setAttribute('d', D); ghost.setAttribute('d', D);
+
+    const L = live.getTotalLength();
+    const lenEl = document.getElementById('lnLen');
+    const arrEl = document.getElementById('lnArray');
+    const offEl = document.getElementById('lnOff');
+    const pctEl = document.getElementById('lnPct');
+    lenEl.textContent = L.toFixed(1) + ' u';
+
+    let mode = 'draw';
+    const MARCH = 18;   /* dash + gap, in user units */
+
+    function render(t) {
+      let array, offset;
+      if (mode === 'draw') {
+        /* One dash as long as the whole path, and one gap the same.
+           The offset IS the pen: at L nothing has been drawn, at 0 all
+           of it has. Eased so the demo rests at both ends. */
+        const u = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
+        array = L.toFixed(2) + ' ' + L.toFixed(2);
+        offset = L * (1 - u);
+      } else {
+        /* Identical properties, different magnitude. The offset runs
+           one full period per cycle so the loop is seamless. */
+        array = (MARCH * 0.55).toFixed(2) + ' ' + (MARCH * 0.45).toFixed(2);
+        offset = -t * MARCH;
+      }
+      live.style.strokeDasharray = array;
+      live.style.strokeDashoffset = offset.toFixed(2);
+      arrEl.textContent = array;
+      offEl.textContent = offset.toFixed(1);
+      pctEl.textContent = mode === 'draw'
+        ? (100 * (1 - offset / L)).toFixed(0) + '%'
+        : 'n/a — every dash is drawn';
+    }
+
+    const demo = WAM.clock('line-bench-stage', { render, dur: 5000, el: live, poster: 0.5 });
+    document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('[data-mode]').forEach((o) => o.classList.toggle('is-on', o === b));
+      mode = b.dataset.mode;
+      demo.render(demo.t);
+    }));
+  })();
+
+  /* ── the stage ────────────────────────────────────────────── */
+  (function () {
+    const svg = document.getElementById('lnMap');
+    const H = globalThis.AI_HISTORY;
+    if (!svg) return;
+    if (!H) {
+      /* Say so on the page rather than failing silently to an empty
+         box. design/vendor/ is generated and gitignored, so a fresh
+         clone reaches this before `bun run vendor` has ever run. */
+      document.querySelector('[data-testid="line-stage"]').insertAdjacentHTML('beforeend',
+        '<div style="position:absolute;inset:0;display:grid;place-items:center;' +
+        'font:11px var(--mono);color:var(--hz-500);text-align:center;padding:20px">' +
+        'design/vendor/ai-history.js is missing — run <b>bun run vendor</b></div>');
+      return;
+    }
+
+    const [Y0, Y1] = H.span;
+    const axisY = H.frame.h + 22;
+    const gGhost = document.createElementNS(NS, 'g');
+    const gAxis = document.getElementById('lnAxis');
+    const gArcs = document.getElementById('lnArcs');
+    const gNodes = document.getElementById('lnNodes');
+    const gHeads = document.getElementById('lnHeads');
+    const labelLayer = document.getElementById('lnLabels');
+    const yearEl = document.getElementById('lnYear');
+    const drawnEl = document.getElementById('lnDrawn');
+    const xOf = (y) => H.frame.pad + ((y - Y0) / (Y1 - Y0)) * (H.frame.w - H.frame.pad * 2);
+
+    const axis = document.createElementNS(NS, 'line');
+    axis.setAttribute('class', 'ln-axis');
+    axis.setAttribute('x1', 12); axis.setAttribute('x2', H.frame.w - 12);
+    axis.setAttribute('y1', axisY); axis.setAttribute('y2', axisY);
+    gAxis.appendChild(axis);
+    for (let y = 1950; y <= Y1; y += 10) {
+      const tk = document.createElementNS(NS, 'line');
+      tk.setAttribute('class', 'ln-tick');
+      tk.setAttribute('x1', xOf(y)); tk.setAttribute('x2', xOf(y));
+      tk.setAttribute('y1', axisY - 4); tk.setAttribute('y2', axisY + 4);
+      const tt = document.createElementNS(NS, 'text');
+      tt.setAttribute('class', 'ln-tick-t');
+      tt.setAttribute('x', xOf(y)); tt.setAttribute('y', axisY + 16);
+      tt.textContent = y;
+      gAxis.append(tk, tt);
+    }
+
+    /* Each arc gets its own draw window on the YEAR axis, not on t —
+       so the pace of the diagram is the pace of the history, and a
+       decade with no documented movement is a decade where nothing
+       draws. That is the point of the section, and it only works if
+       the timing comes from the data. */
+    const SPAN = 4;   /* years an arc takes to draw */
+    document.getElementById('lnTotal').textContent = H.arcs.length;
+
+    /* Every arc must be finished at t=1 — a final frame with one arc
+       still mid-draw is an incomplete composition, and the last
+       movement in the set is only three years short of the axis end.
+       Arcs that late get a compressed draw rather than a clipped one. */
+    const spanOf = (year) => Math.max(0.5, Math.min(SPAN, Y1 - year));
+
+    /* The gap claim in the copy above, derived rather than asserted.
+       It was written the other way round first and was wrong: the
+       second AI winter is densely populated with movements, so the
+       paragraph now says that, and this line is what checks it. */
+    {
+      const ys = H.arcs.map((a) => a.year).sort((a, b) => a - b);
+      const gaps = [];
+      for (let i = 1; i < ys.length; i++) if (ys[i] - ys[i - 1] >= 5) gaps.push([ys[i - 1], ys[i]]);
+      gaps.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
+      document.getElementById('lnGaps').innerHTML =
+        'gaps of five years or more between documented movements: ' +
+        gaps.map(([a, b]) => '<code>' + a + '→' + b + '</code> (' + (b - a) + 'y)').join(' · ') +
+        ' — the longest lands on the first AI winter; the second winter (1987–1993) contains four.';
+    }
+    /* Static: written once, never touched by render(). Beneath the live
+       arcs, so a lit arc covers its own ghost exactly. */
+    svg.insertBefore(gGhost, document.getElementById('lnArcs'));
+    for (const a of H.arcs) {
+      const g = document.createElementNS(NS, 'path');
+      g.setAttribute('class', 'ln-arc-ghost');
+      g.setAttribute('d', a.d);
+      gGhost.appendChild(g);
+    }
+
+    const arcs = H.arcs.map((a) => {
+      const el = document.createElementNS(NS, 'path');
+      el.setAttribute('class', 'ln-arc');
+      el.setAttribute('d', a.d);
+      /* Older movements sit lower on the lightness ramp, so the
+         diagram reads as a gradient in time even paused. */
+      const step = Math.min(3, Math.floor(((a.year - Y0) / (Y1 - Y0)) * 4));
+      el.style.stroke = 'var(--ai-t' + step + ')';
+      gArcs.appendChild(el);
+      const L = el.getTotalLength();
+      el.style.strokeDasharray = L.toFixed(2) + ' ' + L.toFixed(2);
+      return { ...a, el, L };
+    });
+
+    const heads = arcs.map(() => {
+      const c = document.createElementNS(NS, 'path');
+      /* A triangle, not a dot: a dot cannot show rotation, and showing
+         that the marker is turned by the path's own tangent is half of
+         why the marker is here. */
+      c.setAttribute('class', 'ln-head');
+      c.setAttribute('d', 'M5 0L-3.5 3.2L-3.5 -3.2Z');
+      gHeads.appendChild(c);
+      return c;
+    });
+
+    const nodes = H.nodes.map((n) => {
+      const c = document.createElementNS(NS, 'circle');
+      c.setAttribute('class', 'ln-node');
+      c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 2.6);
+      c.style.opacity = 0.28;
+      gNodes.appendChild(c);
+      const lab = document.createElement('div');
+      lab.className = 'ln-lab';
+      /* The short form, and no year prefix. The year is already on the
+         axis beneath and in the counter at the corner, and the lane
+         packing upstream sizes itself from `short` alone — prefixing
+         five more characters here would silently invalidate it. */
+      lab.textContent = n.short;
+      lab.title = n.year + ' · ' + n.label + ' · ' + n.place;
+      lab.dataset.testid = 'line-label-' + n.id;
+      labelLayer.appendChild(lab);
+      return { ...n, c, lab };
+    });
+
+    function render(t) {
+      const year = Y0 + t * (Y1 - Y0);
+      yearEl.textContent = Math.floor(year);
+
+      let done = 0;
+      for (let i = 0; i < arcs.length; i++) {
+        const a = arcs[i];
+        const p = Math.max(0, Math.min(1, (year - a.year) / spanOf(a.year)));
+        a.el.style.strokeDashoffset = (a.L * (1 - p)).toFixed(2);
+        a.el.style.opacity = p > 0 ? 1 : 0;   /* the ghost beneath carries the unlit state */
+        if (p >= 1) done++;
+        const h = heads[i];
+        /* The marker exists only while its arc is being drawn. Left on
+           afterwards it becomes 22 arrowheads parked at 22 endpoints,
+           which reads as decoration rather than as a pen. */
+        if (p > 0 && p < 1) {
+          const at = a.el.getPointAtLength(a.L * p);
+          /* Tangent by finite difference off the path itself, so the
+             marker's heading is the geometry's, not a guess from the
+             endpoints — on these cubics those differ by up to 40°. */
+          const nx = a.el.getPointAtLength(Math.min(a.L, a.L * p + 1.5));
+          const ang = Math.atan2(nx.y - at.y, nx.x - at.x) * 180 / Math.PI;
+          h.style.opacity = 1;
+          h.setAttribute('transform',
+            'translate(' + at.x.toFixed(2) + ' ' + at.y.toFixed(2) + ') rotate(' + ang.toFixed(1) + ')');
+        } else {
+          h.style.opacity = 0;
+        }
+      }
+      drawnEl.textContent = done;
+
+      /* One CTM read for the whole layer. Called per node it would be
+         a forced layout per label, thirty times a frame. */
+      const m = svg.getScreenCTM();
+      const box = svg.getBoundingClientRect();
+      for (const n of nodes) {
+        /* Unlit rather than absent. 0.28 and 0.22 are where each stops
+           competing with the lit state and still reads as present at
+           projection distance — checked on the filmstrip, not guessed. */
+        const lit = Math.max(0, Math.min(1, (year - n.year) / 1.5));
+        n.c.style.opacity = String(0.28 + 0.72 * lit);
+        n.lab.style.opacity = String(0.22 + 0.78 * lit);
+        if (!m) continue;
+        const cx = n.x * m.a + m.e - box.left;
+        /* Clamped to the box. The labels are centre-anchored, so the
+           1943 node — which sits one pad-width from the left edge —
+           had its first six characters outside the stage and clipped. */
+        const half = n.lab.offsetWidth / 2;
+        n.lab.style.left = Math.max(half + 4, Math.min(box.width - half - 4, cx)) + 'px';
+        n.lab.style.top = (n.y * m.d + m.f - box.top - 7) + 'px';
+      }
+    }
+
+    WAM.clock('line-stage', { render, dur: 16000, el: svg, poster: 1 });
+  })();
 })();
 </script>
 </body>
