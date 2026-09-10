@@ -175,89 +175,187 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .ln-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
   border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
 
-/* The stage is a CHART RECORDER — a seismograph, an ECG, a plotter.
-   Not a metaphor laid over the mechanism: a chart recorder's whole job
+/* The stage is a CHART RECORDER PRINTOUT — a seismograph roll, an ECG
+   strip, a plotter trace. It is its own product with its own trade
+   dress, and it deliberately looks nothing like the sheet around it:
+   warm paper and red pen inside a dark instrument harness, the same way
+   the css sheet's magazine is paper-light inside the same harness. A
+   stage that wears the site's own theme reads as another panel of the
+   site; a stage with its own reads as a thing being demonstrated.
+
+   The metaphor is not decoration either. A chart recorder's entire job
    is dragging a pen along a one-dimensional coordinate onto moving
    paper, which is what stroke-dashoffset is. The instrument and the
    technique are the same object.
 
-   It is built on .led-slide rather than the sheet's own .scene-stage,
-   because DESIGN.md's rule is that slide content is an emissive
-   display and the previous version was neither display — it hard-coded
-   the app backdrop and came out a dark box with a chart in it. The
-   payoff is structural, not cosmetic: the LED cell is 6px, every band
-   below is a whole number of cells, and the matrix stops being texture
-   and becomes the chart paper's ruling. */
-.ln-paper { position: relative; overflow: hidden; border-radius: 8px; box-shadow: var(--recess); }
-.ln-slide { transform-origin: 0 0; }
-.ln-slide svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+   Everything below is scoped to .cr — no token here escapes into the
+   sheet, and nothing from the sheet's --ai-* ramp reaches in. */
+.cr {
+  --cr-paper:  oklch(0.945 0.028 82);    /* manila chart stock */
+  --cr-tint:   oklch(0.915 0.042 74);    /* the warmer band down the margins */
+  --cr-grid:   oklch(0.80 0.075 44);     /* the printed grid — orange-red, always */
+  --cr-grid-b: oklch(0.70 0.105 40);     /* every fifth line, heavier */
+  --cr-ink:    oklch(0.32 0.028 62);     /* graphite: printed plate type */
+  --cr-sub:    oklch(0.54 0.038 66);
+  --cr-pen:    oklch(0.50 0.205 28);     /* the pen. One colour, and it is the trace */
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--cr-paper); color: var(--cr-ink);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.5) inset, var(--shadow-2, 0 6px 20px oklch(0 0 0 / 0.35));
+}
+.cr-sheet { position: relative; width: 960px; height: 540px; transform-origin: 0 0; }
+.cr-sheet svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
 
-.ln-grid { stroke: color-mix(in oklch, var(--ai-t1) 22%, transparent); stroke-width: 1; }
-.ln-axis { stroke: color-mix(in oklch, var(--ai-t2) 45%, transparent); stroke-width: 1; }
-.ln-tick-t { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
-  fill: var(--led-dim); text-anchor: middle; }
+/* The printed grid. Real chart paper is ruled before anything is drawn
+   on it, so this is a background rather than geometry — it is the
+   product, not the data. 12px minor, 60px major. */
+.cr-sheet::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg,  var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(90deg, var(--cr-grid) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(0deg,  var(--cr-grid) 0 1px, transparent 1px 12px);
+  opacity: 0.5;
+}
+/* Sprocket margins — the tractor-feed edge. The single cheapest mark
+   that says "this came out of a machine" rather than "this is a div". */
+.cr-sheet::after {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--cr-tint) 0 34px, transparent 34px calc(100% - 34px), var(--cr-tint) calc(100% - 34px)),
+    radial-gradient(circle at 17px 0, transparent 3.5px, transparent 0) ;
+  box-shadow: inset 34px 0 0 -33px var(--cr-grid), inset -34px 0 0 -33px var(--cr-grid);
+}
+.cr-sprockets { position: absolute; top: 0; bottom: 0; width: 34px; z-index: 4; pointer-events: none;
+  background-image: radial-gradient(circle, var(--cr-tint) 0 4px, var(--cr-grid) 4px 4.8px, transparent 5px);
+  background-size: 34px 30px; background-position: center 9px; opacity: 0.9; }
+.cr-sprockets.l { left: 0; } .cr-sprockets.r { right: 0; }
+
+.cr-grid-line { stroke: none; }
+.cr-axis { stroke: var(--cr-ink); stroke-width: 1; opacity: 0.55; }
+.cr-tick-t { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+  fill: var(--cr-sub); text-anchor: middle; }
 
 /* Channel 1. Drawn continuously, INCLUDING across the years where the
    value is zero — an absence has to be drawn to be seen, and a flat
    trace is the most legible mark in the whole vocabulary of
    instruments. Everybody knows what a flatline means. */
-.ln-trace { fill: none; stroke: var(--ai-t3); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.ln-trace-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 60%, transparent); stroke-width: 1; }
-/* Secondary motion: a short decaying segment behind the pen. Cheap,
-   and it is the difference between a plot and something authored. */
-.ln-trail { fill: none; stroke: var(--ai-ink); stroke-width: 2.5; stroke-linecap: round; }
+.cr-trace { fill: none; stroke: var(--cr-pen); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+/* Secondary motion: a short wetter segment behind the nib, the way
+   fresh ink sits heavier before it dries. Cheap, and it is the
+   difference between a plot and something authored. */
+.cr-trail { fill: none; stroke: var(--cr-pen); stroke-width: 3.4; stroke-linecap: round; }
 
-.ln-arc { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke: var(--ai-t2); }
-.ln-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 45%, transparent); stroke-width: 1; }
+.cr-arc { fill: none; stroke-width: 1.2; stroke-linecap: round; stroke: var(--cr-ink); opacity: 0.62; }
+.cr-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--cr-ink) 14%, transparent); stroke-width: 1; }
+.cr-ev { fill: color-mix(in oklch, var(--cr-ink) 26%, transparent); }
+.cr-ev-lit { fill: var(--cr-ink); }
+.cr-leader { stroke: color-mix(in oklch, var(--cr-ink) 30%, transparent); stroke-width: 1; }
 
-.ln-ev { fill: var(--ai-t1); }
-.ln-ev-lit { fill: var(--ai-ink); }
-.ln-leader { stroke: color-mix(in oklch, var(--ai-t2) 40%, transparent); stroke-width: 1; }
+/* The pen carriage. One of them, not twenty-two markers — at any
+   instant exactly one thing on this stage is at peak value. */
+.cr-pen-line { stroke: var(--cr-ink); stroke-width: 1; opacity: 0.35; }
+.cr-nib { fill: var(--cr-pen); }
 
-/* The pen. One carriage, not twenty-two markers — at any instant
-   exactly one thing on this stage is at peak value. */
-.ln-pen { stroke: var(--ai-ink); stroke-width: 1; opacity: 0.5; }
-.ln-nib { fill: var(--ai-ink); }
+/* Plate type: what is PRINTED on the stock, as opposed to what the pen
+   draws. Two different things on a real chart and they should not look
+   alike. */
+.cr-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.cr-mark { position: absolute; transform: translate(-50%, 0);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
+  color: color-mix(in oklch, var(--cr-ink) 42%, transparent); }
+.cr-mark.is-lit { color: var(--cr-ink); }
 
-/* Labels are real HTML: the system's own type scale reaches them, they
-   sit in the reading order, and 11px mono is legible where the 9px
-   SVG <text> this replaced was not. Positions come from the build,
-   which is where "does this label fit" is decided. */
-.ln-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
-/* Unlit and lit are two steps on the ramp, not one colour at two
-   opacities. DESIGN.md expresses level by lightness step; dimming is
-   what stops an emissive element reading as lit at all. */
-.ln-mark { position: absolute; transform: translate(-50%, 0);
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; white-space: nowrap;
-  color: var(--ai-t1); transition: none; }
-.ln-mark.is-lit { color: var(--led-ink); }
+.cr-head { position: absolute; z-index: 4; pointer-events: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--cr-sub); }
+.cr-year { position: absolute; z-index: 4; pointer-events: none;
+  font-family: var(--mono); font-weight: 700; font-size: 42px; line-height: 42px;
+  letter-spacing: -0.01em; color: var(--cr-pen); font-variant-numeric: tabular-nums; }
 
-.ln-year { position: absolute; z-index: 3; pointer-events: none;
-  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
-  font-size: 48px; line-height: 48px; color: var(--tint);
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 12px color-mix(in oklch, var(--tint) 45%, transparent); }
-
-/* The status strip a real recorder prints along its edge. .led-readout
-   is the system's own component for exactly this — a reflective
-   readout embedded in the emissive slide, which components.css says is
-   what the technical slides use. */
-/* Inset to the system margin rather than bled to the edge. DESIGN.md
-   is explicit that the margin is part of the composition and nothing
-   enters it without being a deliberate full-bleed layer — and at full
-   width .led-readout's 178deg gradient spreads into a visible diagonal
-   seam, which is the component being used at a width it was not drawn
-   for rather than a fault in it. */
-.ln-strip { position: absolute; left: var(--led-margin-x); right: var(--led-margin-x); z-index: 3;
-  height: 48px; font-size: 13px; letter-spacing: 0.06em; flex-wrap: nowrap; }
-.ln-strip > span { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
-/* min-width:0 is what actually lets the ellipsis happen: a flex item's
-   default min-width is auto, so the event name refused to shrink and
-   pushed the two readouts off the end of the strip instead. */
-.ln-strip > span.ln-ev-cell { flex: 1; min-width: 0; }
-.ln-strip .k { color: oklch(0.42 0.05 140); font-size: 11px; letter-spacing: 0.14em;
+/* The strip a recorder prints along its own edge — struck type on the
+   same stock, not a second display. */
+.cr-strip { position: absolute; z-index: 4; display: flex; align-items: baseline; gap: 26px;
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--cr-ink);
+  border-top: 1px solid color-mix(in oklch, var(--cr-ink) 22%, transparent); padding-top: 9px;
+  flex-wrap: nowrap; }
+.cr-strip > span { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.cr-strip > span.cr-ev-cell { flex: 1; min-width: 0; }
+.cr-strip .k { color: var(--cr-sub); font-size: 9.5px; letter-spacing: 0.16em;
   text-transform: uppercase; flex: none; }
-.ln-strip .ln-ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cr-strip .cr-ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── 4 · THE PIPELINE, stage ──────────────────────────────────
+   A BROADCAST WEATHER RADAR, and like §2's chart recorder it is its
+   own product with its own trade dress — a different world again, so
+   the sheet reads as three instruments demonstrated rather than three
+   panels of one website.
+
+   The choice is not decoration. A goo filter's entire visual behaviour
+   — separate cells that swell, touch and fuse into one mass with a
+   hard edge — is precipitation on a radar. Everyone has read one.
+   Nobody needs to be taught what merging cells mean, so the filter
+   graph gets to be the subject instead of the thing needing explained.
+
+   The precipitation ramp is the one piece of colour in this project
+   that is allowed to break the sheet's chroma ceiling, and it has to:
+   cyan-green-yellow-red IS the convention, it is what makes a radar
+   legible without a legend, and a tasteful low-chroma version of it
+   would be a worse graphic that merely matched the page better. Scoped
+   to .wx so it reaches nothing else. */
+.wx {
+  --wx-ground: oklch(0.17 0.045 250);   /* the unlit sweep field */
+  --wx-grid:   oklch(0.30 0.045 250);
+  --wx-coast:  oklch(0.72 0.030 230);
+  --wx-ink:    oklch(0.96 0.010 230);
+  --wx-sub:    oklch(0.68 0.025 235);
+  --wx-1: oklch(0.72 0.13 205);         /* light */
+  --wx-2: oklch(0.78 0.19 150);
+  --wx-3: oklch(0.86 0.17 105);
+  --wx-4: oklch(0.80 0.19 60);
+  --wx-5: oklch(0.62 0.23 27);          /* heaviest */
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--wx-ground); color: var(--wx-ink);
+  box-shadow: var(--recess);
+}
+.wx-screen { position: relative; width: 960px; height: 540px; transform-origin: 0 0; }
+.wx-screen svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+/* Scan lines. A broadcast graphic is a video signal before it is a
+   picture, and one 3px raster does more for that read than any amount
+   of styling on the marks themselves. */
+.wx-screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, oklch(0 0 0 / 0.16) 0 1px, transparent 1px 3px);
+}
+.wx-coast { fill: none; stroke: var(--wx-coast); stroke-width: 1; opacity: 0.55;
+  vector-effect: non-scaling-stroke; }
+.wx-grat { stroke: var(--wx-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.wx-site { fill: var(--wx-ink); }
+.wx-slabel { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; fill: var(--wx-ink); }
+
+.wx-chrome { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--wx-sub); }
+.wx-year { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 44px; line-height: 44px; color: var(--wx-ink);
+  font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px oklch(0 0 0 / 0.6); }
+/* The key every radar carries. It is also the legend for the filter:
+   each step is one more band the threshold has snapped to. */
+.wx-key { position: absolute; z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 0; }
+.wx-key i { display: block; width: 34px; height: 9px; }
+.wx-key .cap { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--wx-sub); }
+.wx-bar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 40px;
+  background: oklch(0.11 0.035 250 / 0.92);
+  border-top: 1px solid var(--wx-grid);
+  display: flex; align-items: center; gap: 26px; padding: 0 34px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--wx-ink); }
+.wx-bar > span { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.wx-bar > span.wx-hot { flex: 1; min-width: 0; }
+.wx-bar .k { color: var(--wx-sub); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; flex: none; }
+.wx-bar .wx-hot b { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── 3 · THE FRAME ────────────────────────────────
    Three exclusive camera drivers, one scene. Radios in behaviour, but
@@ -319,6 +417,17 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
     <!-- populated by JS so the chain can be built stage by stage -->
     <filter id="pp-goo" x="-25%" y="-25%" width="150%" height="150%"
             color-interpolation-filters="sRGB"></filter>
+    <!-- The stage needs a filter of its own: the bench's chain is
+         assembled and peeled back by whoever is reading it, and a stage
+         sharing that id would change with it. Same three primitives,
+         fixed. -->
+    <filter id="wx-goo" x="-30%" y="-30%" width="160%" height="160%"
+            color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+      <feColorMatrix in="b" type="matrix" result="g"
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
+      <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+    </filter>
   </defs>
 </svg>
 
@@ -462,12 +571,9 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 
     <p class="scene-note" id="lnGaps" data-testid="line-gaps" style="margin-top:calc(var(--u)*2)"></p>
 
-    <div class="ln-paper" id="lnPaper">
-      <div class="led-slide ln-slide" id="lnSlide" data-testid="line-stage">
-        <div class="led-chrome top">
-          <span></span>
-          <span>lineage recorder · ch.1 movements per year</span>
-        </div>
+    <div class="cr" id="lnPaper">
+      <div class="cr-sheet" id="lnSlide" data-testid="line-stage">
+        <div class="cr-sprockets l"></div><div class="cr-sprockets r"></div>
         <svg viewBox="0 0 960 540" aria-label="A chart recorder drawing documented movements in the history of AI, 1943 to 2024">
           <g id="lnGrid"></g>
           <g id="lnArcs"></g>
@@ -476,10 +582,11 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
           <g id="lnPen"></g>
           <g id="lnAxisG"></g>
         </svg>
-        <div class="ln-marks" id="lnMarks"></div>
-        <div class="ln-year" id="lnYear">1943</div>
-        <div class="led-readout ln-strip" data-testid="line-strip">
-          <span class="ln-ev-cell"><span class="k">event</span> <span class="ln-ev-name" id="lnEvent">—</span></span>
+        <div class="cr-marks" id="lnMarks"></div>
+        <div class="cr-head" id="lnHead">model lr-22 · ch.1 movements per year · 1 div = 1 unit</div>
+        <div class="cr-year" id="lnYear">1943</div>
+        <div class="cr-strip" data-testid="line-strip">
+          <span class="cr-ev-cell"><span class="k">event</span> <span class="cr-ev-name" id="lnEvent">—</span></span>
           <span><span class="k">rate</span> <span id="lnRate">—</span></span>
           <span><span class="k">movements</span> <span id="lnDrawn">0</span>/<span id="lnTotal">—</span></span>
         </div>
@@ -624,6 +731,42 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
         </svg>
       </div>
     </div>
+    <p class="fmt-case" style="margin-top:calc(var(--u)*5)">
+      Same three primitives, one screen up in scale. Each site below is a place
+      in the dataset, and its cell swells with <b>what is countable there</b> —
+      the events on record and the movements in and out, both as of the year on
+      the readout. Nothing is authored: no magnitude was chosen to make a shape.
+      Where sites are close enough that their cells touch, the threshold welds
+      them into one mass, and <b>that is the whole argument</b> — the topology
+      changes without a single path being interpolated, because it happens in
+      raster space rather than in geometry. Watch the 2010s: three separate
+      cells around the Bay become one body, and no code decided that.
+    </p>
+
+    <div class="wx" id="wxPaper">
+      <div class="wx-screen" id="wxSlide" data-testid="pipeline-stage">
+        <svg id="wxSvg" viewBox="440 111 720 405" aria-label="Research activity as a radar-style density field over a world map, 1943 to 2024">
+          <g id="wxGrat"></g>
+          <g id="wxMap"></g>
+          <g id="wxField" filter="url(#wx-goo)"></g>
+          <g id="wxSites"></g>
+        </svg>
+        <div class="wx-chrome" id="wxChrome">lineage radar · composite reflectivity · activity per site</div>
+        <div class="wx-year" id="wxYear">1943</div>
+        <div class="wx-key" id="wxKeyEl">
+          <span class="cap" style="margin-right:8px">light</span>
+          <i style="background:var(--wx-1)"></i><i style="background:var(--wx-2)"></i>
+          <i style="background:var(--wx-3)"></i><i style="background:var(--wx-4)"></i>
+          <i style="background:var(--wx-5)"></i>
+          <span class="cap" style="margin-left:8px">heavy</span>
+        </div>
+        <div class="wx-bar" data-testid="pipeline-stage-bar">
+          <span class="wx-hot"><span class="k">strongest</span> <b id="wxHot">—</b></span>
+          <span><span class="k">cells</span> <span id="wxCells">0</span></span>
+          <span><span class="k">masses</span> <span id="wxMass">0</span></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="notes">
@@ -645,9 +788,10 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
   </div>
 </div>
 
-<!-- Generated by scripts/vendor.js. A plain script, not a module, so
+<!-- Generated by scripts/vendor.js. Plain scripts, not modules, so
      this sheet keeps opening over file:// — see the note in vendor.js. -->
 <script src="../vendor/ai-history.js"></script>
+<script src="../vendor/map.js"></script>
 
 <script>
 /* ── 1 · the network ──────────────────────────────────────────
@@ -1630,19 +1774,17 @@ window.WAM = (function () {
 
     /* Chart ruling, on the cell grid. Horizontal rules divide the trace
        band into quarters the way a recorder's paper is pre-printed. */
-    for (let i = 0; i <= 4; i++) {
-      const y = S.traceBase - (i / 4) * (S.traceBase - S.traceTop);
-      mk('line', { class: 'ln-grid', x1: S.padX, x2: S.w - S.padX, y1: y, y2: y }, grid);
-    }
-    for (let y = 1950; y <= Y1; y += 10) {
-      mk('line', { class: 'ln-grid', x1: xOf(y), x2: xOf(y), y1: S.traceTop, y2: S.base }, grid);
-    }
+    /* No grid drawn here. Real chart paper is ruled before anything is
+       recorded on it, so the ruling is a CSS background on the stock —
+       the product — and the SVG carries only what the machine put
+       there. Drawing both in the same layer is what made the first
+       version read as a chart rather than as a chart RECORDING. */
 
     /* Axis */
-    mk('line', { class: 'ln-axis', x1: S.padX, x2: S.w - S.padX, y1: S.axis, y2: S.axis }, gAxis);
+    mk('line', { class: 'cr-axis', x1: S.padX, x2: S.w - S.padX, y1: S.axis, y2: S.axis }, gAxis);
     for (let y = 1950; y <= Y1; y += 10) {
-      mk('line', { class: 'ln-axis', x1: xOf(y), x2: xOf(y), y1: S.axis, y2: S.axis + 6 }, gAxis);
-      const t = mk('text', { class: 'ln-tick-t', x: xOf(y), y: S.axisText + 8 }, gAxis);
+      mk('line', { class: 'cr-axis', x1: xOf(y), x2: xOf(y), y1: S.axis, y2: S.axis + 6 }, gAxis);
+      const t = mk('text', { class: 'cr-tick-t', x: xOf(y), y: S.axisText + 8 }, gAxis);
       t.textContent = y;
     }
 
@@ -1651,9 +1793,9 @@ window.WAM = (function () {
        what had not happened yet, which made a decade with no movements
        pixel-identical to a decade not yet reached — you cannot see a
        gap in a field that is still filling. */
-    for (const a of H.arcs) mk('path', { class: 'ln-arc-ghost', d: a.d }, gArcs);
+    for (const a of H.arcs) mk('path', { class: 'cr-arc-ghost', d: a.d }, gArcs);
     const arcs = H.arcs.map((a) => {
-      const el = mk('path', { class: 'ln-arc', d: a.d }, gArcs);
+      const el = mk('path', { class: 'cr-arc', d: a.d }, gArcs);
       const L = el.getTotalLength();
       el.style.strokeDasharray = L.toFixed(2) + ' ' + L.toFixed(2);
       return { ...a, el, L };
@@ -1661,26 +1803,31 @@ window.WAM = (function () {
 
     const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
     const events = H.nodes.map((n) => ({
-      ...n, el: mk('circle', { class: 'ln-ev', cx: n.x, cy: S.base, r: 3 }, gEvents),
+      ...n, el: mk('circle', { class: 'cr-ev', cx: n.x, cy: S.base, r: 3 }, gEvents),
     }));
 
-    mk('path', { class: 'ln-trace-ghost', d: H.traceD }, gTrace);
-    const trace = mk('path', { class: 'ln-trace', d: H.traceD }, gTrace);
+    /* No ghost of the trace. The register beneath it IS pre-printed —
+       the stock arrives ruled, with the event scale and its plate type
+       already on it — but the paper ahead of a pen is blank, and
+       printing the recording before it happens is the one thing a
+       chart recorder cannot do. Frame 0 is a complete composition
+       regardless: it is a blank chart form, which is a real object. */
+    const trace = mk('path', { class: 'cr-trace', d: H.traceD }, gTrace);
     const TL = trace.getTotalLength();
     trace.style.strokeDasharray = TL.toFixed(2) + ' ' + TL.toFixed(2);
-    const trail = mk('path', { class: 'ln-trail', d: H.traceD }, gTrace);
+    const trail = mk('path', { class: 'cr-trail', d: H.traceD }, gTrace);
 
-    const penLine = mk('line', { class: 'ln-pen', x1: 0, x2: 0, y1: S.traceTop - 12, y2: S.axis }, gPen);
-    const nib = mk('circle', { class: 'ln-nib', r: 4, cx: 0, cy: 0 }, gPen);
+    const penLine = mk('line', { class: 'cr-pen-line', x1: 0, x2: 0, y1: S.traceTop - 12, y2: S.axis }, gPen);
+    const nib = mk('circle', { class: 'cr-nib', r: 4, cx: 0, cy: 0 }, gPen);
 
     /* Standing labels for the twelve level-0 events, placed by the
        build with leaders down to their own tick — DESIGN.md's callout
        vocabulary, and the reason the labels no longer sit in the same
        plane as the arcs fighting them for figure/ground. */
     const labs = H.labels.map((l) => {
-      mk('line', { class: 'ln-leader', x1: l.x, x2: l.x, y1: S.base + 4, y2: l.y - 4 }, gEvents);
+      mk('line', { class: 'cr-leader', x1: l.x, x2: l.x, y1: S.base + 4, y2: l.y - 4 }, gEvents);
       const d = document.createElement('div');
-      d.className = 'ln-mark';
+      d.className = 'cr-mark';
       d.textContent = l.text;
       d.dataset.testid = 'line-mark-' + l.id;
       d.style.left = (l.x / S.w * 100) + '%';
@@ -1693,9 +1840,15 @@ window.WAM = (function () {
        It sat over the chrome row at first — 48px of Doto starting at
        the chrome's own baseline — which is the kind of collision that
        only shows up once the type is real. */
-    yearEl.style.left = (S.padX / S.w * 100) + '%';
-    yearEl.style.top = (12 / S.h * 100) + '%';
-    document.querySelector('.ln-strip').style.top = (S.readout / S.h * 100) + '%';
+    const pct = (v, d) => (v / d * 100) + '%';
+    document.getElementById('lnHead').style.left = pct(S.padX, S.w);
+    document.getElementById('lnHead').style.top = pct(18, S.h);
+    yearEl.style.right = pct(S.padX, S.w);
+    yearEl.style.top = pct(12, S.h);
+    const strip = document.querySelector('.cr-strip');
+    strip.style.left = pct(S.padX, S.w);
+    strip.style.right = pct(S.padX, S.w);
+    strip.style.top = pct(S.readout, S.h);
 
     /* ── timing ───────────────────────────────────────────────
        The pen's travel is eased, the year it prints is not. A recorder
@@ -1822,6 +1975,142 @@ window.WAM = (function () {
 
     WAM.clock('line-stage', { render, dur: 18000, el: slide, poster: 1 });
   })();
+})();
+</script>
+
+<script>
+/* ── 4 · THE PIPELINE, stage ──────────────────────────────────
+   The same three primitives as the bench above, one screen up in
+   scale, over the projected map. Every radius here is COUNTED from the
+   dataset — events on record at a site plus movements in and out of
+   it, both as of the year on the readout. No magnitude was authored to
+   make a shape, which matters because the fusions are the argument and
+   a tuned radius would be tuning the argument. */
+(function () {
+  const slide = document.getElementById('wxSlide');
+  const paper = document.getElementById('wxPaper');
+  const H = globalThis.AI_HISTORY, M = globalThis.WORLD_MAP;
+  if (!slide) return;
+  if (!H || !M) {
+    paper.insertAdjacentHTML('beforeend',
+      '<div style="padding:40px;text-align:center;font:11px var(--mono);color:var(--wx-sub)">' +
+      'design/vendor/map.js is missing — run <b>bun run vendor</b></div>');
+    return;
+  }
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('wxSvg');
+  const [Y0, Y1] = H.span;
+  const VB = { x: 440, y: 111, w: 720, h: 405 };
+
+  function fit() {
+    const k = paper.clientWidth / 960;
+    slide.style.transform = 'scale(' + k + ')';
+    paper.style.height = Math.round(540 * k) + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(paper);
+  fit();
+
+  const mk = (tag, attrs, parent) => {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e);
+    return e;
+  };
+
+  /* Graticule, on the projected plane. Drawn from the layer's own
+     coordinates rather than re-projected, because the camera never
+     moves on this stage — this one is a fixed coverage area. */
+  const grat = document.getElementById('wxGrat');
+  for (let x = VB.x; x <= VB.x + VB.w; x += 60) mk('line', { class: 'wx-grat', x1: x, x2: x, y1: VB.y, y2: VB.y + VB.h }, grat);
+  for (let y = VB.y; y <= VB.y + VB.h; y += 60) mk('line', { class: 'wx-grat', x1: VB.x, x2: VB.x + VB.w, y1: y, y2: y }, grat);
+
+  mk('path', { class: 'wx-coast', d: M.layers[0].d }, document.getElementById('wxMap'));
+
+  /* One cell per SITE, not per event: co-located events share a place,
+     and it is places that accumulate. Keyed by projected position so
+     two entries at the same institution land in one cell rather than
+     two stacked ones. */
+  const sites = new Map();
+  for (const n of H.nodes) {
+    const g = M.geo[n.id];
+    if (!g) continue;
+    const key = g[0].toFixed(1) + ',' + g[1].toFixed(1);
+    if (!sites.has(key)) sites.set(key, { x: g[0], y: g[1], org: n.org, events: [], deg: [] });
+    sites.get(key).events.push(n);
+  }
+  /* Degree, counted. An arc contributes to both ends in the year it
+     happened — that is the movement arriving somewhere and leaving
+     somewhere else, and both are activity. */
+  const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
+  for (const a of H.arcs) {
+    for (const id of [a.from, a.to]) {
+      const g = M.geo[id]; if (!g) continue;
+      const key = g[0].toFixed(1) + ',' + g[1].toFixed(1);
+      if (sites.has(key)) sites.get(key).deg.push(a.year);
+    }
+  }
+  const field = document.getElementById('wxField');
+  const sitesG = document.getElementById('wxSites');
+  const RAMP = ['--wx-1', '--wx-2', '--wx-3', '--wx-4', '--wx-5'];
+  const cells = [...sites.values()].map((st) => ({
+    ...st,
+    blob: mk('circle', { cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 0 }, field),
+    dot: mk('circle', { class: 'wx-site', cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 1.4 }, sitesG),
+  }));
+
+  const yearEl = document.getElementById('wxYear');
+  const hotEl = document.getElementById('wxHot');
+  const cellsEl = document.getElementById('wxCells');
+  const massEl = document.getElementById('wxMass');
+  const pct = (v, d) => (v / d * 100) + '%';
+  document.getElementById('wxChrome').style.cssText += ';left:' + pct(34, 960) + ';top:' + pct(18, 540);
+  yearEl.style.cssText += ';right:' + pct(34, 960) + ';top:' + pct(14, 540);
+  document.getElementById('wxKeyEl').style.cssText += ';left:' + pct(34, 960) + ';bottom:' + pct(58, 540);
+
+  /* Two blobs belong to one mass when they overlap — the same
+     condition the threshold uses to weld them, so this count is a
+     reading of the picture rather than a second opinion about it.
+     Union-find over the cells present this year. */
+  function massCount(live) {
+    const parent = live.map((_, i) => i);
+    const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    for (let i = 0; i < live.length; i++) {
+      for (let j = i + 1; j < live.length; j++) {
+        const d = Math.hypot(live[i].x - live[j].x, live[i].y - live[j].y);
+        if (d < (live[i].r + live[j].r) * 0.92) parent[find(i)] = find(j);
+      }
+    }
+    return new Set(live.map((_, i) => find(i))).size;
+  }
+
+  function render(t) {
+    /* Eased so the field rests at both ends rather than sliding past
+       the two states worth looking at — diffuse, and collapsed. */
+    const u = t;
+    const year = Y0 + u * (Y1 - Y0);
+    yearEl.textContent = Math.floor(year);
+
+    const live = [];
+    let hot = null;
+    for (const c of cells) {
+      const n = c.events.filter((e) => e.year <= year).length;
+      const d = c.deg.filter((y) => y <= year).length;
+      const w = n + d;
+      /* sqrt, so a site with nine units is three times the RADIUS and
+         nine times the area of one with one — area is what the eye
+         reads as quantity, and a linear radius would overstate it. */
+      const r = w ? 5.5 + Math.sqrt(w) * 5.2 : 0;
+      c.blob.setAttribute('r', r.toFixed(2));
+      c.blob.style.fill = w ? 'var(' + RAMP[Math.min(RAMP.length - 1, w - 1)] + ')' : 'none';
+      c.dot.style.opacity = w ? 0.85 : 0.18;
+      if (w) { live.push({ x: c.x, y: c.y, r, w, org: c.org }); if (!hot || w > hot.w) hot = { w, org: c.org }; }
+    }
+    cellsEl.textContent = live.length;
+    massEl.textContent = live.length ? massCount(live) : 0;
+    hotEl.textContent = hot ? hot.org + ' · ' + hot.w + ' units' : '—';
+  }
+
+  WAM.clock('pipeline-stage', { render, dur: 15000, el: slide, poster: 1 });
 })();
 </script>
 </body>
