@@ -424,11 +424,16 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 /* Divisions deepen with the zoom, the same way the labels do: nations
    everywhere, states from the regional sheet, counties only once the
    scale can hold them. The weights are a hierarchy — a county line
-   drawn like a national border would make sheet 3 unreadable. */
-.sv-border { fill: none; stroke: var(--sv-edge); opacity: 0.6;
+   drawn like a national border would make sheet 3 unreadable.
+
+   The weight stays owned here and the crossfade owns only --fade, so
+   there is still exactly one place that says how dark a county line
+   is. The stage writes --fade per path; unset, it is 1. */
+.sv-border { fill: none; stroke: var(--sv-edge); opacity: calc(0.6 * var(--fade, 1));
   stroke-dasharray: 7 3 2 3; }
-.sv-state { fill: none; stroke: var(--sv-edge); opacity: 0.45; stroke-dasharray: 5 3; }
-.sv-county { fill: none; stroke: var(--sv-edge); opacity: 0.28; }
+.sv-state { fill: none; stroke: var(--sv-edge); opacity: calc(0.45 * var(--fade, 1));
+  stroke-dasharray: 5 3; }
+.sv-county { fill: none; stroke: var(--sv-edge); opacity: calc(0.28 * var(--fade, 1)); }
 /* Place names, from the same division data — a boundary you cannot
    name is decoration. Set apart from the event labels so the two never
    read as one list: the events are the subject, these are the ground. */
@@ -2354,6 +2359,19 @@ window.WAM = (function () {
   const W = M.frame.w, HH = M.frame.h;
   const LV = M.layers;
 
+  /* How far below its nominal k a level is swapped in. Below its own k
+     the coarse layer is still the honest one — 10m coastline shown at
+     world scale is not more accurate, it is the same shoreline drawn
+     with more points than the pixels can hold — and 0.7 is where the
+     difference between the two goes under a pixel. */
+  const SWITCH = 0.7;
+  /* How much wider than its viewport the build cut each level. Read
+     from the map rather than retyped, because vendor.js chose it and a
+     crossfade that started earlier than the geometry reaches would
+     fade in a layer with a visible rectangular edge. */
+  const MARGIN = M.margin;
+  const smoothstep = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+
   let scale = 1;
   function fit() {
     scale = paper.clientWidth / 960;
@@ -2527,20 +2545,51 @@ window.WAM = (function () {
        the page rather than becoming circles at depth. */
     stipple.setAttribute('patternTransform', 'scale(' + (1 / c.k).toFixed(6) + ')');
 
-    /* Only the level whose geometry is cut for this scale. Below its
-       own k the coarse layer is still the honest one — 10m coastline
-       shown at world scale is not more accurate, it is the same
-       shoreline drawn with more points than the pixels can hold. */
+    /* Only the level whose geometry is cut for this scale. SWITCH is
+       declared at the top of the stage, with the reason it is 0.7. */
     let show = 0;
-    for (let i = 0; i < LV.length; i++) if (!LV[i].beyondMap && c.k >= LV[i].k * 0.7) show = i;
+    for (let i = 0; i < LV.length; i++) if (!LV[i].beyondMap && c.k >= LV[i].k * SWITCH) show = i;
+
+    /* Ground swaps hard; divisions cross-fade.
+
+       The ground can swap on one frame because the 0.7 is chosen so
+       that it is the same shoreline at a scale where the difference
+       between the two resolutions is under a pixel — there is nothing
+       to see. Division lines are the opposite case: a county mesh has
+       no coarse version to be confused with, so switching it on at
+       full strength puts several thousand lines on the sheet between
+       one frame and the next, and that reads as a fault in the paper
+       rather than as detail arriving.
+
+       The band costs nothing extra, because the build already pays for
+       it. vendor.js cuts each level with MARGIN 1.6, so a level's
+       geometry covers the frame from k/1.6 upward while the swap does
+       not happen until k*0.7 — everything between is a window where
+       both levels are complete and either may be drawn. That margin is
+       there for this: see the comment at scripts/vendor.js:401. */
+    const enter = (l) => smoothstep(
+      (Math.log(c.k) - Math.log(l.k / MARGIN)) /
+      (Math.log(l.k * SWITCH) - Math.log(l.k / MARGIN)));
+
     layers.forEach((L2, i) => {
       if (!L2 || L2.solid) return;
       const on = i === show ? '' : 'none';
       L2.land.style.display = on; L2.tex.style.display = on;
-      if (L2.bord) L2.bord.style.display = on;
-      if (L2.state) L2.state.style.display = on;
-      if (L2.county) L2.county.style.display = on;
       for (const sh of L2.shelves) sh.style.display = on;
+
+      /* In as this level's own band opens, out as the next one's does.
+         The min is what makes the handover continuous: at any k the two
+         adjacent levels' weights sum to 1 across the overlap, so the
+         total ink on the sheet never jumps. */
+      const nx = LV[i + 1];
+      const w = Math.min(
+        i === 0 ? 1 : enter(LV[i]),
+        (nx && !nx.beyondMap && !nx.solidLand) ? 1 - enter(nx) : 1);
+      for (const p of [L2.bord, L2.state, L2.county]) {
+        if (!p) continue;
+        p.style.display = w > 0.002 ? '' : 'none';
+        p.style.setProperty('--fade', w.toFixed(4));
+      }
     });
     /* The sheet's own ground is the water, so an all-land level has to
        repaint it — otherwise the frame is an ocean with a coastline
