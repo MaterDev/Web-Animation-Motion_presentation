@@ -175,44 +175,89 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .ln-btn.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
   border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
 
-.ln-stage { position: relative; border-radius: 8px; background: oklch(0.14 0.006 265);
-  box-shadow: var(--recess); overflow: hidden; margin-top: calc(var(--u)*3); }
-.ln-stage svg { display: block; width: 100%; height: auto; }
-/* The whole diagram is present from the first frame, unlit. Drawing
-   is a pass of TIME over territory that was always there — which is
-   the same relationship the bench states between its ghost path and
-   its live one, and it means frame 0 is a complete composition rather
-   than an empty box. */
-.ln-arc { fill: none; stroke-width: 1.6; stroke-linecap: round; }
-.ln-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 55%, transparent);
-  stroke-width: 1; }
-.ln-node { transition: none; }
-.ln-axis { stroke: color-mix(in oklch, var(--ai-t1) 55%, transparent); stroke-width: 1; }
-.ln-tick { stroke: color-mix(in oklch, var(--ai-t1) 40%, transparent); stroke-width: 1; }
-.ln-tick-t { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em;
-  fill: var(--hz-500); text-anchor: middle; }
-.ln-node { fill: var(--ai-now); }
-.ln-head { fill: var(--ai-ink); }
+/* The stage is a CHART RECORDER — a seismograph, an ECG, a plotter.
+   Not a metaphor laid over the mechanism: a chart recorder's whole job
+   is dragging a pen along a one-dimensional coordinate onto moving
+   paper, which is what stroke-dashoffset is. The instrument and the
+   technique are the same object.
 
-/* The label layer is HTML, not <text>. Real text nodes in the document
-   flow get the system's font stack, subpixel positioning and wrapping
-   for free, and can be read by a screen reader in reading order —
-   none of which SVG <text> gives you. The price is that their position
-   has to be pushed from the SVG's own coordinate space every frame,
-   which is what getScreenCTM is for. */
-.ln-labels { position: absolute; inset: 0; pointer-events: none; }
-.ln-lab { position: absolute; transform: translate(-50%, -100%);
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; white-space: nowrap;
-  color: var(--ai-ink); text-shadow: 0 0 6px oklch(0.14 0.006 265), 0 0 3px oklch(0.14 0.006 265); }
-.ln-lab b { font-weight: 400; color: var(--hz-500); }
+   It is built on .led-slide rather than the sheet's own .scene-stage,
+   because DESIGN.md's rule is that slide content is an emissive
+   display and the previous version was neither display — it hard-coded
+   the app backdrop and came out a dark box with a chart in it. The
+   payoff is structural, not cosmetic: the LED cell is 6px, every band
+   below is a whole number of cells, and the matrix stops being texture
+   and becomes the chart paper's ruling. */
+.ln-paper { position: relative; overflow: hidden; border-radius: 8px; box-shadow: var(--recess); }
+.ln-slide { transform-origin: 0 0; }
+.ln-slide svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
 
-.ln-year { position: absolute; right: 14px; bottom: 10px;
+.ln-grid { stroke: color-mix(in oklch, var(--ai-t1) 22%, transparent); stroke-width: 1; }
+.ln-axis { stroke: color-mix(in oklch, var(--ai-t2) 45%, transparent); stroke-width: 1; }
+.ln-tick-t { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em;
+  fill: var(--led-dim); text-anchor: middle; }
+
+/* Channel 1. Drawn continuously, INCLUDING across the years where the
+   value is zero — an absence has to be drawn to be seen, and a flat
+   trace is the most legible mark in the whole vocabulary of
+   instruments. Everybody knows what a flatline means. */
+.ln-trace { fill: none; stroke: var(--ai-t3); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.ln-trace-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 60%, transparent); stroke-width: 1; }
+/* Secondary motion: a short decaying segment behind the pen. Cheap,
+   and it is the difference between a plot and something authored. */
+.ln-trail { fill: none; stroke: var(--ai-ink); stroke-width: 2.5; stroke-linecap: round; }
+
+.ln-arc { fill: none; stroke-width: 1.4; stroke-linecap: round; stroke: var(--ai-t2); }
+.ln-arc-ghost { fill: none; stroke: color-mix(in oklch, var(--ai-t0) 45%, transparent); stroke-width: 1; }
+
+.ln-ev { fill: var(--ai-t1); }
+.ln-ev-lit { fill: var(--ai-ink); }
+.ln-leader { stroke: color-mix(in oklch, var(--ai-t2) 40%, transparent); stroke-width: 1; }
+
+/* The pen. One carriage, not twenty-two markers — at any instant
+   exactly one thing on this stage is at peak value. */
+.ln-pen { stroke: var(--ai-ink); stroke-width: 1; opacity: 0.5; }
+.ln-nib { fill: var(--ai-ink); }
+
+/* Labels are real HTML: the system's own type scale reaches them, they
+   sit in the reading order, and 11px mono is legible where the 9px
+   SVG <text> this replaced was not. Positions come from the build,
+   which is where "does this label fit" is decided. */
+.ln-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+/* Unlit and lit are two steps on the ramp, not one colour at two
+   opacities. DESIGN.md expresses level by lightness step; dimming is
+   what stops an emissive element reading as lit at all. */
+.ln-mark { position: absolute; transform: translate(-50%, 0);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; white-space: nowrap;
+  color: var(--ai-t1); transition: none; }
+.ln-mark.is-lit { color: var(--led-ink); }
+
+.ln-year { position: absolute; z-index: 3; pointer-events: none;
   font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
-  font-size: 44px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums;
-  opacity: 0.85; pointer-events: none; }
-.ln-count { position: absolute; right: 16px; bottom: 58px;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--hz-500); pointer-events: none; }
+  font-size: 48px; line-height: 48px; color: var(--tint);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px color-mix(in oklch, var(--tint) 45%, transparent); }
+
+/* The status strip a real recorder prints along its edge. .led-readout
+   is the system's own component for exactly this — a reflective
+   readout embedded in the emissive slide, which components.css says is
+   what the technical slides use. */
+/* Inset to the system margin rather than bled to the edge. DESIGN.md
+   is explicit that the margin is part of the composition and nothing
+   enters it without being a deliberate full-bleed layer — and at full
+   width .led-readout's 178deg gradient spreads into a visible diagonal
+   seam, which is the component being used at a width it was not drawn
+   for rather than a fault in it. */
+.ln-strip { position: absolute; left: var(--led-margin-x); right: var(--led-margin-x); z-index: 3;
+  height: 48px; font-size: 13px; letter-spacing: 0.06em; flex-wrap: nowrap; }
+.ln-strip > span { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+/* min-width:0 is what actually lets the ellipsis happen: a flex item's
+   default min-width is auto, so the event name refused to shrink and
+   pushed the two readouts off the end of the strip instead. */
+.ln-strip > span.ln-ev-cell { flex: 1; min-width: 0; }
+.ln-strip .k { color: oklch(0.42 0.05 140); font-size: 11px; letter-spacing: 0.14em;
+  text-transform: uppercase; flex: none; }
+.ln-strip .ln-ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── 3 · THE FRAME ────────────────────────────────
    Three exclusive camera drivers, one scene. Radios in behaviour, but
@@ -417,16 +462,28 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 
     <p class="scene-note" id="lnGaps" data-testid="line-gaps" style="margin-top:calc(var(--u)*2)"></p>
 
-    <div class="ln-stage" data-testid="line-stage">
-      <svg id="lnMap" viewBox="0 0 1000 406" aria-label="Documented movements in the history of AI, 1943 to 2024, drawn on a year axis">
-        <g id="lnAxis"></g>
-        <g id="lnArcs"></g>
-        <g id="lnNodes"></g>
-        <g id="lnHeads"></g>
-      </svg>
-      <div class="ln-labels" id="lnLabels" data-testid="line-labels"></div>
-      <div class="ln-count" data-testid="line-count"><span id="lnDrawn">0</span> / <span id="lnTotal">—</span> movements</div>
-      <div class="ln-year" id="lnYear" data-testid="line-year">1943</div>
+    <div class="ln-paper" id="lnPaper">
+      <div class="led-slide ln-slide" id="lnSlide" data-testid="line-stage">
+        <div class="led-chrome top">
+          <span></span>
+          <span>lineage recorder · ch.1 movements per year</span>
+        </div>
+        <svg viewBox="0 0 960 540" aria-label="A chart recorder drawing documented movements in the history of AI, 1943 to 2024">
+          <g id="lnGrid"></g>
+          <g id="lnArcs"></g>
+          <g id="lnEvents"></g>
+          <g id="lnTraceG"></g>
+          <g id="lnPen"></g>
+          <g id="lnAxisG"></g>
+        </svg>
+        <div class="ln-marks" id="lnMarks"></div>
+        <div class="ln-year" id="lnYear">1943</div>
+        <div class="led-readout ln-strip" data-testid="line-strip">
+          <span class="ln-ev-cell"><span class="k">event</span> <span class="ln-ev-name" id="lnEvent">—</span></span>
+          <span><span class="k">rate</span> <span id="lnRate">—</span></span>
+          <span><span class="k">movements</span> <span id="lnDrawn">0</span>/<span id="lnTotal">—</span></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1520,187 +1577,228 @@ window.WAM = (function () {
     }));
   })();
 
-  /* ── the stage ────────────────────────────────────────────── */
+  /* ── the stage: a chart recorder ──────────────────────────── */
   (function () {
-    const svg = document.getElementById('lnMap');
+    const slide = document.getElementById('lnSlide');
+    const paper = document.getElementById('lnPaper');
     const H = globalThis.AI_HISTORY;
-    if (!svg) return;
+    if (!slide) return;
     if (!H) {
-      /* Say so on the page rather than failing silently to an empty
-         box. design/vendor/ is generated and gitignored, so a fresh
-         clone reaches this before `bun run vendor` has ever run. */
-      document.querySelector('[data-testid="line-stage"]').insertAdjacentHTML('beforeend',
-        '<div style="position:absolute;inset:0;display:grid;place-items:center;' +
-        'font:11px var(--mono);color:var(--hz-500);text-align:center;padding:20px">' +
+      paper.insertAdjacentHTML('beforeend',
+        '<div style="padding:40px;text-align:center;font:11px var(--mono);color:var(--hz-500)">' +
         'design/vendor/ai-history.js is missing — run <b>bun run vendor</b></div>');
       return;
     }
-
+    const svg = slide.querySelector('svg');
+    const S = H.strip;
     const [Y0, Y1] = H.span;
-    const axisY = H.frame.h + 22;
-    const gGhost = document.createElementNS(NS, 'g');
-    const gAxis = document.getElementById('lnAxis');
-    const gArcs = document.getElementById('lnArcs');
-    const gNodes = document.getElementById('lnNodes');
-    const gHeads = document.getElementById('lnHeads');
-    const labelLayer = document.getElementById('lnLabels');
-    const yearEl = document.getElementById('lnYear');
-    const drawnEl = document.getElementById('lnDrawn');
-    const xOf = (y) => H.frame.pad + ((y - Y0) / (Y1 - Y0)) * (H.frame.w - H.frame.pad * 2);
+    const xOf = (y) => S.padX + ((y - Y0) / (Y1 - Y0)) * (S.w - S.padX * 2);
 
-    const axis = document.createElementNS(NS, 'line');
-    axis.setAttribute('class', 'ln-axis');
-    axis.setAttribute('x1', 12); axis.setAttribute('x2', H.frame.w - 12);
-    axis.setAttribute('y1', axisY); axis.setAttribute('y2', axisY);
-    gAxis.appendChild(axis);
-    for (let y = 1950; y <= Y1; y += 10) {
-      const tk = document.createElementNS(NS, 'line');
-      tk.setAttribute('class', 'ln-tick');
-      tk.setAttribute('x1', xOf(y)); tk.setAttribute('x2', xOf(y));
-      tk.setAttribute('y1', axisY - 4); tk.setAttribute('y2', axisY + 4);
-      const tt = document.createElementNS(NS, 'text');
-      tt.setAttribute('class', 'ln-tick-t');
-      tt.setAttribute('x', xOf(y)); tt.setAttribute('y', axisY + 16);
-      tt.textContent = y;
-      gAxis.append(tk, tt);
+    /* .led-slide is a fixed 960x540 by design — the grid depends on the
+       stage being exactly one known size — so it is scaled by transform
+       rather than reflowed. Every module stays a whole number of cells
+       at any display width, which is the entire reason for the fixed
+       size, and the wrapper takes the scaled height so the page still
+       flows around it. */
+    function fit() {
+      const k = paper.clientWidth / S.w;
+      slide.style.transform = 'scale(' + k + ')';
+      paper.style.height = Math.round(S.h * k) + 'px';
     }
+    if ('ResizeObserver' in window) new ResizeObserver(fit).observe(paper);
+    fit();
 
-    /* Each arc gets its own draw window on the YEAR axis, not on t —
-       so the pace of the diagram is the pace of the history, and a
-       decade with no documented movement is a decade where nothing
-       draws. That is the point of the section, and it only works if
-       the timing comes from the data. */
-    const SPAN = 4;   /* years an arc takes to draw */
+    const grid = document.getElementById('lnGrid');
+    const gArcs = document.getElementById('lnArcs');
+    const gEvents = document.getElementById('lnEvents');
+    const gTrace = document.getElementById('lnTraceG');
+    const gPen = document.getElementById('lnPen');
+    const gAxis = document.getElementById('lnAxisG');
+    const marks = document.getElementById('lnMarks');
+    const yearEl = document.getElementById('lnYear');
+    const evEl = document.getElementById('lnEvent');
+    const drawnEl = document.getElementById('lnDrawn');
+    const rateEl = document.getElementById('lnRate');
     document.getElementById('lnTotal').textContent = H.arcs.length;
 
-    /* Every arc must be finished at t=1 — a final frame with one arc
-       still mid-draw is an incomplete composition, and the last
-       movement in the set is only three years short of the axis end.
-       Arcs that late get a compressed draw rather than a clipped one. */
-    const spanOf = (year) => Math.max(0.5, Math.min(SPAN, Y1 - year));
+    const mk = (tag, attrs, parent) => {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      (parent || svg).appendChild(e);
+      return e;
+    };
 
-    /* The gap claim in the copy above, derived rather than asserted.
-       It was written the other way round first and was wrong: the
-       second AI winter is densely populated with movements, so the
-       paragraph now says that, and this line is what checks it. */
-    {
-      const ys = H.arcs.map((a) => a.year).sort((a, b) => a - b);
-      const gaps = [];
-      for (let i = 1; i < ys.length; i++) if (ys[i] - ys[i - 1] >= 5) gaps.push([ys[i - 1], ys[i]]);
-      gaps.sort((a, b) => (b[1] - b[0]) - (a[1] - a[0]));
-      document.getElementById('lnGaps').innerHTML =
-        'gaps of five years or more between documented movements: ' +
-        gaps.map(([a, b]) => '<code>' + a + '→' + b + '</code> (' + (b - a) + 'y)').join(' · ') +
-        ' — the longest lands on the first AI winter; the second winter (1987–1993) contains four.';
+    /* Chart ruling, on the cell grid. Horizontal rules divide the trace
+       band into quarters the way a recorder's paper is pre-printed. */
+    for (let i = 0; i <= 4; i++) {
+      const y = S.traceBase - (i / 4) * (S.traceBase - S.traceTop);
+      mk('line', { class: 'ln-grid', x1: S.padX, x2: S.w - S.padX, y1: y, y2: y }, grid);
     }
-    /* Static: written once, never touched by render(). Beneath the live
-       arcs, so a lit arc covers its own ghost exactly. */
-    svg.insertBefore(gGhost, document.getElementById('lnArcs'));
-    for (const a of H.arcs) {
-      const g = document.createElementNS(NS, 'path');
-      g.setAttribute('class', 'ln-arc-ghost');
-      g.setAttribute('d', a.d);
-      gGhost.appendChild(g);
+    for (let y = 1950; y <= Y1; y += 10) {
+      mk('line', { class: 'ln-grid', x1: xOf(y), x2: xOf(y), y1: S.traceTop, y2: S.base }, grid);
     }
 
+    /* Axis */
+    mk('line', { class: 'ln-axis', x1: S.padX, x2: S.w - S.padX, y1: S.axis, y2: S.axis }, gAxis);
+    for (let y = 1950; y <= Y1; y += 10) {
+      mk('line', { class: 'ln-axis', x1: xOf(y), x2: xOf(y), y1: S.axis, y2: S.axis + 6 }, gAxis);
+      const t = mk('text', { class: 'ln-tick-t', x: xOf(y), y: S.axisText + 8 }, gAxis);
+      t.textContent = y;
+    }
+
+    /* Everything unlit first, so frame 0 is a complete composition and
+       the year passes over a STABLE field. The previous staging hid
+       what had not happened yet, which made a decade with no movements
+       pixel-identical to a decade not yet reached — you cannot see a
+       gap in a field that is still filling. */
+    for (const a of H.arcs) mk('path', { class: 'ln-arc-ghost', d: a.d }, gArcs);
     const arcs = H.arcs.map((a) => {
-      const el = document.createElementNS(NS, 'path');
-      el.setAttribute('class', 'ln-arc');
-      el.setAttribute('d', a.d);
-      /* Older movements sit lower on the lightness ramp, so the
-         diagram reads as a gradient in time even paused. */
-      const step = Math.min(3, Math.floor(((a.year - Y0) / (Y1 - Y0)) * 4));
-      el.style.stroke = 'var(--ai-t' + step + ')';
-      gArcs.appendChild(el);
+      const el = mk('path', { class: 'ln-arc', d: a.d }, gArcs);
       const L = el.getTotalLength();
       el.style.strokeDasharray = L.toFixed(2) + ' ' + L.toFixed(2);
       return { ...a, el, L };
     });
 
-    const heads = arcs.map(() => {
-      const c = document.createElementNS(NS, 'path');
-      /* A triangle, not a dot: a dot cannot show rotation, and showing
-         that the marker is turned by the path's own tangent is half of
-         why the marker is here. */
-      c.setAttribute('class', 'ln-head');
-      c.setAttribute('d', 'M5 0L-3.5 3.2L-3.5 -3.2Z');
-      gHeads.appendChild(c);
-      return c;
+    const events = H.nodes.map((n) => ({
+      ...n, el: mk('circle', { class: 'ln-ev', cx: n.x, cy: S.base, r: 3 }, gEvents),
+    }));
+
+    mk('path', { class: 'ln-trace-ghost', d: H.traceD }, gTrace);
+    const trace = mk('path', { class: 'ln-trace', d: H.traceD }, gTrace);
+    const TL = trace.getTotalLength();
+    trace.style.strokeDasharray = TL.toFixed(2) + ' ' + TL.toFixed(2);
+    const trail = mk('path', { class: 'ln-trail', d: H.traceD }, gTrace);
+
+    const penLine = mk('line', { class: 'ln-pen', x1: 0, x2: 0, y1: S.traceTop - 12, y2: S.axis }, gPen);
+    const nib = mk('circle', { class: 'ln-nib', r: 4, cx: 0, cy: 0 }, gPen);
+
+    /* Standing labels for the twelve level-0 events, placed by the
+       build with leaders down to their own tick — DESIGN.md's callout
+       vocabulary, and the reason the labels no longer sit in the same
+       plane as the arcs fighting them for figure/ground. */
+    const labs = H.labels.map((l) => {
+      mk('line', { class: 'ln-leader', x1: l.x, x2: l.x, y1: S.base + 4, y2: l.y - 4 }, gEvents);
+      const d = document.createElement('div');
+      d.className = 'ln-mark';
+      d.textContent = l.text;
+      d.dataset.testid = 'line-mark-' + l.id;
+      d.style.left = (l.x / S.w * 100) + '%';
+      d.style.top = (l.y / S.h * 100) + '%';
+      marks.appendChild(d);
+      return { ...l, el: d };
     });
 
-    const nodes = H.nodes.map((n) => {
-      const c = document.createElementNS(NS, 'circle');
-      c.setAttribute('class', 'ln-node');
-      c.setAttribute('cx', n.x); c.setAttribute('cy', n.y); c.setAttribute('r', 2.6);
-      c.style.opacity = 0.28;
-      gNodes.appendChild(c);
-      const lab = document.createElement('div');
-      lab.className = 'ln-lab';
-      /* The short form, and no year prefix. The year is already on the
-         axis beneath and in the counter at the corner, and the lane
-         packing upstream sizes itself from `short` alone — prefixing
-         five more characters here would silently invalidate it. */
-      lab.textContent = n.short;
-      lab.title = n.year + ' · ' + n.label + ' · ' + n.place;
-      lab.dataset.testid = 'line-label-' + n.id;
-      labelLayer.appendChild(lab);
-      return { ...n, c, lab };
-    });
+    /* Top left, in reading order and ahead of the trace it indexes.
+       It sat over the chrome row at first — 48px of Doto starting at
+       the chrome's own baseline — which is the kind of collision that
+       only shows up once the type is real. */
+    yearEl.style.left = (S.padX / S.w * 100) + '%';
+    yearEl.style.top = (12 / S.h * 100) + '%';
+    document.querySelector('.ln-strip').style.top = (S.readout / S.h * 100) + '%';
 
-    function render(t) {
-      const year = Y0 + t * (Y1 - Y0);
-      yearEl.textContent = Math.floor(year);
+    /* ── timing ───────────────────────────────────────────────
+       The pen's travel is eased, the year it prints is not. A recorder
+       drags its carriage smoothly and its counter steps in whole
+       units; running both off one linear ramp gave a smooth crawl
+       under a stepped label, which reads as neither.
 
-      let done = 0;
-      for (let i = 0; i < arcs.length; i++) {
-        const a = arcs[i];
-        const p = Math.max(0, Math.min(1, (year - a.year) / spanOf(a.year)));
-        a.el.style.strokeDashoffset = (a.L * (1 - p)).toFixed(2);
-        a.el.style.opacity = p > 0 ? 1 : 0;   /* the ghost beneath carries the unlit state */
-        if (p >= 1) done++;
-        const h = heads[i];
-        /* The marker exists only while its arc is being drawn. Left on
-           afterwards it becomes 22 arrowheads parked at 22 endpoints,
-           which reads as decoration rather than as a pen. */
-        if (p > 0 && p < 1) {
-          const at = a.el.getPointAtLength(a.L * p);
-          /* Tangent by finite difference off the path itself, so the
-             marker's heading is the geometry's, not a guess from the
-             endpoints — on these cubics those differ by up to 40°. */
-          const nx = a.el.getPointAtLength(Math.min(a.L, a.L * p + 1.5));
-          const ang = Math.atan2(nx.y - at.y, nx.x - at.x) * 180 / Math.PI;
-          h.style.opacity = 1;
-          h.setAttribute('transform',
-            'translate(' + at.x.toFixed(2) + ' ' + at.y.toFixed(2) + ') rotate(' + ang.toFixed(1) + ')');
-        } else {
-          h.style.opacity = 0;
+       HOLDS. The pen rests at each of the dataset's four zoom levels —
+       the same ranks §3 uses — so the piece has four rests rather than
+       being one 16-second ramp. Amateur motion never settles. */
+    const HOLD = 0.05, RESOLVE = 0.14;
+    const legs = H.levels.length - 1;
+    const LEG = (1 - RESOLVE - HOLD * (legs - 1)) / legs;
+
+    /* The travel is eased and the year it prints is not: a recorder
+       drags its carriage smoothly and its counter steps in whole
+       units. Running both off one linear ramp gave a smooth crawl
+       under a stepped label, which reads as neither.
+
+       Four rests rather than one continuous ramp — at each of the
+       dataset's own level boundaries, and then a long one at the end.
+       Returns the phase too, because the resolve has to be a state the
+       rest of render() can see, not a special case buried in here. */
+    function phaseAt(t) {
+      for (let i = 0; i < legs; i++) {
+        const a = i * (LEG + HOLD);
+        if (t < a + LEG) {
+          const p = Math.max(0, (t - a) / LEG);
+          /* --ease-ballistic sampled: damped, no overshoot. A pen
+             carriage is a needle, and that is the token named for it. */
+          const e = 1 - Math.pow(1 - p, 3);
+          return { year: Y0 + ((i + e) / legs) * (Y1 - Y0), resolve: 0 };
         }
+        if (t < a + LEG + HOLD) return { year: Y0 + ((i + 1) / legs) * (Y1 - Y0), resolve: 0 };
+      }
+      /* The resolve. The paper stops, the pen lifts, and the readout
+         lands on its total — a payoff beat instead of an abstract loop,
+         which is the standard SCOPE.md sets for every stage in the deck. */
+      const p = Math.min(1, (t - (1 - RESOLVE)) / RESOLVE);
+      return { year: Y1, resolve: 1 - Math.pow(1 - p, 3) };
+    }
+
+    let lastEvent = null;
+    function render(t) {
+      const { year, resolve } = phaseAt(t);
+      const x = xOf(year);
+      const lift = 1 - resolve;
+
+      /* The trace is one number: how much of the paper the pen has
+         covered. Same mechanism as the bench, at scale. */
+      const frac = Math.max(0, Math.min(1, (x - S.padX) / (S.w - S.padX * 2)));
+      trace.style.strokeDashoffset = (TL * (1 - frac)).toFixed(2);
+
+      /* Trail: a short window of the trace immediately behind the pen.
+         Two dashes rather than one — a leading gap the length of the
+         undrawn remainder, then the visible tail. */
+      const TRAIL = 46;
+      const head = TL * frac;
+      trail.style.strokeDasharray = '0 ' + Math.max(0, head - TRAIL).toFixed(2) +
+        ' ' + Math.min(TRAIL, head).toFixed(2) + ' ' + TL.toFixed(2);
+      trail.style.opacity = (frac > 0.002 ? 0.9 : 0) * lift;
+
+      const pt = trace.getPointAtLength(head);
+      penLine.setAttribute('x1', x.toFixed(2)); penLine.setAttribute('x2', x.toFixed(2));
+      nib.setAttribute('cx', pt.x.toFixed(2)); nib.setAttribute('cy', pt.y.toFixed(2));
+      /* The lift: the carriage rises off the paper and the guide line
+         goes with it. Nothing else moves during the resolve. */
+      penLine.style.opacity = (0.5 * lift).toFixed(3);
+      nib.style.opacity = lift.toFixed(3);
+      nib.setAttribute('r', (4 * lift + 0.001).toFixed(2));
+
+      let done = 0, current = null;
+      for (const a of arcs) {
+        const p = Math.max(0, Math.min(1, (year - a.year) / 3));
+        a.el.style.strokeDashoffset = (a.L * (1 - p)).toFixed(2);
+        a.el.style.opacity = p > 0 ? (p < 1 ? 1 : 0.72) : 0;
+        if (p >= 1) done++;
+        if (p > 0 && p < 1) current = a;
       }
       drawnEl.textContent = done;
 
-      /* One CTM read for the whole layer. Called per node it would be
-         a forced layout per label, thirty times a frame. */
-      const m = svg.getScreenCTM();
-      const box = svg.getBoundingClientRect();
-      for (const n of nodes) {
-        /* Unlit rather than absent. 0.28 and 0.22 are where each stops
-           competing with the lit state and still reads as present at
-           projection distance — checked on the filmstrip, not guessed. */
-        const lit = Math.max(0, Math.min(1, (year - n.year) / 1.5));
-        n.c.style.opacity = String(0.28 + 0.72 * lit);
-        n.lab.style.opacity = String(0.22 + 0.78 * lit);
-        if (!m) continue;
-        const cx = n.x * m.a + m.e - box.left;
-        /* Clamped to the box. The labels are centre-anchored, so the
-           1943 node — which sits one pad-width from the left edge —
-           had its first six characters outside the stage and clipped. */
-        const half = n.lab.offsetWidth / 2;
-        n.lab.style.left = Math.max(half + 4, Math.min(box.width - half - 4, cx)) + 'px';
-        n.lab.style.top = (n.y * m.d + m.f - box.top - 7) + 'px';
+      for (const e of events) {
+        const lit = year >= e.year;
+        e.el.setAttribute('class', lit ? 'ln-ev-lit' : 'ln-ev');
+        e.el.setAttribute('r', lit ? 4 : 2.5);
       }
+      for (const l of labs) {
+        const n = events.find((e) => e.id === l.id);
+        l.el.classList.toggle('is-lit', year >= n.year);
+      }
+
+      /* The recorder prints what it is recording. One name at a time,
+         at readable size, instead of thirty labels fighting the arcs. */
+      const passed = events.filter((e) => e.year <= year);
+      const latest = passed.length ? passed[passed.length - 1] : null;
+      const name = current ? current.what : latest ? latest.label : '—';
+      if (name !== lastEvent) { evEl.textContent = name; lastEvent = name; }
+
+      yearEl.textContent = Math.floor(year);
+      const a = H.activity.find((v) => v.year === Math.floor(year));
+      rateEl.textContent = a ? String(a.raw) : '—';
     }
 
-    WAM.clock('line-stage', { render, dur: 16000, el: svg, poster: 1 });
+    WAM.clock('line-stage', { render, dur: 18000, el: slide, poster: 1 });
   })();
 })();
 </script>
