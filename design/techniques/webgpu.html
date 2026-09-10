@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SL-13 · WebGPU — WAM-2026</title>
+<title>SL-14 · WebGPU — WAM-2026</title>
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
@@ -34,9 +34,9 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
 <body data-testid="technique-webgpu">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-13">Techniques</a></div>
+  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14">Techniques</a></div>
   <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
-  <div class="head"><span class="code">SL-13</span><h1>webgpu</h1></div>
+  <div class="head"><span class="code">SL-14</span><h1>webgpu</h1></div>
   <p class="dek">
     Compute shaders. Simulation moves onto the GPU — the particle count WebGL can't
     sustain, and the payoff of the whole callback chain.
@@ -60,13 +60,13 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: c
   </div>
 
   <div class="notes">
-    <h3>SCOPE.md · slide 13</h3>
+    <h3>SCOPE.md · slide 14</h3>
     <p>"WebGPU: The New Layer — compute shaders enable particle/fluid sims and on-device ML
       at a scale WebGL can't reach; visual: thread demo in WebGPU at a particle count the
       WebGL version couldn't sustain (hundreds of thousands to millions) — the payoff of
       the whole callback chain."</p>
     <p>What's built so far is the honest floor: real feature detection and a clean
-      fallback card, which is itself half of slide 13's argument (the degradation ladder).
+      fallback card, which is itself half of slide 15's argument (the degradation ladder).
       If this machine supports WebGPU, a clear-colour device init runs so the pipeline is
       proven end to end. The actual compute-shader particle sim is the next step — not
       built yet.</p>

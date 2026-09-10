@@ -28,7 +28,7 @@
       code: 'PR',
       title: 'presentation',
       note: 'The deck itself, delivered as running code rather than slides. Viewer in progress.',
-      meta: '15 slides',
+      meta: '16 slides',
       status: 'in build',
     },
   ];
@@ -64,7 +64,7 @@
                device's own readout -->
           <div class="lcd-strip hero-foot">
             <span class="lcd-kv"><span class="k">Model</span><span class="v">WAM-2026</span></span>
-            <span class="lcd-kv"><span class="k">Slides</span><span class="v">15</span></span>
+            <span class="lcd-kv"><span class="k">Slides</span><span class="v">16</span></span>
             <span class="lcd-kv"><span class="k">Spectrum</span><span class="v">video → webgpu</span></span>
 
             <span class="lamps" aria-hidden="true">
