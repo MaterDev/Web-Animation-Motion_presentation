@@ -2622,6 +2622,16 @@ window.WAM = (function () {
        the thing that loses is always the more minor of two, rather than
        whichever happened to come later in the array. The target is
        placed first unconditionally: it is what the flight is for. */
+    /* Hiding a label has to clear its position too. A label culled by the
+       collision pass keeps whatever left/top the previous frame gave it,
+       which is invisible on screen and makes render(t) non-idempotent —
+       the same t reached from two different frames produces two different
+       outerHTMLs. Caught by the acceptance check, not by looking. */
+    const hide = (el) => {
+      el.style.display = 'none';
+      el.style.left = ''; el.style.top = '';
+    };
+
     const cand = [];
     for (const n of sites) {
       const sx = (W / 2) + (n.x - c.cx) * c.k;
@@ -2631,7 +2641,7 @@ window.WAM = (function () {
       const eligible = inFrame && n.level <= lvl;
       n.dot.style.display = inFrame ? '' : 'none';
       if (eligible) cand.push({ n, sx, sy });
-      else n.lab.style.display = 'none';
+      else hide(n.lab);
     }
     cand.sort((a, b) => (a.n === target ? -1 : b.n === target ? 1
       : a.n.level - b.n.level || a.n.year - b.n.year));
@@ -2649,7 +2659,7 @@ window.WAM = (function () {
       const w = c2.n.labW + PAD * 2, h = c2.n.labH;
       const box = { l: c2.sx - w / 2, r: c2.sx + w / 2, t: c2.sy - 10 - h, b: c2.sy - 10 + PAD };
       const hit = placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b);
-      if (hit) { c2.n.lab.style.display = 'none'; continue; }
+      if (hit) { hide(c2.n.lab); continue; }
       placed.push(box);
       c2.n.lab.style.display = '';
       c2.n.lab.style.left = (c2.sx / W * 100) + '%';
@@ -2660,14 +2670,14 @@ window.WAM = (function () {
        when a county name and a landmark want the same square inch, the
        landmark keeps it. The ground never displaces the subject. */
     for (const pl of places) {
-      if (pl.level !== show) { pl.el.style.display = 'none'; continue; }
+      if (pl.level !== show) { hide(pl.el); continue; }
       const sx = (W / 2) + (pl.x - c.cx) * c.k;
       const sy = (HH / 2) + (pl.y - c.cy) * c.k;
-      if (sx < 40 || sx > W - 40 || sy < 30 || sy > HH - 30) { pl.el.style.display = 'none'; continue; }
+      if (sx < 40 || sx > W - 40 || sy < 30 || sy > HH - 30) { hide(pl.el); continue; }
       const w = pl.w + PAD * 2, h = pl.h + PAD;
       const box = { l: sx - w / 2, r: sx + w / 2, t: sy - h / 2, b: sy + h / 2 };
       if (placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b)) {
-        pl.el.style.display = 'none'; continue;
+        hide(pl.el); continue;
       }
       placed.push(box);
       pl.el.style.display = '';
