@@ -166,6 +166,13 @@ for (const { entry, outfile, expect } of bundles) {
      diagram, so y carries nothing and x is time. Arcs lift above it. */
   const nodes = [...NODES].sort((a, b) => a.year - b.year).map((n) => ({
     id: n.id, year: n.year, short: n.short, label: n.label, place: n.place,
+    /* The institution, for the register strip: an edge is a movement
+       between PLACES, so printing the two event names either side of an
+       arrow ("R1/XCON → Deep Blue") describes the wrong relation. The
+       first segment of `place` is the institution in almost every case;
+       where the dataset had to pin a split or venue location it is
+       whatever that note says, which is still the right place. */
+    org: n.place.split(',')[0].trim(),
     level: n.level, x: R2(xOf(n.year)),
   }));
   const pos = Object.fromEntries(nodes.map((n) => [n.id, n]));

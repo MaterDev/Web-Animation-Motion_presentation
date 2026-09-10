@@ -1659,6 +1659,7 @@ window.WAM = (function () {
       return { ...a, el, L };
     });
 
+    const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
     const events = H.nodes.map((n) => ({
       ...n, el: mk('circle', { class: 'ln-ev', cx: n.x, cy: S.base, r: 3 }, gEvents),
     }));
@@ -1790,8 +1791,29 @@ window.WAM = (function () {
          at readable size, instead of thirty labels fighting the arcs. */
       const passed = events.filter((e) => e.year <= year);
       const latest = passed.length ? passed[passed.length - 1] : null;
-      const name = current ? current.what : latest ? latest.label : '—';
-      if (name !== lastEvent) { evEl.textContent = name; lastEvent = name; }
+      /* A register prints a record, not a paragraph. The dataset's
+         `what` is a full sourced sentence — up to two hundred
+         characters — and putting it here ellipsised away everything
+         after the first clause. So the strip prints the movement in the
+         form a log would keep it, kind and endpoints, and carries the
+         sourced sentence as its title. */
+      /* Where both ends sit in the same institution the movement is
+         internal, and "collab · Google → Google" reads as a no-op. Fall
+         back to the two events, which is what actually differs. */
+      const ends = current && [byId[current.from], byId[current.to]];
+      const rec = current
+        ? { text: current.kind + ' · ' + (ends[0].org === ends[1].org
+              ? ends[0].short + ' → ' + ends[1].short
+              : ends[0].org + ' → ' + ends[1].org),
+            full: current.what }
+        : latest
+          ? { text: latest.short, full: latest.label + ' · ' + latest.place }
+          : { text: '—', full: '' };
+      if (rec.text !== lastEvent) {
+        evEl.textContent = rec.text;
+        evEl.title = rec.full;
+        lastEvent = rec.text;
+      }
 
       yearEl.textContent = Math.floor(year);
       const a = H.activity.find((v) => v.year === Math.floor(year));
