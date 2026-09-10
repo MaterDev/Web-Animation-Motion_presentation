@@ -22,7 +22,7 @@
   <p class="mono kicker">Presentation · Viewer</p>
   <h1>not built yet</h1>
   <p class="lead">
-    The deck itself — 15 slides, each demo real running code rather than a recording. The
+    The deck itself — 16 slides, each demo real running code rather than a recording. The
     design system it will be built from is <a href="/design">done and documented</a>; this is
     the next phase.
   </p>
