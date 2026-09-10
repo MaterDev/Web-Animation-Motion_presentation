@@ -208,14 +208,30 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 /* The printed grid. Real chart paper is ruled before anything is drawn
    on it, so this is a background rather than geometry — it is the
    product, not the data. 12px minor, 60px major. */
+/* Two rulings, not one. The first version printed the fine 12px grid
+   over the whole sheet at half opacity, which is roughly what real
+   chart paper looks like and completely wrong here — every label, the
+   axis figures and the footer all sat on top of it and became hard to
+   read. On a real recorder the fine ruling covers the RECORDING AREA
+   and the margins are plain, which is both more accurate and the fix:
+   the fine grid is confined to the trace band, and only a faint major
+   grid continues across the rest. */
 .cr-sheet::before {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, var(--cr-grid-b) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(0deg,  var(--cr-grid-b) 0 1px, transparent 1px 60px);
+  opacity: 0.28;
+}
+.cr-rule { position: absolute; left: 0; right: 0; z-index: 1; pointer-events: none;
   background:
     repeating-linear-gradient(90deg, var(--cr-grid-b) 0 1px, transparent 1px 60px),
     repeating-linear-gradient(0deg,  var(--cr-grid-b) 0 1px, transparent 1px 60px),
     repeating-linear-gradient(90deg, var(--cr-grid) 0 1px, transparent 1px 12px),
     repeating-linear-gradient(0deg,  var(--cr-grid) 0 1px, transparent 1px 12px);
-  opacity: 0.5;
+  opacity: 0.42;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 8%, #000 92%, transparent);
 }
 /* Sprocket margins — the tractor-feed edge. The single cheapest mark
    that says "this came out of a machine" rather than "this is a div". */
@@ -234,7 +250,8 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .cr-grid-line { stroke: none; }
 .cr-axis { stroke: var(--cr-ink); stroke-width: 1; opacity: 0.55; }
 .cr-tick-t { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
-  fill: var(--cr-sub); text-anchor: middle; }
+  fill: var(--cr-sub); text-anchor: middle;
+  paint-order: stroke; stroke: var(--cr-paper); stroke-width: 3.5; stroke-linejoin: round; }
 
 /* Channel 1. Drawn continuously, INCLUDING across the years where the
    value is zero — an absence has to be drawn to be seen, and a flat
@@ -263,9 +280,13 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .cr-marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .cr-mark { position: absolute; transform: translate(-50%, 0);
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
-  color: color-mix(in oklch, var(--cr-ink) 42%, transparent); }
+  color: color-mix(in oklch, var(--cr-ink) 42%, transparent);
+  /* Struck on the stock, so it knocks the ruling out behind itself
+     rather than competing with it. */
+  text-shadow: 0 0 3px var(--cr-paper), 0 0 5px var(--cr-paper), 0 0 7px var(--cr-paper); }
 .cr-mark.is-lit { color: var(--cr-ink); }
 
+.cr-head, .cr-year, .cr-strip { background: color-mix(in oklch, var(--cr-paper) 88%, transparent); }
 .cr-head { position: absolute; z-index: 4; pointer-events: none;
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--cr-sub); }
@@ -400,8 +421,23 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 /* Interior country borders, from the countries mesh — real data, and
    meshed so shared arcs appear once and coastlines are excluded, which
    is what stops every shoreline being drawn twice. */
-.sv-border { fill: none; stroke: var(--sv-edge); opacity: 0.55;
+/* Divisions deepen with the zoom, the same way the labels do: nations
+   everywhere, states from the regional sheet, counties only once the
+   scale can hold them. The weights are a hierarchy — a county line
+   drawn like a national border would make sheet 3 unreadable. */
+.sv-border { fill: none; stroke: var(--sv-edge); opacity: 0.6;
   stroke-dasharray: 7 3 2 3; }
+.sv-state { fill: none; stroke: var(--sv-edge); opacity: 0.45; stroke-dasharray: 5 3; }
+.sv-county { fill: none; stroke: var(--sv-edge); opacity: 0.28; }
+/* Place names, from the same division data — a boundary you cannot
+   name is decoration. Set apart from the event labels so the two never
+   read as one list: the events are the subject, these are the ground. */
+.sv-place { position: absolute; transform: translate(-50%, -50%);
+  font-family: var(--mono); letter-spacing: 0.12em; white-space: nowrap;
+  color: color-mix(in oklch, var(--sv-ink) 52%, transparent); text-transform: uppercase;
+  text-shadow: 0 0 3px var(--sv-land), 0 0 6px var(--sv-land); }
+.sv-place.r1 { font-size: 10px; letter-spacing: 0.2em; }
+.sv-place.r2 { font-size: 8.5px; color: color-mix(in oklch, var(--sv-ink) 36%, transparent); }
 .sv-grat { stroke: var(--sv-grid); fill: none; opacity: 0.5; }
 
 /* The locator. A survey sheet's index diagram marks where the next
@@ -675,6 +711,7 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
     <div class="cr" id="lnPaper">
       <div class="cr-sheet" id="lnSlide" data-testid="line-stage">
         <div class="cr-sprockets l"></div><div class="cr-sprockets r"></div>
+        <div class="cr-rule" id="lnRule"></div>
         <svg viewBox="0 0 960 540" aria-label="A chart recorder drawing documented movements in the history of AI, 1943 to 2024">
           <g id="lnGrid"></g>
           <g id="lnArcs"></g>
@@ -878,7 +915,7 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 
     <div class="wx" id="wxPaper">
       <div class="wx-screen" id="wxSlide" data-testid="pipeline-stage">
-        <svg id="wxSvg" viewBox="440 111 720 405" aria-label="Research activity as a radar-style density field over a world map, 1943 to 2024">
+        <svg id="wxSvg" aria-label="Research activity as a radar-style density field over a world map, 1943 to 2024">
           <g id="wxGrat"></g>
           <g id="wxMap"></g>
           <g id="wxField" filter="url(#wx-goo)"></g>
@@ -937,9 +974,10 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       it is used as a pointer to a primary document rather than as the source itself.</p>
 
     <p><b>Credits.</b> Coastlines are <b>Natural Earth</b>, public domain, via
-      <code>world-atlas</code>; projected at build time with <b>d3-geo</b> and
-      <b>topojson-client</b>, neither of which is shipped to the browser — the sheet
-      receives path strings. Type is <b>Inter</b>, <b>JetBrains Mono</b> and <b>Doto</b>.
+      <code>world-atlas</code>, and US state and county divisions are the Census
+      Bureau's via <code>us-atlas</code>, also public domain; projected at build time
+      with <b>d3-geo</b> and <b>topojson-client</b>, neither of which is shipped to the
+      browser — the sheet receives path strings. Type is <b>Inter</b>, <b>JetBrains Mono</b> and <b>Doto</b>.
       No animation library is used anywhere on this page: <code>render(t)</code> is the
       timeline, which is the argument §2 is making, so importing a library to make it
       would be conceding it.</p>
@@ -1999,6 +2037,10 @@ window.WAM = (function () {
        the chrome's own baseline — which is the kind of collision that
        only shows up once the type is real. */
     const pct = (v, d) => (v / d * 100) + '%';
+    /* The fine ruling covers the recording area only. */
+    const rule = document.getElementById('lnRule');
+    rule.style.top = pct(S.traceTop - 12, S.h);
+    rule.style.height = pct((S.base + 12) - (S.traceTop - 12), S.h);
     document.getElementById('lnHead').style.left = pct(S.padX, S.w);
     document.getElementById('lnHead').style.top = pct(18, S.h);
     yearEl.style.right = pct(S.padX, S.w);
@@ -2158,7 +2200,23 @@ window.WAM = (function () {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.getElementById('wxSvg');
   const [Y0, Y1] = H.span;
-  const VB = { x: 440, y: 111, w: 720, h: 405 };
+  /* Derived from where the data actually projects, not a constant. It
+     was hardcoded, and the moment the projection's central meridian
+     moved — it did, to put the sheet's seam over open ocean — the
+     window was pointing at the wrong ocean. A radar shows its coverage
+     area; this computes it. */
+  const VB = (function () {
+    const pts = Object.values(M.geo);
+    const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+    const pad = 90;
+    let x0 = Math.min(...xs) - pad, x1 = Math.max(...xs) + pad;
+    let cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+    const w = x1 - x0, h = w * (540 / 960);
+    return { x: x0, y: cy - h / 2, w, h };
+  })();
+
+  svg.setAttribute('viewBox',
+    VB.x.toFixed(1) + ' ' + VB.y.toFixed(1) + ' ' + VB.w.toFixed(1) + ' ' + VB.h.toFixed(1));
 
   function fit() {
     const k = paper.clientWidth / 960;
@@ -2179,8 +2237,8 @@ window.WAM = (function () {
      coordinates rather than re-projected, because the camera never
      moves on this stage — this one is a fixed coverage area. */
   const grat = document.getElementById('wxGrat');
-  for (let x = VB.x; x <= VB.x + VB.w; x += 60) mk('line', { class: 'wx-grat', x1: x, x2: x, y1: VB.y, y2: VB.y + VB.h }, grat);
-  for (let y = VB.y; y <= VB.y + VB.h; y += 60) mk('line', { class: 'wx-grat', x1: VB.x, x2: VB.x + VB.w, y1: y, y2: y }, grat);
+  for (let x = Math.ceil(VB.x / 60) * 60; x <= VB.x + VB.w; x += 60) mk('line', { class: 'wx-grat', x1: x, x2: x, y1: VB.y, y2: VB.y + VB.h }, grat);
+  for (let y = Math.ceil(VB.y / 60) * 60; y <= VB.y + VB.h; y += 60) mk('line', { class: 'wx-grat', x1: VB.x, x2: VB.x + VB.w, y1: y, y2: y }, grat);
 
   mk('path', { class: 'wx-coast', d: M.layers[0].d }, document.getElementById('wxMap'));
 
@@ -2334,9 +2392,24 @@ window.WAM = (function () {
       land: mk('path', { class: 'sv-land', d: l.d }, gLand),
       tex: mk('path', { class: 'sv-stipple', d: l.d }, gTex),
       bord: l.borders ? mk('path', { class: 'sv-border', d: l.borders }, gBord) : null,
+      state: l.states ? mk('path', { class: 'sv-state', d: l.states }, gBord) : null,
+      county: l.counties ? mk('path', { class: 'sv-county', d: l.counties }, gBord) : null,
       shelves,
     };
   });
+
+  /* Place names, one pool for every level; which ones are eligible is
+     decided per frame by the level that is showing. */
+  const placeLayer = document.getElementById('svLabels');
+  const places = LV.flatMap((l, i) => (l.named || []).map((n) => {
+    const d = document.createElement('div');
+    d.className = 'sv-place r' + n.r;
+    d.textContent = n.n;
+    placeLayer.appendChild(d);
+    return { ...n, level: i, el: d };
+  }));
+
+
 
   const gGrat = document.getElementById('svGrat');
   for (let x = 0; x <= W; x += 100) mk('line', { class: 'sv-grat', x1: x, x2: x, y1: 0, y2: HH }, gGrat);
@@ -2370,6 +2443,22 @@ window.WAM = (function () {
      rather than being one label among thirty. */
   const target = sites.find((n) => n.id === 'dartmouth');
   if (target) target.lab.classList.add('is-target');
+
+  /* Measure every label once, rather than estimating its width from a
+     character advance. Three passes at guessing the metrics of
+     uppercase mono with tracking each left labels touching; offsetWidth
+     is the browser's own answer, it is unaffected by the ancestor
+     transform because it is layout rather than paint, and it converts
+     to sheet units by one constant. Measured, not claimed — the same
+     rule the rest of this sheet is held to.
+
+     One forced layout at init, then never again. */
+  const U0 = W / 960;
+  for (const n of sites) { n.labW = n.lab.offsetWidth * U0; n.labH = n.lab.offsetHeight * U0; }
+  for (const pl of places) {
+    pl.w = pl.el.offsetWidth * U0; pl.h = pl.el.offsetHeight * U0;
+    pl.el.style.display = 'none';
+  }
 
   const plate = document.getElementById('svPlate');
   const scaleBar = document.getElementById('svScale');
@@ -2430,6 +2519,8 @@ window.WAM = (function () {
     for (const L2 of layers) if (L2 && L2.land) {
       L2.land.style.strokeWidth = hair;
       if (L2.bord) L2.bord.style.strokeWidth = (1.6 / D).toFixed(6);
+      if (L2.state) L2.state.style.strokeWidth = (1.3 / D).toFixed(6);
+      if (L2.county) L2.county.style.strokeWidth = (1 / D).toFixed(6);
     }
     for (const el of gGrat.children) el.style.strokeWidth = hair;
     /* Counter-scale the halftone so the dots stay a constant size on
@@ -2447,6 +2538,8 @@ window.WAM = (function () {
       const on = i === show ? '' : 'none';
       L2.land.style.display = on; L2.tex.style.display = on;
       if (L2.bord) L2.bord.style.display = on;
+      if (L2.state) L2.state.style.display = on;
+      if (L2.county) L2.county.style.display = on;
       for (const sh of L2.shelves) sh.style.display = on;
     });
     /* The sheet's own ground is the water, so an all-land level has to
@@ -2501,17 +2594,36 @@ window.WAM = (function () {
        map units understated every box by 1.667x, which is why the first
        cull still left labels touching. */
     const U = W / 960;
-    const CH = 6.6 * U, LH = 15 * U, PAD = 5 * U;
+    const PAD = 4 * U;
     const placed = [];
     for (const c2 of cand) {
-      const w = c2.n.short.length * CH + PAD * 2;
-      const box = { l: c2.sx - w / 2, r: c2.sx + w / 2, t: c2.sy - 10 - LH, b: c2.sy - 10 + PAD };
+      const w = c2.n.labW + PAD * 2, h = c2.n.labH;
+      const box = { l: c2.sx - w / 2, r: c2.sx + w / 2, t: c2.sy - 10 - h, b: c2.sy - 10 + PAD };
       const hit = placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b);
       if (hit) { c2.n.lab.style.display = 'none'; continue; }
       placed.push(box);
       c2.n.lab.style.display = '';
       c2.n.lab.style.left = (c2.sx / W * 100) + '%';
       c2.n.lab.style.top = ((c2.sy - 10) / HH * 100) + '%';
+    }
+
+    /* Place names run through the same cull, but AFTER the events — so
+       when a county name and a landmark want the same square inch, the
+       landmark keeps it. The ground never displaces the subject. */
+    for (const pl of places) {
+      if (pl.level !== show) { pl.el.style.display = 'none'; continue; }
+      const sx = (W / 2) + (pl.x - c.cx) * c.k;
+      const sy = (HH / 2) + (pl.y - c.cy) * c.k;
+      if (sx < 40 || sx > W - 40 || sy < 30 || sy > HH - 30) { pl.el.style.display = 'none'; continue; }
+      const w = pl.w + PAD * 2, h = pl.h + PAD;
+      const box = { l: sx - w / 2, r: sx + w / 2, t: sy - h / 2, b: sy + h / 2 };
+      if (placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b)) {
+        pl.el.style.display = 'none'; continue;
+      }
+      placed.push(box);
+      pl.el.style.display = '';
+      pl.el.style.left = (sx / W * 100) + '%';
+      pl.el.style.top = (sy / HH * 100) + '%';
     }
 
     const L = LV[Math.min(LV.length - 1, Math.round(c.at))];

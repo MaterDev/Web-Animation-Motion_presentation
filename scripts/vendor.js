@@ -272,7 +272,7 @@ for (const { entry, outfile, expect } of bundles) {
    actually on screen there. */
 {
   const { feature, mesh } = await import('topojson-client');
-  const { geoMercator, geoPath } = await import('d3-geo');
+  const { geoMercator, geoPath, geoContains } = await import('d3-geo');
   const data = await import(new URL('scripts/data/ai-history.js', root).href);
   const { NODES, LEVELS } = data;
 
@@ -286,11 +286,35 @@ for (const { entry, outfile, expect } of bundles) {
      out centred on North America with Japan at one edge and Europe at
      the other — every node on one continuous sheet. */
   const lons = [...new Set(NODES.map((n) => n.lon))].sort((a, b) => a - b);
-  let widest = { gap: -1, cut: 0 };
+  const gaps = [];
   for (let i = 0; i < lons.length; i++) {
     const a = lons[i], b = lons[(i + 1) % lons.length];
     const gap = ((b - a) + 360) % 360;
-    if (gap > widest.gap) widest = { gap, cut: ((a + gap / 2) + 540) % 360 - 180 };
+    gaps.push({ gap, cut: ((a + gap / 2) + 540) % 360 - 180 });
+  }
+  gaps.sort((x, y) => y.gap - x.gap);
+
+  /* The widest gap is not automatically the right meridian to cut. The
+     widest one in this dataset is 122 degrees across central Asia, and
+     cutting there slices the sheet through Kazakhstan and India —
+     every world map is cut somewhere, and cutting through a continent
+     is the one place it shows. So the cut has to clear the data AND
+     fall over water, which is why every atlas cuts near the
+     antimeridian.
+
+     Tested against the coastline rather than hand-picked: a candidate
+     is rejected if its meridian touches land at any of several
+     latitudes. The Pacific gap between Japan and California is
+     narrower at 98 degrees and wins, which puts the seam in open ocean
+     near 171 W. */
+  const probeTopo = await Bun.file(new URL('node_modules/world-atlas/land-110m.json', root)).json();
+  const probeLand = feature(probeTopo, probeTopo.objects.land);
+  const LATS = [-60, -30, -10, 0, 10, 30, 45, 60, 70];
+  const overWater = (lon) => !LATS.some((lat) => geoContains(probeLand, [lon, lat]));
+  const widest = gaps.find((g) => overWater(g.cut)) || gaps[0];
+  if (!overWater(widest.cut)) {
+    console.error('vendor: no data gap clears land — every candidate meridian cuts a continent');
+    process.exit(1);
   }
   const centre = ((widest.cut + 180) + 540) % 360 - 180;
 
@@ -321,6 +345,30 @@ for (const { entry, outfile, expect } of bundles) {
     const ctry = await Bun.file(new URL(`node_modules/world-atlas/countries-${r}.json`, root)).json();
     BORDERS[r] = mesh(ctry, ctry.objects.countries, (a, b) => a !== b);
   }
+
+  /* US divisions, from us-atlas — the unprojected files, because this
+     build does its own projection and the -albers- variants arrive
+     already flattened. This answers the spec's open question directly:
+     clipped 50m land does NOT suffice for the mid-zoom, because a
+     coastline is not a division and the middle levels of this flight
+     are almost entirely inland. Country borders alone leave sheet 2 as
+     one undifferentiated landmass.
+
+     Counties are the finest boundary these public-domain sets carry.
+     There is no municipal-boundary layer here, so the city-scale marks
+     stay the dataset's own places rather than being invented. */
+  const usTopo = await Bun.file(new URL('node_modules/us-atlas/counties-10m.json', root)).json();
+  const US = {
+    states: mesh(usTopo, usTopo.objects.states, (a, b) => a !== b),
+    counties: mesh(usTopo, usTopo.objects.counties, (a, b) => a !== b),
+  };
+  /* Names, placed at each polygon's own centroid. A division you cannot
+     name is decoration; a named one is the thing that makes a sheet
+     informative rather than merely detailed. */
+  const NAMED = {
+    states: feature(usTopo, usTopo.objects.states).features,
+    counties: feature(usTopo, usTopo.objects.counties).features,
+  };
 
   /* Coarsest geometry that survives the level, clipped to the level's
      own viewport. clipExtent works in this projection's plane, which
@@ -400,6 +448,30 @@ for (const { entry, outfile, expect } of bundles) {
     if (typeof bpath.digits === 'function') bpath.digits(plan.digits);
     const borders = bpath(BORDERS[plan.res]) || '';
 
+    /* Divisions deepen with the zoom, the same way the labels do:
+       countries everywhere, states from the regional sheet down,
+       counties only once the scale can hold them. Meshes are lines, so
+       the clip-rectangle trap that bit the land fill does not apply —
+       there is no area to fill and nothing for d3 to close. */
+    const states = i >= 1 ? (bpath(US.states) || '') : '';
+    const counties = i >= 2 ? (bpath(US.counties) || '') : '';
+
+    /* Names for whatever is on this sheet, centroid-placed and kept
+       only if the centroid is actually inside the clip box — a label
+       whose polygon is off-sheet is worse than no label. */
+    const inBox = (x, y) => !clip ||
+      (x >= clip[0][0] && x <= clip[1][0] && y >= clip[0][1] && y <= clip[1][1]);
+    const named = [];
+    for (const [kind, rank] of [['states', 1], ['counties', 2]]) {
+      if ((kind === 'states' && i < 1) || (kind === 'counties' && i < 2)) continue;
+      for (const f of NAMED[kind]) {
+        const c2 = geoPath(base()).centroid(f);
+        if (!c2 || !isFinite(c2[0]) || !inBox(c2[0], c2[1])) continue;
+        named.push({ n: f.properties.name, r: rank,
+          x: Math.round(c2[0] * 100) / 100, y: Math.round(c2[1] * 100) / 100 });
+      }
+    }
+
     /* A level can outrun the map. Dartmouth is about 150 km inland, so
        by k=384 the clip box is ~60 km across and contains no Natural
        Earth geometry at all — the deepest level of this zoom is simply
@@ -410,7 +482,7 @@ for (const { entry, outfile, expect } of bundles) {
     const beyondMap = d.length < 200 && !solidLand;
     return { label: lv.label, k: lv.k, res: plan.res, digits: plan.digits, beyondMap, solidLand,
       cx: Math.round(cx * 1000) / 1000, cy: Math.round(cy * 1000) / 1000,
-      d: beyondMap ? '' : d, borders: beyondMap ? '' : borders };
+      d: beyondMap ? '' : d, borders, states, counties, named };
   });
 
   const geo = {};
@@ -462,10 +534,11 @@ for (const { entry, outfile, expect } of bundles) {
     process.exit(1);
   }
   console.log(`vendor: Natural Earth → design/vendor/map.js (${Math.round(size / 1024)} KB, ` +
-    `centred ${centre.toFixed(1)}° cut ${widest.cut.toFixed(1)}° (widest data gap ${widest.gap.toFixed(0)}°), ` +
+    `centred ${centre.toFixed(1)}° cut ${widest.cut.toFixed(1)}° over water (gap ${widest.gap.toFixed(0)}°), ` +
     `layers ${layers.map((l) => l.beyondMap ? l.label.split(',')[0] + ':beyond-map'
-      : l.res + '@' + l.digits + 'dp:' + Math.round((l.d.length + l.borders.length) / 1024) + 'KB' +
-        (l.solidLand ? ':solid-land' : '')).join(' ')}, ` +
+      : l.res + '@' + l.digits + 'dp:' +
+        Math.round((l.d.length + l.borders.length + l.states.length + l.counties.length) / 1024) + 'KB/' +
+        l.named.length + 'names' + (l.solidLand ? ':solid' : '')).join(' ')}, ` +
     `Mercator stretch at ${target.label}: ${distortion.toFixed(2)}x)`);
 }
 
