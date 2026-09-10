@@ -35,3 +35,10 @@ vite.config.js.timestamp-*
 
 # claude code: machine-local settings (launch.json is shared, this is not)
 .claude/settings.local.json
+# borrowed-agent scaffolding — ephemeral, not part of this project
+.claude/agent-memory/
+
+# NOTE: conductor/ and .claude/commands/ ARE committed here, deliberately.
+# The portable setup spec (~/.claude/conductor-setup-prompt.md) git-ignores
+# them; this repo keeps them so the reasoning behind a rebuild lives beside
+# the code it produced. See conductor/README.md "Deviations".
