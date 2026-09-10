@@ -24,6 +24,26 @@
   --gn-coral:  oklch(0.68 0.17 32);
   --gn-water:  oklch(0.74 0.11 205);
   --gn-cream:  oklch(0.95 0.03 95);
+
+  /* ── era ramp ──────────────────────────────────────────────
+     Replaces the food hues as sections rebuild. Hue is held at 145
+     because hue is already spent: it is the deck's sheet-identity
+     code (--tint-svg is hue 145), so a second hue here would compete
+     with it, and anything near 27 collides with --signal, which this
+     page already uses for a failing frame rate.
+
+     So lightness carries time and chroma stays low. Each step is
+     ~+0.12 L, which is above the threshold where adjacent levels read
+     as levels rather than as inconsistencies. The old --gn-leaf ran
+     at chroma 0.16 against a section tint of 0.05 — three times its
+     own tint, which is why this sheet read as a green demo rather
+     than a green-tinted instrument. Ceiling here is 0.10. */
+  --ai-t0:  oklch(0.46 0.05 145);   /* 1950s — floor */
+  --ai-t1:  oklch(0.58 0.07 145);   /* 1970s */
+  --ai-t2:  oklch(0.70 0.09 145);   /* 1990s */
+  --ai-t3:  oklch(0.82 0.08 145);   /* 2010s */
+  --ai-now: oklch(0.92 0.04 145);   /* the present */
+  --ai-ink: oklch(0.97 0.01 145);   /* the one accent, used at low extension */
 }
 .wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
@@ -108,12 +128,71 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 .ceil-sub b { color: var(--hz-800); font-weight: 400; }
 
 
+/* ── the bench ────────────────────────────────────────────────
+   Every section pairs a small cold "mechanism" panel with a large
+   stage. The size difference is the argument, so it is carried by
+   height and stated identically in all three sections rather than
+   re-chosen per section: bench 1000x200, stage 1000x625, a ratio of
+   ~1:3.1 that matches the rail:main split already used on the css
+   sheet. Stacked rather than side by side — at 1:3 across, the eye
+   lands on the stage and the mechanism silently becomes a sidebar,
+   whereas stacked the reading order IS the argument order.
+
+   The transport lives in the bench, never in the stage. Which panel
+   owns the control is what says which one is the instrument. */
+.bench { display: grid; grid-template-columns: 317px minmax(0, 1fr); gap: calc(var(--u)*3);
+  align-items: stretch; border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.bench-rail { padding: 11px 13px; display: flex; flex-direction: column; gap: 9px;
+  border-right: var(--hair) solid var(--hz-300); }
+.bench-stage { background: oklch(0.14 0.006 265); min-height: 200px; position: relative; }
+.bench-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bench-h { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--hz-500); }
+.bench-read { margin-top: auto; display: flex; flex-direction: column; gap: 3px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; color: var(--hz-500); }
+.bench-read var { font-style: normal; color: var(--tint); font-variant-numeric: tabular-nums; }
+.bench-read i { font-style: normal; color: var(--hz-700); }
+.bench-read .warn { color: var(--hz-400); line-height: 1.5; }
+
+/* ── 4 · THE PIPELINE ─────────────────────────────────────────
+   Stage toggles are cumulative, not independent: the point is that a
+   filter is a GRAPH, so the reader watches blur alone, then the
+   threshold snapping it back to a hard edge, then the composite. An
+   independent set of checkboxes would show combinations that are not
+   pipeline stages and teach the wrong shape. */
+.pp-stages { display: flex; flex-direction: column; gap: 4px; }
+.pp-stage { display: flex; align-items: center; gap: 7px; padding: 5px 8px; border-radius: 5px;
+  cursor: pointer; font: inherit; text-align: left; width: 100%;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.05em; color: var(--hz-500);
+  transition: background var(--dur-fast) var(--ease-standard); }
+.pp-stage:hover { background: var(--hz-200); color: var(--hz-800); }
+.pp-stage.is-on { background: color-mix(in oklch, var(--tint) 22%, var(--hz-100));
+  border-color: color-mix(in oklch, var(--tint) 50%, var(--hz-300)); color: var(--hz-900); }
+.pp-stage .pp-n { color: var(--hz-400); font-variant-numeric: tabular-nums; }
+.pp-stage.is-on .pp-n { color: var(--tint); }
+.pp-blob { fill: var(--ai-t2); }
+
 .notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
 .notes p { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; margin-bottom: calc(var(--u)*2); }
 </style>
 </head>
 <body data-testid="technique-svg">
+
+<!-- Every filter/marker/gradient definition lives here rather than inside the
+     stage that uses it. url(#id) resolves document-wide, so the QC filmstrip
+     can clone a stage as many times as it likes and every clone keeps
+     resolving against this one set instead of duplicating ids. Ids are
+     prefixed per section. -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute" data-testid="svg-defs">
+  <defs>
+    <!-- populated by JS so the chain can be built stage by stage -->
+    <filter id="pp-goo" x="-25%" y="-25%" width="150%" height="150%"
+            color-interpolation-filters="sRGB"></filter>
+  </defs>
+</svg>
 
 <div class="wrap">
   <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-10">Techniques</a></div>
@@ -194,6 +273,43 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
           </div>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- ═══ 4 · THE PIPELINE ═══════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-pipeline">
+    <div class="fmt-head"><span class="fmt-tag">THE PIPELINE</span><h2>a render pipeline, and no shader</h2></div>
+    <p class="fmt-case">
+      A filter in SVG is not an effect, it is a <b>graph</b> — primitives wired
+      input to output, declared in markup, evaluated by the browser's raster
+      pipeline. Build it up one stage at a time below. Blur alone smears the
+      alpha of overlapping shapes into one mass; the colour matrix then
+      multiplies that alpha hard enough to snap it back to a crisp edge, and two
+      circles become one body. <b>No path is interpolated anywhere in this</b> —
+      the topology change is free because it happens in raster space rather than
+      in geometry.
+    </p>
+
+    <div class="bench" data-testid="pipeline-bench">
+      <div class="bench-rail">
+        <span class="bench-h">filter graph</span>
+        <div class="pp-stages" data-testid="pipeline-stages">
+          <button class="pp-stage" data-stage="1" data-testid="pipeline-stage-blur"><span class="pp-n">1</span> feGaussianBlur</button>
+          <button class="pp-stage" data-stage="2" data-testid="pipeline-stage-matrix"><span class="pp-n">2</span> feColorMatrix</button>
+          <button class="pp-stage" data-stage="3" data-testid="pipeline-stage-composite"><span class="pp-n">3</span> feComposite</button>
+        </div>
+        <div class="bench-read" data-testid="pipeline-readout">
+          <span>chain <i id="ppChain">SourceGraphic</i></span>
+          <span>region <var id="ppRegion">—</var> device px</span>
+          <span>main-thread <var id="ppCost">—</var></span>
+          <span class="warn" id="ppWarn"></span>
+        </div>
+      </div>
+      <div class="bench-stage" data-testid="pipeline-bench-stage">
+        <svg id="ppSvg" viewBox="0 0 660 200" aria-label="Four circles merging under a goo filter">
+          <g id="ppField"></g>
+        </svg>
+      </div>
     </div>
   </div>
 
@@ -391,5 +507,247 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 })();
 </script>
 
+<script>
+/* ── shared runtime ───────────────────────────────────────────
+   One namespace for every demo on this sheet. Deliberately not a
+   module: ES module imports are blocked on file:// in Chrome and
+   Safari, and these tearsheets are meant to open from disk.
+
+   The contract is render(t), t in [0,1], where EVERY visual attribute
+   is set from t alone — no accumulated state, idempotent, and nothing
+   render() touches may carry a CSS transition (a transition would make
+   a screenshot at t show a value that is on its way somewhere else).
+   Scrub, autoplay, the reduced-motion poster and the QC filmstrip are
+   then four callers of one function rather than four code paths. */
+window.WAM = (function () {
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const demos = {};
+
+  function clock(name, { render, dur = 6000, el, poster = 1 }) {
+    let raf = 0, t0 = 0, visible = true, playing = false, t = 0;
+
+    /* Rolling mean of the time spent INSIDE render(). This is the only
+       cost this sheet can honestly measure: it is main-thread work.
+       Raster — including every filter primitive — happens on the
+       compositor and is invisible from here. See the note in the §4
+       readout; a frame-rate meter beside a filter reads the same with
+       the filter on or off, which was verified rather than assumed. */
+    let costAcc = 0, costN = 0, cost = 0;
+
+    function draw(v) {
+      t = v;
+      const a = performance.now();
+      render(v);
+      costAcc += performance.now() - a; costN++;
+      if (costN >= 30) { cost = costAcc / costN; costAcc = 0; costN = 0; }
+    }
+    function frame(now) {
+      if (!t0) t0 = now;
+      draw(((now - t0) % dur) / dur);
+      if (playing && visible) raf = requestAnimationFrame(frame);
+    }
+    function play() {
+      if (mq.matches || playing || !visible) return;
+      playing = true; t0 = performance.now() - t * dur;
+      raf = requestAnimationFrame(frame);
+    }
+    function pause() { playing = false; cancelAnimationFrame(raf); raf = 0; }
+    function seek(v) { pause(); draw(v); }
+
+    /* Browsers throttle rAF to ~1Hz in a background tab, and a demo
+       animating off-screen is pure waste on a page with several. */
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) pause(); else if (!mq.matches) play();
+    });
+    if (el && 'IntersectionObserver' in window) {
+      new IntersectionObserver((es) => es.forEach((e) => {
+        visible = e.isIntersecting;
+        if (visible && !mq.matches) play(); else pause();
+      }), { rootMargin: '160px' }).observe(el);
+    }
+
+    const api = {
+      play, pause, seek, render: draw,
+      get t() { return t; }, get playing() { return playing; },
+      get cost() { return cost; }, dur
+    };
+    demos[name] = api;
+
+    /* Reduced motion is not covered by the global CSS rule in
+       tokens.css — that rule cannot reach a rAF loop. Freeze on the
+       poster frame, and honour a change to the setting live. */
+    if (mq.matches) draw(poster); else play();
+    mq.addEventListener('change', () => {
+      if (mq.matches) { pause(); draw(poster); } else play();
+    });
+    return api;
+  }
+
+  /* Clone the stage at N values of t into one row in THIS document, so
+     CSS custom properties, @font-face and url(#…) filter refs all still
+     resolve. Screenshot once and the whole transformation is one image.
+     Serialising the SVG instead loses every one of those. */
+  function filmstrip(name, n = 12) {
+    const d = demos[name]; if (!d) return console.error('no demo: ' + name);
+    const stage = document.querySelector('[data-testid="' + name + '"]');
+    if (!stage) return console.error('no stage for: ' + name);
+    document.querySelector('.qc-strip')?.remove();
+    const was = d.t, wasPlaying = d.playing;
+    d.pause();
+    const strip = document.createElement('section');
+    strip.className = 'qc-strip'; strip.dataset.testid = 'qc-strip';
+    strip.style.cssText = 'display:flex;gap:6px;overflow:auto;padding:10px;margin:16px 0;background:var(--hz-050);border-radius:8px';
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      d.render(t);
+      const cell = document.createElement('div');
+      cell.style.cssText = 'flex:none;width:150px';
+      const clone = stage.cloneNode(true);
+      clone.removeAttribute('data-testid');
+      clone.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+      clone.style.cssText += ';width:150px;height:100px;min-height:0';
+      const cap = document.createElement('div');
+      cap.style.cssText = 'font:9px var(--mono);color:var(--hz-500);padding-top:4px';
+      cap.textContent = 't=' + t.toFixed(2);
+      cell.append(clone, cap); strip.append(cell);
+    }
+    document.querySelector('.notes').before(strip);
+    d.render(was); if (wasPlaying) d.play();
+    return strip;
+  }
+
+  return { clock, filmstrip, demos, get reduced() { return mq.matches; } };
+})();
+
+/* ── 4 · THE PIPELINE ─────────────────────────────────────────
+   The filter's children are built from JS rather than declared in
+   markup, because the subject of this bench is that a filter IS a
+   chain — so the chain is assembled a link at a time and printed. */
+(function () {
+  const svg = document.getElementById('ppSvg');
+  if (!svg) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  const field = document.getElementById('ppField');
+  const filter = document.getElementById('pp-goo');
+  const chainEl = document.getElementById('ppChain');
+  const regionEl = document.getElementById('ppRegion');
+  const costEl = document.getElementById('ppCost');
+  const warnEl = document.getElementById('ppWarn');
+
+  const N = 5, R = 26, cs = [];
+  for (let i = 0; i < N; i++) {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('r', R); c.setAttribute('class', 'pp-blob');
+    field.appendChild(c); cs.push(c);
+  }
+
+  let stage = 0;   /* 0 = none, 1 = blur, 2 = +matrix, 3 = +composite */
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function buildChain() {
+    filter.textContent = '';
+    const parts = ['SourceGraphic'];
+    if (stage >= 1) {
+      filter.append(el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: 12, result: 'blur' }));
+      parts.push('blur(12)');
+    }
+    if (stage >= 2) {
+      /* Multiply alpha by 18 and subtract 7: everywhere the blurred
+         alpha crossed the threshold snaps back to opaque, everywhere
+         else falls to nothing. That step is the entire goo effect. */
+      filter.append(el('feColorMatrix', {
+        in: 'blur', type: 'matrix', result: 'goo',
+        values: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7'
+      }));
+      parts.push('matrix(α×18−7)');
+    }
+    if (stage >= 3) {
+      filter.append(el('feComposite', { in: 'SourceGraphic', in2: 'goo', operator: 'atop' }));
+      parts.push('composite(atop)');
+    }
+    field.setAttribute('filter', stage > 0 ? 'url(#pp-goo)' : '');
+    chainEl.textContent = parts.join(' → ');
+    document.querySelectorAll('.pp-stage').forEach((b) => {
+      b.classList.toggle('is-on', +b.dataset.stage <= stage);
+    });
+    measureRegion();
+  }
+
+  /* The number that actually explains filter cost. A filter region is
+     rasterised at device resolution, so its area in device pixels — not
+     the blur radius — is what the GPU is asked to fill. */
+  function measureRegion() {
+    if (!stage) { regionEl.textContent = 'no filter'; return; }
+    const bb = field.getBBox();
+    const vb = svg.viewBox.baseVal;
+    const rect = svg.getBoundingClientRect();
+    if (!rect.width || !bb.width) { regionEl.textContent = '—'; return; }
+    const scale = rect.width / vb.width;
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.round(bb.width * 1.5 * scale * dpr);
+    const h = Math.round(bb.height * 1.5 * scale * dpr);
+    regionEl.textContent = w + ' × ' + h + ' · ' + ((w * h) / 1e6).toFixed(2) + ' MP';
+  }
+
+  function render(t) {
+    /* Beads on a wire rather than a ring. A ring in a 660x200 field
+       keeps the blobs apart for most of the cycle, so the merge — the
+       only thing this bench exists to show — barely reads. Strung
+       along the long axis they pass through full fusion every loop.
+
+       Gap runs 27 -> 96: at 27 against r=26 the neighbours overlap
+       enough for the threshold to weld them into one bar, at 96 they
+       are cleanly separate. Eased with a cosine so the demo RESTS at
+       both extremes instead of sliding continuously past the two
+       states worth looking at. */
+    const gap = 27 + 69 * (0.5 - 0.5 * Math.cos(t * Math.PI * 2));
+    for (let i = 0; i < N; i++) {
+      const o = i - (N - 1) / 2;
+      /* a little counter-phase bob, so the fused bar has a living edge
+         rather than reading as a rounded rectangle */
+      const bob = Math.sin(t * Math.PI * 4 + i * 1.7) * 9 * (1 - gap / 96);
+      cs[i].setAttribute('cx', (330 + o * gap).toFixed(2));
+      cs[i].setAttribute('cy', (100 + bob).toFixed(2));
+    }
+  }
+
+  const demo = WAM.clock('pipeline-bench-stage', {
+    render, dur: 5200, el: svg, poster: 0.5
+  });
+
+  document.querySelectorAll('.pp-stage').forEach((b) => {
+    b.addEventListener('click', () => {
+      const n = +b.dataset.stage;
+      stage = (stage === n) ? n - 1 : n;   /* click the active top stage to peel it back */
+      buildChain();
+    });
+  });
+
+  /* Report main-thread cost honestly, and say what it does not include.
+     A frame-rate readout here would print the same number with the
+     filter on or off — verified by probe — which on a sheet arguing
+     "measured, not claimed" would be a false number on screen. */
+  setInterval(() => {
+    /* Microseconds, not milliseconds: this render is a handful of
+       attribute writes and 3dp of ms rounds it to a flat 0.000, which
+       reads as "not measured" rather than "genuinely almost free". */
+    costEl.textContent = (demo.cost * 1000).toFixed(0) + ' µs/frame';
+    measureRegion();
+    warnEl.textContent = stage
+      ? 'raster is compositor work — not in that figure, and not visible to any in-page frame meter'
+      : '';
+  }, 500);
+
+  addEventListener('resize', measureRegion);
+  stage = 2; buildChain();
+  /* buildChain ran before the clock's first frame, so the bbox it saw
+     was five circles stacked at the origin. Position them, then measure. */
+  demo.render(0.5); measureRegion();
+})();
+</script>
 </body>
 </html>
