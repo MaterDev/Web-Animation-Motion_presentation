@@ -212,12 +212,16 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
   </p>
   <div class="stage-box" id="typeBox" style="max-width:760px" data-testid="type-scale"></div>
 
-  <div class="sec-label">The compositions — all 15 slides</div>
+  <div class="sec-label">The compositions — 15 of the deck's 16 slides</div>
   <p class="sec-note">
-    Every slide from SCOPE.md's content outline, built as real <code>.led-slide</code>
-    components at 960 × 540 and scaled down, not approximated. Each one is asymmetric: content
-    takes a subset of the columns and the rest is deliberately empty. Click a tile for a
-    full-size preview; the guide toggle above applies to these too.
+    Built as real <code>.led-slide</code> components at 960 × 540 and scaled down, not
+    approximated. Each one is asymmetric: content takes a subset of the columns and the rest
+    is deliberately empty. Click a tile for a full-size preview; the guide toggle above
+    applies to these too.
+    <br><b>Fifteen, not sixteen:</b> SL-04 here is still a merged
+    <i>baseline: video &amp; gif</i>, from before SCOPE.md's outline split those into slides 4
+    and 5. So this sheet's numbering runs one behind the outline from SL-04 on. SCOPE.md owns
+    the slide count; splitting the composition is tracked in <code>conductor/product.md</code>.
   </p>
 
   <div class="grid" id="grid" data-testid="layouts-grid"></div>

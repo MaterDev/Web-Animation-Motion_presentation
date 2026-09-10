@@ -10,7 +10,7 @@
 
 ## Revision — where this actually landed (5 Aug 2026)
 
-This document was written **before** the six treatments were built, and it did its job: it set the problem, the constraints, and the starting direction. Building against it then changed four things materially. Rather than silently rewriting the original — the treatments only make sense as a record if the brief they were answering is still legible — the deltas are stated here, and the affected sections below carry pointers back to this one.
+This document was written **before** the six treatments were built, and it did its job: it set the problem, the constraints, and the starting direction. Building against it then changed several things materially. Rather than silently rewriting the original — the treatments only make sense as a record if the brief they were answering is still legible — the deltas are stated here, and the affected sections below carry pointers back to this one.
 
 **1. The premise moved from "instrument housing" to "content on an LED panel."** Part 0 proposed a machined instrument enclosure. Five treatments in, the stronger idea turned out to be that a slide *is a display*: an emissive dark ground with a visible pixel matrix, rather than a printed card sitting in a metal case. The housing survives as the app's chassis — top bar, bezels, plates — but the slide surface itself is a screen. This produced the `.led-slide` / `.screen-unit` components and the rule that governs both: **on-screen elements are emissive graphics and glass; chassis materials (moulded plastic, chamfers, knurl, wells) stay off the screen.**
 
@@ -23,6 +23,12 @@ This document was written **before** the six treatments were built, and it did i
 **5. There are two displays, and which one you use is a rule, not a preference.** See below — this is the single most load-bearing thing to get right, and the easiest to get backwards.
 
 **6. The material question mostly dissolved.** §1.4 treats surface material as the primary carrier of the aesthetic, and an open question through the treatments was how far to push plastic and glass against anodised aluminium. Once the screens arrived, that stopped mattering much: the displays carry the identity, and the chassis is deliberately quiet around them. Of the eleven material recipes in §1.4, nine now appear only in T-06's own materials catalogue, which documents them; `.mat-anodised` is the only one doing real work in the app. They're kept rather than pruned — the catalogue is part of the record of how the system got here, and it costs nothing but a section on one sheet. **The live distinction is screen vs. chassis, not metal vs. plastic.**
+
+**7. The stack moved off React, so all of Part 3 is a superseded proposal.** This document specifies a React app — `useDeck`/`useSync`/`useTimer`, `dangerouslySetInnerHTML`, JSX-free deck data, a `src/deck` · `src/runtime` · `src/ui` · `src/demos` tree. **None of that was built and none of those directories exist.** The shell is SvelteKit 2 / Svelte 5 runes on Bun, decided 5 Aug 2026 — SCOPE.md:166 owns that decision and the reasoning for it. Part 3, the file-structure block in Part 5, and Part 6's step 1 are kept as the record of what was proposed; read them as history, not as instructions. **`conductor/tech-stack.md` is the single source of truth for what actually runs.**
+
+What survived the port is the part that was never framework-specific, and it is the load-bearing half: data and UI strictly separated, a slide as a plain serialisable structure, lazy-loaded demos behind a registry, the iframe-per-heavy-demo escape hatch and the reason for it (the ~16 concurrent WebGL context cap). The dependency rule still holds; only the directory names in it are wrong.
+
+**Part 1 and Part 2 are unaffected.** The visual language and the motion system are current, and are what the treatments and the technique sheets are actually built against.
 
 **Kept treatment:** T-06 (Field Unit, dark). The other five are still in `design/treatments/` and viewable in the app at `/design/treatments`.
 
@@ -58,7 +64,7 @@ The tell that you've overdone it: two adjacent LCD panels with ordinary prose in
 
 Whichever size you're using, carry the furniture a real readout carries — that furniture *is* the aesthetic:
 
-- **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 15`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
+- **`.lcd-kv`** — key/value pairs (`MODEL / WAM-2026`, `SLIDES / 16`). Both halves in the dot face: on a real readout the label is printed by the same matrix as the value, and setting the label in a different family is the tell that it's a web page pretending.
 - **`.lcd-strip`** — the row those sit in, along the bottom of a panel.
 - **`.led` inside `.lcd`** — status lamps, automatically flattened to screen content (no dome, no bloom). Same rule as slides: indicators drawn on a screen are graphics, not hardware.
 - **`.lcd.sm` / `.lcd.strip` in a `.well`** — small standalone readout chips (`12:04`, `06/14`, `RUNNING`), for data that belongs on its own little screen rather than inside a bigger one.
@@ -436,6 +442,12 @@ Substitute, don't delete (SCOPE.md §Accessibility):
 
 ## Part 3 — Architecture
 
+> **Superseded — see Revision item 7.** This part specifies a React app that was
+> never built. The shell is SvelteKit 2 / Svelte 5 runes on Bun; the directories
+> named below do not exist. The *principles* here did survive the port — kept as
+> the record of what was proposed and why. `conductor/tech-stack.md` is the
+> single source of truth for what runs.
+
 ### 3.1 Principle: data and UI are separate
 
 Per your direction. Three layers, strictly:
@@ -503,7 +515,7 @@ Lazy imports mean a demo's code isn't even parsed until its slide is near — wh
 
 Hybrid, per the default I flagged earlier:
 
-- **`inline` (default).** The slide renders into the stage element in the main document. Fast, shares fonts and tokens, transitions are trivial, React state is available.
+- **`inline` (default).** The slide renders into the stage element in the main document. Fast, shares fonts and tokens, transitions are trivial, component state is available. *(Written as "React state"; see Revision item 7.)*
 - **`iframe` (opt-in per slide).** A sandboxed document. Reserved for the heavy WebGL/WebGPU demos.
 
 The iframe path exists to solve a real, named risk: SCOPE.md §Architecture flags that browsers cap concurrent WebGL contexts at ~16 and that exhausting them crashes the tab mid-talk. An iframe gets its own context budget and, more importantly, **tearing down the iframe reliably reclaims the GPU resources**, which manual Three.js disposal often does not do completely. For a 20-minute live talk with no second take, that reliability is worth the plumbing.
@@ -600,6 +612,10 @@ Reusable components expose a `testId?: string` prop and derive children from it.
 
 ### File structure
 
+> **Superseded — see Revision item 7.** None of these directories exist. The
+> real layout is in `conductor/tech-stack.md`. Kept because the dependency rule
+> below still holds; only the names are wrong.
+
 ```
 src/
   design/      tokens.css, reset.css, type.css   — no components
@@ -617,7 +633,7 @@ The dependency rule: `deck/` imports nothing. `runtime/` imports `deck/`. `ui/` 
 
 Deliberately sequenced so the app is *presentable* early and improves, rather than being complete only at the end. SCOPE.md §Risks names the real failure mode: "chrome polish eating the day before the talk."
 
-1. **Skeleton** — Vite + React + TS, tokens, reset, type scale. Placeholder deck of 14 stub slides carrying the real titles and sections.
+1. **Skeleton** — ~~Vite + React + TS~~ Vite + SvelteKit + JSDoc-checked JS (Revision item 7), tokens, reset, type scale. Placeholder deck of stub slides carrying the real titles and sections. *(Said 14; SCOPE.md's outline owns the count and it is 16.)*
 2. **Runtime** — navigation, steps, deep links, keyboard. Ugly but complete. *The deck is now navigable end to end.*
 3. **Chrome v1** — stage, progress rail, slide codes, section tints. The design language lands here.
 4. **Presenter view** — sync, notes, timers. *Rehearsal becomes possible — do this before demos, not after.*
