@@ -1,12 +1,12 @@
 # Web Animation & Motion — Presentation Scope
 
 **Presenter:** Key Clark (hello@primatif.com)
-**Presentation date:** Friday, August 21, 2026
-**Doc drafted:** August 3, 2026 · **Last revised:** August 5, 2026
+**Presentation date:** Thursday, September 17, 2026
+**Doc drafted:** August 3, 2026 · **Last revised:** September 10, 2026
 
 ## Timeline
 
-**Moved from August 7 to August 21** — roughly twelve working days from August 5 rather than four. This changes the plan in one specific way and not others: the build was never the thing most at risk, sequencing and rehearsal were, and those still need reserving. What the extra two weeks genuinely buys is room to prototype the two unproven items (layout-animation slide transitions, and the WebGPU compute sim at a real particle count) *before* they're load-bearing, instead of discovering their limits during the build.
+**Moved from August 7 to August 21, then to September 17** — as of September 10 that is seven calendar days, roughly five working. The paragraph below was written when the move bought slack; it no longer does, and the prototyping room it describes is gone. This changes the plan in one specific way and not others: the build was never the thing most at risk, sequencing and rehearsal were, and those still need reserving. What the extra two weeks genuinely buys is room to prototype the two unproven items (layout-animation slide transitions, and the WebGPU compute sim at a real particle count) *before* they're load-bearing, instead of discovering their limits during the build.
 
 It also makes learning an unfamiliar stack a reasonable choice rather than a gamble — see Technical Approach.
 
