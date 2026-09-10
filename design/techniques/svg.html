@@ -770,7 +770,6 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
         clock and prints a bound rather than a fabricated zero.
       </p>
     </div>
-  </div>
 
     <p class="fmt-case" style="margin-top:calc(var(--u)*5)">
       A survey sheet is the object whose whole premise is that the same place gets
@@ -881,16 +880,41 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       low particle count (tens), each one a real DOM node, resolving into the brandmark
       via path morph/draw-on. Worth surfacing the DOM-node cost as the reason the count
       stays low."</p>
-    <p>The DOM-node cost is surfaced as a <b>measurement</b> rather than an assertion —
-      section two is a live FPS readout against a node count you control, so the ceiling
-      is demonstrated on the audience's own machine rather than claimed. That also sets up
-      slide 11 without needing to argue for it.</p>
-    <p><b>What is here, and what is not.</b> Sections three (four production
-      screens) and four (path morphing) were removed to be rebuilt. What remains is the
-      argument this sheet is actually for: a node is an element, and elements have a
-      price. The credits that were here covered artwork and libraries those sections
-      used — Twemoji, Flubber, Inter glyph outlines — and none of them are loaded by this
-      page any more, so the attribution goes back in alongside whatever replaces them.</p>
+
+    <p><b>How this sheet is put together.</b> Four sections, each pairing a small cold
+      bench — the mechanism, with its numbers exposed — against one large stage. The three
+      stages are deliberately three unrelated products: a chart-recorder printout, a
+      topographic survey sheet and a broadcast weather radar. None of them looks like this
+      page, because a demo that wears the site's own clothes reads as another panel of the
+      site rather than as a thing being shown to you. All three read one dataset.</p>
+
+    <p><b>Measured, not claimed — including where that came out inconvenient.</b> §4's
+      bench does not report a frame time, because a rAF meter cannot see filter cost: it
+      reads the same with the filter on or off, which was established by probe rather than
+      assumed. §3's bench found no measurable difference between its three camera drivers
+      and says so, and its hairline readout names which of two instruments produced the
+      number, because neither works in all three browsers. Every readout on this page
+      states its own floor.</p>
+
+    <p><b>The data.</b> Thirty events between 1943 and 2024 and twenty-two movements
+      between institutions, in <code>scripts/data/ai-history.js</code>. Every entry carries
+      at least one checkable source and the build fails on one that does not. Edges are
+      documented movements — a person changing institutions, a lab spinning out, an
+      acquisition — never "influence": seven candidate edges were dropped rather than
+      asserted as interpretation, and that list is a comment at the foot of the file.
+      Sources are per-entry there rather than summarised here, because a citation that
+      cannot be traced to the claim it supports is decoration. They lean on the ACM A.M.
+      Turing Award profiles, the Nobel Prize archive, institutional histories at Toronto,
+      Stanford, UCL, MIT, Mila and IBM, the Computer History Museum, and Wikipedia where
+      it is used as a pointer to a primary document rather than as the source itself.</p>
+
+    <p><b>Credits.</b> Coastlines are <b>Natural Earth</b>, public domain, via
+      <code>world-atlas</code>; projected at build time with <b>d3-geo</b> and
+      <b>topojson-client</b>, neither of which is shipped to the browser — the sheet
+      receives path strings. Type is <b>Inter</b>, <b>JetBrains Mono</b> and <b>Doto</b>.
+      No animation library is used anywhere on this page: <code>render(t)</code> is the
+      timeline, which is the argument §2 is making, so importing a library to make it
+      would be conceding it.</p>
   </div>
 </div>
 
