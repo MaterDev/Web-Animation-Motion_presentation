@@ -10,21 +10,6 @@
 <style>
 :root {
   --tint: var(--tint-svg);
-  /* ── Good n'Healthy ────────────────────────────────────────
-     One palette for every demo on this sheet. Hues are picked so a
-     food reads as itself before any label does: greens for produce,
-     amber for fruit and energy, water-blue for hydration, coral for
-     fat. Kept whole while the demos below are rebuilt — the hues are
-     the decision, and re-deriving them per demo is how a sheet ends
-     up with five greens. */
-  --gn-leaf:   oklch(0.74 0.16 145);
-  --gn-sprout: oklch(0.85 0.15 128);
-  --gn-forest: oklch(0.27 0.05 155);
-  --gn-amber:  oklch(0.82 0.14 68);
-  --gn-coral:  oklch(0.68 0.17 32);
-  --gn-water:  oklch(0.74 0.11 205);
-  --gn-cream:  oklch(0.95 0.03 95);
-
   /* ── era ramp ──────────────────────────────────────────────
      Replaces the food hues as sections rebuild. Hue is held at 145
      because hue is already spent: it is the deck's sheet-identity
@@ -34,10 +19,11 @@
 
      So lightness carries time and chroma stays low. Each step is
      ~+0.12 L, which is above the threshold where adjacent levels read
-     as levels rather than as inconsistencies. The old --gn-leaf ran
-     at chroma 0.16 against a section tint of 0.05 — three times its
-     own tint, which is why this sheet read as a green demo rather
-     than a green-tinted instrument. Ceiling here is 0.10. */
+     as levels rather than as inconsistencies. The food palette this
+     replaced ran its lead green at chroma 0.16 against a section tint
+     of 0.05 — three times its own tint, which is why this sheet used
+     to read as a green demo rather than a green-tinted instrument.
+     Ceiling here is 0.10. */
   --ai-t0:  oklch(0.46 0.05 145);   /* 1950s — floor */
   --ai-t1:  oklch(0.58 0.07 145);   /* 1970s */
   --ai-t2:  oklch(0.70 0.09 145);   /* 1990s */
@@ -84,12 +70,12 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: c
 .node-stage, .ceil-stage { aspect-ratio: 16/10; }
 .node-stage svg, .ceil-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-.edge { stroke: color-mix(in oklch, var(--gn-leaf) 32%, transparent); stroke-width: 1; }
+.edge { stroke: color-mix(in oklch, var(--ai-t3) 32%, transparent); stroke-width: 1; }
 .nd { cursor: pointer; }
-.nd circle { fill: var(--gn-forest); stroke: var(--gn-leaf); stroke-width: 1.5;
+.nd circle { fill: var(--ai-t0); stroke: var(--ai-t3); stroke-width: 1.5;
   transition: fill var(--dur-fast) var(--ease-standard), r var(--dur-base) var(--ease-standard); }
 .nd text { font-family: var(--mono); font-size: 5.5px; letter-spacing: 0.06em; text-transform: uppercase;
-  fill: var(--gn-cream); text-anchor: middle; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
+  fill: var(--ai-ink); text-anchor: middle; opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }
 /* pointer events hit the shape, not a rectangle — this is the bit
    Canvas cannot do without hand-rolling hit testing */
 .nd:hover circle { fill: var(--tint); r: 9; }
@@ -99,9 +85,9 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: c
 /* the whole sheet restyled from OUTSIDE the graphic, by class */
 svg.sk-wire .nd circle { fill: none; }
 svg.sk-wire .edge { stroke-dasharray: 3 3; }
-svg.sk-solid .nd circle { fill: var(--gn-leaf); stroke: none; }
-svg.sk-solid .edge { stroke: color-mix(in oklch, var(--gn-leaf) 55%, transparent); }
-svg.sk-ghost .nd circle { fill: var(--gn-forest); stroke-opacity: 0.35; }
+svg.sk-solid .nd circle { fill: var(--ai-t3); stroke: none; }
+svg.sk-solid .edge { stroke: color-mix(in oklch, var(--ai-t3) 55%, transparent); }
+svg.sk-ghost .nd circle { fill: var(--ai-t0); stroke-opacity: 0.35; }
 svg.sk-ghost .edge { stroke-opacity: 0.25; }
 
 .sk-btns { padding: 8px; display: flex; gap: 5px; }
@@ -301,8 +287,11 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
     rather than pixels. That single fact is what you are buying: the marks are in the DOM,
     so CSS styles them, the pointer hits them, a screen reader can be told what they are —
     and every one of them costs a node, which is also what you are paying. Every demo here
-    is built as one fictional product, <b>Good n’Healthy</b>, because a technique shown on a
-    coloured square teaches nothing about when to reach for it.
+    is built on <b>one dataset — the documented history of this field</b>, because a
+    technique shown on a coloured square teaches nothing about when to reach for it, and
+    because a sheet that argues its numbers are measured should be arguing it about
+    something real. Thirty events, twenty-two sourced movements between institutions,
+    1943 to today.
   </p>
 
   <!-- ═══ 1 · THE TRADE ═══════════════════════════════════ -->
@@ -313,9 +302,9 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       reaches it, the pointer hits it and a screen reader can be told what it is — and
       because every mark is a real element, the browser must style, lay out and paint each
       one. <b>Both halves of that are demonstrated here rather than asserted</b>, and the
-      right-hand one is the whole reason the next slide exists. The graph is Good n’Healthy's
-      food-group tree; the field beside it is what happens when you try to plot every logged
-      item at once.
+      right-hand one is the whole reason the next slide exists. The graph is a lineage
+      fragment from the dataset the rest of this sheet runs on; the field beside it is what
+      happens when you try to plot everything at once.
     </p>
 
     <div class="two-up">
@@ -323,12 +312,12 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
         <h3 class="col-h">every mark is an element</h3>
         <p class="col-p">
           A canvas hands you one element and a bag of pixels. <b>SVG hands you a
-          document.</b> Hover a food group — the pointer hits the <i>shape</i>, not its
+          document.</b> Hover any node — the pointer hits the <i>shape</i>, not its
           bounding box, and nothing scripts that. The buttons restyle the whole graph from
           <b>outside</b> it, by putting one class on the root.
         </p>
         <div class="scene-stage node-stage" data-testid="node-stage">
-          <svg id="netSvg" viewBox="0 0 320 200" role="img" aria-label="A food group network, each node a separate element">
+          <svg id="netSvg" viewBox="0 0 320 200" role="img" aria-label="A lineage fragment, each node a separate element">
             <g id="netEdges" stroke-linecap="round"></g>
             <g id="netNodes"></g>
           </svg>
@@ -353,8 +342,8 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
         <p class="col-p">
           Each mark carries style resolution, layout participation and a paint record of its
           own. <b>Drag the count up and watch where it stops being free.</b> This is the honest
-          reason Good n’Healthy plots a sample rather than every logged item — measured on your
-          machine, not claimed.
+          reason §2 draws twenty-two arcs and not two thousand — measured on your machine,
+          not claimed.
         </p>
         <div class="scene-stage ceil-stage" data-testid="ceiling-stage">
           <svg id="ceilSvg" viewBox="0 0 320 200" aria-hidden="true"></svg>
@@ -599,6 +588,10 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
   </div>
 </div>
 
+<!-- Generated by scripts/vendor.js. A plain script, not a module, so
+     this sheet keeps opening over file:// — see the note in vendor.js. -->
+<script src="../vendor/ai-history.js"></script>
+
 <script>
 /* ── 1 · the network ──────────────────────────────────────────
    Built from data rather than hand-authored markup so the node count
@@ -606,15 +599,58 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
 (function () {
   const svg = document.getElementById('netSvg');
   if (!svg) return;
-  const NODES = [
-    { x: 42,  y: 58,  t: 'plate' },   { x: 96,  y: 34,  t: 'veg' },
-    { x: 96,  y: 96,  t: 'protein' }, { x: 150, y: 62,  t: 'leafy' },
-    { x: 150, y: 128, t: 'fish' },    { x: 208, y: 38,  t: 'spinach' },
-    { x: 208, y: 96,  t: 'lentils' }, { x: 208, y: 152, t: 'salmon' },
-    { x: 264, y: 66,  t: 'iron' },    { x: 264, y: 124, t: 'omega-3' },
-    { x: 42,  y: 138, t: 'fruit' },   { x: 96,  y: 162, t: 'berries' },
-  ];
-  const EDGES = [[0,1],[0,2],[0,10],[1,3],[2,3],[2,4],[3,5],[3,6],[4,7],[6,8],[7,9],[10,11],[4,6]];
+  /* A real fragment of the sheet's one dataset rather than a hand-typed
+     array. Taken as the earliest movements until enough distinct places
+     accumulate, which yields a connected subgraph by construction — a
+     random sample of nodes would mostly draw isolated dots and the
+     "hover hits the shape" demonstration needs edges to hit.
+
+     Positioned here rather than at build time because this graph's box
+     is 320x200 and the build-time layout targets §2's 1000x366; one
+     layout cannot serve both, and re-deriving twelve positions is
+     cheap. */
+  const H = globalThis.AI_HISTORY;
+  const WANT = 12;
+  const NODES = [], EDGES = [];
+  if (H) {
+    const byId = Object.fromEntries(H.nodes.map((n) => [n.id, n]));
+    const picked = [], idx = {};
+    const take = (id) => { if (!(id in idx) && picked.length < WANT) { idx[id] = picked.length; picked.push(byId[id]); } };
+    const used = [];
+    for (const a of H.arcs) {
+      if (picked.length >= WANT && (!(a.from in idx) || !(a.to in idx))) continue;
+      take(a.from); take(a.to);
+      if (a.from in idx && a.to in idx) used.push(a);
+    }
+    const ys = picked.map((n) => n.year);
+    const [lo, hi] = [Math.min(...ys), Math.max(...ys)];
+    /* Lanes by first-fit on the same principle as the build-time
+       layout, just at this box's scale: nodes closer than this in
+       years would collide as circles. */
+    const GAP = (hi - lo) / 5.5;
+    const last = [], lane = {};
+    for (const n of [...picked].sort((a, b) => a.year - b.year)) {
+      let l = last.findIndex((v) => n.year - v >= GAP);
+      if (l === -1) { l = last.length; last.push(-Infinity); }
+      last[l] = n.year;
+      lane[n.id] = l;
+    }
+    /* Two passes, and it has to be two: the lane count is still growing
+       during the first, so computing y inside that loop spaced the
+       early nodes against a lane count of one or two and the late ones
+       against five. Same lane, different heights, and the collisions
+       looked like a layout that had no rule at all. */
+    const rows = Math.max(1, last.length - 1);
+    for (const n of picked) {
+      NODES[idx[n.id]] = {
+        x: 30 + ((n.year - lo) / (hi - lo || 1)) * 260,
+        y: 26 + lane[n.id] * (148 / rows),
+        t: n.short,
+      };
+    }
+    for (const a of used) EDGES.push([idx[a.from], idx[a.to]]);
+  }
+  if (!NODES.length) return;
   const NS = 'http://www.w3.org/2000/svg';
   const eg = document.getElementById('netEdges');
   const ng = document.getElementById('netNodes');
@@ -704,7 +740,7 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       c.setAttribute('cx', (rnd() * 320).toFixed(1));
       c.setAttribute('cy', (rnd() * 200).toFixed(1));
       c.setAttribute('r', (0.9 + rnd() * 2.2).toFixed(2));
-      c.setAttribute('fill', 'var(--gn-leaf)');
+      c.setAttribute('fill', 'var(--ai-t3)');
       c.setAttribute('opacity', (0.3 + rnd() * 0.7).toFixed(2));
       if (!reduce) c.style.animationDelay = (-rnd() * 3.2).toFixed(2) + 's';
       frag.appendChild(c);
@@ -773,10 +809,6 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
   }
 })();
 </script>
-
-<!-- Generated by scripts/vendor.js. A plain script, not a module, so
-     this sheet keeps opening over file:// — see the note in vendor.js. -->
-<script src="../vendor/ai-history.js"></script>
 
 <script>
 /* ── shared runtime ───────────────────────────────────────────
