@@ -28,6 +28,11 @@ test-results/
 playwright-report/
 vite.config.js.timestamp-*
 
+# stray debug screenshots at the repo root — frame-live.png rode in on a
+# Phase 4 commit and sat there unreferenced for six commits
+/*.png
+/*.jpg
+
 # editor / os
 .DS_Store
 .idea/
