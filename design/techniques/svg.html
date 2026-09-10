@@ -351,7 +351,7 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
           <button class="fr-btn is-on" data-billboard="1" data-testid="frame-billboard"><span class="fr-k">↺</span> counter-scale labels</button>
         </div>
         <div class="bench-read" data-testid="frame-readout">
-          <span>zoom <var id="frScale">—</var></span>
+          <span>zoom <var id="frScale">—</var> · dpr <var id="frDpr">—</var></span>
           <span>hairline <var id="frHair">—</var></span>
           <span>render <var id="frCost">—</var></span>
           <span>clock <var id="frFloor">—</var></span>
@@ -386,13 +386,17 @@ svg.sk-ghost .edge { stroke-opacity: 0.25; }
       </p>
       <p>
         <b>The hairline strategy is the only control that moves the number</b>, and
-        the one that costs is the only one that works.
+        the one that costs is the only one that works. The middle column is the rule;
+        the third is one measurement of it. They only differ on a 2× display — which
+        is why the readout above prints the <code>dpr</code> it measured at, so the
+        live number and this table can be reconciled rather than read as a
+        contradiction.
       </p>
       <table>
-        <tr><th>strategy</th><th>device px at ×1</th><th>at ×64</th><th>per-frame writes</th></tr>
-        <tr><td>none</td><td class="fr-bad">1</td><td class="fr-bad">84</td><td>0</td></tr>
-        <tr><td>vector-effect</td><td class="fr-bad">2</td><td class="fr-bad">2</td><td>0</td></tr>
-        <tr><td>inverse stroke-width</td><td class="fr-good">1</td><td class="fr-good">1</td><td>88</td></tr>
+        <tr><th>strategy</th><th>what it actually pins to</th><th>measured at ×64, dpr 2</th><th>per-frame writes</th></tr>
+        <tr><td>none</td><td class="fr-bad">nothing — scales with the camera</td><td class="fr-bad">84 device px</td><td>0</td></tr>
+        <tr><td>vector-effect</td><td class="fr-bad">one CSS pixel</td><td class="fr-bad">2 device px</td><td>0</td></tr>
+        <tr><td>inverse stroke-width</td><td class="fr-good">one device pixel</td><td class="fr-good">1 device px</td><td>88</td></tr>
       </table>
       <p>
         <code>vector-effect: non-scaling-stroke</code> is constant, but it pins to one
@@ -1235,6 +1239,7 @@ window.WAM = (function () {
   }
 
   const scaleEl = document.getElementById('frScale');
+  const dprEl = document.getElementById('frDpr');
   const hairEl = document.getElementById('frHair');
   const costEl = document.getElementById('frCost');
   const floorEl = document.getElementById('frFloor');
@@ -1244,6 +1249,10 @@ window.WAM = (function () {
 
   setInterval(() => {
     scaleEl.textContent = '×' + camAt(demo.t).k.toFixed(1);
+    /* Printed because two of the three strategies below are only
+       distinguishable when it is not 1, and a reader on a 1x display
+       would otherwise see the readout contradict the table. */
+    dprEl.textContent = (window.devicePixelRatio || 1).toFixed(2).replace(/\.?0+$/, '');
     /* Measured, not computed: the rendered thickness of the reference
        line, read back off the box the browser gave it. */
     const m = measureHairline();
