@@ -519,6 +519,49 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .b3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--b3-mask-hi); }
 .b3-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--b3-pad); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 .b3-kv b.b3-net { color: var(--b3-net); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §4 · READ — a radiology soft-copy workstation
+
+   This world is deliberately ACHROMATIC, and it is the only world on the
+   sheet whose lack of colour is a standard rather than a shortage. DICOM
+   Part 14's Grayscale Standard Display Function is a real worldwide
+   calibration for medical displays — constant perceived contrast at every
+   grey level — and a reading room is colourless on purpose.
+
+   One colour is allowed in: the overlay annotation, which is how a
+   workstation has always separated what the machine measured from what a
+   person wrote on it. The heat ramp is the second LUT, and switching
+   between them is the demonstration — same pixels, read back and mapped
+   two ways.
+   ───────────────────────────────────────────────────────────────────────── */
+.r4 {
+  --r4-void:  oklch(0.080 0 0);           /* the surround                    */
+  --r4-frame: oklch(0.170 0 0);
+  --r4-rule:  oklch(0.320 0 0);
+  --r4-ink:   oklch(0.870 0 0);
+  --r4-anno:  oklch(0.880 0.155 108);     /* overlay annotation — one colour */
+  --r4-roi:   oklch(0.640 0.190  27);     /* the region of interest          */
+  --r4-gutter: 20px;
+}
+.r4-world { background: var(--r4-void); }
+.r4-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 14px var(--r4-gutter) 4px; }
+.r4-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--r4-ink); background: transparent;
+  border: 1px solid var(--r4-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.r4-btn.r4-on { color: var(--r4-void); background: var(--r4-anno); border-color: var(--r4-anno); }
+.r4-stage { position: relative; line-height: 0; padding: 8px var(--r4-gutter); }
+.r4-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.r4-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--r4-ink);
+  max-width: 74ch; padding: 4px var(--r4-gutter) 8px; opacity: 0.6;
+}
+.r4-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 6px var(--r4-gutter) 18px; }
+.r4-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--r4-rule); }
+.r4-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--r4-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.r4-kv b.r4-anno { color: var(--r4-anno); }
 </style>
 </head>
 <body data-testid="technique-canvas">
@@ -766,27 +809,49 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
   <!-- ═══ §4 · READBACK ═══════════════════════════════════════════════ -->
   <section class="cv-sec" data-testid="section-4">
     <div class="cv-sec-head"><span class="cv-sec-n">§4</span><h2>Readback</h2></div>
-    <p class="cv-because">The surface can be read back, <b>uniquely on this spectrum.</b>
-      SVG can tell you where a node is; it cannot tell you what colour a pixel ended up.
-      Canvas can, synchronously, for any region. That single capability is what makes
-      the brandmark below resolve out of pixels rather than out of coordinates — and it
-      is what turns a drawing surface into an input.</p>
-    <div class="cv-pair">
-      <div>
-        <div class="cv-lede">Explanatory graphic</div>
-        <div class="cv-fig" data-testid="g4-stage">
-          <canvas data-testid="g4-canvas"></canvas>
-          <div class="cv-cap">The mark is rasterised to an off-screen canvas, read back
-            with <b>getImageData</b>, and every opaque pixel above threshold becomes one
-            particle's destination. <b>No path data is authored here</b> — change the
-            face and the target set changes with it.</div>
-        </div>
+    <p class="cv-because">The surface can be read back, <b>uniquely on this
+      spectrum.</b> SVG can tell you where a node is; it cannot tell you what colour
+      a pixel ended up. Canvas can, synchronously, for any region — and once a
+      drawing surface can be read, it stops being an output and becomes an input.
+      Everything on the right of the workstation below is <i>derived from the image
+      on the left by reading it</i>: the histogram, the window, the region
+      statistics, and the mark that assembles itself out of the pixels.</p>
+
+    <div class="r4 r4-world" data-testid="r4-world">
+      <div class="r4-bar" data-testid="r4-bar">
+        <button class="r4-btn r4-on" data-lut="gsdf" data-testid="r4-lut-gsdf">GSDF grey</button>
+        <button class="r4-btn" data-lut="iron" data-testid="r4-lut-iron">heat</button>
+        <button class="r4-btn r4-on" data-testid="r4-cine">cine</button>
+        <button class="r4-btn r4-on" data-testid="r4-roi">region</button>
+        <button class="r4-btn" data-testid="r4-recon">reconstruct from readback</button>
       </div>
-      <div>
-        <div class="cv-lede">ACETATE · screen 4</div>
-        <div data-testid="acetate-4-mount"></div>
+      <div class="r4-stage" data-testid="r4-stage">
+        <canvas data-testid="r4-canvas"></canvas>
+      </div>
+      <p class="r4-cap" data-testid="r4-cap">Drag on the image to set window and
+        level — the two numbers every reading room argues about. They do not change
+        the scan; they change which slice of its range the display spends its greys
+        on, which is why the same pixels can show bone or soft tissue and never both
+        at once.</p>
+      <div class="r4-plate" data-testid="r4-readouts">
+        <div class="r4-kv">slice<b data-testid="r4-slice">—</b></div>
+        <div class="r4-kv">window / level<b class="r4-anno" data-testid="r4-wwwl">—</b></div>
+        <div class="r4-kv">region mean ± sd<b data-testid="r4-roistat">—</b></div>
+        <div class="r4-kv">pixels read this frame<b data-testid="r4-read">—</b></div>
+        <div class="r4-kv">readback cost<b data-testid="r4-readcost">—</b></div>
       </div>
     </div>
+
+    <p class="cv-instr" data-testid="r4-instr">
+      <b>Nothing on the right is stored, and that is the point of the section.</b>
+      The histogram is counted out of the pixels every frame; the region statistics
+      are computed from the pixels inside the box; the mark is assembled from the
+      pixels above a threshold. Change the slice, the window, the level or the LUT
+      and all of them follow, because none of them is a copy of the image — they are
+      all questions asked of it. A retained-mode surface can tell you where its
+      objects are and it cannot answer any of these, because the answer is not in
+      the objects. It is in the pixels the objects turned into.
+    </p>
   </section>
 
   <!-- ═══ §5 · OFF-THREAD ═════════════════════════════════════════════ -->
@@ -980,7 +1045,7 @@ var acProbe = document.createElement('div');
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-acProbe.className = 'ac t5 v1 h2 b3';
+acProbe.className = 't5 v1 h2 b3 r4';
 acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(acProbe);
 var acRoot = getComputedStyle(acProbe);
@@ -2120,182 +2185,295 @@ var SEC2 = (function () {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
-   §4 · READBACK
+   §4 · READ — readback
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  /* ── the LUT, built from the six token stops ─────────────────────────
-     Interpolated continuously, because a radar thresholds and a
-     spectrogram does not — and monotone in L, so it needs no key. */
-  var STOPS = ['--ac-sg-0', '--ac-sg-1', '--ac-sg-2', '--ac-sg-3', '--ac-sg-4', '--ac-sg-5'].map(function (n) {
-    return resolveRGB(token(n));
-  });
-  var LUT = new Uint8Array(256 * 3);
-  (function () {
-    var i, u, s, f, a, b;
-    for (i = 0; i < 256; i++) {
-      u = (i / 255) * (STOPS.length - 1);
-      s = Math.min(STOPS.length - 2, u | 0); f = u - s;
-      a = STOPS[s]; b = STOPS[s + 1];
-      LUT[i * 3] = a[0] + (b[0] - a[0]) * f;
-      LUT[i * 3 + 1] = a[1] + (b[1] - a[1]) * f;
-      LUT[i * 3 + 2] = a[2] + (b[2] - a[2]) * f;
-    }
-  })();
+  var W = 1240, H = 640;
+  var cv = $('r4-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
 
-  /* ── the source surface, drawn once ──────────────────────────────────
-     This is a canvas, and the spectrogram beside it is built by READING
-     IT BACK — not by re-evaluating the function that drew it. Changing the
-     region below changes which pixels are read, and the output follows. */
-  var SW = 1024, SH = 256;
-  var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
-  var sx2 = sc.getContext('2d', { willReadFrequently: true });
-  (function () {
-    var r = rng(0x5EC7A0), img = sx2.createImageData(SW, SH), d = img.data;
-    var x, y, u, v, e, o;
-    for (x = 0; x < SW; x++) {
-      u = x / SW;
-      for (y = 0; y < SH; y++) {
-        v = 1 - y / SH;                       /* frequency, low at the foot */
-        e = Math.exp(-v * 3.1) * (0.55 + 0.45 * Math.sin(u * TAU * 5 + v * 9));
-        e += 0.42 * Math.exp(-Math.pow((v - 0.18) / 0.045, 2)) * (0.6 + 0.4 * Math.sin(u * TAU * 31));
-        e += 0.30 * Math.exp(-Math.pow((v - 0.37) / 0.03, 2)) * (0.5 + 0.5 * Math.sin(u * TAU * 17 + 1.2));
-        e += 0.22 * Math.exp(-Math.pow((v - 0.56) / 0.025, 2)) * Math.max(0, Math.sin(u * TAU * 3));
-        e *= 0.55 + 0.45 * Math.pow(Math.sin(u * Math.PI), 0.4);
-        e += (r() - 0.5) * 0.05;
-        e = Math.max(0, Math.min(1, e));
+  var VOID = resolveRGB(token('--r4-void'));
+  var FRAME = self.SKIN_CSS(resolveRGB(token('--r4-frame')));
+  var RULE = self.SKIN_CSS(resolveRGB(token('--r4-rule')));
+  var INK = self.SKIN_CSS(resolveRGB(token('--r4-ink')));
+  var ANNO = self.SKIN_CSS(resolveRGB(token('--r4-anno')));
+  var ROI = self.SKIN_CSS(resolveRGB(token('--r4-roi')));
+
+  /* Two LUTs, 256 entries each. GSDF grey is perceptually linear and
+     chroma 0 — DICOM Part 14 is a real worldwide calibration, and it is why
+     a reading room is colourless on purpose rather than by omission. The
+     heat ramp is monotone in lightness too, so it carries a value scale
+     rather than needing a colour key. */
+  function lutFrom(stops) {
+    var out = new Uint8Array(256 * 3), i, u, k, f, a, b;
+    for (i = 0; i < 256; i++) {
+      u = (i / 255) * (stops.length - 1);
+      k = Math.min(stops.length - 2, u | 0); f = u - k;
+      a = stops[k]; b = stops[k + 1];
+      out[i * 3] = a[0] + (b[0] - a[0]) * f;
+      out[i * 3 + 1] = a[1] + (b[1] - a[1]) * f;
+      out[i * 3 + 2] = a[2] + (b[2] - a[2]) * f;
+    }
+    return out;
+  }
+  var LUTS = {
+    gsdf: lutFrom([[8, 8, 8], [250, 250, 250]]),
+    iron: lutFrom([resolveRGB('oklch(0.060 0.010 30)'), resolveRGB('oklch(0.280 0.130 28)'),
+                   resolveRGB('oklch(0.520 0.200 38)'), resolveRGB('oklch(0.720 0.180 62)'),
+                   resolveRGB('oklch(0.880 0.155 92)'), resolveRGB('oklch(0.985 0.012 95)')])
+  };
+
+  /* ── the source, which is a canvas and nothing else ──────────────────
+     A synthetic phantom. Nothing here is a real scan of a real person, and
+     nothing is decoded from one. It is drawn into an offscreen canvas, and
+     everything the workstation says about it is obtained by READING IT
+     BACK — not by re-evaluating the function that drew it. */
+  var SW = 520, SH = 520;
+  var src = document.createElement('canvas');
+  src.width = SW; src.height = SH;
+  var sx2 = src.getContext('2d', { willReadFrequently: true });
+  var srcImg = sx2.createImageData(SW, SH);
+
+  function drawSlice(z) {
+    var d = srcImg.data, x, y, o, u, v, r, a, val, i;
+    var r0 = rng(0x5CA4 + ((z * 97) | 0));
+    for (y = 0; y < SH; y++) {
+      for (x = 0; x < SW; x++) {
         o = (y * SW + x) * 4;
-        d[o] = d[o + 1] = d[o + 2] = (e * 255) | 0;
+        u = (x / SW - 0.5) * 2; v = (y / SH - 0.5) * 2;
+        r = Math.sqrt(u * u * 1.18 + v * v);
+        val = 0;
+        if (r < 0.94) {
+          val = 0.30 + 0.10 * Math.sin(u * 9 + z * 4) * Math.cos(v * 7 - z * 3);
+          /* the wall */
+          if (r > 0.88) val = 0.86;
+          /* two structures that move through the stack */
+          a = Math.exp(-(Math.pow(u + 0.32 + 0.16 * Math.sin(z * TAU), 2) * 26 + Math.pow(v + 0.12, 2) * 30));
+          val += a * 0.52;
+          a = Math.exp(-(Math.pow(u - 0.38, 2) * 34 + Math.pow(v - 0.24 - 0.2 * Math.cos(z * TAU), 2) * 22));
+          val += a * 0.44;
+          /* a dense inclusion that only appears over part of the stack */
+          a = Math.exp(-(Math.pow(u - 0.04, 2) * 190 + Math.pow(v + 0.36, 2) * 190));
+          val += a * (0.5 + 0.5 * Math.sin(z * TAU * 2)) * 0.95;
+          val += (r0() - 0.5) * 0.05;
+        }
+        val = val < 0 ? 0 : val > 1 ? 1 : val;
+        i = (val * 255) | 0;
+        d[o] = d[o + 1] = d[o + 2] = i;
         d[o + 3] = 255;
       }
     }
-    sx2.putImageData(img, 0, 0);
-  })();
-
-  var REGIONS = [
-    { key: 'a', label: 'reel A · 0–340', x: 0 },
-    { key: 'b', label: 'reel B · 340–680', x: 340 },
-    { key: 'c', label: 'reel C · 680–1024', x: 680 }
-  ];
-  var region = 0;
-
-  var c = chassis(4, {
-    caps: '<div class="ac-caps" data-testid="acetate-4-caps">' +
-      REGIONS.map(function (r, i) {
-        return '<button class="ac-cap-btn' + (i === 0 ? ' ac-on' : '') + '" data-r="' + i + '" data-testid="acetate-4-region-' + r.key + '">' + r.label + '</button>';
-      }).join('') + '</div>',
-    work: '<div class="ac-well" data-testid="acetate-4-well"><canvas data-testid="acetate-4-canvas"></canvas></div>',
-    meta: [
-      { k: 'source', v: 'getImageData', c: 'aux' },
-      { k: 'region read', v: '—', c: 'aux' },
-      { k: 'peak bin', v: '—', c: 'src' }
-    ]
-  });
-
-  var a = $('acetate-4-canvas'), ax = a.getContext('2d'), aw = 0, ah = 0;
-  var out = null, o32 = null;
-  function asize() {
-    var s = fit(a, 250); aw = s.w; ah = s.h;
-    out = ax.createImageData(aw, ah); o32 = new Uint32Array(out.data.buffer);
+    sx2.putImageData(srcImg, 0, 0);
   }
-  asize(); onResize(function () { asize(); demo.render(demo.t); });
 
-  var COLS = 340;
-  var demo = WAM.clock('acetate-4-stage', {
-    el: $('acetate-4'), dur: 14000, poster: 0.5,
+  var lut = 'gsdf', cine = true, roiOn = true, recon = false;
+  var ww = 0.62, wl = 0.46, dragging = false, lastXY = null;
+  var readCosts = [], out = null, o32 = null;
+  var VX = 20, VY = 18, VW = 560, VH = 560;             /* the viewport */
+  var RX = VX + VW + 26, RW = W - RX - 20;
+
+  function ensureOut() {
+    if (!out || out.width !== VW) { out = ctx.createImageData(VW, VH); o32 = new Uint32Array(out.data.buffer); }
+  }
+
+  /* ROI, in source coordinates */
+  var roi = { x: 190, y: 150, w: 140, h: 110 };
+
+  var demo = WAM.clock('r4-stage', {
+    el: $('r4-world'), dur: 20000, poster: 0.4,
     render: function (t) {
-      var r = REGIONS[region];
-      var scroll = Math.round(t * 40);
-      var x0 = Math.min(SW - COLS, r.x + scroll);
-      /* THE readback. Everything drawn below came out of this call. */
-      var src = sx2.getImageData(x0, 0, COLS, SH).data;
+      ensureOut();
+      var z = cine ? t : 0.3;
+      drawSlice(z);
 
-      var x, y, sxi, syi, o, val, peak = 0, peakY = 0;
-      for (y = 0; y < ah; y++) {
-        syi = ((y / ah) * SH) | 0;
-        for (x = 0; x < aw; x++) {
-          sxi = ((x / aw) * COLS) | 0;
-          val = src[(syi * COLS + sxi) * 4];
-          o = y * aw + x;
-          o32[o] = (255 << 24) | (LUT[val * 3 + 2] << 16) | (LUT[val * 3 + 1] << 8) | LUT[val * 3];
-          if (val > peak) { peak = val; peakY = y; }
+      /* THE READBACK. Everything below comes out of this one call — the
+         display mapping, the histogram, the region statistics and the
+         reconstruction. Not one of them re-evaluates the function that
+         drew the slice. */
+      var t0 = performance.now();
+      var s = sx2.getImageData(0, 0, SW, SH).data;
+      readCosts.push(performance.now() - t0);
+      if (readCosts.length > 20) readCosts.shift();
+
+      var table = LUTS[lut];
+      var lo = wl - ww / 2, hi = wl + ww / 2;
+      var hist = new Uint32Array(64);
+      var x, y, sxi, syi, v, n, o;
+      var roiSum = 0, roiSq = 0, roiN = 0;
+
+      for (y = 0; y < VH; y++) {
+        syi = ((y / VH) * SH) | 0;
+        for (x = 0; x < VW; x++) {
+          sxi = ((x / VW) * SW) | 0;
+          v = s[(syi * SW + sxi) * 4] / 255;
+          hist[Math.min(63, (v * 64) | 0)]++;
+          n = (v - lo) / (hi - lo);
+          n = n < 0 ? 0 : n > 1 ? 1 : n;
+          o = y * VW + x;
+          var idx = (n * 255) | 0;
+          o32[o] = (255 << 24) | (table[idx * 3 + 2] << 16) | (table[idx * 3 + 1] << 8) | table[idx * 3];
         }
       }
-      ax.putImageData(out, 0, 0);
+      for (y = roi.y; y < roi.y + roi.h; y++) {
+        for (x = roi.x; x < roi.x + roi.w; x++) {
+          v = s[(y * SW + x) * 4];
+          roiSum += v; roiSq += v * v; roiN++;
+        }
+      }
 
-      c.tc.textContent = timecode(t, 14000);
-      c.kv(1).textContent = 'x ' + x0 + '–' + (x0 + COLS) + ' of ' + SW;
-      c.kv(2).textContent = (((1 - peakY / ah) * 22050) | 0).toLocaleString() + ' Hz';
+      ctx.fillStyle = self.SKIN_CSS(VOID);
+      ctx.fillRect(0, 0, W, H);
+      ctx.putImageData(out, VX, VY);
+
+      /* viewport furniture — thin rules, nothing decorative */
+      ctx.strokeStyle = RULE; ctx.lineWidth = 1;
+      ctx.strokeRect(VX - 0.5, VY - 0.5, VW + 1, VH + 1);
+
+      if (recon) {
+        /* the mark, assembled out of pixels above threshold. No path data
+           is authored: change the slice and the target set changes. */
+        ctx.fillStyle = ANNO;
+        var step = 5, cnt = 0;
+        for (y = 0; y < SH; y += step) {
+          for (x = 0; x < SW; x += step) {
+            if (s[(y * SW + x) * 4] > 190) {
+              ctx.fillRect(VX + (x / SW) * VW, VY + (y / SH) * VH, 2, 2);
+              cnt++;
+            }
+          }
+        }
+        ctx.font = '11px ' + (token('--mono') || 'monospace');
+        ctx.fillText(cnt.toLocaleString() + ' PIXELS OVER THRESHOLD, READ BACK', VX + 10, VY + VH - 12);
+      }
+
+      if (roiOn) {
+        ctx.strokeStyle = ROI; ctx.lineWidth = 1;
+        ctx.strokeRect(VX + (roi.x / SW) * VW + 0.5, VY + (roi.y / SH) * VH + 0.5,
+                       (roi.w / SW) * VW, (roi.h / SH) * VH);
+      }
+
+      /* overlay annotation, the one colour allowed in */
+      ctx.fillStyle = ANNO;
+      ctx.font = '12px ' + (token('--mono') || 'monospace');
+      ctx.fillText('SYNTHETIC PHANTOM — NOT A PATIENT', VX + 10, VY + 22);
+      ctx.fillText('W ' + Math.round(ww * 1000) + '  L ' + Math.round(wl * 1000), VX + 10, VY + 40);
+
+      /* ── the right-hand column, all of it derived ────────────────── */
+      var hy = VY + 14;
+      ctx.fillStyle = INK; ctx.font = '11px ' + (token('--mono') || 'monospace');
+      ctx.fillText('HISTOGRAM — COUNTED FROM THE PIXELS, EVERY FRAME', RX, hy);
+      var hh = 150, hmax = 1;
+      for (x = 0; x < 64; x++) if (hist[x] > hmax) hmax = hist[x];
+      for (x = 0; x < 64; x++) {
+        var bw = RW / 64, bh = Math.round((hist[x] / hmax) * hh);
+        var inWin = (x / 64) >= lo && (x / 64) <= hi;
+        ctx.fillStyle = inWin ? INK : RULE;
+        ctx.fillRect(RX + x * bw, hy + 12 + hh - bh, bw - 1, bh);
+      }
+      /* the window, drawn over the histogram it selects, clamped to the
+         histogram's own range — an unclamped box ran off both ends and
+         stopped reading as a selection */
+      var wLo = Math.max(0, Math.min(1, lo)), wHi = Math.max(0, Math.min(1, hi));
+      ctx.strokeStyle = ANNO; ctx.lineWidth = 1;
+      ctx.strokeRect(RX + wLo * RW + 0.5, hy + 12.5, Math.max(2, (wHi - wLo) * RW), hh);
+
+      /* the LUT it maps through */
+      var ly = hy + 12 + hh + 34;
+      ctx.fillStyle = INK;
+      ctx.fillText(lut === 'gsdf' ? 'LUT — DICOM GSDF GREY, 256 ENTRIES' : 'LUT — HEAT, 256 ENTRIES, MONOTONE IN L', RX, ly - 10);
+      for (x = 0; x < RW; x++) {
+        var li = ((x / RW) * 255) | 0;
+        ctx.fillStyle = 'rgb(' + table[li * 3] + ',' + table[li * 3 + 1] + ',' + table[li * 3 + 2] + ')';
+        ctx.fillRect(RX + x, ly, 1, 26);
+      }
+      ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly - 0.5, RW + 1, 27);
+
+      /* the slice ladder — where in the stack we are */
+      var sy2 = ly + 62;
+      ctx.fillStyle = INK;
+      ctx.fillText('STACK', RX, sy2 - 10);
+      for (x = 0; x < 48; x++) {
+        var at = Math.abs(x / 48 - z) < 0.02;
+        ctx.fillStyle = at ? ANNO : RULE;
+        ctx.fillRect(RX + x * (RW / 48), sy2, RW / 48 - 2, at ? 18 : 10);
+      }
+
+      /* ── the region, read back and magnified ─────────────────────
+         A fourth thing derived from the same read. Nearest-neighbour on
+         purpose: a workstation magnifies by showing you the pixels, not by
+         inventing smoother ones between them, and the blocks are the
+         honest statement of how much data is actually there. */
+      var dy = sy2 + 58;
+      ctx.fillStyle = INK;
+      ctx.fillText('REGION — THE SAME PIXELS, MAGNIFIED', RX, dy - 10);
+      var dw = Math.min(RW, 300), dh = Math.round(dw * (roi.h / roi.w));
+      if (roiOn) {
+        for (y = 0; y < dh; y++) {
+          syi = roi.y + ((y / dh) * roi.h) | 0;
+          for (x = 0; x < dw; x++) {
+            sxi = roi.x + ((x / dw) * roi.w) | 0;
+            v = s[(syi * SW + sxi) * 4] / 255;
+            n = (v - lo) / (hi - lo);
+            n = n < 0 ? 0 : n > 1 ? 1 : n;
+            var di = (n * 255) | 0;
+            ctx.fillStyle = 'rgb(' + table[di * 3] + ',' + table[di * 3 + 1] + ',' + table[di * 3 + 2] + ')';
+            ctx.fillRect(RX + x, dy + y, 1, 1);
+          }
+        }
+        ctx.strokeStyle = ROI; ctx.strokeRect(RX - 0.5, dy - 0.5, dw + 1, dh + 1);
+      } else {
+        ctx.fillStyle = RULE;
+        ctx.fillText('REGION OFF', RX, dy + 16);
+      }
+
+      /* the profile through the region's middle row, also from the read */
+      if (roiOn) {
+        var px2 = RX + dw + 24, pw2 = RW - dw - 24, ph2 = dh;
+        ctx.fillStyle = INK;
+        ctx.fillText('PROFILE THROUGH ITS MIDDLE ROW', px2, dy - 10);
+        ctx.fillStyle = RULE;
+        ctx.fillRect(px2, dy + ph2, pw2, 1);
+        ctx.fillStyle = ANNO;
+        for (x = 0; x < pw2; x++) {
+          sxi = roi.x + ((x / pw2) * roi.w) | 0;
+          syi = roi.y + (roi.h >> 1);
+          v = s[(syi * SW + sxi) * 4] / 255;
+          ctx.fillRect(px2 + x, dy + ph2 - v * ph2, 1, 2);
+        }
+      }
+
+      var mean = roiN ? roiSum / roiN : 0;
+      var sd = roiN ? Math.sqrt(Math.max(0, roiSq / roiN - mean * mean)) : 0;
+      $('r4-slice').textContent = Math.round(z * 48) + ' of 48';
+      $('r4-wwwl').textContent = Math.round(ww * 1000) + ' / ' + Math.round(wl * 1000);
+      $('r4-roistat').textContent = roiOn ? (mean.toFixed(1) + ' ± ' + sd.toFixed(1)) : 'off';
+      $('r4-read').textContent = (SW * SH).toLocaleString();
+      $('r4-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
     }
   });
-  $('acetate-4-caps').addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-r]'); if (!b) return;
-    region = Number(b.dataset.r);
-    [].forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('ac-on', x === b); });
+
+  /* Drag for window and level — the two numbers every reading room argues
+     about. Horizontal is window, vertical is level, which is the convention
+     every workstation uses. */
+  cv.addEventListener('pointerdown', function (e) { dragging = true; lastXY = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerup', function (e) { dragging = false; cv.releasePointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', function (e) {
+    if (!dragging || !lastXY) return;
+    ww = Math.max(0.06, Math.min(1.4, ww + (e.clientX - lastXY[0]) * 0.003));
+    wl = Math.max(0.05, Math.min(0.95, wl - (e.clientY - lastXY[1]) * 0.003));
+    lastXY = [e.clientX, e.clientY];
     demo.render(demo.t);
   });
 
-  /* ── graphic: the brandmark, resolved out of pixels ──────────────────
-     No path data is authored. The mark is rasterised to an off-screen
-     canvas, read back, and every pixel above threshold becomes one
-     particle's destination. Change the face and the target set changes. */
-  var g = $('g4-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
-  var mk = document.createElement('canvas'), mkx = mk.getContext('2d', { willReadFrequently: true });
-  var TARGETS = null, START = null;
-  var TINT = token('--tint-canvas') || '#e2c23a';
-  var HZ4 = token('--hz-400') || '#666';
-
-  function buildTargets() {
-    mk.width = Math.max(160, Math.round(gw));
-    mk.height = Math.max(80, Math.round(gh));
-    mkx.clearRect(0, 0, mk.width, mk.height);
-    mkx.fillStyle = '#fff';
-    mkx.textAlign = 'center'; mkx.textBaseline = 'middle';
-    var size = Math.min(mk.width * 0.32, mk.height * 0.64);
-    mkx.font = '900 ' + size + 'px ' + (token('--sans') || 'sans-serif');
-    mkx.fillText('WAM', mk.width / 2, mk.height * 0.46);
-    mkx.font = '500 ' + (size * 0.20) + 'px ' + (token('--mono') || 'monospace');
-    mkx.fillText('2 0 2 6', mk.width / 2, mk.height * 0.78);
-
-    var d = mkx.getImageData(0, 0, mk.width, mk.height).data;
-    var pts = [], x, y, i, r = rng(0x4A17);
-    for (y = 0; y < mk.height; y += 2) {
-      for (x = 0; x < mk.width; x += 2) {
-        if (d[(y * mk.width + x) * 4 + 3] > 128) pts.push(x, y);
-      }
-    }
-    TARGETS = new Float32Array(pts);
-    START = new Float32Array(pts.length);
-    for (i = 0; i < pts.length; i += 2) {
-      START[i] = r() * gw;
-      START[i + 1] = r() * gh;
-    }
-  }
-  function gsize() { var s = fit(g, 230); gw = s.w; gh = s.h; buildTargets(); }
-  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
-
-  function ease(u) { return u < 0 ? 0 : u > 1 ? 1 : 1 - Math.pow(1 - u, 3); }
-
-  var gdemo = WAM.clock('g4-stage', {
-    el: $('g4-stage'), dur: 7000, poster: 0.82,
-    render: function (t) {
-      gx.clearRect(0, 0, gw, gh);
-      /* out and back, so both ends of the demo are a complete composition
-         rather than a blank surface */
-      var u = ease(t < 0.62 ? t / 0.62 : 1 - (t - 0.62) / 0.38);
-      var i, n = TARGETS.length, px2, py, lag;
-      gx.fillStyle = TINT;
-      for (i = 0; i < n; i += 2) {
-        lag = ease(Math.min(1, u * 1.35 - (i / n) * 0.35));
-        px2 = START[i] + (TARGETS[i] - START[i]) * lag;
-        py = START[i + 1] + (TARGETS[i + 1] - START[i + 1]) * lag;
-        gx.globalAlpha = 0.35 + 0.6 * lag;
-        gx.fillRect(px2, py, 1.6 * DPR, 1.6 * DPR);
-      }
-      gx.globalAlpha = 1;
-      gx.fillStyle = HZ4;
-      gx.font = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
-      gx.fillText((TARGETS.length / 2).toLocaleString() + ' destinations, all read back from a canvas', 10 * DPR, gh - 8 * DPR);
-    }
+  $('r4-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.lut) {
+      lut = b.dataset.lut;
+      [].forEach.call(this.querySelectorAll('[data-lut]'), function (x) { x.classList.toggle('r4-on', x === b); });
+    } else if (b === $('r4-cine')) { cine = !cine; b.classList.toggle('r4-on', cine); }
+    else if (b === $('r4-roi')) { roiOn = !roiOn; b.classList.toggle('r4-on', roiOn); }
+    else if (b === $('r4-recon')) { recon = !recon; b.classList.toggle('r4-on', recon); }
+    demo.render(demo.t);
   });
 })();
 
