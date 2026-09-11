@@ -1580,7 +1580,7 @@ void main(){ v_p = (modelMatrix*vec4(position, 1.0)).xyz; v_n = normalize(normal
    characteristic matrix for both polarisations, twelve wavelengths, the CIE
    observer; the reflection is of a procedural sky, the rest is transmitted */
 const FILM_FS = `precision highp float; in vec3 v_p; in vec3 v_n; in vec2 v_uv; out vec4 o;
-uniform vec3 cameraPosition, u_base, u_sunDir; uniform sampler2D u_tmap; uniform vec2 u_toff; uniform float u_nf, u_ns, u_tmin, u_tmax, u_transmit, u_skyGain;
+uniform vec3 cameraPosition, u_base, u_sunDir; uniform sampler2D u_tmap; uniform vec2 u_toff; uniform float u_nf, u_ns, u_tmin, u_tmax, u_transmit, u_skyGain, u_norm;
 float filmR(float lam, float cosi, float nf, float d, float ns){ float sini2 = 1.0 - cosi*cosi; float cosf = sqrt(max(0.0, 1.0 - sini2/(nf*nf))); float coss = sqrt(max(0.0, 1.0 - sini2/(ns*ns)));
   float del = 6.2831853*nf*d*cosf/lam; float c = cos(del), sn = sin(del); float R = 0.0;
   for (int pol = 0; pol < 2; pol++){ float e0 = pol == 0 ? cosi : 1.0/cosi; float ef = pol == 0 ? nf*cosf : nf/cosf; float es = pol == 0 ? ns*coss : ns/coss;
@@ -1596,6 +1596,10 @@ void main(){ vec3 n = normalize(v_n); vec3 V = normalize(cameraPosition - v_p); 
   vec3 acc = vec3(0.0), wht = vec3(0.0); float Ravg = 0.0;
   for (int k = 0; k < 12; k++){ float lam = 400.0 + 300.0*(float(k)+0.5)/12.0; float R = filmR(lam, cosi, u_nf, d, u_ns); vec3 xb = xyzBar(lam); acc += xb*R; wht += xb; Ravg += R/12.0; }
   vec3 Rrgb = max((XYZ2RGB*acc)/(XYZ2RGB*wht), 0.0);
+  /* u_norm: show the film's chromaticity at full contrast — an oil/water
+     boundary reflects almost nothing, so the true modulation is a few percent
+     of the sky; the plate says so */
+  Rrgb = mix(Rrgb, Rrgb/max(Ravg, 1e-4)*0.10, u_norm);
   vec3 refl = skyAt(reflect(-V, n)); vec3 col = Rrgb*refl + u_base*(1.0 - Ravg)*u_transmit;
   col = 1.0 - exp(-col*1.1); o = vec4(pow(col, vec3(1.0/2.2)), 1.0); }`;
 const DISC_VS = `precision highp float; in vec3 position; in vec3 normal; in vec2 uv; uniform mat4 projectionMatrix, modelViewMatrix, modelMatrix; uniform mat3 normalMatrix; out vec3 v_p; out vec3 v_n; out vec2 v_uv;
@@ -1678,7 +1682,7 @@ const ENTRIES = {
     diagram: 'film', control: 'area',
     build() { const sc = new THREE.Scene(); sc.background = COL.well;
       this.tmap = thicknessMap((u, v) => 1 - v + 0.10 * (vnoise(u * 9, v * 5) - 0.5) + 0.05 * Math.sin(u * TAU * 3 + v * 9));
-      this.uniforms = { u_base: { value: COL.well }, u_sunDir: { value: new THREE.Vector3(0.5, 0.75, 0.6) }, u_tmap: { value: this.tmap }, u_toff: { value: new THREE.Vector2() }, u_nf: { value: 1.33 }, u_ns: { value: 1.0 }, u_tmin: { value: 140 }, u_tmax: { value: 900 }, u_transmit: { value: 1 }, u_skyGain: { value: 0.9 } };
+      this.uniforms = { u_base: { value: COL.well }, u_sunDir: { value: new THREE.Vector3(0.5, 0.75, 0.6) }, u_tmap: { value: this.tmap }, u_toff: { value: new THREE.Vector2() }, u_nf: { value: 1.33 }, u_ns: { value: 1.0 }, u_tmin: { value: 140 }, u_tmax: { value: 900 }, u_transmit: { value: 1 }, u_skyGain: { value: 0.9 }, u_norm: { value: 0 } };
       const mat = new THREE.RawShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: FILM_VS, fragmentShader: FILM_FS, uniforms: this.uniforms });
       const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), mat); sc.add(mesh);
       return { scene: sc, radius: 3.1, view: { mode: 'full', yaw0: 0, pitch0: 6 }, apply: (p) => { this.uniforms.u_tmin.value = 140 - 120 * p + 20; this.uniforms.u_tmax.value = 900 - 700 * p; }, tick: (T) => { this.uniforms.u_toff.value.set(T * 0.02, 0); } }; } },
@@ -1694,12 +1698,12 @@ const ENTRIES = {
       return { scene: sc, radius: 3.6, view: { mode: 'sway', yaw0: 0, pitch0: 18, yawAmp: 30, pitchAmp: 20 }, apply: (p) => { this.uniforms.u_pitch.value = 0.74 + 1.26 * p; } }; } },
   oil: { no: 5, title: 'Oil on water', mech: 'single film · a slick', asset: 'geometry authored · program written out', prog: 'RawShaderMaterial · one-film transfer matrix on water · a thickness map',
     text: '<b>The puddle is the film\'s mirror.</b> A slick of oil, index about 1.4, floats on water at 1.33, a few hundred nanometres thick and thinner toward its edges. Both reflections are from a lower to a higher index, so unlike the bubble a thin edge goes bright, not black. The rings are contours of thickness again, and they drift as the slick spreads.',
-    mechp: 'One film, <b>n 1.4</b>, on water, <b>n 1.33</b>. The base is dark so only the film\'s reflection reaches you. The slider spreads the slick — thinner everywhere, the rings widen and the centre colour walks down the spectrum.',
+    mechp: 'One film, <b>n 1.4</b>, on water, <b>n 1.33</b>. The oil–water boundary reflects almost nothing, so the film modulates only a few percent of the sky; the plate shows that modulation at full contrast, as your eye does against a bright overcast. The slider spreads the slick — thinner everywhere, the rings widen and the centre colour walks down the spectrum.',
     paramK: 'spread', paramFmt: (p) => `${Math.round(700 - 550 * p)} nm at the centre`, stack: (p) => filmStack(1.4, 700 - 550 * p, 1.33),
     diagram: 'film', control: 'area',
     build() { const sc = new THREE.Scene(); sc.background = COL.well;
       this.tmap = thicknessMap((u, v) => { const d = Math.hypot(u - 0.5, v - 0.5) * 2; return Math.max(0, 1 - d * d) * (0.75 + 0.25 * fbm(u * 4, v * 4)) + 0.12 * (vnoise(u * 12, v * 12) - 0.5); });
-      this.uniforms = { u_base: { value: new THREE.Color(0.02, 0.025, 0.035) }, u_sunDir: { value: new THREE.Vector3(0.0, 0.45, 1.0) }, u_tmap: { value: this.tmap }, u_toff: { value: new THREE.Vector2() }, u_nf: { value: 1.4 }, u_ns: { value: 1.33 }, u_tmin: { value: 40 }, u_tmax: { value: 700 }, u_transmit: { value: 1 }, u_skyGain: { value: 3.4 } };
+      this.uniforms = { u_base: { value: new THREE.Color(0.02, 0.025, 0.035) }, u_sunDir: { value: new THREE.Vector3(0.0, 0.45, 1.0) }, u_tmap: { value: this.tmap }, u_toff: { value: new THREE.Vector2() }, u_nf: { value: 1.4 }, u_ns: { value: 1.33 }, u_tmin: { value: 40 }, u_tmax: { value: 700 }, u_transmit: { value: 1 }, u_skyGain: { value: 1.2 }, u_norm: { value: 1 } };
       const mat = new THREE.RawShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: FILM_VS, fragmentShader: FILM_FS, uniforms: this.uniforms });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), mat); mesh.rotation.x = -Math.PI / 2; sc.add(mesh);
       return { scene: sc, radius: 3.0, view: { mode: 'sway', yaw0: 0, pitch0: 26, yawAmp: 30, pitchAmp: 10 }, apply: (p) => { this.uniforms.u_tmax.value = 700 - 550 * p; }, tick: (T) => { this.uniforms.u_toff.value.set(T * 0.006, T * 0.004); } }; } }
