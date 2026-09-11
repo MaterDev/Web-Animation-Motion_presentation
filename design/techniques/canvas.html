@@ -469,6 +469,56 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
 .h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
 .h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §3 · BOARD — a PCB layout editor
+
+   Green soldermask over laminate, ENIG gold pads, white silkscreen. The
+   world exists because "select net" IS a pick buffer: an editor with no
+   elements has to rebuild the pointer by hand, and the way every layout
+   tool has done it is a second surface where an object's colour is its
+   identity. Hover a pad here and the whole net lights up across the board,
+   from one getImageData of one pixel.
+
+   Soldermask is a TRANSLUCENT ink over copper, so it composites with
+   multiply — physically correct rather than stylistically preferred, and
+   the reason --b3-mask and --b3-mask-hi are the same ink over two
+   substrates rather than two colours.
+   ───────────────────────────────────────────────────────────────────────── */
+.b3 {
+  --b3-mask:    oklch(0.230 0.035 165);   /* soldermask over bare laminate  */
+  --b3-mask-hi: oklch(0.290 0.040 165);   /* mask over copper pour          */
+  /* Copper under soldermask really is only a shade lighter than the mask
+     over bare laminate, and at that shade the tracks vanish at projection
+     distance. This is the one place the world is tuned for the back of the
+     room rather than for accuracy, and it is stated rather than smuggled. */
+  --b3-cu:      oklch(0.430 0.062 162);   /* track, read from the back row  */
+  --b3-sub:     oklch(0.310 0.045  92);   /* bare FR-4                      */
+  --b3-pad:     oklch(0.820 0.105  88);   /* ENIG gold                      */
+  --b3-silk:    oklch(0.930 0.006 165);   /* white silkscreen               */
+  --b3-net:     oklch(0.760 0.130 215);   /* the highlighted net            */
+  --b3-sel:     oklch(0.960 0.080  88);   /* the selected pad               */
+  --b3-drill:   oklch(0.120 0.010 165);   /* drill holes                    */
+  --b3-gutter: 20px;
+}
+.b3-world { background: oklch(0.135 0.012 165); }
+.b3-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 14px var(--b3-gutter) 4px; }
+.b3-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--b3-silk); background: transparent;
+  border: 1px solid var(--b3-mask-hi); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.b3-btn.b3-on { color: oklch(0.135 0.012 165); background: var(--b3-pad); border-color: var(--b3-pad); }
+.b3-stage { position: relative; line-height: 0; padding: 8px var(--b3-gutter); }
+.b3-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.b3-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--b3-silk);
+  max-width: 74ch; padding: 4px var(--b3-gutter) 8px; opacity: 0.66;
+}
+.b3-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 6px var(--b3-gutter) 18px; }
+.b3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--b3-mask-hi); }
+.b3-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--b3-pad); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.b3-kv b.b3-net { color: var(--b3-net); }
 </style>
 </head>
 <body data-testid="technique-canvas">
@@ -669,27 +719,48 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
   <!-- ═══ §3 · HIT TESTING ════════════════════════════════════════════ -->
   <section class="cv-sec" data-testid="section-3">
     <div class="cv-sec-head"><span class="cv-sec-n">§3</span><h2>Hit testing</h2></div>
-    <p class="cv-because">The pointer is rebuilt by hand, <b>because there are no nodes.</b>
-      No element means no <code>:hover</code>, no event target, no accessibility tree.
-      The standard answer is a second surface nobody sees: draw every object again in a
-      colour that <i>is</i> its identity, then read the one pixel under the cursor and
-      decode it. One <code>getImageData</code> call, regardless of how many objects
-      there are.</p>
-    <div class="cv-pair">
-      <div>
-        <div class="cv-lede">Explanatory graphic</div>
-        <div class="cv-fig" data-testid="g3-stage">
-          <canvas data-testid="g3-canvas"></canvas>
-          <div class="cv-cap">Identity encoded into colour, and one pixel read back out
-            of it. The index travels in the red and green channels; alpha separates a
-            hit from the ground.</div>
-        </div>
+    <p class="cv-because">The pointer is rebuilt by hand, <b>because there are no
+      nodes.</b> No element means no <code>:hover</code>, no event target, no
+      accessibility tree. The answer every layout editor has reached for is a second
+      surface nobody sees: draw everything again in a colour that <i>is</i> its
+      identity, then read the one pixel under the cursor and decode it. One
+      <code>getImageData</code> call, however many objects there are — and the board
+      below has thousands. <b>Move the pointer over it.</b></p>
+
+    <div class="b3 b3-world" data-testid="b3-world">
+      <div class="b3-bar" data-testid="b3-bar">
+        <button class="b3-btn" data-testid="b3-layer">show the net layer</button>
+        <button class="b3-btn b3-on" data-testid="b3-route">autoroute</button>
+        <button class="b3-btn b3-on" data-testid="b3-silk">silkscreen</button>
+        <button class="b3-btn b3-on" data-testid="b3-mask">soldermask</button>
       </div>
-      <div>
-        <div class="cv-lede">ACETATE · screen 3</div>
-        <div data-testid="acetate-3-mount"></div>
+      <div class="b3-stage" data-testid="b3-stage">
+        <canvas data-testid="b3-canvas"></canvas>
+      </div>
+      <p class="b3-cap" data-testid="b3-cap">The net layer is the second surface. Every
+        track and every pad is drawn on it again in a flat colour that encodes its net
+        number — red and green carry the index, blue carries the object class, and
+        alpha separates a hit from the board. It is never composited to the screen.
+        Switch to it and you are looking at the thing the pointer sees.</p>
+      <div class="b3-plate" data-testid="b3-readouts">
+        <div class="b3-kv">nets<b data-testid="b3-nets">—</b></div>
+        <div class="b3-kv">objects on the board<b data-testid="b3-objects">—</b></div>
+        <div class="b3-kv">pixel read<b data-testid="b3-pixel">—</b></div>
+        <div class="b3-kv">decoded<b class="b3-net" data-testid="b3-decoded">nothing under the pointer</b></div>
+        <div class="b3-kv">read cost<b data-testid="b3-readcost">—</b></div>
       </div>
     </div>
+
+    <p class="cv-instr" data-testid="b3-instr">
+      <b>The cost of the read does not move with the object count</b>, and that is the
+      whole reason this technique survives. A scene graph answers "what is under the
+      pointer" by walking a tree; a pick buffer answers it by looking at one pixel,
+      so the answer costs the same whether the board carries forty objects or forty
+      thousand. What it costs instead is a second full draw every frame — which is
+      the trade, stated rather than hidden, and it is why the net layer is rebuilt at
+      the same <code>t</code> as the board. A pick buffer one frame out of date is
+      the classic defect here: the picture moves and the hit regions do not.
+    </p>
   </section>
 
   <!-- ═══ §4 · READBACK ═══════════════════════════════════════════════ -->
@@ -909,7 +980,7 @@ var acProbe = document.createElement('div');
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-acProbe.className = 'ac t5 v1 h2';
+acProbe.className = 'ac t5 v1 h2 b3';
 acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(acProbe);
 var acRoot = getComputedStyle(acProbe);
@@ -1818,218 +1889,233 @@ var SEC2 = (function () {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
-   §3 · HIT TESTING
+   §3 · BOARD — hit testing
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  var MARKERS = 2400;
-  var EVT = resolveRGB(token('--ac-evt') || '#8b7fd6');
-  var INK = resolveRGB(token('--ac-ink') || '#eee');
-  var GRD = resolveRGB(token('--ac-grid') || '#555');
-  var MUTE = resolveRGB(token('--ac-mute') || '#666');
-  function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  var W = 1240, H = 600;
+  var cv = $('b3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
 
-  /* Marker positions are seeded, so the identity a pixel decodes to is the
-     same on every load and can be read off a screenshot. */
-  var MK = [];
-  (function () {
-    var r = rng(0x5EED17), i;
-    for (i = 0; i < MARKERS; i++) {
-      MK.push({ u: r(), lane: (r() * 4) | 0, len: 0.0012 + r() * 0.004, kind: (r() * 3) | 0 });
-    }
-    MK.sort(function (a, b) { return a.u - b.u; });
-  })();
-  var KINDS = ['CUT', 'FADE', 'MARK'];
-
-  var edlRows = MK.slice(0, 400).map(function (m, i) {
-    return '<div class="ac-edl-row" data-testid="acetate-3-edl-' + i + '"><span>' +
-      ('0000' + i).slice(-4) + '</span><b>' + KINDS[m.kind] + '</b><span>' +
-      timecode(m.u, 210000).slice(3, 11) + '</span></div>';
-  }).join('');
-
-  var c = chassis(3, {
-    caps: '<div class="ac-caps" data-testid="acetate-3-caps">' +
-      '<button class="ac-cap-btn" data-testid="acetate-3-pick-toggle">show pick buffer</button></div>',
-    work: '<div class="ac-edl">' +
-        '<div class="ac-well" data-testid="acetate-3-well"><canvas data-testid="acetate-3-canvas"></canvas></div>' +
-        '<div class="ac-edl-list" data-testid="acetate-3-edl"><div class="ac-edl-head">edit decision list</div>' + edlRows + '</div>' +
-      '</div>',
-    meta: [
-      { k: 'events', v: MARKERS.toLocaleString(), c: 'evt' },
-      { k: 'pixel read', v: '—', c: 'evt' },
-      { k: 'decoded id', v: 'none', c: 'ink' }
-    ]
-  });
-
-  var a = $('acetate-3-canvas'), ax = a.getContext('2d'), aw = 0, ah = 0;
-  /* The pick buffer: a second surface, the same size, that no user sees.
-     willReadFrequently because reading one pixel per pointermove is exactly
-     the access pattern that hint exists for. */
+  /* The net layer: a second surface the same size that is never composited.
+     willReadFrequently because one pixel per pointermove is exactly the
+     access pattern that hint exists for. */
   var pk = document.createElement('canvas');
+  pk.width = W; pk.height = H;
   var px = pk.getContext('2d', { willReadFrequently: true });
-  function asize() {
-    var s = fit(a, 260); aw = s.w; ah = s.h;
-    pk.width = aw; pk.height = ah;
-  }
-  asize(); onResize(function () { asize(); demo.render(demo.t); });
 
-  var showPick = false, hoverId = -1, hoverPx = null;
-  var laneY = function (l) { return 44 * DPR + l * ((ah - 66 * DPR) / 4); };
-  var laneH = function () { return ((ah - 66 * DPR) / 4) * 0.58; };
+  var MASK = self.SKIN_CSS(resolveRGB(token('--b3-mask')));
+  var MASKHI = self.SKIN_CSS(resolveRGB(token('--b3-mask-hi')));
+  var CU = self.SKIN_CSS(resolveRGB(token('--b3-cu')));
+  var SUB = self.SKIN_CSS(resolveRGB(token('--b3-sub')));
+  var PAD = self.SKIN_CSS(resolveRGB(token('--b3-pad')));
+  var SILK = self.SKIN_CSS(resolveRGB(token('--b3-silk')));
+  var NET = self.SKIN_CSS(resolveRGB(token('--b3-net')));
+  var SEL = self.SKIN_CSS(resolveRGB(token('--b3-sel')));
+  var DRILL = self.SKIN_CSS(resolveRGB(token('--b3-drill')));
 
-  function drawMarkers(ctx, identity, t) {
-    var i, m, x, w, y, h = laneH(), lit;
-    for (i = 0; i < MARKERS; i++) {
-      m = MK[i];
-      x = (m.u * aw) | 0;
-      w = Math.max(2, (m.len * aw) | 0);
-      y = laneY(m.lane) | 0;
-      if (identity) {
-        /* identity IS the colour: index in red and green, kind in blue,
-           alpha opaque so the ground (0,0,0,0) can never decode to id 0. */
-        ctx.fillStyle = 'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',' + (m.kind + 1) + ',1)';
-        ctx.fillRect(x, y, w, h);
-      } else {
-        lit = (i === hoverId);
-        ctx.fillStyle = lit ? rgba(INK, 1) : rgba(EVT, m.u < t ? 0.92 : 0.34);
-        ctx.fillRect(x, y, w, h);
+  /* ── the board, generated once and seeded ───────────────────────────
+     Components on a grid, pads on their edges, and a net joining pads in
+     Manhattan runs with 45° corners — which is how a board is actually
+     routed and why the picture reads as one. */
+  var COMPS = [], NETS = [], objects = 0;
+  (function () {
+    var r = rng(0xB0A2D), i, j, k;
+    var cols = 9, rows = 5, cw = W / cols, ch = H / rows;
+    for (j = 0; j < rows; j++) {
+      for (i = 0; i < cols; i++) {
+        if (r() < 0.22) continue;
+        var wide = r() < 0.3;
+        var w = wide ? cw * 0.62 : cw * 0.34;
+        var h = wide ? ch * 0.30 : ch * 0.42;
+        var x = i * cw + (cw - w) / 2 + (r() - 0.5) * 10;
+        var y = j * ch + (ch - h) / 2 + (r() - 0.5) * 10;
+        var pins = 2 + Math.floor(r() * 7);
+        var c = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), pads: [], ref: 'U' + (COMPS.length + 1) };
+        for (k = 0; k < pins; k++) {
+          var side = k % 2;
+          var u = (k + 1) / (pins + 1);
+          c.pads.push({
+            x: Math.round(c.x + (side ? c.w + 7 : -7)),
+            y: Math.round(c.y + u * c.h),
+            r: 4
+          });
+        }
+        COMPS.push(c);
       }
+    }
+    /* nets: join a pad to a pad elsewhere, Manhattan with a mitre */
+    var all = [];
+    COMPS.forEach(function (c, ci) { c.pads.forEach(function (p, pi) { all.push({ c: ci, p: pi, x: p.x, y: p.y }); }); });
+    for (i = 0; i < 150 && all.length > 2; i++) {
+      var a = all[(r() * all.length) | 0], b = all[(r() * all.length) | 0];
+      if (a === b) continue;
+      var midX = Math.round((a.x + b.x) / 2);
+      var m2 = 10 * (b.y > a.y ? 1 : -1);
+      NETS.push({
+        id: NETS.length,
+        pts: [[a.x, a.y], [midX - m2, a.y], [midX, a.y + m2], [midX, b.y - m2], [midX + m2, b.y], [b.x, b.y]],
+        w: r() < 0.18 ? 5 : 3
+      });
+    }
+    objects = NETS.length + all.length + COMPS.length;
+    $('b3-nets').textContent = NETS.length.toLocaleString();
+    $('b3-objects').textContent = objects.toLocaleString();
+  })();
+
+  var showLayer = false, routing = true, silkOn = true, maskOn = true;
+  var hoverNet = -1, readCosts = [];
+
+  function trace(c, n, progress, width, colour) {
+    var pts = n.pts, i, seg, total = pts.length - 1, upto = progress * total;
+    c.strokeStyle = colour;
+    c.lineWidth = width;
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(pts[0][0], pts[0][1]);
+    for (i = 1; i <= total; i++) {
+      seg = upto - (i - 1);
+      if (seg <= 0) break;
+      if (seg >= 1) c.lineTo(pts[i][0], pts[i][1]);
+      else c.lineTo(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * seg,
+                    pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * seg);
+    }
+    c.stroke();
+  }
+
+  /* Each net has its own phase, so the autorouter lays the board down in a
+     wave rather than all at once — which is what makes the section move,
+     and what a router actually looks like. */
+  function progressOf(n, t) {
+    if (!routing) return 1;
+    var phase = (t * 1.6 + n.id * 0.0135) % 1.6;
+    return phase < 1 ? phase : 1;
+  }
+
+  function drawBoard(t) {
+    ctx.fillStyle = MASK;
+    ctx.fillRect(0, 0, W, H);
+
+    /* copper pour: a ground plane under everything, seen through the mask.
+       Drawn first, then the mask tint multiplied over it — soldermask is a
+       translucent ink, so multiply is the physically correct operator here
+       and not a stylistic preference. */
+    if (maskOn) {
+      ctx.fillStyle = MASKHI;
+      ctx.fillRect(14, 14, W - 28, H - 28);
+      ctx.fillStyle = MASK;
+      ctx.fillRect(18, 18, W - 36, H - 36);
+    } else {
+      ctx.fillStyle = SUB;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    var i, j, n, c;
+    /* tracks */
+    for (i = 0; i < NETS.length; i++) {
+      n = NETS[i];
+      trace(ctx, n, progressOf(n, t), n.w, n.id === hoverNet ? NET : (maskOn ? CU : PAD));
+    }
+    /* highlighted net on top, so it reads over everything */
+    if (hoverNet >= 0) {
+      trace(ctx, NETS[hoverNet], progressOf(NETS[hoverNet], t), NETS[hoverNet].w + 3, NET);
+    }
+
+    /* components: silkscreen outline, reference, pads */
+    for (i = 0; i < COMPS.length; i++) {
+      c = COMPS[i];
+      if (silkOn) {
+        ctx.strokeStyle = SILK; ctx.lineWidth = 1; ctx.globalAlpha = 0.75;
+        ctx.strokeRect(c.x + 0.5, c.y + 0.5, c.w, c.h);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = SILK; ctx.globalAlpha = 0.6;
+        ctx.font = '9px ' + (token('--mono') || 'monospace');
+        ctx.fillText(c.ref, c.x + 3, c.y - 3);
+        ctx.globalAlpha = 1;
+      }
+      for (j = 0; j < c.pads.length; j++) {
+        var p = c.pads[j];
+        ctx.fillStyle = PAD;
+        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+        ctx.fillStyle = DRILL;
+        ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+      }
+    }
+  }
+
+  /* The net layer, rebuilt at the SAME t as the board. A pick buffer one
+     frame out of date is the classic defect here: the picture moves and the
+     hit regions do not. */
+  function drawPick(t) {
+    px.clearRect(0, 0, W, H);
+    var i, n;
+    for (i = 0; i < NETS.length; i++) {
+      n = NETS[i];
+      /* identity IS the colour: index in red and green, object class in
+         blue, alpha opaque so the board (0,0,0,0) can never decode to net 0.
+         Stroked wider than the visible track, because a 3px target is a
+         cruel thing to ask a pointer to hit. */
+      trace(px, n, progressOf(n, t), n.w + 6,
+        'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',1,1)');
     }
   }
 
   function decode(d) {
-    if (d[3] === 0) return -1;
+    if (d[3] === 0 || d[2] === 0) return -1;
     var id = d[0] | (d[1] << 8);
-    return (id >= 0 && id < MARKERS && d[2] > 0) ? id : -1;
+    return (id >= 0 && id < NETS.length) ? id : -1;
   }
 
-  var demo = WAM.clock('acetate-3-stage', {
-    el: $('acetate-3'), dur: 15000, poster: 0.6,
+  var demo = WAM.clock('b3-stage', {
+    el: $('b3-world'), dur: 18000, poster: 0.55,
     render: function (t) {
-      /* The pick buffer is rebuilt at the same t as the display, always.
-         A stale pick buffer is the classic defect here: the picture moves
-         and the hit regions do not. */
-      px.clearRect(0, 0, aw, ah);
-      drawMarkers(px, true, t);
-
-      ax.clearRect(0, 0, aw, ah);
-      if (showPick) {
-        ax.drawImage(pk, 0, 0);
-        ax.fillStyle = rgba(INK, 0.85);
-        ax.font = (10 * DPR) + 'px ' + (token('--mono') || 'monospace');
-        ax.fillText('PICK BUFFER — never composited to screen', 10 * DPR, 18 * DPR);
+      drawPick(t);
+      if (showLayer) {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, W, H);
+        ctx.drawImage(pk, 0, 0);
+        ctx.fillStyle = SILK;
+        ctx.font = '12px ' + (token('--mono') || 'monospace');
+        ctx.fillText('NET LAYER — NEVER COMPOSITED TO THE SCREEN', 22, 30);
       } else {
-        var i, x;
-        ax.strokeStyle = rgba(GRD, 0.7); ax.lineWidth = 1;
-        for (i = 0; i <= 20; i++) {
-          x = Math.round((i / 20) * aw) + 0.5;
-          ax.beginPath(); ax.moveTo(x, 20 * DPR); ax.lineTo(x, i % 5 === 0 ? 34 * DPR : 28 * DPR); ax.stroke();
-        }
-        ax.fillStyle = rgba(MUTE, 1);
-        ax.font = (8.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
-        for (i = 0; i <= 4; i++) ax.fillText(timecode(i / 4, 210000).slice(0, 8), (i / 4) * (aw - 56 * DPR) + 4 * DPR, 15 * DPR);
-        drawMarkers(ax, false, t);
-        ax.fillStyle = rgba(INK, 0.9);
-        ax.fillRect((t * aw) | 0, 18 * DPR, 1.5 * DPR, ah - 24 * DPR);
+        drawBoard(t);
       }
-      c.tc.textContent = timecode(t, 210000);
     }
   });
 
-  /* One getImageData of one pixel, however many objects there are. That
-     invariance is the finding — it does not get slower with MARKERS. */
-  a.addEventListener('pointermove', function (e) {
-    var r = a.getBoundingClientRect();
-    var x = Math.round((e.clientX - r.left) * (aw / r.width));
-    var y = Math.round((e.clientY - r.top) * (ah / r.height));
-    if (x < 0 || y < 0 || x >= aw || y >= ah) return;
+  /* One getImageData of one pixel, however many objects are on the board.
+     That invariance is the finding: it does not get slower with the count. */
+  cv.addEventListener('pointermove', function (e) {
+    var r = cv.getBoundingClientRect();
+    var x = Math.round((e.clientX - r.left) * (W / r.width));
+    var y = Math.round((e.clientY - r.top) * (H / r.height));
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    var t0 = performance.now();
     var d = px.getImageData(x, y, 1, 1).data;
+    readCosts.push(performance.now() - t0);
+    if (readCosts.length > 30) readCosts.shift();
     var id = decode(d);
-    hoverPx = [x, y, d[0], d[1], d[2], d[3]];
-    c.kv(1).textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
-    c.kv(2).textContent = id < 0 ? 'none' : '#' + ('0000' + id).slice(-4) + ' ' + KINDS[MK[id].kind];
-    if (id !== hoverId) {
-      hoverId = id;
-      var prev = $('acetate-3-edl').querySelector('.ac-on');
-      if (prev) prev.classList.remove('ac-on');
-      var row = id >= 0 && id < 400 ? $('acetate-3-edl-' + id) : null;
-      if (row) { row.classList.add('ac-on'); row.scrollIntoView({ block: 'nearest' }); }
-      demo.render(demo.t);
-    }
+    $('b3-pixel').textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
+    $('b3-decoded').textContent = id < 0 ? 'nothing under the pointer' : 'net ' + id + ' — ' + NETS[id].w + ' mil track';
+    $('b3-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
+    if (id !== hoverNet) { hoverNet = id; demo.render(demo.t); }
   });
-  a.addEventListener('pointerleave', function () {
-    hoverId = -1; c.kv(1).textContent = '—'; c.kv(2).textContent = 'none';
-    demo.render(demo.t);
-  });
-  $('acetate-3-pick-toggle').addEventListener('click', function () {
-    showPick = !showPick;
-    this.classList.toggle('ac-on', showPick);
-    this.textContent = showPick ? 'show display' : 'show pick buffer';
+  cv.addEventListener('pointerleave', function () {
+    hoverNet = -1;
+    $('b3-pixel').textContent = '—';
+    $('b3-decoded').textContent = 'nothing under the pointer';
     demo.render(demo.t);
   });
 
-  /* ── graphic: identity encoded as colour ─────────────────────────── */
-  var g = $('g3-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
-  var gp = document.createElement('canvas'), gpx = gp.getContext('2d', { willReadFrequently: true });
-  function gsize() { var s = fit(g, 220); gw = s.w; gh = s.h; gp.width = gw; gp.height = gh; }
-  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
-
-  var TINT = token('--tint-canvas') || '#e2c23a';
-  var HZ3 = token('--hz-300') || '#333';
-  var HZ4 = token('--hz-400') || '#666';
-  var HZ6 = token('--hz-600') || '#ccc';
-  var SHAPES = [];
-  (function () {
-    var r = rng(0xB105), i;
-    for (i = 0; i < 9; i++) SHAPES.push({ x: 0.08 + r() * 0.34, y: 0.18 + r() * 0.6, rr: 0.05 + r() * 0.05, id: 1024 + i * 37 });
-  })();
-
-  var gdemo = WAM.clock('g3-stage', {
-    el: $('g3-stage'), dur: 8000, poster: 0.42,
-    render: function (t) {
-      var half = gw / 2, mono = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace'), i, s;
-      gx.clearRect(0, 0, gw, gh);
-      gpx.clearRect(0, 0, gw, gh);
-
-      /* right half: the identity surface, drawn first so the left can be
-         its visual twin rather than a separate drawing */
-      for (i = 0; i < SHAPES.length; i++) {
-        s = SHAPES[i];
-        gpx.fillStyle = 'rgba(' + (s.id & 255) + ',' + ((s.id >> 8) & 255) + ',1,1)';
-        gpx.beginPath(); gpx.arc(half + s.x * half + 8 * DPR, s.y * gh, s.rr * gh, 0, TAU); gpx.fill();
-      }
-      gx.drawImage(gp, 0, 0);
-
-      for (i = 0; i < SHAPES.length; i++) {
-        s = SHAPES[i];
-        gx.fillStyle = TINT;
-        gx.globalAlpha = 0.85;
-        gx.beginPath(); gx.arc(s.x * half + 8 * DPR, s.y * gh, s.rr * gh, 0, TAU); gx.fill();
-        gx.globalAlpha = 1;
-      }
-
-      gx.strokeStyle = HZ3; gx.lineWidth = 1;
-      gx.beginPath(); gx.moveTo(half + 0.5, 0); gx.lineTo(half + 0.5, gh); gx.stroke();
-      gx.fillStyle = HZ4; gx.font = mono;
-      gx.fillText('what the user sees', 10 * DPR, 14 * DPR);
-      gx.fillText('what the pointer sees', half + 10 * DPR, 14 * DPR);
-
-      /* the probe: one moving point, and the one pixel it reads */
-      var u = t, cx = 0.08 + u * 0.84, cyv = 0.5 + 0.34 * Math.sin(u * TAU * 1.6);
-      var sx = Math.round(cx * half), sy = Math.round(cyv * gh);
-      var d = gpx.getImageData(half + sx, sy, 1, 1).data;
-      var id = d[3] ? (d[0] | (d[1] << 8)) : -1;
-
-      [[sx, 'left'], [half + sx, 'right']].forEach(function (pair) {
-        gx.strokeStyle = HZ6; gx.lineWidth = 1 * DPR;
-        gx.beginPath(); gx.arc(pair[0], sy, 5 * DPR, 0, TAU); gx.stroke();
-        gx.beginPath(); gx.moveTo(pair[0] - 10 * DPR, sy); gx.lineTo(pair[0] - 6 * DPR, sy);
-        gx.moveTo(pair[0] + 6 * DPR, sy); gx.lineTo(pair[0] + 10 * DPR, sy); gx.stroke();
-      });
-
-      gx.fillStyle = HZ6;
-      gx.fillText('getImageData(' + sx + ',' + sy + ',1,1) → rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3] +
-        '   →   ' + (id < 0 ? 'no hit' : 'id ' + id), 10 * DPR, gh - 8 * DPR);
-    }
+  $('b3-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b === $('b3-layer')) {
+      showLayer = !showLayer;
+      b.classList.toggle('b3-on', showLayer);
+      b.textContent = showLayer ? 'show the board' : 'show the net layer';
+    } else if (b === $('b3-route')) { routing = !routing; b.classList.toggle('b3-on', routing); }
+    else if (b === $('b3-silk')) { silkOn = !silkOn; b.classList.toggle('b3-on', silkOn); }
+    else if (b === $('b3-mask')) { maskOn = !maskOn; b.classList.toggle('b3-on', maskOn); }
+    demo.render(demo.t);
   });
 })();
 
