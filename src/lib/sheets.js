@@ -56,7 +56,7 @@ export const SHEETS = [
   { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
   { group: 'Techniques', code: 'SL-05', name: 'GIF', note: 'Baseline — pre-baked, no player', file: 'techniques/gif/index.html', tint: 'var(--tint-video)' },
   { group: 'Techniques', code: 'SL-04', name: 'Video', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
-  { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
+  { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'The picture is computed, not stored', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
   { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
   { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
 ];
