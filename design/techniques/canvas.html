@@ -400,6 +400,10 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 }
 .v1-stage { position: relative; line-height: 0; }
 .v1-stage canvas { display: block; width: 100%; }
+.v1-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--v1-ink);
+  max-width: 74ch; padding: 8px 2px 2px; opacity: 0.72;
+}
 .v1-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*2); }
 .v1-btn {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
@@ -458,6 +462,10 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .h2-btn.h2-c.h2-on { background: var(--h2-ink-c); border-color: var(--h2-ink-c); }
 .h2-btn.h2-m.h2-on { background: var(--h2-ink-m); border-color: var(--h2-ink-m); }
 .h2-btn.h2-y.h2-on { background: var(--h2-ink-y); border-color: var(--h2-ink-y); color: var(--h2-ink-k); }
+.h2-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--h2-ink-k);
+  max-width: 74ch; padding: 4px var(--h2-gutter) 10px; background: var(--h2-stock); opacity: 0.8;
+}
 .h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
 .h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
 .h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
@@ -500,6 +508,14 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       replaced by a faded copy of itself, scaled a fraction about its centre.</p>
 
     <div class="v1" data-testid="v1-world">
+      <div class="v1-stage" data-testid="v1-explain-stage">
+        <canvas data-testid="v1-explain"></canvas>
+      </div>
+      <p class="v1-cap" data-testid="v1-explain-cap">How one mark ages. Each
+        generation is the one before it, dimmed by the decay and scaled 1.006 about
+        the field's centre — so a mark drifts outward as it fades, and the ladder
+        below it is what the palette does to that fade: sixteen steps, no dither,
+        which is why the trail bands instead of dissolving.</p>
       <div class="v1-stage" data-testid="v1-stage">
         <canvas data-testid="v1-canvas"></canvas>
       </div>
@@ -576,6 +592,13 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
         <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
       </div>
+      <div class="h2-stage" data-testid="h2-explain-stage">
+        <canvas data-testid="h2-explain"></canvas>
+      </div>
+      <p class="h2-cap" data-testid="h2-explain-cap">The four separations, each at
+        its own angle, and what they make together. Below: coverage from 0 to 100%,
+        and the dot that carries it — area, not width, which is why a 50% tone is a
+        dot of radius 0.40 of the cell rather than half of it.</p>
       <div class="h2-stage" data-testid="h2-stage">
         <canvas data-testid="h2-canvas"></canvas>
       </div>
@@ -1238,6 +1261,86 @@ function timecode(t, dur) {
     }
   });
 
+  /* ── the explanatory graphic, in this world's own language ──────────
+     Not a pane in the deck's harness beside the world — that is what made
+     every section open in presentation chrome. It is drawn on the same
+     palette, with the same bevel, inside the same frame, because an
+     explanation of a world belongs to it. */
+  (function () {
+    var EW = 960, EH = 172;
+    var ec = $('v1-explain'), ex = ec.getContext('2d');
+    ec.width = EW; ec.height = EH;
+    var GENS = 9;
+
+    WAM.clock('v1-explain-stage', {
+      el: $('v1-explain-stage'), dur: 11000, poster: 0.5,
+      render: function (t) {
+        ex.fillStyle = BEVEL.face; ex.fillRect(0, 0, EW, EH);
+        var EDGE = { hi: BEVEL.hi, lt: BEVEL.lt, sh: BEVEL.sh, dk: BEVEL.dk };
+        self.SKIN_BEVEL(ex, 0, 0, EW, EH, false, EDGE);
+
+        var padX = 16, padY = 16, innerW = EW - padX * 2, innerH = EH - padY * 2;
+        ex.fillStyle = self.SKIN_CSS(VOID);
+        ex.fillRect(padX, padY, innerW, innerH);
+        self.SKIN_BEVEL(ex, padX - 2, padY - 2, innerW + 4, innerH + 4, true, EDGE);
+
+        var mono = '10px ' + (token('--mono') || 'monospace');
+        ex.font = mono;
+
+        /* left: one mark, nine generations, six frames apart. The radius is
+           the TRUE feedback scale — 1.006 per frame, so 1.33x over 48 — and
+           not an exaggeration of it. The first version compounded 46 frames
+           per step instead of 6 and drew a final disc nine times the size,
+           which looked more like the idea and was a picture of a number
+           nobody measured. */
+        var i, cy = padY + innerH * 0.44, r, lvl, idx;
+        var GEN_STEP = 6;
+        var pitch = (innerW * 0.60) / GENS;
+        for (i = 0; i < GENS; i++) {
+          lvl = Math.pow(1 - DECAY[mode], i * GEN_STEP);
+          r = 13 * Math.pow(FEEDBACK, i * GEN_STEP);
+          idx = Math.max(0, Math.min(15, Math.round(lvl * 15)));
+          var cx = padX + 34 + i * pitch;
+          ex.fillStyle = self.SKIN_CSS(PALETTE[2 + idx]);
+          ex.beginPath(); ex.arc(cx, cy, r, 0, TAU); ex.fill();
+          ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+          ex.fillText(i === 0 ? 'NOW' : '\u2212' + (i * GEN_STEP), cx - 9, padY + innerH - 12);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('ONE MARK, EVERY SIXTH FRAME \u2014 DIMMED BY DECAY, GROWN BY FEEDBACK', padX + 14, padY + 18);
+        ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+        ex.fillText('\u00d7' + Math.pow(FEEDBACK, 48).toFixed(2) + ' OVER 48 FRAMES', padX + 14, padY + 34);
+
+        /* right: the same fade twice. Smooth on top, and quantised to the
+           palette's sixteen steps below it — so the banding is not asserted,
+           it is the visible difference between two strips. */
+        var gx0 = padX + innerW * 0.66, gw = innerW * 0.30, bh = 22, n = 46, j, u, v2;
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('SMOOTH', gx0, padY + 18);
+        for (j = 0; j < n; j++) {
+          u = j / (n - 1);
+          v2 = Math.pow(1 - DECAY[mode], u * 54);
+          ex.fillStyle = 'rgb(' + Math.round(PALETTE[17][0] * v2 + PALETTE[0][0] * (1 - v2)) + ',' +
+                                  Math.round(PALETTE[17][1] * v2 + PALETTE[0][1] * (1 - v2)) + ',' +
+                                  Math.round(PALETTE[17][2] * v2 + PALETTE[0][2] * (1 - v2)) + ')';
+          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26, gw / n + 1, bh);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('QUANTISED \u2014 16 STEPS, NO DITHER', gx0, padY + 26 + bh + 18);
+        for (j = 0; j < n; j++) {
+          u = j / (n - 1);
+          v2 = Math.pow(1 - DECAY[mode], u * 54);
+          idx = Math.max(0, Math.min(15, Math.round(v2 * 15)));
+          ex.fillStyle = self.SKIN_CSS(PALETTE[2 + idx]);
+          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26 + bh + 24, gw / n + 1, bh);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+        ex.fillText('0', gx0, padY + 26 + bh * 2 + 60);
+        ex.fillText('54 FRAMES', gx0 + gw - 56, padY + 26 + bh * 2 + 60);
+      }
+    });
+  })();
+
   $('v1-bar').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
     if (b.dataset.mode) {
@@ -1606,6 +1709,90 @@ var SEC2 = (function () {
         : PLATES.map(function (p) { return p.ch.toUpperCase() + ' ' + angleOf(p, t).toFixed(1); }).join(' · ');
     }
   });
+
+  /* ── the explanatory graphic, in this world's own language ──────────
+     A press proof: the four separations, what they make together, and the
+     tone ramp that says what a dot of a given size is worth. Printed on the
+     same stock, in the same four inks, at the same angles as the console —
+     because an explanation of a world belongs to it. */
+  (function () {
+    var EW = 1200, EH = 186;
+    var ec = $('h2-explain'), ex = ec.getContext('2d');
+    ec.width = EW; ec.height = EH;
+
+    function patch(x, y, w, h, plates, tone, t) {
+      ex.save();
+      ex.beginPath(); ex.rect(x, y, w, h); ex.clip();
+      ex.fillStyle = self.SKIN_CSS(STOCK); ex.fillRect(x, y, w, h);
+      ex.globalCompositeOperation = 'multiply';
+      plates.forEach(function (p) {
+        var deg = p.deg * Math.PI / 180, ca = Math.cos(deg), sa = Math.sin(deg);
+        var cell = CELL / p.freq, i, j, lx, ly, px2, py2, c, r;
+        var reach = Math.ceil(Math.max(w, h) / cell) + 2;
+        ex.fillStyle = self.SKIN_CSS(INK[p.ch]);
+        for (j = -reach; j <= reach; j++) {
+          for (i = -reach; i <= reach; i++) {
+            lx = i * cell; ly = j * cell;
+            px2 = lx * ca - ly * sa + x + w / 2;
+            py2 = lx * sa + ly * ca + y + h / 2;
+            if (px2 < x - cell || py2 < y - cell || px2 > x + w + cell || py2 > y + h + cell) continue;
+            c = dotGain(tone);
+            if (c < 0.02) continue;
+            r = cell * 0.5 * Math.sqrt(c / 0.7854);
+            if (r > cell * 0.78) r = cell * 0.78;
+            ex.beginPath(); ex.arc(px2, py2, r, 0, TAU); ex.fill();
+          }
+        }
+      });
+      ex.globalCompositeOperation = 'source-over';
+      ex.restore();
+      ex.strokeStyle = RULE; ex.lineWidth = 1;
+      ex.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    }
+
+    WAM.clock('h2-explain-stage', {
+      el: $('h2-explain-stage'), dur: 16000, poster: 0.3,
+      render: function (t) {
+        ex.fillStyle = self.SKIN_CSS(STOCK);
+        ex.fillRect(0, 0, EW, EH);
+        ex.font = '11px ' + (token('--mono') || 'monospace');
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+
+        /* the separations, each alone, then the four together */
+        var pw = 116, ph = 116, py = 34, gap = 14, x0 = 18;
+        var tone = 0.52 + 0.2 * Math.sin(t * TAU);
+        PLATES.forEach(function (p, i) {
+          var x = x0 + i * (pw + gap);
+          patch(x, py, pw, ph, [p], tone, t);
+          ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+          ex.fillText(p.ch.toUpperCase() + '  ' + p.deg + '°', x, py - 8);
+        });
+        var xc = x0 + 4 * (pw + gap) + 10;
+        /* Half the tone for the four-colour patch: at 68% coverage in four
+           inks a multiply stack is simply black, and the rosette — the thing
+           the patch exists to show — disappears into it. */
+        patch(xc, py, pw + 30, ph, PLATES, tone * 0.5, t);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+        ex.fillText('TOGETHER — THE ROSETTE', xc, py - 8);
+
+        /* the tone ramp: coverage against the dot that carries it. Area,
+           not width, which is the thing people get wrong about halftones. */
+        var rx = xc + pw + 60, rw = EW - rx - 20, ry = py, steps = 11, i2;
+        ex.fillText('COVERAGE 0 → 100%', rx, py - 8);
+        for (i2 = 0; i2 < steps; i2++) {
+          var c2 = i2 / (steps - 1);
+          var cw = rw / steps;
+          patch(rx + i2 * cw, ry, cw - 2, ph * 0.62, [PLATES[2]], c2, t);
+        }
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-sub')));
+        ex.fillText('r = cell/2 · √(coverage / π)   —   AREA, NOT WIDTH', rx, ry + ph * 0.62 + 18);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+        ex.fillText('TONE ' + Math.round(tone * 100) + '%', x0, py + ph + 20);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-sub')));
+        ex.fillText('dot gain ' + (gain ? 'ON — coverage pushed by 0.12·sin(πc)' : 'OFF — the plate, before the press has had it'), x0 + 110, py + ph + 20);
+      }
+    });
+  })();
 
   $('h2-bar').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
@@ -2046,7 +2233,7 @@ var SEC2 = (function () {
      left the bottom 40% of both chassis empty, which is what a backing store
      chosen before the layout looks like. A player is a wide, shallow object;
      the classic window was 275 x 116. */
-  var W = 560, H = 124;
+  var W = 560, H = 340;
   var mainCv = $('t5-main-canvas'), wkrCv = $('t5-worker-canvas'), fbCv = $('t5-fallback-canvas');
   [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; });
 
@@ -2138,6 +2325,7 @@ var SEC2 = (function () {
       'self.T5_WIDTH = ' + self.T5_WIDTH + ';\n' +
       'self.T5_CHROME = ' + self.T5_CHROME + ';\n' +
       'self.T5_CAPS = ' + self.T5_CAPS + ';\n' +
+      'self.T5_ROW = ' + self.T5_ROW + ';\n' +
       'self.T5_LIVE = ' + self.T5_LIVE + ';\n' +
       '(' + self.T5_WORKER + ')();\n' +
       '//# sourceURL=transport-worker.js';
