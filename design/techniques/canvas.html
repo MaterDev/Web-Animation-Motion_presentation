@@ -263,61 +263,87 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   §3 · BOARD — a PCB layout editor
+   §3 · NETWORK — an animated transit map
 
-   Green soldermask over laminate, ENIG gold pads, white silkscreen. The
-   world exists because "select net" IS a pick buffer: an editor with no
-   elements has to rebuild the pointer by hand, and the way every layout
-   tool has done it is a second surface where an object's colour is its
-   identity. Hover a pad here and the whole net lights up across the board,
-   from one getImageData of one pixel.
+   The world exists because a transit map is the most natural possible use
+   of "an object's colour is its identity". A line IS its colour — that is
+   not a rendering choice, it is how the artefact works, and it is the same
+   proposition as a pick buffer stated in a language everyone already reads.
 
-   Soldermask is a TRANSLUCENT ink over copper, so it composites with
-   multiply — physically correct rather than stylistically preferred, and
-   the reason --b3-mask and --b3-mask-hi are the same ink over two
-   substrates rather than two colours.
+   Diagrammatic, not geographic: 45° and 90° only, uniform spacing between
+   stations regardless of real distance, and the river as the one piece of
+   geography that survives. Every line is cased — drawn once in the ground
+   colour at a wider stroke before its own colour goes down — so crossings
+   read as crossings. That casing is why a map with nine lines over one
+   another does not turn to mud, and it is a drawing order rather than a
+   material.
    ───────────────────────────────────────────────────────────────────────── */
-.b3 {
-  /* An interim contrast fix while the world is re-researched. Green copper
-     on green mask is what a board really looks like and it was failing at
-     distance — twice now, because the first correction lifted the copper
-     and left the ground where it was. Lifting one of a pair that is too
-     close only works if you lift it far enough; dropping the other is the
-     cheaper half of the same move. The mask goes dark and slightly blue,
-     which also stops it reading as the same green family as the traces. */
-  --b3-mask:    oklch(0.155 0.022 178);   /* soldermask, dark               */
-  --b3-mask-hi: oklch(0.205 0.026 178);   /* mask over copper pour          */
-  /* Copper under soldermask really is only a shade lighter than the mask
-     over bare laminate, and at that shade the tracks vanish at projection
-     distance. This is the one place the world is tuned for the back of the
-     room rather than for accuracy, and it is stated rather than smuggled. */
-  --b3-cu:      oklch(0.520 0.085 152);   /* track, read from the back row  */
-  --b3-sub:     oklch(0.310 0.045  92);   /* bare FR-4                      */
-  --b3-pad:     oklch(0.820 0.105  88);   /* ENIG gold                      */
-  --b3-silk:    oklch(0.930 0.006 165);   /* white silkscreen               */
-  --b3-net:     oklch(0.760 0.130 215);   /* the highlighted net            */
-  --b3-sel:     oklch(0.960 0.080  88);   /* the selected pad               */
-  --b3-drill:   oklch(0.120 0.010 165);   /* drill holes                    */
-  --b3-gutter: 20px;
+.n3 {
+  --n3-paper:   oklch(0.975 0.004  85);   /* the sheet                      */
+  --n3-ink:     oklch(0.230 0.010 260);   /* station names, rules           */
+  --n3-dim:     oklch(0.560 0.012 260);   /* zone labels, key, secondary    */
+  --n3-hair:    oklch(0.880 0.006 260);   /* zone boundaries                */
+  --n3-water:   oklch(0.895 0.045 225);   /* the river                      */
+  --n3-case:    oklch(0.975 0.004  85);   /* line casing — the paper itself */
+  --n3-stn:     oklch(0.230 0.010 260);   /* tick marks and interchange rim */
+  /* the lines. Identity, not decoration — every one clears its neighbours
+     by enough hue to be named across a platform. */
+  --n3-l1: oklch(0.585 0.205  27);        /* AXIOM     — red                */
+  --n3-l2: oklch(0.520 0.155 250);        /* KELVIN    — blue               */
+  --n3-l3: oklch(0.575 0.135 152);        /* MERIDIAN  — green              */
+  --n3-l4: oklch(0.760 0.155  72);        /* HARBOUR   — amber              */
+  --n3-l5: oklch(0.500 0.150 310);        /* ORBITAL   — purple             */
+  --n3-l6: oklch(0.520 0.075 200);        /* FOUNDRY   — teal               */
+  --n3-live:   oklch(0.300 0.030 260);    /* a train                        */
+  --n3-alert:  oklch(0.620 0.190  45);    /* minor delays                   */
+  --n3-gutter: 22px;
 }
-.b3-world { background: oklch(0.095 0.012 178); }
-.b3-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 14px var(--b3-gutter) 4px; }
-.b3-btn {
+.n3-world { background: var(--n3-paper); }
+.n3-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--n3-gutter) 4px; }
+.n3-btn {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--b3-silk); background: transparent;
-  border: 1px solid var(--b3-mask-hi); border-radius: 0; padding: 6px 11px; cursor: pointer;
+  color: var(--n3-ink); background: transparent;
+  border: 1px solid var(--n3-hair); border-radius: 0; padding: 6px 11px; cursor: pointer;
 }
-.b3-btn.b3-on { color: oklch(0.135 0.012 165); background: var(--b3-pad); border-color: var(--b3-pad); }
-.b3-stage { position: relative; line-height: 0; padding: 8px var(--b3-gutter); }
-.b3-stage canvas { display: block; width: 100%; cursor: crosshair; }
-.b3-cap {
-  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--b3-silk);
-  max-width: 74ch; padding: 4px var(--b3-gutter) 8px; opacity: 0.66;
+.n3-btn.n3-on { color: var(--n3-paper); background: var(--n3-ink); border-color: var(--n3-ink); }
+.n3-stage { position: relative; line-height: 0; padding: 6px var(--n3-gutter); }
+.n3-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.n3-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--n3-dim);
+  max-width: 74ch; padding: 6px var(--n3-gutter) 4px;
 }
-.b3-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 6px var(--b3-gutter) 18px; }
-.b3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--b3-mask-hi); }
-.b3-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--b3-pad); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
-.b3-kv b.b3-net { color: var(--b3-net); }
+/* the departure board is DOM, because it is text and a raster is somewhere
+   a screen reader cannot go. Its contents are computed from where the
+   trains actually are — see the coupling table in the caption. */
+.n3-shell { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*2); padding: 8px var(--n3-gutter) 18px; }
+@media (min-width: 860px) { .n3-shell { grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); } }
+.n3-board { background: var(--n3-ink); padding: 12px 14px; }
+.n3-board-head {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--n3-hair); padding-bottom: 8px; border-bottom: 1px solid oklch(1 0 0 / 0.18);
+}
+.n3-row {
+  display: grid; grid-template-columns: 18px 1fr 64px 52px; gap: 10px; align-items: baseline;
+  font-family: var(--mono); font-size: 12px; color: var(--n3-paper); padding: 5px 0;
+  font-variant-numeric: tabular-nums;
+}
+.n3-row .n3-bullet { width: 12px; height: 12px; border-radius: 50%; align-self: center; }
+.n3-row .n3-due { text-align: right; color: var(--n3-l4); }
+.n3-row .n3-plat { text-align: right; color: var(--n3-hair); font-size: 10px; }
+.n3-status { display: flex; flex-direction: column; gap: 4px; }
+.n3-line-row {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center;
+  font-family: var(--mono); font-size: 10.5px; color: var(--n3-ink);
+  padding: 5px 0; border-bottom: 1px solid var(--n3-hair);
+}
+.n3-line-row i { display: block; height: 8px; border-radius: 4px; }
+.n3-line-row b { font-weight: 500; letter-spacing: 0.06em; }
+.n3-line-row span { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--n3-dim); }
+.n3-line-row span.n3-delay { color: var(--n3-alert); }
+.n3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--n3-dim); }
+.n3-kv b { display: block; font-family: var(--mono); font-size: 13px; color: var(--n3-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.n3-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 2px var(--n3-gutter) 16px; }
 
 /* ─────────────────────────────────────────────────────────────────────────
    §4 · READ — a radiology soft-copy workstation
@@ -565,46 +591,61 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
     <div class="cv-sec-head"><span class="cv-sec-n">§3</span><h2>Hit testing</h2></div>
     <p class="cv-because">The pointer is rebuilt by hand, <b>because there are no
       nodes.</b> No element means no <code>:hover</code>, no event target, no
-      accessibility tree. The answer every layout editor has reached for is a second
-      surface nobody sees: draw everything again in a colour that <i>is</i> its
-      identity, then read the one pixel under the cursor and decode it. One
-      <code>getImageData</code> call, however many objects there are — and the board
-      below has thousands. <b>Move the pointer over it.</b></p>
+      accessibility tree. The answer is a second surface nobody sees: draw
+      everything again in a colour that <i>is</i> its identity, then read the one
+      pixel under the cursor and decode it. A transit map is the most natural
+      possible use of that idea, because a line already <i>is</i> its colour.
+      <b>Move the pointer over the map.</b></p>
 
-    <div class="b3 b3-world" data-testid="b3-world">
-      <div class="b3-bar" data-testid="b3-bar">
-        <button class="b3-btn" data-testid="b3-layer">show the net layer</button>
-        <button class="b3-btn b3-on" data-testid="b3-route">trace signals</button>
-        <button class="b3-btn b3-on" data-testid="b3-silk">silkscreen</button>
-        <button class="b3-btn b3-on" data-testid="b3-mask">soldermask</button>
+    <div class="n3 n3-world" data-testid="n3-world">
+      <div class="n3-bar" data-testid="n3-bar">
+        <button class="n3-btn" data-testid="n3-layer">show the pick surface</button>
+        <button class="n3-btn n3-on" data-testid="n3-run">run the service</button>
+        <button class="n3-btn n3-on" data-testid="n3-labels">station names</button>
+        <button class="n3-btn n3-on" data-testid="n3-zones">zones &amp; river</button>
       </div>
-      <div class="b3-stage" data-testid="b3-stage">
-        <canvas data-testid="b3-canvas"></canvas>
+      <div class="n3-stage" data-testid="n3-stage">
+        <canvas data-testid="n3-canvas"></canvas>
       </div>
-      <p class="b3-cap" data-testid="b3-cap">The net layer is the second surface. Every
-        track and every pad is drawn on it again in a flat colour that encodes its net
-        number — red and green carry the index, blue carries the object class, and
-        alpha separates a hit from the board. It is never composited to the screen.
-        Switch to it and you are looking at the thing the pointer sees.</p>
-      <div class="b3-plate" data-testid="b3-readouts">
-        <div class="b3-kv">nets<b data-testid="b3-nets">—</b></div>
-        <div class="b3-kv">objects on the board<b data-testid="b3-objects">—</b></div>
-        <div class="b3-kv">pixel read<b data-testid="b3-pixel">—</b></div>
-        <div class="b3-kv">decoded<b class="b3-net" data-testid="b3-decoded">nothing under the pointer</b></div>
-        <div class="b3-kv">routes live<b class="b3-net" data-testid="b3-phase">—</b></div>
-        <div class="b3-kv">read cost<b data-testid="b3-readcost">—</b></div>
+      <p class="n3-cap" data-testid="n3-cap">The pick surface is the second map. Every
+        line and every station is drawn on it again in a flat colour that encodes what
+        it is — red and green carry the index, blue says whether it is a line or a
+        station, and alpha separates a hit from the paper. It is never composited to
+        the screen. Switch to it and you are looking at the thing the pointer sees.</p>
+
+      <div class="n3-shell" data-testid="n3-shell">
+        <div class="n3-board" data-testid="n3-board">
+          <div class="n3-board-head">
+            <span data-testid="n3-board-station">hover a station</span>
+            <span data-testid="n3-board-clock">--:--</span>
+          </div>
+          <div data-testid="n3-board-rows"></div>
+        </div>
+        <div class="n3-status" data-testid="n3-status"></div>
+      </div>
+
+      <div class="n3-plate" data-testid="n3-readouts">
+        <div class="n3-kv">stations<b data-testid="n3-stations">—</b></div>
+        <div class="n3-kv">objects on the map<b data-testid="n3-objects">—</b></div>
+        <div class="n3-kv">pixel read<b data-testid="n3-pixel">—</b></div>
+        <div class="n3-kv">decoded<b data-testid="n3-decoded">nothing under the pointer</b></div>
+        <div class="n3-kv">read cost<b data-testid="n3-readcost">—</b></div>
       </div>
     </div>
 
-    <p class="cv-instr" data-testid="b3-instr">
-      <b>The cost of the read does not move with the object count</b>, and that is the
-      whole reason this technique survives. A scene graph answers "what is under the
-      pointer" by walking a tree; a pick buffer answers it by looking at one pixel,
-      so the answer costs the same whether the board carries forty objects or forty
-      thousand. What it costs instead is a second full draw every frame — which is
-      the trade, stated rather than hidden, and it is why the net layer is rebuilt at
-      the same <code>t</code> as the board. A pick buffer one frame out of date is
-      the classic defect here: the picture moves and the hit regions do not.
+    <p class="cv-instr" data-testid="n3-instr">
+      <b>The cost of the read does not move with the object count</b>, and that is why
+      this technique survives. A scene graph answers "what is under the pointer" by
+      walking a tree; a pick buffer answers it by looking at one pixel, so the answer
+      costs the same whether the map carries forty objects or forty thousand. What it
+      costs instead is a second full draw every frame — the trade, stated rather than
+      hidden, and the reason the pick surface is rebuilt at the same <code>t</code> as
+      the map. A pick buffer one frame out of date is the classic defect here: the
+      picture moves and the hit regions do not, and it fails silently.
+      <b>The board and the status panel are not decoration.</b> Every arrival time is
+      computed from where a train actually is on the line — distance remaining over
+      speed — and a line reads <i>minor delays</i> because a train on it is being
+      held, not because a timer said so. One state, two readers.
     </p>
   </section>
 
@@ -854,7 +895,7 @@ var worldProbe = document.createElement('div');
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-worldProbe.className = 'v1 h2 b3 r4 t5';
+worldProbe.className = 'v1 h2 n3 r4 t5';
 worldProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(worldProbe);
 var worldRoot = getComputedStyle(worldProbe);
@@ -1831,378 +1872,479 @@ var SEC2 = (function () {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
-   §3 · BOARD — hit testing
+   §3 · NETWORK — hit testing
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
   var W = 1240, H = 620;
-  var cv = $('b3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  var cv = $('n3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
-  /* The net layer: a second surface the same size that is never composited.
-     willReadFrequently because one pixel per pointermove is exactly the
-     access pattern that hint exists for. */
+  /* the pick surface: a second map the same size that is never composited */
   var pk = document.createElement('canvas');
   pk.width = W; pk.height = H;
   var px = pk.getContext('2d', { willReadFrequently: true });
 
-  var MASK = self.SKIN_CSS(resolveRGB(token('--b3-mask')));
-  var MASKHI = self.SKIN_CSS(resolveRGB(token('--b3-mask-hi')));
-  var SUB = self.SKIN_CSS(resolveRGB(token('--b3-sub')));
-  var PADC = resolveRGB(token('--b3-pad'));
-  var PAD = self.SKIN_CSS(PADC);
-  var SILK = self.SKIN_CSS(resolveRGB(token('--b3-silk')));
-  var NETC = resolveRGB(token('--b3-net'));
-  var NET = self.SKIN_CSS(NETC);
-  var SEL = self.SKIN_CSS(resolveRGB(token('--b3-sel')));
-  var DRILL = self.SKIN_CSS(resolveRGB(token('--b3-drill')));
-  var CU = self.SKIN_CSS(resolveRGB(token('--b3-cu')));
-  var CU_LO = self.SKIN_CSS(resolveRGB('oklch(0.300 0.048 162)'));   /* trace relief */
-  var CU_HI = self.SKIN_CSS(resolveRGB('oklch(0.680 0.095 150)'));   /* trace crown  */
-  var SHADOW = 'rgba(0,0,0,0.45)';
+  var PAPER = self.SKIN_CSS(resolveRGB(token('--n3-paper')));
+  var INK   = self.SKIN_CSS(resolveRGB(token('--n3-ink')));
+  var DIM   = self.SKIN_CSS(resolveRGB(token('--n3-dim')));
+  var HAIR  = self.SKIN_CSS(resolveRGB(token('--n3-hair')));
+  var WATER = self.SKIN_CSS(resolveRGB(token('--n3-water')));
+  var LIVE  = self.SKIN_CSS(resolveRGB(token('--n3-live')));
+  var ALERT = self.SKIN_CSS(resolveRGB(token('--n3-alert')));
 
-  /* ── the architecture ────────────────────────────────────────────────
-     The board is given one, because a net that lights up at random reads
-     as decoration and a net that lights up in sequence reads as a machine
-     doing something. The sequence is the ordinary one: a clock edge, an
-     address goes out, a strobe, and data comes back. Every net belongs to
-     one of those classes and fires inside that class's window, staggered
-     by its bit index — so a bus arrives as a bus, a ripple across sixteen
-     lines, rather than sixteen unrelated flashes. */
-  var CLASSES = [
-    { key: 'CLK',  from: 0.00, to: 0.12, colour: [255, 236, 170] },
-    { key: 'ADDR', from: 0.10, to: 0.46, colour: NETC },
-    { key: 'CTRL', from: 0.42, to: 0.56, colour: [255, 190, 120] },
-    { key: 'DATA', from: 0.52, to: 0.92, colour: [150, 235, 190] }
+  /* ── the network ─────────────────────────────────────────────────────
+     Hand-authored on a 44 × 22 grid, 45° and 90° only. Diagrammatic, not
+     geographic: the grid is the whole point of the convention, and a
+     network generated from random coordinates gives itself away in one
+     second because real diagrams have no arbitrary angles in them. */
+  var GX = 44, GY = 22, PAD = 46;
+  function gx(x) { return PAD + (x / GX) * (W - PAD * 2); }
+  function gy(y) { return PAD + (y / GY) * (H - PAD * 2 - 40); }
+
+  var LINES = [
+    { key: 'l1', name: 'AXIOM',    pts: [[2,11],[9,11],[12,8],[22,8],[25,11],[36,11],[41,11]] },
+    { key: 'l2', name: 'KELVIN',   pts: [[16,1],[16,5],[19,8],[19,14],[16,17],[16,21]] },
+    { key: 'l3', name: 'MERIDIAN', pts: [[3,3],[9,3],[14,8],[14,12],[18,16],[33,16],[38,16]] },
+    { key: 'l4', name: 'HARBOUR',  pts: [[41,4],[34,4],[30,8],[30,14],[34,18],[41,18]] },
+    { key: 'l5', name: 'ORBITAL',  pts: [[7,17],[16,17],[22,17],[26,13],[26,8],[22,4],[16,4]] },
+    { key: 'l6', name: 'FOUNDRY',  pts: [[6,20],[10,20],[14,16],[14,12]] }
   ];
+  LINES.forEach(function (L, i) { L.i = i; L.colour = self.SKIN_CSS(resolveRGB(token('--n3-' + L.key))); });
 
-  var COMPS = [], NETS = [], VIAS = [], MOUNT = [], ROUTES = [];
-  (function () {
-    var r = rng(0xB0A2D), i, j, k;
-    var cols = 9, rows = 5, cw = W / cols, ch = (H - 40) / rows;
-    for (j = 0; j < rows; j++) {
-      for (i = 0; i < cols; i++) {
-        if (r() < 0.22) continue;
-        var wide = r() < 0.3;
-        var w = wide ? cw * 0.62 : cw * 0.34;
-        var h = wide ? ch * 0.30 : ch * 0.42;
-        var x = i * cw + (cw - w) / 2 + (r() - 0.5) * 10;
-        var y = 20 + j * ch + (ch - h) / 2 + (r() - 0.5) * 10;
-        var pins = 2 + Math.floor(r() * 7);
-        var c = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), pads: [], ref: 'U' + (COMPS.length + 1) };
-        for (k = 0; k < pins; k++) {
-          var side = k % 2;
-          var u = (k + 1) / (pins + 1);
-          c.pads.push({ x: Math.round(c.x + (side ? c.w + 7 : -7)), y: Math.round(c.y + u * c.h), r: 4 });
-        }
-        COMPS.push(c);
+  /* Uniform station spacing regardless of distance is the convention that
+     makes a diagram a diagram — the map is a topology, and spacing it by
+     real distance is the single most common way a fake one gives itself
+     away. Stations are laid at a fixed step along each line, plus one at
+     every terminus. */
+  var NAMES = ['Ashford Gate','Beacon Row','Cable Wharf','Dunmore','Eastcote Hill','Fallow Green',
+    'Granary Yard','Havelock','Ivory Reach','Junction Mills','Kiln Bank','Lambert Cross',
+    'Marsh End','Northgate','Oakhurst','Pitman Street','Quarry Rise','Redwater','Sable Park',
+    'Tanner Fields','Upper Vale','Verity Square','Westmoor','Yarrow Lane','Zenith Park',
+    'Alder Quay','Barrow Point','Chandler','Dockhead','Ember Lane','Foundry Halt','Gorse Hill',
+    'Harrow Bank','Inkerman','Jessop Way','Kestrel','Linnet Road','Meadowsyde','Nettlebed',
+    'Orwell Rise','Pike Street','Rush Common','Saltmarsh','Thorn Cross','Ullswater','Vane Street',
+    'Wicker Hill','Yewtree','Ansell Court','Bridewell','Corn Exchange','Draycott',
+    'Elmsworth','Ferrier Street','Goswell','Hartsmere','Ilford Bridge','Jarrow Place',
+    'Kingsmead','Lowfield','Maltby','Newland Park','Ottershaw','Penrose','Quillon Street',
+    'Ravensbourne','Stapleton','Trenton Hill','Undercliff','Vauxbridge','Whitlock',
+    'Ashby Vale','Bellringer','Cowdray','Dunsford','Everleigh','Fernhurst','Garstang',
+    'Holloway Reach','Ingram Street','Jubilee Quay','Kirkstall','Lyndhurst','Morden Fields'];
+
+  /* Names are consumed, never recycled. The first pass wrapped the list
+     with a modulo and produced two Granary Yards, two Cable Wharfs and two
+     Marsh Ends on one map — which is the single fastest way to tell a
+     reader that nobody looked at it. If the list runs out the map says so
+     rather than repeating itself. */
+  var STATIONS = [], nameAt = 0;
+  function nextName() {
+    return nameAt < NAMES.length ? NAMES[nameAt++] : 'Unnamed ' + (++nameAt - NAMES.length);
+  }
+  function segLen(a, b) { return Math.hypot(gx(b[0]) - gx(a[0]), gy(b[1]) - gy(a[1])); }
+  LINES.forEach(function (L) {
+    var acc = [0], i, total = 0;
+    for (i = 1; i < L.pts.length; i++) { total += segLen(L.pts[i - 1], L.pts[i]); acc.push(total); }
+    L.acc = acc; L.len = total;
+    var STEP = 74, n = Math.max(2, Math.round(total / STEP)), k;
+    L.stops = [];
+    for (k = 0; k <= n; k++) L.stops.push((k / n) * total);
+  });
+
+  function atDist(L, d) {
+    var i, a, b, segd;
+    for (i = 1; i < L.acc.length; i++) {
+      if (d <= L.acc[i] || i === L.acc.length - 1) {
+        a = L.pts[i - 1]; b = L.pts[i];
+        segd = L.acc[i] - L.acc[i - 1];
+        var u = segd ? (d - L.acc[i - 1]) / segd : 0;
+        u = u < 0 ? 0 : u > 1 ? 1 : u;
+        return {
+          x: gx(a[0]) + (gx(b[0]) - gx(a[0])) * u,
+          y: gy(a[1]) + (gy(b[1]) - gy(a[1])) * u,
+          dx: gx(b[0]) - gx(a[0]), dy: gy(b[1]) - gy(a[1])
+        };
       }
     }
-    var all = [];
-    COMPS.forEach(function (c, ci) { c.pads.forEach(function (p, pi) { all.push({ c: ci, p: pi, x: p.x, y: p.y }); }); });
-    for (i = 0; i < 150 && all.length > 2; i++) {
-      var a = all[(r() * all.length) | 0], b = all[(r() * all.length) | 0];
-      if (a === b) continue;
-      var midX = Math.round((a.x + b.x) / 2);
-      var m2 = 10 * (b.y > a.y ? 1 : -1);
-      var cls = i < 4 ? 0 : i < 48 ? 1 : i < 66 ? 2 : 3;
-      var pts = [[a.x, a.y], [midX - m2, a.y], [midX, a.y + m2], [midX, b.y - m2], [midX + m2, b.y], [b.x, b.y]];
-      var len = 0, q;
-      for (q = 1; q < pts.length; q++) len += Math.hypot(pts[q][0] - pts[q - 1][0], pts[q][1] - pts[q - 1][1]);
-      NETS.push({ id: NETS.length, pts: pts, len: len, w: cls === 0 ? 5 : (r() < 0.18 ? 5 : 3), cls: cls, bit: i, a: a.c, b: b.c });
-      /* a via wherever a run changes direction hard enough to need one */
-      if (r() < 0.55) VIAS.push({ x: midX, y: Math.round(a.y + m2) });
-    }
-    for (i = 0; i < 4; i++) MOUNT.push({ x: i % 2 ? W - 26 : 26, y: i < 2 ? 26 : H - 26 });
-
-    /* ── the routes ─────────────────────────────────────────────────
-       A path is WALKED, not chosen: from a starting package, follow a net
-       to whatever it lands on, then follow one of that package's nets
-       onward, four to seven hops deep. What comes out is a real chain
-       through the circuit — a signal that leaves one part, passes through
-       three more and ends somewhere — rather than a set of unrelated lines
-       that happen to light up together. The sheet then cycles the chains,
-       so the board is never showing the same combination twice running. */
-    var adj = {};
-    NETS.forEach(function (n) {
-      (adj[n.a] = adj[n.a] || []).push(n);
-      (adj[n.b] = adj[n.b] || []).push(n);
-    });
-    for (i = 0; i < 14; i++) {
-      var at = (r() * COMPS.length) | 0, chain = [], seen = {}, hops = 4 + ((r() * 4) | 0), h;
-      for (h = 0; h < hops; h++) {
-        var opts = (adj[at] || []).filter(function (n) { return !seen[n.id]; });
-        if (!opts.length) break;
-        var pick = opts[(r() * opts.length) | 0];
-        seen[pick.id] = 1;
-        chain.push(pick.id);
-        at = pick.a === at ? pick.b : pick.a;
-      }
-      if (chain.length >= 3) ROUTES.push(chain);
-    }
-    $('b3-nets').textContent = NETS.length.toLocaleString();
-    $('b3-objects').textContent = (NETS.length + all.length + COMPS.length + VIAS.length).toLocaleString();
-  })();
-
-  var showLayer = false, running = true, silkOn = true, maskOn = true;
-  var hoverNet = -1, readCosts = [];
-
-  function path(c, n, from, to) {
-    var pts = n.pts, i, total = pts.length - 1;
-    var a = from * total, b = to * total;
-    c.beginPath();
-    for (i = 0; i <= total; i++) {
-      var segA = Math.max(0, Math.min(1, a - i + 1));
-      var segB = Math.max(0, Math.min(1, b - i + 1));
-      if (i === 0) { c.moveTo(pts[0][0], pts[0][1]); continue; }
-      var p0 = pts[i - 1], p1 = pts[i];
-      if (segB <= 0) break;
-      var sx = p0[0] + (p1[0] - p0[0]) * (i === 1 ? Math.max(0, a) : Math.max(0, a - i + 1));
-      if (segA > 0 && segA < 1) c.moveTo(p0[0] + (p1[0] - p0[0]) * segA, p0[1] + (p1[1] - p0[1]) * segA);
-      c.lineTo(p0[0] + (p1[0] - p0[0]) * segB, p0[1] + (p1[1] - p0[1]) * segB);
-    }
+    return { x: gx(L.pts[0][0]), y: gy(L.pts[0][1]), dx: 1, dy: 0 };
   }
 
-  function strokeNet(c, n, from, to, width, colour) {
-    c.strokeStyle = colour; c.lineWidth = width;
+  /* Build stations, merging any two that land within 16px into one
+     interchange — which is what an interchange IS: one place, several
+     lines, drawn once. */
+  LINES.forEach(function (L) {
+    L.stations = [];
+    L.stops.forEach(function (d, k) {
+      var p = atDist(L, d), i, found = null;
+      for (i = 0; i < STATIONS.length; i++) {
+        if (Math.hypot(STATIONS[i].x - p.x, STATIONS[i].y - p.y) < 17) { found = STATIONS[i]; break; }
+      }
+      if (!found) {
+        found = { id: STATIONS.length, x: p.x, y: p.y, lines: [], name: nextName(), term: false };
+        STATIONS.push(found);
+      }
+      if (found.lines.indexOf(L.i) < 0) found.lines.push(L.i);
+      if (k === 0 || k === L.stops.length - 1) found.term = true;
+      L.stations.push({ st: found, d: d });
+    });
+  });
+
+  var ROUTE_COUNT = STATIONS.length;
+  $('n3-stations').textContent = ROUTE_COUNT.toLocaleString();
+  $('n3-objects').textContent = (ROUTE_COUNT + LINES.length + LINES.reduce(function (a, L) { return a + L.stations.length; }, 0)).toLocaleString();
+
+  /* ── the service ─────────────────────────────────────────────────────
+     Trains, and a held one. A transit map is the one subject on this sheet
+     whose motion needs no dilation to be honest: a train really does move
+     along a fixed path at a speed a person can watch, in both directions,
+     stopping at stops. Everything the shell prints is derived from these
+     positions and from nothing else. */
+  var TRAINS = [];
+  LINES.forEach(function (L) {
+    var n = Math.max(2, Math.round(L.len / 260)), k;
+    for (k = 0; k < n; k++) {
+      TRAINS.push({ line: L, phase: k / n, dir: k % 2 ? -1 : 1, held: false });
+    }
+  });
+  var SPEED = 118;                       /* px per second of world time */
+
+  function trainAt(tr, t) {
+    /* the held train: one service on ORBITAL is stopped for part of the
+       cycle, which is what makes the status panel amber — a readout that
+       goes amber on a timer is a decoration, one that goes amber because a
+       train is not moving is an instrument */
+    /* One service on ORBITAL is held for roughly a third of every cycle.
+       The first version held it so rarely that the status panel read "good
+       service" almost always — which made the panel look like a static
+       caption rather than a readout, and the whole point of it is that it
+       is not one. */
+    var held = tr.line.key === 'l5' && tr.phase < 0.34 && ((t * 1.5) % 1) > 0.62;
+    tr.held = held;
+    var travel = held ? Math.floor(t * 2) / 2 : t;
+    var d = (tr.phase * tr.line.len + travel * SPEED * 26 * tr.dir) % tr.line.len;
+    if (d < 0) d += tr.line.len;
+    return atDist(tr.line, d);
+  }
+
+  var showPick = false, running = true, labelsOn = true, zonesOn = true;
+  var hover = { kind: null, id: -1 }, readCosts = [], selected = null;
+
+  function linePath(c, L, w, colour) {
+    c.strokeStyle = colour; c.lineWidth = w;
     c.lineJoin = 'round'; c.lineCap = 'round';
-    path(c, n, from, to);
+    c.beginPath();
+    c.moveTo(gx(L.pts[0][0]), gy(L.pts[0][1]));
+    for (var i = 1; i < L.pts.length; i++) c.lineTo(gx(L.pts[i][0]), gy(L.pts[i][1]));
     c.stroke();
   }
 
-  /* Which route is live, and how far the signal has travelled along it.
-     Two routes overlap at any moment — the one ending and the one starting
-     — so the board reads as a machine handing work on rather than a slide
-     show of paths. */
-  function liveRoutes(t) {
-    if (!running || !ROUTES.length) return [];
-    /* Each route starts one slot after the one before it and runs for 1.8
-       slots, so there are always two overlapping: one finishing while the
-       next is already on its way. The wrap is done on t rather than on u,
-       because a route that starts near the end of the cycle has to be able
-       to finish at the beginning of the next one. */
-    var slot = 1 / ROUTES.length, span = slot * 1.8, out = [], i, u;
-    for (i = 0; i < ROUTES.length; i++) {
-      u = ((t - i * slot) % 1 + 1) % 1 / span;
-      if (u <= 1) out.push({ route: ROUTES[i], u: u, i: i });
-    }
-    return out;
+  /* A river is a RIBBON. The first pass filled everything below it, which
+     turns the bottom third of the sheet into water and reads as a coastline
+     — and a coastline is geography, which is the one thing a diagram has
+     already agreed to throw away. The river survives the abstraction
+     because it tells you which side of the water you are on; it does not
+     survive it as a landmass. */
+  function drawRiver() {
+    ctx.strokeStyle = WATER;
+    ctx.lineWidth = 34;
+    ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-10, gy(18.6));
+    ctx.bezierCurveTo(gx(11), gy(17.0), gx(19), gy(20.6), gx(28), gy(18.2));
+    ctx.bezierCurveTo(gx(34), gy(16.8), gx(38), gy(17.6), W + 10, gy(16.9));
+    ctx.stroke();
   }
 
-  /* Where the signal is on one hop of a live route. Each hop fires after
-     the one before it has finished, so the glow walks the chain end to end
-     instead of lighting all of it at once. */
-  function hopPhase(u, k, n) {
-    var each = 1 / n;
-    var v = (u - k * each) / each;
-    return v < 0 ? 0 : v > 1 ? 1 : v;
+  function drawZones() {
+    var i;
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    var ry = [(H - PAD * 2) * 0.30, (H - PAD * 2) * 0.44];
+    for (i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.ellipse(gx(21), gy(11), (W - PAD * 2) * (0.26 + i * 0.16), ry[i], 0, 0, TAU);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.fillStyle = DIM;
+    ctx.font = '10px ' + (token('--mono') || 'monospace');
+    /* the label sits INSIDE its own ring, on the boundary, which is where a
+       zone label goes — outside it belongs to the next zone out */
+    ctx.fillText('ZONE 1', gx(21) - 20, gy(11) - ry[0] + 14);
+    ctx.fillText('ZONE 2', gx(21) - 20, gy(11) - ry[1] + 14);
   }
 
-  /* ── dimensionality ──────────────────────────────────────────────────
-     Not a simulated material — flat tones, offset copies and one-pixel
-     edges, which is the same notation the bevels use. A trace gets a dark
-     copy beneath it and a lighter crown on top, so it reads as copper
-     standing proud of the laminate rather than a line drawn on it. */
-  function drawTraces(t) {
-    var i, n, a;
-    /* 1 · the relief: every trace, offset down and right, in shadow */
-    for (i = 0; i < NETS.length; i++) {
-      n = NETS[i];
-      ctx.save(); ctx.translate(1, 1.5);
-      strokeNet(ctx, n, 0, 1, n.w + 1, SHADOW);
-      ctx.restore();
+  function drawStation(st, emph) {
+    var multi = st.lines.length > 1;
+    if (multi) {
+      /* an interchange is a hollow ring, because it is a PLACE rather than
+         a stop on one line — the distinction the whole vocabulary rests on */
+      ctx.fillStyle = PAPER;
+      ctx.beginPath(); ctx.arc(st.x, st.y, emph ? 9 : 7.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = emph ? ALERT : INK; ctx.lineWidth = emph ? 3 : 2.2;
+      ctx.beginPath(); ctx.arc(st.x, st.y, emph ? 9 : 7.5, 0, TAU); ctx.stroke();
+    } else {
+      /* a single-line stop is a tick across the line, not a dot */
+      var L = LINES[st.lines[0]], near = nearestDir(L, st);
+      ctx.strokeStyle = emph ? ALERT : INK; ctx.lineWidth = emph ? 3.5 : 2.4;
+      ctx.beginPath();
+      ctx.moveTo(st.x - near.ny * 6, st.y + near.nx * 6);
+      ctx.lineTo(st.x + near.ny * 6, st.y - near.nx * 6);
+      ctx.stroke();
     }
-    /* 2 · the copper itself */
-    for (i = 0; i < NETS.length; i++) strokeNet(ctx, NETS[i], 0, 1, NETS[i].w, maskOn ? CU : PAD);
-    /* 3 · the crown — a hairline along the top of each run, at low alpha.
-       At full strength it made every trace on the board read as lit, which
-       cost the signal glow the contrast it needs: if unrouted copper
-       glows, a routed signal has nothing left to be brighter than. */
-    ctx.globalAlpha = 0.30;
-    for (i = 0; i < NETS.length; i++) {
-      ctx.save(); ctx.translate(0, -0.5);
-      strokeNet(ctx, NETS[i], 0, 1, Math.max(1, NETS[i].w - 2), CU_HI);
-      ctx.restore();
+  }
+
+  function nearestDir(L, st) {
+    var best = null, bd = Infinity, i;
+    for (i = 0; i < L.stations.length; i++) {
+      var d = Math.hypot(L.stations[i].st.x - st.x, L.stations[i].st.y - st.y);
+      if (d < bd) { bd = d; best = L.stations[i]; }
     }
-    ctx.globalAlpha = 1;
-    /* 4 · the signal, walking its route. A wide dim halo, a body, and a
-       bright head at the leading edge — all composited with `lighter`, so
-       where two live routes cross each other the crossing blooms. That
-       bloom is the thing that makes it read as current rather than paint,
-       and it is a composite operation rather than a shadow: there is no
-       CSS that adds light to what is already on a surface. */
-    ctx.globalCompositeOperation = 'lighter';
-    var live = liveRoutes(t), L, k, hp, fade;
-    for (L = 0; L < live.length; L++) {
-      var route = live[L].route, u = live[L].u;
-      fade = u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1;       /* the tail dies out */
-      for (k = 0; k < route.length; k++) {
-        n = NETS[route[k]];
-        hp = hopPhase(u, k, route.length);
-        if (hp <= 0) continue;
-        var c = CLASSES[n.cls].colour;
-        var rgb = c[0] + ',' + c[1] + ',' + c[2];
-        strokeNet(ctx, n, 0, hp, n.w + 9, 'rgba(' + rgb + ',' + (0.05 * fade).toFixed(3) + ')');
-        strokeNet(ctx, n, 0, hp, n.w + 4, 'rgba(' + rgb + ',' + (0.10 * fade).toFixed(3) + ')');
-        strokeNet(ctx, n, 0, hp, n.w, 'rgba(' + rgb + ',' + (0.42 * fade).toFixed(3) + ')');
-        if (hp < 1) {
-          strokeNet(ctx, n, Math.max(0, hp - 0.22), hp, n.w + 2, 'rgba(' + rgb + ',' + (0.45 * fade).toFixed(3) + ')');
-          strokeNet(ctx, n, Math.max(0, hp - 0.06), hp, n.w, 'rgba(255,255,255,' + (0.6 * fade).toFixed(3) + ')');
+    var p = atDist(L, best ? best.d : 0);
+    var m = Math.hypot(p.dx, p.dy) || 1;
+    return { nx: p.dx / m, ny: p.dy / m };
+  }
+
+  /* LABEL PLACEMENT IS MOST OF THE CRAFT IN A REAL DIAGRAM, and it is the
+     part a generated map gets wrong first. Two things have to be avoided,
+     not one: another label, and a LINE. A name printed across a route is
+     the more obvious fault of the two and the easier one to miss in code,
+     because a label-versus-label test passes it happily.
+
+     The line test reads the pick surface — the same off-screen identity map
+     the pointer reads. It already knows where every line and every station
+     is, to the pixel, and it is built before anything is drawn. The section
+     uses its own technique to lay out its own type, which is not a trick:
+     "where are the objects" is one question, and there is one surface that
+     answers it.
+
+     Placement is computed ONCE, at build, because nothing in it moves.
+     Recomputing per frame would also let a label hop between candidates as
+     a train passed under it, which is a jitter nobody could explain. */
+  var LABELS = [];
+  function layoutLabels() {
+    var occ = px.getImageData(0, 0, W, H).data;
+    var placed = [];
+    function hitsLabel(b) {
+      for (var i = 0; i < placed.length; i++) {
+        var o = placed[i];
+        if (b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y) return true;
+      }
+      return false;
+    }
+    function hitsLine(b) {
+      var sx, sy;
+      for (sy = b.y; sy < b.y + b.h; sy += 4) {
+        for (sx = b.x; sx < b.x + b.w; sx += 5) {
+          if (sx < 0 || sy < 0 || sx >= W || sy >= H) continue;
+          if (occ[((sy | 0) * W + (sx | 0)) * 4 + 3] !== 0) return true;
         }
       }
+      return false;
     }
-    ctx.globalCompositeOperation = 'source-over';
-    /* 5 · the hovered net last, so a selection reads over everything */
-    if (hoverNet >= 0) strokeNet(ctx, NETS[hoverNet], 0, 1, NETS[hoverNet].w + 3, NET);
-  }
-
-  function drawPad(p) {
-    /* ENIG gold with a two-tone bevel: light on the lamp side, dark on the
-       other, and a drilled centre with a ring of wall. Two flat tones, no
-       gradient — a pad that is domed is a notation for a pad that is domed. */
-    ctx.fillStyle = SHADOW;
-    ctx.fillRect(p.x - p.r + 1, p.y - p.r + 1, p.r * 2, p.r * 2);
-    ctx.fillStyle = PAD;
-    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.35)';
-    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, 1);
-    ctx.fillRect(p.x - p.r, p.y - p.r, 1, p.r * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(p.x - p.r, p.y + p.r - 1, p.r * 2, 1);
-    ctx.fillRect(p.x + p.r - 1, p.y - p.r, 1, p.r * 2);
-    ctx.fillStyle = DRILL;
-    ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
-  }
-
-  function drawBoard(t) {
-    /* the laminate, then the pour, then the mask over both */
-    ctx.fillStyle = maskOn ? MASK : SUB;
-    ctx.fillRect(0, 0, W, H);
-
-    if (maskOn) {
-      /* ground pour, hatched — a real pour is a filled region and the
-         hatch is how every layout tool has drawn one since they were
-         plotted on paper */
-      ctx.strokeStyle = MASKHI; ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.55;
-      var i;
-      for (i = -H; i < W; i += 9) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke();
+    var order = STATIONS.slice().sort(function (a, b) {
+      var ra = (a.lines.length > 1 ? 2 : 0) + (a.term ? 1 : 0);
+      var rb = (b.lines.length > 1 ? 2 : 0) + (b.term ? 1 : 0);
+      return rb - ra;
+    });
+    order.forEach(function (st) {
+      var bold = st.lines.length > 1 || st.term;
+      ctx.font = (bold ? '600 ' : '') + '11px ' + (token('--sans') || 'sans-serif');
+      var w = ctx.measureText(st.name).width + 7, h = 15;
+      var cands = [
+        { x: st.x + 14, y: st.y - 19 }, { x: st.x - 14 - w, y: st.y - 19 },
+        { x: st.x + 14, y: st.y + 5 },  { x: st.x - 14 - w, y: st.y + 5 },
+        { x: st.x - w / 2, y: st.y - 26 }, { x: st.x - w / 2, y: st.y + 14 }
+      ];
+      for (var i = 0; i < cands.length; i++) {
+        var b = { x: cands[i].x, y: cands[i].y, w: w, h: h };
+        if (b.x < 4 || b.x + w > W - 4 || b.y < 2 || b.y + h > H - 44) continue;
+        if (hitsLabel(b) || hitsLine(b)) continue;
+        placed.push(b);
+        LABELS.push({ st: st, x: b.x, y: b.y + h / 2, bold: bold });
+        return;
       }
+    });
+  }
+
+  function drawLabels() {
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    for (var i = 0; i < LABELS.length; i++) {
+      var L2 = LABELS[i];
+      ctx.font = (L2.bold ? '600 ' : '') + '11px ' + (token('--sans') || 'sans-serif');
+      ctx.fillStyle = (hover.kind === 'station' && hover.id === L2.st.id) ? ALERT : INK;
+      ctx.fillText(L2.st.name, L2.x, L2.y);
+    }
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  function drawKey() {
+    var y = H - 24, x = PAD, i;
+    ctx.font = '10px ' + (token('--mono') || 'monospace');
+    for (i = 0; i < LINES.length; i++) {
+      var L = LINES[i];
+      ctx.strokeStyle = L.colour; ctx.lineWidth = 5; ctx.lineCap = 'butt';
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 22, y); ctx.stroke();
+      ctx.fillStyle = INK;
+      ctx.fillText(L.name, x + 28, y + 3.5);
+      x += 34 + ctx.measureText(L.name).width + 22;
+    }
+  }
+
+  function drawMap(t) {
+    ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
+    if (zonesOn) { drawRiver(); drawZones(); }
+
+    var i;
+    /* CASING FIRST, EVERY LINE, THEN COLOUR. A line drawn straight onto the
+       paper disappears where another crosses it; cased, every line sits in
+       its own channel of paper and nine of them can share a corridor and
+       still be counted. It is a drawing order, not a material. */
+    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 13, PAPER);
+    for (i = 0; i < LINES.length; i++) {
+      var L = LINES[i];
+      var dim = hover.kind === 'line' && hover.id !== i;
+      ctx.globalAlpha = dim ? 0.20 : 1;
+      linePath(ctx, L, hover.kind === 'line' && hover.id === i ? 9 : 7, L.colour);
       ctx.globalAlpha = 1;
-      /* the routed board edge: a bevel and a shadow inside it */
-      ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.fillRect(0, 0, W, 10); ctx.fillRect(0, H - 10, W, 10);
-      ctx.fillRect(0, 0, 10, H); ctx.fillRect(W - 10, 0, 10, H);
-      ctx.strokeStyle = CU_HI; ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
-      ctx.strokeRect(10.5, 10.5, W - 21, H - 21);
-      ctx.globalAlpha = 1;
     }
 
-    drawTraces(t);
+    /* stations */
+    STATIONS.forEach(function (st) {
+      var emph = (hover.kind === 'station' && hover.id === st.id) ||
+                 (hover.kind === 'line' && st.lines.indexOf(hover.id) >= 0);
+      if (hover.kind === 'line' && st.lines.indexOf(hover.id) < 0) return;
+      drawStation(st, emph);
+    });
 
-    /* vias: a ring of copper with a hole through it */
-    var i, v;
-    for (i = 0; i < VIAS.length; i++) {
-      v = VIAS[i];
-      ctx.fillStyle = CU_HI; ctx.fillRect(v.x - 3, v.y - 3, 6, 6);
-      ctx.fillStyle = DRILL; ctx.fillRect(v.x - 1, v.y - 1, 2, 2);
+    if (labelsOn) drawLabels();
+
+    /* trains */
+    if (running) {
+      TRAINS.forEach(function (tr) {
+        var p = trainAt(tr, t);
+        var m = Math.hypot(p.dx, p.dy) || 1, ux = p.dx / m * tr.dir, uy = p.dy / m * tr.dir;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(Math.atan2(uy, ux));
+        /* cased, like the lines — a train drawn straight onto its own line
+           is a slightly darker piece of that line and nothing more */
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(-10, -6, 20, 12);
+        ctx.fillStyle = tr.held ? ALERT : LIVE;
+        ctx.fillRect(-8.5, -4.5, 17, 9);
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(5, -2.5, 2.5, 5);       /* the cab window, facing travel */
+        ctx.restore();
+      });
     }
 
-    /* components: a shadow, a body that stands proud, then silkscreen */
-    var c, j;
-    for (i = 0; i < COMPS.length; i++) {
-      c = COMPS[i];
-      ctx.fillStyle = SHADOW;
-      ctx.fillRect(c.x + 3, c.y + 3, c.w, c.h);
-      ctx.fillStyle = 'rgb(24,26,25)';
-      ctx.fillRect(c.x, c.y, c.w, c.h);
-      ctx.fillStyle = 'rgba(255,255,255,0.16)';
-      ctx.fillRect(c.x, c.y, c.w, 1); ctx.fillRect(c.x, c.y, 1, c.h);
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(c.x, c.y + c.h - 1, c.w, 1); ctx.fillRect(c.x + c.w - 1, c.y, 1, c.h);
-      /* pin-1 dot, the one mark every package carries */
-      ctx.fillStyle = 'rgba(255,255,255,0.30)';
-      ctx.fillRect(c.x + 4, c.y + 4, 3, 3);
-      if (silkOn) {
-        ctx.fillStyle = SILK; ctx.globalAlpha = 0.62;
-        ctx.font = '9px ' + (token('--mono') || 'monospace');
-        ctx.fillText(c.ref, c.x + 3, c.y - 4);
-        ctx.globalAlpha = 1;
-      }
-      for (j = 0; j < c.pads.length; j++) drawPad(c.pads[j]);
-    }
-
-    /* mounting holes and fiducials — the furniture that says "fabricated" */
-    for (i = 0; i < MOUNT.length; i++) {
-      var m2 = MOUNT[i];
-      ctx.fillStyle = CU_HI; ctx.fillRect(m2.x - 7, m2.y - 7, 14, 14);
-      ctx.fillStyle = 'rgb(10,12,11)'; ctx.fillRect(m2.x - 4, m2.y - 4, 8, 8);
-    }
-
-    /* the bus legend, in silkscreen, so the sequence has names */
-    if (silkOn) {
-      ctx.font = '10px ' + (token('--mono') || 'monospace');
-      var lx = 22;
-      var active = {};
-      liveRoutes(t).forEach(function (x) { x.route.forEach(function (id) { active[NETS[id].cls] = 1; }); });
-      for (i = 0; i < CLASSES.length; i++) {
-        var cl = CLASSES[i];
-        ctx.fillStyle = 'rgb(' + cl.colour[0] + ',' + cl.colour[1] + ',' + cl.colour[2] + ')';
-        ctx.globalAlpha = active[i] && running ? 1 : 0.32;
-        ctx.fillRect(lx, H - 22, 8, 8);
-        ctx.fillText(cl.key, lx + 13, H - 14);
-        ctx.globalAlpha = 1;
-        lx += 78;
-      }
-    }
+    drawKey();
   }
 
-  /* The net layer, rebuilt at the SAME t as the board. A pick buffer one
-     frame out of date is the classic defect here: the picture moves and the
-     hit regions do not. */
-  function drawPick(t) {
+  /* The pick surface, rebuilt at the SAME t as the map. Stations are drawn
+     after lines and larger than they look, because a 6px tick is a cruel
+     target and a station is the more specific answer — the more specific
+     object wins the pixel. */
+  function drawPick() {
     px.clearRect(0, 0, W, H);
     var i;
-    for (i = 0; i < NETS.length; i++) {
-      /* identity IS the colour: index in red and green, object class in
-         blue, alpha opaque so the board (0,0,0,0) can never decode to net
-         0. Stroked wider than the visible track, because a 3px target is a
-         cruel thing to ask a pointer to hit. */
-      strokeNet(px, NETS[i], 0, 1, NETS[i].w + 6,
-        'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',' + (NETS[i].cls + 1) + ',1)');
+    for (i = 0; i < LINES.length; i++) {
+      linePath(px, LINES[i], 15, 'rgba(' + (i & 255) + ',0,1,1)');
     }
+    STATIONS.forEach(function (st) {
+      px.fillStyle = 'rgba(' + (st.id & 255) + ',' + ((st.id >> 8) & 255) + ',2,1)';
+      px.beginPath(); px.arc(st.x, st.y, 13, 0, TAU); px.fill();
+    });
   }
 
-  function decode(d) {
-    if (d[3] === 0 || d[2] === 0) return -1;
-    var id = d[0] | (d[1] << 8);
-    return (id >= 0 && id < NETS.length) ? id : -1;
-  }
+  /* The pick surface never changes: lines and stations do not move, and
+     the trains are deliberately NOT on it — a train is not a thing you
+     select, and putting it there would make the answer under the pointer
+     depend on what time it is. So it is drawn once, which also means the
+     "rebuilt at the same t" hazard cannot arise here: there is no t. */
+  drawPick();
+  layoutLabels();
+  $('n3-objects').textContent = (STATIONS.length + LINES.length + LABELS.length).toLocaleString();
 
-  var demo = WAM.clock('b3-stage', {
-    el: $('b3-world'), dur: 9000, poster: 0.55,
+  var demo = WAM.clock('n3-stage', {
+    el: $('n3-world'), dur: 26000, poster: 0.35,
     render: function (t) {
-      drawPick(t);
-      if (showLayer) {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, W, H);
+      if (showPick) {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
         ctx.drawImage(pk, 0, 0);
-        ctx.fillStyle = SILK;
+        ctx.fillStyle = '#fff';
         ctx.font = '12px ' + (token('--mono') || 'monospace');
-        ctx.fillText('NET LAYER — NEVER COMPOSITED TO THE SCREEN', 22, 30);
+        ctx.fillText('PICK SURFACE — NEVER COMPOSITED TO THE SCREEN', PAD, 30);
       } else {
-        drawBoard(t);
+        drawMap(t);
       }
-      var lv = liveRoutes(t), i, hops = 0;
-      for (i = 0; i < lv.length; i++) hops += lv[i].route.length;
-      $('b3-phase').textContent = running
-        ? (lv.length ? lv.map(function (x) { return 'R' + (x.i + 1); }).join(' + ') + ' — ' + hops + ' hops' : 'settling')
-        : 'held';
+      shell(t);
     }
   });
 
-  /* One getImageData of one pixel, however many objects are on the board.
-     That invariance is the finding: it does not get slower with the count. */
+  /* ── the shell, and the rule that keeps it honest ────────────────────
+     Everything below reads the SAME state the map draws — train positions,
+     the held flag, and the hovered id. Nothing here has a timer of its own.
+     A departure board counting down on its own clock is a decoration that
+     happens to sit near a map; one counting down from where the train is
+     is the same instrument twice. */
+  function shell(t) {
+    var st = selected || (hover.kind === 'station' ? STATIONS[hover.id] : null);
+    var rows = $('n3-board-rows');
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 2) % 18;
+    $('n3-board-clock').textContent = (hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins;
+
+    if (!st) {
+      $('n3-board-station').textContent = 'hover a station';
+      rows.innerHTML = '<div class="n3-row" style="opacity:.5"><span></span><span>—</span><span></span><span></span></div>';
+    } else {
+      $('n3-board-station').textContent = st.name + (st.lines.length > 1 ? ' · interchange' : '');
+      var out = [];
+      TRAINS.forEach(function (tr) {
+        if (st.lines.indexOf(tr.line.i) < 0) return;
+        var p = trainAt(tr, t);
+        /* the arrival time IS the distance remaining over the speed. There
+           is no second source for this number. */
+        var dist = Math.hypot(p.x - st.x, p.y - st.y);
+        var due = dist / SPEED;
+        out.push({ line: tr.line, due: due, held: tr.held, to: terminusOf(tr, st) });
+      });
+      out.sort(function (a, b) { return a.due - b.due; });
+      rows.innerHTML = out.slice(0, 5).map(function (r) {
+        return '<div class="n3-row">' +
+          '<i class="n3-bullet" style="background:' + r.line.colour + '"></i>' +
+          '<span>' + r.to + '</span>' +
+          '<span class="n3-due">' + (r.held ? 'held' : (r.due < 0.4 ? 'due' : Math.round(r.due * 3) + ' min')) + '</span>' +
+          '<span class="n3-plat">plat ' + (1 + (r.line.i % 4)) + '</span>' +
+          '</div>';
+      }).join('') || '<div class="n3-row" style="opacity:.5"><span></span><span>no service</span><span></span><span></span></div>';
+    }
+
+    /* the status panel: a line is delayed because one of ITS trains is
+       held, which is a fact about the map rather than a state of its own */
+    $('n3-status').innerHTML = LINES.map(function (L) {
+      var bad = TRAINS.some(function (tr) { return tr.line === L && tr.held; });
+      return '<div class="n3-line-row" data-testid="n3-status-' + L.key + '">' +
+        '<i style="background:' + L.colour + '"></i>' +
+        '<b>' + L.name + '</b>' +
+        '<span class="' + (bad ? 'n3-delay' : '') + '">' + (bad ? 'minor delays' : 'good service') + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* A board never advertises a service TO the platform you are standing on.
+     The first version did, because it printed the terminus in the direction
+     of travel without asking where the reader was — so a terminus station
+     listed four trains to itself. If this train terminates here, the useful
+     answer is the other end of the line. */
+  function terminusOf(tr, here) {
+    var L = tr.line;
+    var fwd = L.stations[L.stations.length - 1].st, back = L.stations[0].st;
+    var end = tr.dir > 0 ? fwd : back;
+    if (here && end === here) end = (end === fwd) ? back : fwd;
+    return end.name;
+  }
+
+  /* One getImageData of one pixel, however many objects are on the map. */
   cv.addEventListener('pointermove', function (e) {
     var r = cv.getBoundingClientRect();
     var x = Math.round((e.clientX - r.left) * (W / r.width));
@@ -2212,29 +2354,39 @@ var SEC2 = (function () {
     var d = px.getImageData(x, y, 1, 1).data;
     readCosts.push(performance.now() - t0);
     if (readCosts.length > 30) readCosts.shift();
-    var id = decode(d);
-    $('b3-pixel').textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
-    $('b3-decoded').textContent = id < 0 ? 'nothing under the pointer'
-      : 'net ' + id + ' — ' + CLASSES[NETS[id].cls].key + ', ' + NETS[id].w + ' mil, ' + Math.round(NETS[id].len) + ' mil long';
-    $('b3-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
-    if (id !== hoverNet) { hoverNet = id; demo.render(demo.t); }
+
+    var kind = null, id = -1;
+    if (d[3] !== 0) {
+      if (d[2] === 2) { kind = 'station'; id = d[0] | (d[1] << 8); if (id >= STATIONS.length) { kind = null; id = -1; } }
+      else if (d[2] === 1) { kind = 'line'; id = d[0]; if (id >= LINES.length) { kind = null; id = -1; } }
+    }
+    $('n3-pixel').textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
+    $('n3-decoded').textContent = kind === 'station'
+      ? STATIONS[id].name + ' — ' + STATIONS[id].lines.map(function (i) { return LINES[i].name; }).join(', ')
+      : kind === 'line' ? LINES[id].name + ' line' : 'nothing under the pointer';
+    $('n3-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
+    if (kind !== hover.kind || id !== hover.id) {
+      hover = { kind: kind, id: id };
+      if (kind === 'station') selected = STATIONS[id];
+      demo.render(demo.t);
+    }
   });
   cv.addEventListener('pointerleave', function () {
-    hoverNet = -1;
-    $('b3-pixel').textContent = '—';
-    $('b3-decoded').textContent = 'nothing under the pointer';
+    hover = { kind: null, id: -1 };
+    $('n3-pixel').textContent = '—';
+    $('n3-decoded').textContent = 'nothing under the pointer';
     demo.render(demo.t);
   });
 
-  $('b3-bar').addEventListener('click', function (e) {
+  $('n3-bar').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (b === $('b3-layer')) {
-      showLayer = !showLayer;
-      b.classList.toggle('b3-on', showLayer);
-      b.textContent = showLayer ? 'show the board' : 'show the net layer';
-    } else if (b === $('b3-route')) { running = !running; b.classList.toggle('b3-on', running); }
-    else if (b === $('b3-silk')) { silkOn = !silkOn; b.classList.toggle('b3-on', silkOn); }
-    else if (b === $('b3-mask')) { maskOn = !maskOn; b.classList.toggle('b3-on', maskOn); }
+    if (b === $('n3-layer')) {
+      showPick = !showPick;
+      b.classList.toggle('n3-on', showPick);
+      b.textContent = showPick ? 'show the map' : 'show the pick surface';
+    } else if (b === $('n3-run')) { running = !running; b.classList.toggle('n3-on', running); }
+    else if (b === $('n3-labels')) { labelsOn = !labelsOn; b.classList.toggle('n3-on', labelsOn); }
+    else if (b === $('n3-zones')) { zonesOn = !zonesOn; b.classList.toggle('n3-on', zonesOn); }
     demo.render(demo.t);
   });
 })();
