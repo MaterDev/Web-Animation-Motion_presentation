@@ -118,17 +118,21 @@ iframe { border: 0; width: 100%; height: 100%; background: var(--hz-000); displa
    in the sidebar to match that technique's section tint, so the
    list itself previews the colour system before you click in.
    ───────────────────────────────────────────────────────── */
+/* Same order as src/lib/sheets.js — the deck's own spectrum, not slide
+   numbers. The two lists are duplicated on purpose: this page has to work as
+   a standalone file with no build step, so it cannot import that module. A
+   change to one is a change to both. */
 const ITEMS = [
   { group: 'Reference', code: 'SYS', name: 'System', note: 'T-06 — the design system reference sheet', file: 'treatments/06-field-unit-dark.html' },
   { group: 'Reference', code: 'LAY', name: 'Layouts', note: 'Slide layout gallery, click a tile to preview', file: 'layouts/index.html' },
   { group: 'Reference', code: 'GFX', name: 'Graphic language', note: 'Per-topic tint + pixel symbol colour keys', file: 'graphic-language/index.html' },
   { group: 'Techniques', code: 'SL-06', name: 'Layout / CSS', note: 'Layout animated by selectors + scroll', file: 'techniques/css.html', ct: 'var(--tint-css)' },
   { group: 'Techniques', code: 'SL-10', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', ct: 'var(--tint-svg)' },
+  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', ct: 'var(--tint-canvas)' },
   { group: 'Techniques', code: 'SL-05', name: 'GIF', note: 'Baseline — pre-baked, no player', file: 'techniques/gif/index.html', ct: 'var(--tint-video)' },
   { group: 'Techniques', code: 'SL-04', name: 'Video', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', ct: 'var(--tint-video)' },
-  { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', ct: 'var(--tint-webgpu)' },
   { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', ct: 'var(--tint-webgl)' },
-  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', ct: 'var(--tint-canvas)' },
+  { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', ct: 'var(--tint-webgpu)' },
   { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', ct: 'var(--tint-composite)' },
 ];
 
