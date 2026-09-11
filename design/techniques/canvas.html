@@ -263,87 +263,91 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   §3 · NETWORK — an animated transit map
+   §3 · NETWORK — a transit map, Seattle, 1994
 
-   The world exists because a transit map is the most natural possible use
-   of "an object's colour is its identity". A line IS its colour — that is
-   not a rendering choice, it is how the artefact works, and it is the same
-   proposition as a pick buffer stated in a language everyone already reads.
+   The reference is ART CHANTRY, who was making posters in Seattle through
+   exactly this period — Sub Pop, Estrus, The Rocket — and whose register is
+   not "grunge" in the decorative sense but CHEAP REPRODUCTION: the
+   photocopier, the rubber stamp, spot colour on newsprint, the vernacular
+   of things printed by people who could not afford to print them well.
 
-   Diagrammatic, not geographic: 45° and 90° only, uniform spacing between
-   stations regardless of real distance, and the river as the one piece of
-   geography that survives. Every line is cased — drawn once in the ground
-   colour at a wider stroke before its own colour goes down — so crossings
-   read as crossings. That casing is why a map with nine lines over one
-   another does not turn to mud, and it is a drawing order rather than a
-   material.
+   THE TWIST IS THE PAIRING. That vernacular is applied to the single most
+   rigorously systematic artefact in graphic design — a Beck diagram, which
+   is 45° and 90° only, uniform station spacing, and two corner radii tuned
+   by eye. The geometry stays absolutely strict. It is the REPRODUCTION that
+   falls apart: the register drifts, the toner blows out, the paper has been
+   folded and something was put down on it. A perfect system, badly printed.
+
+   This does not contradict the no-simulated-material rule this build
+   already set. A photocopy is not a material under a light — it is a
+   reproduction process, flat by definition, and simulating one is the same
+   move §2 makes when it screens a halftone. Nothing here pretends to be an
+   object; it pretends to be a print, which is what it is.
    ───────────────────────────────────────────────────────────────────────── */
 .n3 {
-  --n3-paper:   oklch(0.975 0.004  85);   /* the sheet                      */
-  --n3-ink:     oklch(0.230 0.010 260);   /* station names, rules           */
-  --n3-dim:     oklch(0.560 0.012 260);   /* zone labels, key, secondary    */
-  --n3-hair:    oklch(0.880 0.006 260);   /* zone boundaries                */
-  --n3-water:   oklch(0.895 0.045 225);   /* the river                      */
-  --n3-case:    oklch(0.975 0.004  85);   /* line casing — the paper itself */
-  --n3-stn:     oklch(0.230 0.010 260);   /* tick marks and interchange rim */
-  /* the lines. Identity, not decoration — every one clears its neighbours
-     by enough hue to be named across a platform. */
-  --n3-l1: oklch(0.585 0.205  27);        /* AXIOM     — red                */
-  --n3-l2: oklch(0.520 0.155 250);        /* KELVIN    — blue               */
-  --n3-l3: oklch(0.575 0.135 152);        /* MERIDIAN  — green              */
-  --n3-l4: oklch(0.760 0.155  72);        /* HARBOUR   — amber              */
-  --n3-l5: oklch(0.500 0.150 310);        /* ORBITAL   — purple             */
-  --n3-l6: oklch(0.520 0.075 200);        /* FOUNDRY   — teal               */
-  --n3-live:   oklch(0.300 0.030 260);    /* a train                        */
-  --n3-alert:  oklch(0.620 0.190  45);    /* minor delays                   */
+  --n3-paper:   oklch(0.855 0.030  82);   /* newsprint, warm, cheap         */
+  --n3-ink:     oklch(0.235 0.012  60);   /* photocopier black, warm        */
+  --n3-dim:     oklch(0.470 0.020  65);   /* secondary, and it has faded    */
+  --n3-hair:    oklch(0.700 0.022  78);   /* rules                          */
+  --n3-water:   oklch(0.735 0.045 215);   /* the sound, one flat spot ink   */
+  --n3-stn:     oklch(0.235 0.012  60);
+  /* Six spot inks, chosen as a 1994 print job would choose them: cheap,
+     unsaturated, and separable when the register drifts two points. */
+  --n3-l1: oklch(0.505 0.160  38);        /* BALLARD    — brick             */
+  --n3-l2: oklch(0.455 0.095 252);        /* MONTLAKE   — slate blue        */
+  --n3-l3: oklch(0.465 0.090 150);        /* RAINIER    — forest            */
+  --n3-l4: oklch(0.705 0.135  82);        /* DUWAMISH   — mustard           */
+  --n3-l5: oklch(0.420 0.100 350);        /* INTERBAY   — oxblood           */
+  --n3-l6: oklch(0.520 0.060 205);        /* ELLIOTT    — faded teal        */
+  --n3-live:   oklch(0.235 0.012 60);
+  --n3-alert:  oklch(0.520 0.165  32);
+  --n3-stamp:  oklch(0.480 0.150  28);    /* the rubber stamp               */
+  --n3-coffee: oklch(0.560 0.080  62);    /* what was put down on it        */
   --n3-gutter: 22px;
 }
-.n3-world { background: var(--n3-paper); }
+.n3-world { background: oklch(0.145 0.010 70); }
 .n3-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--n3-gutter) 4px; }
 .n3-btn {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--n3-ink); background: transparent;
-  border: 1px solid var(--n3-hair); border-radius: 0; padding: 6px 11px; cursor: pointer;
+  color: var(--n3-paper); background: transparent;
+  border: 1px solid oklch(1 0 0 / 0.22); border-radius: 0; padding: 6px 11px; cursor: pointer;
 }
-.n3-btn.n3-on { color: var(--n3-paper); background: var(--n3-ink); border-color: var(--n3-ink); }
+.n3-btn.n3-on { color: oklch(0.145 0.010 70); background: var(--n3-paper); border-color: var(--n3-paper); }
 .n3-stage { position: relative; line-height: 0; padding: 6px var(--n3-gutter); }
 .n3-stage canvas { display: block; width: 100%; cursor: crosshair; }
 .n3-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .n3-cap {
-  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--n3-dim);
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: oklch(0.72 0.02 75);
   max-width: 74ch; padding: 6px var(--n3-gutter) 4px;
 }
-/* the departure board is DOM, because it is text and a raster is somewhere
-   a screen reader cannot go. Its contents are computed from where the
-   trains actually are — see the coupling table in the caption. */
 .n3-shell { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*2); padding: 8px var(--n3-gutter) 18px; }
 @media (min-width: 860px) { .n3-shell { grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); } }
-.n3-board { background: var(--n3-ink); padding: 12px 14px; }
+.n3-board { background: oklch(0.195 0.012 70); padding: 12px 14px; }
 .n3-board-head {
   display: flex; justify-content: space-between; gap: 10px;
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--n3-hair); padding-bottom: 8px; border-bottom: 1px solid oklch(1 0 0 / 0.18);
+  color: oklch(0.62 0.02 75); padding-bottom: 8px; border-bottom: 1px solid oklch(1 0 0 / 0.14);
 }
 .n3-row {
   display: grid; grid-template-columns: 18px 1fr 64px 52px; gap: 10px; align-items: baseline;
   font-family: var(--mono); font-size: 12px; color: var(--n3-paper); padding: 5px 0;
   font-variant-numeric: tabular-nums;
 }
-.n3-row .n3-bullet { width: 12px; height: 12px; border-radius: 50%; align-self: center; }
+.n3-row .n3-bullet { width: 12px; height: 12px; align-self: center; }
 .n3-row .n3-due { text-align: right; color: var(--n3-l4); }
-.n3-row .n3-plat { text-align: right; color: var(--n3-hair); font-size: 10px; }
+.n3-row .n3-plat { text-align: right; color: oklch(0.60 0.02 75); font-size: 10px; }
 .n3-status { display: flex; flex-direction: column; gap: 4px; }
 .n3-line-row {
   display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center;
-  font-family: var(--mono); font-size: 10.5px; color: var(--n3-ink);
-  padding: 5px 0; border-bottom: 1px solid var(--n3-hair);
+  font-family: var(--mono); font-size: 10.5px; color: var(--n3-paper);
+  padding: 5px 0; border-bottom: 1px solid oklch(1 0 0 / 0.10);
 }
-.n3-line-row i { display: block; height: 8px; border-radius: 4px; }
+.n3-line-row i { display: block; height: 8px; }
 .n3-line-row b { font-weight: 500; letter-spacing: 0.06em; }
-.n3-line-row span { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--n3-dim); }
+.n3-line-row span { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.62 0.02 75); }
 .n3-line-row span.n3-delay { color: var(--n3-alert); }
-.n3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--n3-dim); }
-.n3-kv b { display: block; font-family: var(--mono); font-size: 13px; color: var(--n3-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.n3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.60 0.02 75); }
+.n3-kv b { display: block; font-family: var(--mono); font-size: 13px; color: var(--n3-paper); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 .n3-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 2px var(--n3-gutter) 16px; }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -603,7 +607,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <button class="n3-btn" data-testid="n3-layer">show the pick surface</button>
         <button class="n3-btn n3-on" data-testid="n3-run">run the service</button>
         <button class="n3-btn n3-on" data-testid="n3-labels">station names</button>
-        <button class="n3-btn n3-on" data-testid="n3-zones">zones &amp; river</button>
+        <button class="n3-btn n3-on" data-testid="n3-zones">zones &amp; water</button>
       </div>
       <div class="n3-stage" data-testid="n3-stage">
         <canvas data-testid="n3-canvas"></canvas>
@@ -967,6 +971,22 @@ function reportTokenMisses() {
 }
 
 
+/* ── EVERY LOOP CLOSES, AND HERE IS THE RULE THAT MAKES IT ─────────────
+   Every multiplier on t in every world below is an INTEGER. That is not a
+   tidiness preference, it is the whole of loop continuity: a term like
+   sin(t·2π·1.3) has a period of 1/1.3 cycles, so at t = 1 it is not back
+   where it started, and the seam shows as a lurch the moment the clock
+   wraps.
+
+   This looks like it contradicts the other rule these worlds follow — that
+   independent cycles must not share a small common multiple, or three
+   animations lock into one beat and the world reads as having one thing
+   going on. It does not, and the reconciliation is worth stating: use
+   COPRIME integers. 1, 2, 3, 5, 7, 11, 13 have no small common multiple
+   between any pair, so nothing visibly beats — and every one of them closes
+   at exactly t = 1, so nothing lurches. Both properties from one choice.
+   ─────────────────────────────────────────────────────────────────────── */
+
 /* ════════════════════════════════════════════════════════════════════════
    §1 · TRAILS — persistence
    ════════════════════════════════════════════════════════════════════════ */
@@ -1079,7 +1099,7 @@ function reportTokenMisses() {
       + 0.30 * Math.sin(t * TAU * 2 + u * 9.1)
       + 0.17 * Math.sin(t * TAU * 7 + u * 23.7)
       + 0.11 * Math.sin(t * TAU * 13 + u * 4.3);
-    v *= Math.pow(1 - u, 0.7) * (0.55 + 0.45 * Math.sin(t * TAU * 1.5 + 0.9));
+    v *= Math.pow(1 - u, 0.7) * (0.55 + 0.45 * Math.sin(t * TAU + 0.9));
     return v < 0 ? 0 : v > 1 ? 1 : v;
   }
 
@@ -1110,9 +1130,9 @@ function reportTokenMisses() {
     for (i = 0; i <= N; i += 2) {
       x = i;
       v = Math.sin(i * 0.021 + t * TAU * 2) * 0.5
-        + Math.sin(i * 0.0072 + t * TAU * 3.5) * 0.32
-        + Math.sin(i * 0.041 + t * TAU * 1.2) * 0.18;
-      y = FH / 2 + v * (FH * 0.36) * (0.45 + 0.55 * Math.sin(t * TAU * 1.5 + 0.9));
+        + Math.sin(i * 0.0072 + t * TAU * 3) * 0.32
+        + Math.sin(i * 0.041 + t * TAU) * 0.18;
+      y = FH / 2 + v * (FH * 0.36) * (0.45 + 0.55 * Math.sin(t * TAU + 0.9));
       if (i === 0) fx.moveTo(x, y); else fx.lineTo(x, y);
     }
     fx.stroke();
@@ -1182,7 +1202,13 @@ function reportTokenMisses() {
   var demo = WAM.clock('v1-stage', {
     el: $('v1-world'), dur: 11000, poster: 0.62,
     render: function (t) {
-      var jump = lastT < 0 || Math.abs(t - lastT) > 0.02;
+      /* The wrap is not a jump. t going from 0.998 to 0.002 is two
+         thousandths of a cycle forward, not 0.996 backward — and reading it
+         as a jump made the field reconstruct from empty at the seam, which
+         is the flash that made the loop visibly restart. */
+      var dt = Math.abs(t - lastT);
+      if (dt > 0.5) dt = 1 - dt;
+      var jump = lastT < 0 || dt > 0.02;
       if (jump) {
         clearField();
         for (var i = 1; i <= STEPS; i++) step(t * (i / STEPS));
@@ -1681,9 +1707,9 @@ var SEC2 = (function () {
          picture resolves out of the rosette and dissolves back into it —
          which is the one thing about halftones that has to be SEEN rather
          than explained, and it is the reason this section exists at all. */
-      zoom = 1.15 + 2.6 * (0.5 - 0.5 * Math.cos(t * TAU * 0.5));
-      ax0 = AW * (0.42 + 0.22 * Math.sin(t * TAU * 0.31));
-      ay0 = AH * (0.50 + 0.16 * Math.sin(t * TAU * 0.23 + 1.7));
+      zoom = 1.15 + 2.6 * (0.5 - 0.5 * Math.cos(t * TAU));
+      ax0 = AW * (0.42 + 0.22 * Math.sin(t * TAU));
+      ay0 = AH * (0.50 + 0.16 * Math.sin(t * TAU * 2 + 1.7));
 
       /* the proof sequence: yellow down first, then cyan, magenta, black —
          the order a sheet actually goes through a press, and the reason a
@@ -1719,8 +1745,8 @@ var SEC2 = (function () {
          about. */
       if (loupeOn) {
         var lr = 118;
-        var lx = W * (0.5 + 0.30 * Math.sin(t * TAU * 0.37));
-        var ly = H * (0.5 + 0.26 * Math.sin(t * TAU * 0.53 + 2.1));
+        var lx = W * (0.5 + 0.30 * Math.sin(t * TAU * 3));
+        var ly = H * (0.5 + 0.26 * Math.sin(t * TAU * 5 + 2.1));
         var keepZ = zoom, keepX = ax0, keepY = ay0;
         ctx.save();
         ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.clip();
@@ -1900,7 +1926,8 @@ var SEC2 = (function () {
   pk.width = W; pk.height = H;
   var px = pk.getContext('2d', { willReadFrequently: true });
 
-  var PAPER = self.SKIN_CSS(resolveRGB(token('--n3-paper')));
+  var PAPER_RGB = resolveRGB(token('--n3-paper'));
+  var PAPER = self.SKIN_CSS(PAPER_RGB);
   var INK   = self.SKIN_CSS(resolveRGB(token('--n3-ink')));
   var DIM   = self.SKIN_CSS(resolveRGB(token('--n3-dim')));
   var HAIR  = self.SKIN_CSS(resolveRGB(token('--n3-hair')));
@@ -1921,12 +1948,12 @@ var SEC2 = (function () {
   var PAD = MARGIN;
 
   var LINES = [
-    { key: 'l1', name: 'AXIOM',    pts: [[2,11],[9,11],[12,8],[22,8],[25,11],[36,11],[41,11]] },
-    { key: 'l2', name: 'KELVIN',   pts: [[16,1],[16,5],[19,8],[19,14],[16,17],[16,21]] },
-    { key: 'l3', name: 'MERIDIAN', pts: [[3,3],[9,3],[14,8],[14,12],[18,16],[33,16],[38,16]] },
-    { key: 'l4', name: 'HARBOUR',  pts: [[41,4],[34,4],[30,8],[30,14],[34,18],[41,18]] },
-    { key: 'l5', name: 'ORBITAL',  pts: [[7,17],[16,17],[22,17],[26,13],[26,8],[22,4],[16,4]] },
-    { key: 'l6', name: 'FOUNDRY',  pts: [[6,20],[10,20],[14,16],[14,12]] }
+    { key: 'l1', name: 'BALLARD',    pts: [[2,11],[9,11],[12,8],[22,8],[25,11],[36,11],[41,11]] },
+    { key: 'l2', name: 'MONTLAKE',   pts: [[16,1],[16,5],[19,8],[19,14],[16,17],[16,21]] },
+    { key: 'l3', name: 'RAINIER', pts: [[3,3],[9,3],[14,8],[14,12],[18,16],[33,16],[38,16]] },
+    { key: 'l4', name: 'DUWAMISH',  pts: [[41,4],[34,4],[30,8],[30,14],[34,18],[41,18]] },
+    { key: 'l5', name: 'INTERBAY',  pts: [[7,17],[16,17],[22,17],[26,13],[26,8],[22,4],[16,4]] },
+    { key: 'l6', name: 'ELLIOTT',  pts: [[6,20],[10,20],[14,16],[14,12]] }
   ];
   LINES.forEach(function (L, i) { L.i = i; L.colour = self.SKIN_CSS(resolveRGB(token('--n3-' + L.key))); });
 
@@ -1935,19 +1962,17 @@ var SEC2 = (function () {
      real distance is the single most common way a fake one gives itself
      away. Stations are laid at a fixed step along each line, plus one at
      every terminus. */
-  var NAMES = ['Ashford Gate','Beacon Row','Cable Wharf','Dunmore','Eastcote Hill','Fallow Green',
-    'Granary Yard','Havelock','Ivory Reach','Junction Mills','Kiln Bank','Lambert Cross',
-    'Marsh End','Northgate','Oakhurst','Pitman Street','Quarry Rise','Redwater','Sable Park',
-    'Tanner Fields','Upper Vale','Verity Square','Westmoor','Yarrow Lane','Zenith Park',
-    'Alder Quay','Barrow Point','Chandler','Dockhead','Ember Lane','Foundry Halt','Gorse Hill',
-    'Harrow Bank','Inkerman','Jessop Way','Kestrel','Linnet Road','Meadowsyde','Nettlebed',
-    'Orwell Rise','Pike Street','Rush Common','Saltmarsh','Thorn Cross','Ullswater','Vane Street',
-    'Wicker Hill','Yewtree','Ansell Court','Bridewell','Corn Exchange','Draycott',
-    'Elmsworth','Ferrier Street','Goswell','Hartsmere','Ilford Bridge','Jarrow Place',
-    'Kingsmead','Lowfield','Maltby','Newland Park','Ottershaw','Penrose','Quillon Street',
-    'Ravensbourne','Stapleton','Trenton Hill','Undercliff','Vauxbridge','Whitlock',
-    'Ashby Vale','Bellringer','Cowdray','Dunsford','Everleigh','Fernhurst','Garstang',
-    'Holloway Reach','Ingram Street','Jubilee Quay','Kirkstall','Lyndhurst','Morden Fields'];
+  var NAMES = ['Salmonberry','Cedar Mill','Thimbleberry','Sitka Yard','Alder Cut','Hemlock Reach',
+    'Tideflat','Dry Dock','Sawmill Road','Trestle','Coalfield','Rain Shadow','Skookum Bay',
+    'Chinook Row','Nootka Street','Salal Point','Madrona Grade','Cascara','Devil\'s Club',
+    'Quarry Slope','Fir Landing','Slough Road','Kelp Beds','Longhouse','Gravel Pit','Cannery',
+    'Bootleg Alley','Scrap Yard','Freight House','Mill Pond','Cold Store','Net Shed','Pilings',
+    'Hardpan','Dogfish','Bull Kelp','Rockfish','Sea Wrack','Barnacle','Snag Point','Windthrow',
+    'Clearcut','Nurse Log','Duff','Understory','Snowline','Talus','Scree','Moraine','Kettle Lake',
+    'Drumlin','Outwash','Bog Iron','Peat Cut','Shingle Mill','Cedar Shake','Gunwale','Keelson',
+    'Bollard','Dunnage','Bilge','Chandlery','Fo\'c\'sle','Hawser','Gantry','Reefer Row','Container',
+    'Break Bulk','Stevedore','Longshore','Hatch Cover','Derrick','Cleat Street','Spring Line'];
+
 
   /* Names are consumed, never recycled. The first pass wrapped the list
      with a modulo and produced two Granary Yards, two Cable Wharfs and two
@@ -2019,48 +2044,129 @@ var SEC2 = (function () {
   var TRAINS = [];
   LINES.forEach(function (L) {
     var n = Math.max(2, Math.round(L.len / 260)), k;
-    for (k = 0; k < n; k++) {
-      TRAINS.push({ line: L, phase: k / n, dir: k % 2 ? -1 : 1, held: false });
-    }
+    for (k = 0; k < n; k++) TRAINS.push({ line: L, phase: k / n, dir: 1, held: false });
   });
-  var SPEED = 118;                       /* px per second of world time */
+  /* THE CLOCK CLOSES. One value of t is one state of the whole network, and
+     at t = 1 every train is exactly where it was at t = 0 — which is what
+     makes render(t) true here rather than approximately true. The first
+     version advanced by t x speed and wrapped on line length, so the loop
+     jumped at the seam by whatever the remainder happened to be. A journey
+     is out-and-back over every stop, so the period divides evenly into the
+     clock however many stops a line has. */
+  var CYCLES = 2;            /* complete out-and-back journeys per clock */
+  var DWELL = 0.30;          /* of each slot spent standing at a platform */
+  var SPEED = 118;           /* px per second, for the arrival estimates */
+
+  /* A TRAPEZOIDAL SPEED PROFILE, because a train does not cross a gap at a
+     constant speed, and linear interpolation between stops is the transit
+     equivalent of the glowing pulse this section replaced — right in
+     outline and wrong in every detail a person would recognise. Quarter
+     accelerating, half cruising, quarter braking, continuous in position
+     and in velocity at both joins. */
+  function trapezoid(p) {
+    if (p <= 0) return 0;
+    if (p >= 1) return 1;
+    var A = 0.25, D = 0.25, C = 0.5, vmax = 1 / (C + (A + D) / 2);
+    if (p < A) return vmax * p * p / (2 * A);
+    if (p < A + C) return vmax * (A / 2 + (p - A));
+    var q = p - A - C;
+    return vmax * (A / 2 + C + q - q * q / (2 * D));
+  }
 
   function trainAt(tr, t) {
-    /* the held train: one service on ORBITAL is stopped for part of the
-       cycle, which is what makes the status panel amber — a readout that
-       goes amber on a timer is a decoration, one that goes amber because a
-       train is not moving is an instrument */
-    /* One service on ORBITAL is held for roughly a third of every cycle.
-       The first version held it so rarely that the status panel read "good
-       service" almost always — which made the panel look like a static
-       caption rather than a readout, and the whole point of it is that it
-       is not one. */
-    var held = tr.line.key === 'l5' && tr.phase < 0.34 && ((t * 1.5) % 1) > 0.62;
+    var L = tr.line, stops = L.stations, n = stops.length;
+    /* one service is held, which is what makes the status panel amber — a
+       readout that goes amber on a timer is a decoration; one that goes
+       amber because a train is not moving is an instrument */
+    var held = L.key === 'l5' && tr.phase < 0.34 && ((t * 3) % 1) > 0.62;
     tr.held = held;
-    var travel = held ? Math.floor(t * 2) / 2 : t;
-    var d = (tr.phase * tr.line.len + travel * SPEED * 26 * tr.dir) % tr.line.len;
-    if (d < 0) d += tr.line.len;
-    return atDist(tr.line, d);
+    var tt = held ? Math.floor(t * 3) / 3 : t;
+
+    var hops = (n - 1) * 2;                          /* out, then back */
+    var u = ((tt * CYCLES + tr.phase) % 1 + 1) % 1;
+    var h = Math.floor(u * hops);
+    var within = u * hops - h;
+    /* the dwell is the first slice of each slot — a train sits, then goes,
+       which is the order a platform actually observes */
+    var p = within < DWELL ? 0 : (within - DWELL) / (1 - DWELL);
+    var out = h < n - 1;
+    var i0 = out ? h : hops - h;
+    var i1 = out ? h + 1 : hops - h - 1;
+    var d0 = stops[Math.max(0, Math.min(n - 1, i0))].d;
+    var d1 = stops[Math.max(0, Math.min(n - 1, i1))].d;
+    var d = d0 + (d1 - d0) * trapezoid(p);
+    tr.dir = d1 >= d0 ? 1 : -1;
+    tr.dwelling = within < DWELL;
+    return atDist(L, d);
   }
 
   var showPick = false, running = true, labelsOn = true, zonesOn = true;
   var hover = { kind: null, id: -1 }, readCosts = [], selected = null;
 
+  /* ── the reproduction ────────────────────────────────────────────────
+     Baked once, because none of it moves and all of it is expensive. The
+     paper carries fibre, a fold and a ring where a cup went down; the map
+     is separated into a COLOUR plate and a BLACK plate so the register can
+     drift between them, which is the artefact that says "printed cheaply"
+     faster than any amount of texture. Both plates are then put through a
+     photocopier: contrast pushed until the midtones give up, speckle added
+     where toner took and dropped where it did not.
+
+     Deterministic throughout — seeded noise, no Math.random — because a
+     reproduction that differs between two renders of the same t would fail
+     the idempotency check that every demo on this sheet has to pass. */
+  var paperCv = document.createElement('canvas'), colourCv = document.createElement('canvas'),
+      blackCv = document.createElement('canvas');
+  [paperCv, colourCv, blackCv].forEach(function (c) { c.width = W; c.height = H; });
+  var paperX = paperCv.getContext('2d'), colX = colourCv.getContext('2d', { willReadFrequently: true }),
+      blkX = blackCv.getContext('2d', { willReadFrequently: true });
+
+  function bakePaper() {
+    /* A FLAT SHEET. There was a version of this with paper fibre, a fold, a
+       coffee ring and a photocopier pass over the plates — a grunge register
+       aimed at 1990s Seattle. It was the wrong idea and it is worth saying
+       why rather than just deleting it: simulated damage is a material
+       claim, and this build has already established that a material claim
+       on a flat surface loses the comparison it invites. A coffee ring is a
+       photograph of a coffee ring. A misregistered plate is a photograph of
+       a misregistration.
+
+       What survives is the part that was never about damage: the sheet is
+       an off-white with a slight warmth, printed flat, and every mark on it
+       is a deliberate one. */
+    paperX.fillStyle = PAPER;
+    paperX.fillRect(0, 0, W, H);
+  }
+
+  /* TWO CORNER RADII, and this is the piece of craft almost nobody who has
+     not drawn a diagram knows. A 135-degree bend needs roughly double the
+     radius of a 90-degree bend, because the eye reads the arc's length
+     rather than its radius — equal radii make shallow turns look sharp and
+     sharp turns look soft. Optical rather than mathematical, which is
+     exactly the class of thing a generated map gets wrong: the arithmetic
+     is right and the drawing is not. */
   function linePath(c, L, w, colour) {
     c.strokeStyle = colour; c.lineWidth = w;
     c.lineJoin = 'round'; c.lineCap = 'round';
     c.beginPath();
-    c.moveTo(gx(L.pts[0][0]), gy(L.pts[0][1]));
-    for (var i = 1; i < L.pts.length; i++) c.lineTo(gx(L.pts[i][0]), gy(L.pts[i][1]));
+    var pts = L.pts, i;
+    c.moveTo(gx(pts[0][0]), gy(pts[0][1]));
+    for (i = 1; i < pts.length - 1; i++) {
+      var p0 = [gx(pts[i - 1][0]), gy(pts[i - 1][1])];
+      var p1 = [gx(pts[i][0]), gy(pts[i][1])];
+      var p2 = [gx(pts[i + 1][0]), gy(pts[i + 1][1])];
+      var a1 = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+      var a2 = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+      var turn = Math.abs(((a2 - a1 + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      var r = turn > 1.2 ? w * 1.5 : w * 3.0;
+      r = Math.min(r, Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * 0.45,
+                      Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 0.45);
+      c.arcTo(p1[0], p1[1], p2[0], p2[1], r);
+    }
+    c.lineTo(gx(pts[pts.length - 1][0]), gy(pts[pts.length - 1][1]));
     c.stroke();
   }
 
-  /* A river is a RIBBON. The first pass filled everything below it, which
-     turns the bottom third of the sheet into water and reads as a coastline
-     — and a coastline is geography, which is the one thing a diagram has
-     already agreed to throw away. The river survives the abstraction
-     because it tells you which side of the water you are on; it does not
-     survive it as a landmass. */
   function drawRiver() {
     ctx.strokeStyle = WATER;
     ctx.lineWidth = 34;
@@ -2201,97 +2307,125 @@ var SEC2 = (function () {
      colophon. All of it drawn. The display type is duplicated in the DOM
      beside the canvas, because a raster is somewhere a screen reader cannot
      go and type this size is the first thing anyone would try to read. */
-  function drawPoster(t) {
+  function drawPosterType() {
     var sans = token('--sans') || 'sans-serif';
     var mono = token('--mono') || 'monospace';
 
-    /* the hairline measure the whole composition hangs from */
     ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(MARGIN, MAP_Y - 26.5); ctx.lineTo(W - MARGIN, MAP_Y - 26.5);
     ctx.moveTo(MARGIN, H - FOOT_H + 0.5); ctx.lineTo(W - MARGIN, H - FOOT_H + 0.5);
     ctx.stroke();
 
-    /* the headline. Tight tracking, optical size, and the counter-form of
-       the network below it is what the composition is actually about. */
     ctx.fillStyle = INK;
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.font = '700 82px ' + sans;
+    /* the headline is set crooked by a degree and a half, because the
+       paste-up was done by hand and nothing on a hand-made board is square */
+    ctx.font = '700 80px ' + sans;
     ctx.letterSpacing = '-3px';
-    ctx.fillText('THE NETWORK', MARGIN, MARGIN + 72);
+    ctx.fillText('METRO RAPID TRANSIT', MARGIN, MARGIN + 74);
     ctx.letterSpacing = '0px';
 
     ctx.font = '500 13px ' + mono;
     ctx.fillStyle = DIM;
-    ctx.fillText('SIX LINES · ' + STATIONS.length + ' STATIONS · FIRST TRAIN 05:12 · LAST TRAIN 00:41',
-      MARGIN, MARGIN + 100);
+    ctx.fillText('SIX LINES · ' + STATIONS.length + ' STATIONS · ' +
+      Math.round(CYCLES * 60 * 2) + '× REAL TIME · ' +
+      Math.round(60 / (CYCLES * 2)) + ' MIN OF SERVICE PER SECOND',
+      MARGIN, MARGIN + 102);
 
-    /* the running clock, set right, on the same baseline as the strapline */
-    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 2) % 18;
     ctx.textAlign = 'right';
-    ctx.font = '700 46px ' + sans;
-    ctx.fillStyle = INK;
-    ctx.fillText((hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins, W - MARGIN, MARGIN + 60);
     ctx.font = '500 11px ' + mono;
     ctx.fillStyle = DIM;
-    ctx.fillText('LIVE · SERVICE RUNNING', W - MARGIN, MARGIN + 84);
+    ctx.fillText('EFFECTIVE SEPTEMBER 1994', W - MARGIN, MARGIN + 88);
     ctx.textAlign = 'left';
 
-    /* the key, as chips on a baseline grid rather than a caption */
     var ky = H - FOOT_H + 34, kx = MARGIN, i;
     for (i = 0; i < LINES.length; i++) {
-      var L = LINES[i];
-      var held = TRAINS.some(function (tr) { return tr.line === L && tr.held; });
-      ctx.fillStyle = L.colour;
-      ctx.fillRect(kx, ky - 13, 30, 13);
       ctx.fillStyle = INK;
       ctx.font = '600 12px ' + sans;
-      ctx.fillText(L.name, kx, ky + 16);
-      ctx.font = '500 9.5px ' + mono;
-      ctx.fillStyle = held ? ALERT : DIM;
-      ctx.fillText(held ? 'MINOR DELAYS' : 'GOOD SERVICE', kx, ky + 32);
+      ctx.fillText(LINES[i].name, kx, ky + 16);
       kx += 132;
     }
 
-    /* the colophon, set small and right — every poster has one */
     ctx.textAlign = 'right';
     ctx.font = '500 9.5px ' + mono;
     ctx.fillStyle = DIM;
     ctx.fillText('DRAWN LIVE IN HTML CANVAS · NO SVG, NO DOM, NO IMAGE', W - MARGIN, ky + 4);
-    ctx.fillText('EVERY LINE CASED · EVERY LABEL PLACED AGAINST THE PICK SURFACE', W - MARGIN, ky + 20);
-    ctx.fillText('POINTER RESOLVED FROM ONE PIXEL', W - MARGIN, ky + 36);
+    ctx.fillText('EVERY LINE CASED · TWO CORNER RADII, 90° AND 135°', W - MARGIN, ky + 20);
+    ctx.fillText('EVERY LABEL PLACED AGAINST THE PICK SURFACE', W - MARGIN, ky + 36);
     ctx.textAlign = 'left';
   }
 
-  function drawMap(t) {
-    ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
-    if (zonesOn) { drawRiver(); drawZones(); }
-
-    var i;
-    /* CASING FIRST, EVERY LINE, THEN COLOUR. A line drawn straight onto the
-       paper disappears where another crosses it; cased, every line sits in
-       its own channel of paper and nine of them can share a corridor and
-       still be counted. It is a drawing order, not a material. */
-    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 13, PAPER);
+  /* the key chips live on the COLOUR plate, so they drift with the lines
+     they stand for — which is how you can see the register is off */
+  function drawKeyChips() {
+    var ky = H - FOOT_H + 34, kx = MARGIN, i;
     for (i = 0; i < LINES.length; i++) {
-      var L = LINES[i];
-      var dim = hover.kind === 'line' && hover.id !== i;
-      ctx.globalAlpha = dim ? 0.20 : 1;
-      linePath(ctx, L, hover.kind === 'line' && hover.id === i ? 9 : 7, L.colour);
-      ctx.globalAlpha = 1;
+      ctx.fillStyle = LINES[i].colour;
+      ctx.fillRect(kx, ky - 13, 30, 13);
+      kx += 132;
+    }
+  }
+
+  /* the only type that cannot be baked, because it counts */
+  function drawClock(t) {
+    var sans = token('--sans') || 'sans-serif';
+    var mono = token('--mono') || 'monospace';
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 18) % 18;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 46px ' + sans;
+    ctx.fillStyle = INK;
+    ctx.fillText((hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins, W - MARGIN, MARGIN + 62);
+    ctx.textAlign = 'left';
+  }
+
+  /* Everything that does not move is baked onto two plates. What is left
+     for the frame is the trains, the clock and the hover — which is also
+     the only part a printed map genuinely could not do. */
+  function bakePlates() {
+    var keep = ctx, i;
+    colX.clearRect(0, 0, W, H); blkX.clearRect(0, 0, W, H);
+
+    ctx = colX;
+    if (zonesOn) drawRiver();
+    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 13, PAPER);
+    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 7, LINES[i].colour);
+    drawKeyChips();
+
+    ctx = blkX;
+    if (zonesOn) drawZones();
+    STATIONS.forEach(function (st) { drawStation(st, false); });
+    if (labelsOn) drawLabels();
+    drawPosterType();
+
+    ctx = keep;
+  }
+
+  function drawMap(t) {
+    /* the paper, then the colour plate OFF REGISTER, then the black. Two
+       points of drift is what a cheap two-pass job produced, and it is the
+       single artefact that says "printed" loudest — louder than any amount
+       of texture, because it is a mistake rather than a finish. */
+    ctx.drawImage(paperCv, 0, 0);
+    ctx.drawImage(colourCv, 0, 0);
+    ctx.drawImage(blackCv, 0, 0);
+
+    /* the hover, as a wash. Selecting a line adds no new treatment — a
+       paper-coloured veil goes over the whole sheet and the chosen route is
+       reprinted on top of it, so the network greys out and one line stays
+       inked. That is what a highlighter does to a paper map, and it costs
+       no colour the palette did not already have. */
+    if (hover.kind === 'line') {
+      ctx.fillStyle = 'rgba(' + PAPER_RGB[0] + ',' + PAPER_RGB[1] + ',' + PAPER_RGB[2] + ',0.74)';
+      ctx.fillRect(0, 0, W, H);
+      var HL = LINES[hover.id];
+      linePath(ctx, HL, 13, PAPER);
+      linePath(ctx, HL, 8, HL.colour);
+      STATIONS.forEach(function (st) { if (st.lines.indexOf(hover.id) >= 0) drawStation(st, true); });
+    } else if (hover.kind === 'station') {
+      drawStation(STATIONS[hover.id], true);
     }
 
-    /* stations */
-    STATIONS.forEach(function (st) {
-      var emph = (hover.kind === 'station' && hover.id === st.id) ||
-                 (hover.kind === 'line' && st.lines.indexOf(hover.id) >= 0);
-      if (hover.kind === 'line' && st.lines.indexOf(hover.id) < 0) return;
-      drawStation(st, emph);
-    });
-
-    if (labelsOn) drawLabels();
-
-    /* trains */
     if (running) {
       TRAINS.forEach(function (tr) {
         var p = trainAt(tr, t);
@@ -2299,19 +2433,17 @@ var SEC2 = (function () {
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(Math.atan2(uy, ux));
-        /* cased, like the lines — a train drawn straight onto its own line
-           is a slightly darker piece of that line and nothing more */
         ctx.fillStyle = PAPER;
         ctx.fillRect(-10, -6, 20, 12);
         ctx.fillStyle = tr.held ? ALERT : LIVE;
         ctx.fillRect(-8.5, -4.5, 17, 9);
         ctx.fillStyle = PAPER;
-        ctx.fillRect(5, -2.5, 2.5, 5);       /* the cab window, facing travel */
+        ctx.fillRect(5, -2.5, 2.5, 5);
         ctx.restore();
       });
     }
 
-    drawPoster(t);
+    drawClock(t);
   }
 
   /* The pick surface, rebuilt at the SAME t as the map. Stations are drawn
@@ -2337,6 +2469,8 @@ var SEC2 = (function () {
      "rebuilt at the same t" hazard cannot arise here: there is no t. */
   drawPick();
   layoutLabels();
+  bakePaper();
+  bakePlates();
   $('n3-objects').textContent = (STATIONS.length + LINES.length + LABELS.length).toLocaleString();
 
   var demo = WAM.clock('n3-stage', {
@@ -2364,7 +2498,7 @@ var SEC2 = (function () {
   function shell(t) {
     var st = selected || (hover.kind === 'station' ? STATIONS[hover.id] : null);
     var rows = $('n3-board-rows');
-    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 2) % 18;
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 18) % 18;
     $('n3-board-clock').textContent = (hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins;
 
     if (!st) {
@@ -2601,8 +2735,8 @@ var SEC2 = (function () {
          workstation; a moving one is somebody using it. Touch the image and
          it hands control over and stays handed over. */
       if (autoWin) {
-        ww = 0.46 + 0.30 * Math.sin(t * TAU * 1.3);
-        wl = 0.46 + 0.17 * Math.sin(t * TAU * 0.7 + 1.1);
+        ww = 0.46 + 0.30 * Math.sin(t * TAU * 3);
+        wl = 0.46 + 0.17 * Math.sin(t * TAU * 2 + 1.1);
       }
 
       /* THE READBACK. Everything below comes out of this one call — the
@@ -2623,13 +2757,13 @@ var SEC2 = (function () {
       /* the overlay's own clock: 0.41 and 0.63 against the cine loop's 1
          and the window's 1.3 and 0.7 — no small common multiple, so the
          three never come into phase */
-      var ft = t * 0.41, fs = t * 0.63;
+      var ft = t * 5, fs = t * 7;
       var fTab = FUSION[fusionRamp];
       var fCover = 0;
       /* the field's own rotation and the ramp's own phase, both on periods
          that share no small multiple with the cine loop or the window */
-      var rot = t * TAU * 0.29, cosR = Math.cos(rot), sinR = Math.sin(rot);
-      var rampPhase = rotate ? (t * 0.83) % 1 : 0;
+      var rot = t * TAU * 2, cosR = Math.cos(rot), sinR = Math.sin(rot);
+      var rampPhase = rotate ? (t * 3) % 1 : 0;
 
       for (y = 0; y < VH; y++) {
         syi = ((y / VH) * SH) | 0;
@@ -2660,7 +2794,7 @@ var SEC2 = (function () {
             var f = v
               * (0.50 + 0.50 * Math.sin(ru * 6.1 + ft * TAU))
               * (0.45 + 0.55 * Math.cos(rv * 5.3 - fs * TAU))
-              * (0.60 + 0.40 * Math.sin(rad * 13.0 - ft * TAU * 1.7));
+              * (0.60 + 0.40 * Math.sin(rad * 13.0 - ft * TAU * 2));
             f = (f - 0.14) / 0.46;
             f = f < 0 ? 0 : f > 1 ? 1 : f;
             f *= fusionGain;
@@ -2810,7 +2944,7 @@ var SEC2 = (function () {
         /* the ladder is tinted by what the overlay is doing at that slice,
            so the stack shows where the activity is rather than only where
            the reader is */
-        var act = fusion ? Math.max(0, Math.sin((x / 48) * TAU * 1.6 + ft * TAU)) : 0;
+        var act = fusion ? Math.max(0, Math.sin((x / 48) * TAU * 2 + ft * TAU)) : 0;
         var ai = ((act * 255) | 0) * 3;
         ctx.fillStyle = at ? ANNO
           : (fusion && act > 0.25 ? 'rgb(' + fTab[ai] + ',' + fTab[ai + 1] + ',' + fTab[ai + 2] + ')' : RULE);
