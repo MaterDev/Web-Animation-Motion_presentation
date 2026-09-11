@@ -476,6 +476,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">black 45°</button>
         <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
         <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
+        <button class="h2-btn h2-on" data-testid="h2-proof">proof sequence</button>
+        <button class="h2-btn h2-on" data-testid="h2-loupe">loupe</button>
       </div>
       <div class="h2-stage" data-testid="h2-explain-stage">
         <canvas data-testid="h2-explain"></canvas>
@@ -1455,20 +1457,67 @@ var SEC2 = (function () {
   var CELL = 12;
   var on = { c: true, m: true, y: true, k: true };
   var method = 'arc', gain = true, costs = [], dots = 0, locked = false;
+  var proofing = true, loupeOn = true, plateCount = 4;
+  var zoom = 1, ax0 = 0, ay0 = 0, cellScale = 1;
 
-  /* The separation. A continuous-tone field authored as CMYK coverage
-     directly — there is no photograph here and nothing is decoded. */
-  function cov(u, v, ch, t) {
-    var a = Math.sin(u * 5.1 + t * TAU * 0.5) * Math.cos(v * 3.7 - t * TAU * 0.3);
-    var b = Math.exp(-((u - 0.34) * (u - 0.34) + (v - 0.46) * (v - 0.46)) * 6.5);
-    var d = Math.exp(-((u - 0.72) * (u - 0.72) * 3 + (v - 0.58) * (v - 0.58) * 9));
-    var val;
-    if (ch === 'k') val = 0.14 + 0.34 * b + 0.12 * a;
-    else if (ch === 'c') val = 0.30 + 0.42 * b - 0.20 * d + 0.10 * a;
-    else if (ch === 'm') val = 0.22 + 0.30 * d + 0.26 * b - 0.10 * a;
-    else val = 0.36 + 0.34 * d + 0.16 * a;
-    val *= 0.72 + 0.28 * Math.sin(t * TAU + u * 1.4);
-    return val < 0 ? 0 : val > 1 ? 1 : val;
+  /* ── the artwork ─────────────────────────────────────────────────────
+     A HALFTONE OF NOTHING IS A TEXTURE; A HALFTONE OF SOMETHING IS AN
+     IMAGE. The first version screened an abstract tone field and it was a
+     moving surface with nothing to look at, because there was nothing
+     underneath it to resolve into.
+
+     So there is a job on the press now. It is drawn once, in full colour,
+     to an off-screen canvas — and then READ BACK and separated into four
+     plates, which is exactly the order of operations a prepress department
+     works in. Nothing is decoded and no photograph is used: every mark on
+     it is drawn here. */
+  var AW = 900, AH = 420;
+  var art = document.createElement('canvas');
+  art.width = AW; art.height = AH;
+  var ADATA = null;
+  (function () {
+    var a = art.getContext('2d', { willReadFrequently: true });
+    a.fillStyle = '#efe7d2'; a.fillRect(0, 0, AW, AH);
+    /* three process-ish discs, overprinted — the shape every colour chart
+       on every press wall has, and the reason CMYK is legible at a glance */
+    var discs = [
+      [AW * 0.30, AH * 0.46, 150, 'rgba(0,160,220,0.88)'],
+      [AW * 0.44, AH * 0.62, 150, 'rgba(225,0,120,0.80)'],
+      [AW * 0.38, AH * 0.30, 130, 'rgba(250,205,0,0.85)']
+    ];
+    discs.forEach(function (d) {
+      a.fillStyle = d[3];
+      a.beginPath(); a.arc(d[0], d[1], d[2], 0, TAU); a.fill();
+    });
+    /* a tonal sweep, which is what actually exercises a screen: every
+       coverage from nothing to solid, in one band */
+    var g = a.createLinearGradient(AW * 0.60, 0, AW, 0);
+    g.addColorStop(0, 'rgba(20,20,26,0)'); g.addColorStop(1, 'rgba(20,20,26,1)');
+    a.fillStyle = g; a.fillRect(AW * 0.60, AH * 0.10, AW * 0.36, AH * 0.34);
+    /* and the headline, because a press sheet has type on it */
+    a.fillStyle = '#14141a';
+    a.font = '900 132px ' + (token('--sans') || 'sans-serif');
+    a.fillText('SL-11', AW * 0.06, AH * 0.90);
+    a.font = '600 30px ' + (token('--mono') || 'monospace');
+    a.fillText('FOUR COLOUR PROCESS', AW * 0.62, AH * 0.66);
+    a.font = '500 19px ' + (token('--mono') || 'monospace');
+    a.fillText('175 LPI · GMG PROOF · SHEET 1 OF 1', AW * 0.62, AH * 0.74);
+    ADATA = a.getImageData(0, 0, AW, AH).data;
+  })();
+
+  /* RGB to CMYK, the ordinary way, with GCR pulling the common component
+     into black — which is what makes four plates cheaper than three and is
+     why a black plate exists at all. */
+  function sample(ax, ay, ch) {
+    if (ax < 0 || ay < 0 || ax >= AW || ay >= AH) return 0;
+    var o = (((ay | 0) * AW) + (ax | 0)) * 4;
+    var r = ADATA[o] / 255, g = ADATA[o + 1] / 255, b = ADATA[o + 2] / 255;
+    var k = 1 - Math.max(r, g, b);
+    if (ch === 'k') return k;
+    if (k >= 0.999) return 0;
+    if (ch === 'c') return (1 - r - k) / (1 - k);
+    if (ch === 'm') return (1 - g - k) / (1 - k);
+    return (1 - b - k) / (1 - k);
   }
 
   /* Ink spreads into paper. 12% at the midtone, nothing at either end —
@@ -1499,7 +1548,13 @@ var SEC2 = (function () {
 
   function screenPlate(p, t) {
     var deg = angleOf(p, t) * Math.PI / 180, ca = Math.cos(deg), sa = Math.sin(deg);
-    var cell = CELL / p.freq;
+    /* cellScale is what makes the loupe a loupe. Magnifying the artwork
+       while holding the ruling constant is a digital zoom — you get more
+       picture at the same dot size, which is not what a linen tester does.
+       A real one magnifies the PAPER, so the dots grow with the image and
+       you see fewer of them. Scaling the cell and the view together is the
+       whole difference. */
+    var cell = (CELL * cellScale) / p.freq;
     /* walk the ROTATED lattice and place a dot per cell, rather than
        walking pixels and testing each one — a halftone is a set of marks,
        and this section is about what marks cost */
@@ -1528,7 +1583,7 @@ var SEC2 = (function () {
         x = lx * ca - ly * sa + W / 2;
         y = lx * sa + ly * ca + H / 2;
         if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
-        c = dotGain(cov(x / W, y / H, p.ch, t));
+        c = dotGain(sample(ax0 + (x - W / 2) / zoom, ay0 + (y - H / 2) / zoom, p.ch));
         if (c < 0.02) continue;
         r = cell * 0.5 * Math.sqrt(c / 0.7854);      /* area → radius */
         if (r > cell * 0.78) r = cell * 0.78;
@@ -1566,22 +1621,88 @@ var SEC2 = (function () {
       ctx.fillStyle = self.SKIN_CSS(STOCK);
       ctx.fillRect(0, 0, W, H);
 
+      /* THE PRESS RUNS AND THE LOUPE MOVES. Magnification sweeps between
+         roughly 1x and 6x and the view drifts across the sheet, so the
+         picture resolves out of the rosette and dissolves back into it —
+         which is the one thing about halftones that has to be SEEN rather
+         than explained, and it is the reason this section exists at all. */
+      zoom = 1.15 + 2.6 * (0.5 - 0.5 * Math.cos(t * TAU * 0.5));
+      ax0 = AW * (0.42 + 0.22 * Math.sin(t * TAU * 0.31));
+      ay0 = AH * (0.50 + 0.16 * Math.sin(t * TAU * 0.23 + 1.7));
+
+      /* the proof sequence: yellow down first, then cyan, magenta, black —
+         the order a sheet actually goes through a press, and the reason a
+         proof is read plate by plate rather than only at the end */
+      /* Weighted, not even: one, two, three, then the full sheet for half
+         the cycle. An even four-way split spends three quarters of its time
+         on an incomplete proof, and the complete one is the thing worth
+         looking at — the incomplete ones are how it got there. */
+      if (proofing) plateCount = [1, 2, 3, 4, 4, 4][Math.floor(t * 6) % 6];
+
       var t0 = performance.now(), n = 0, i;
       /* MULTIPLY, because that is what ink on ink does. Subtractive
          compositing is physically correct here rather than stylistically
          preferred, and it is why the overlaps darken instead of covering. */
       ctx.globalCompositeOperation = 'multiply';
-      for (i = 0; i < PLATES.length; i++) if (on[PLATES[i].ch]) n += screenPlate(PLATES[i], t);
+      for (i = 0; i < PLATES.length; i++) {
+        if (!on[PLATES[i].ch]) continue;
+        if (proofing && i >= plateCount) continue;
+        n += screenPlate(PLATES[i], t);
+      }
       ctx.globalCompositeOperation = 'source-over';
       sync(ctx);
       var dt = performance.now() - t0;
       costs.push(dt); if (costs.length > 20) costs.shift();
       dots = n;
 
+      /* ── the loupe ─────────────────────────────────────────────────
+         A press operator's linen tester, and the reason one is on every
+         press in the world: you cannot judge register or dot shape at
+         reading distance. Inside the ring the same sheet is screened at
+         three times the magnification, so the image and its dots are on
+         screen at once — which is the comparison the whole section is
+         about. */
+      if (loupeOn) {
+        var lr = 118;
+        var lx = W * (0.5 + 0.30 * Math.sin(t * TAU * 0.37));
+        var ly = H * (0.5 + 0.26 * Math.sin(t * TAU * 0.53 + 2.1));
+        var keepZ = zoom, keepX = ax0, keepY = ay0;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.clip();
+        ctx.fillStyle = self.SKIN_CSS(STOCK);
+        ctx.fillRect(lx - lr, ly - lr, lr * 2, lr * 2);
+        /* re-screen the same sheet, three times closer, around the point
+           the ring is actually over */
+        var LOUPE = 3;
+        ax0 = keepX + (lx - W / 2) / keepZ;
+        ay0 = keepY + (ly - H / 2) / keepZ;
+        zoom = keepZ * LOUPE;
+        cellScale = LOUPE;
+        ctx.translate(lx - W / 2, ly - H / 2);
+        ctx.globalCompositeOperation = 'multiply';
+        for (i = 0; i < PLATES.length; i++) {
+          if (!on[PLATES[i].ch]) continue;
+          if (proofing && i >= plateCount) continue;
+          screenPlate(PLATES[i], t);
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+        zoom = keepZ; ax0 = keepX; ay0 = keepY; cellScale = 1;
+        /* the ring: a machined barrel, in the same flat notation as every
+           other bevel on this sheet */
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 7;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 3, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = RULE; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 6, 0, TAU); ctx.stroke();
+      }
+
       trimMarks();
       $('h2-dots').textContent = n.toLocaleString();
       $('h2-cost').innerHTML = ms(median(costs)) + ' ms' + atFloor(median(costs));
-      $('h2-ruling').textContent = CELL + ' px cell at 20×';
+      $('h2-ruling').textContent = CELL + ' px cell · ' + zoom.toFixed(1) + '× on the sheet'
+        + (proofing ? ' · plate ' + plateCount + ' of 4' : '');
       $('h2-angles').textContent = locked
         ? 'Y 0 · C 15 · K 45 · M 75 — locked'
         : PLATES.map(function (p) { return p.ch.toUpperCase() + ' ' + angleOf(p, t).toFixed(1); }).join(' · ');
@@ -1688,6 +1809,12 @@ var SEC2 = (function () {
       locked = !locked;
       b.classList.toggle('h2-on', locked);
       b.textContent = locked ? 'release the screen' : 'lock to standard angles';
+    } else if (b === $('h2-proof')) {
+      proofing = !proofing; plateCount = 4;
+      b.classList.toggle('h2-on', proofing);
+    } else if (b === $('h2-loupe')) {
+      loupeOn = !loupeOn;
+      b.classList.toggle('h2-on', loupeOn);
     }
     demo.render(demo.t);
   });
@@ -2277,13 +2404,13 @@ var SEC2 = (function () {
             var u2 = x / VW - 0.5, v2b = y / VH - 0.5;
             var f = v * (0.55 + 0.45 * Math.sin((u2 * 6.1 + ft * TAU)))
                       * (0.5 + 0.5 * Math.cos((v2b * 5.3 - fs * TAU)));
-            f = (f - 0.24) / 0.5;
+            f = (f - 0.18) / 0.52;
             f = f < 0 ? 0 : f > 1 ? 1 : f;
             f *= fusionGain;
-            if (f > 0.04) {
+            if (f > 0.03) {
               fCover++;
               var fi = ((f * 255) | 0) * 3;
-              var al = f * 0.78;
+              var al = 0.24 + f * 0.70;
               rr = rr + (fTab[fi] - rr) * al;
               gg = gg + (fTab[fi + 1] - gg) * al;
               bb = bb + (fTab[fi + 2] - bb) * al;
@@ -2354,7 +2481,25 @@ var SEC2 = (function () {
       for (x = 0; x < 64; x++) {
         var bw = RW / 64, bh = Math.round((hist[x] / hmax) * hh);
         var inWin = (x / 64) >= lo && (x / 64) <= hi;
-        ctx.fillStyle = inWin ? INK : RULE;
+        /* Each bar is painted in the colour that value will actually
+           receive — through the display LUT, and through the fusion ramp
+           where the overlay reaches it. The histogram stops being a chart
+           beside the image and becomes a legend for it: the bar you are
+           looking at is the grey, or the colour, it will turn into. */
+        var bi = Math.round(Math.max(0, Math.min(1, ((x / 64) - lo) / (hi - lo))) * 255) * 3;
+        if (inWin) {
+          var hr = table[bi], hg = table[bi + 1], hb = table[bi + 2];
+          if (fusion) {
+            var fw = Math.max(0, Math.min(1, ((x / 64) - 0.42) / 0.5));
+            var qi = ((fw * 255) | 0) * 3;
+            hr += (fTab[qi] - hr) * fw * 0.8;
+            hg += (fTab[qi + 1] - hg) * fw * 0.8;
+            hb += (fTab[qi + 2] - hb) * fw * 0.8;
+          }
+          ctx.fillStyle = 'rgb(' + (hr | 0) + ',' + (hg | 0) + ',' + (hb | 0) + ')';
+        } else {
+          ctx.fillStyle = RULE;
+        }
         ctx.fillRect(RX + x * bw, hy + 12 + hh - bh, bw - 1, bh);
       }
       /* the window, drawn over the histogram it selects, clamped to the
@@ -2374,6 +2519,18 @@ var SEC2 = (function () {
         ctx.fillRect(RX + x, ly, 1, 26);
       }
       ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly - 0.5, RW + 1, 27);
+      /* the overlay's own ramp, under the study's, so the two scales the
+         image is carrying are both legible as scales */
+      if (fusion) {
+        for (x = 0; x < RW; x++) {
+          var fi2 = (((x / RW) * 255) | 0) * 3;
+          ctx.fillStyle = 'rgb(' + fTab[fi2] + ',' + fTab[fi2 + 1] + ',' + fTab[fi2 + 2] + ')';
+          ctx.fillRect(RX + x, ly + 31, 1, 14);
+        }
+        ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly + 30.5, RW + 1, 15);
+        ctx.fillStyle = INK;
+        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase(), RX, ly + 58);
+      }
 
       /* the slice ladder — where in the stack we are */
       var sy2 = ly + 62;
@@ -2381,7 +2538,13 @@ var SEC2 = (function () {
       ctx.fillText('STACK', RX, sy2 - 10);
       for (x = 0; x < 48; x++) {
         var at = Math.abs(x / 48 - z) < 0.02;
-        ctx.fillStyle = at ? ANNO : RULE;
+        /* the ladder is tinted by what the overlay is doing at that slice,
+           so the stack shows where the activity is rather than only where
+           the reader is */
+        var act = fusion ? Math.max(0, Math.sin((x / 48) * TAU * 1.6 + ft * TAU)) : 0;
+        var ai = ((act * 255) | 0) * 3;
+        ctx.fillStyle = at ? ANNO
+          : (fusion && act > 0.25 ? 'rgb(' + fTab[ai] + ',' + fTab[ai + 1] + ',' + fTab[ai + 2] + ')' : RULE);
         ctx.fillRect(RX + x * (RW / 48), sy2, RW / 48 - 2, at ? 18 : 10);
       }
 
@@ -2425,12 +2588,17 @@ var SEC2 = (function () {
         ctx.fillText('PROFILE THROUGH ITS MIDDLE ROW', px2, dy - 10);
         ctx.fillStyle = RULE;
         ctx.fillRect(px2, dy + ph2, pw2, 1);
-        ctx.fillStyle = ANNO;
         for (x = 0; x < pw2; x++) {
           sxi = roi.x + ((x / pw2) * roi.w) | 0;
           syi = roi.y + (roi.h >> 1);
           v = s[(syi * SW + sxi) * 4] / 255;
-          ctx.fillRect(px2 + x, dy + ph2 - v * ph2, 1, 2);
+          /* the trace is painted in the colour the value maps to, so the
+             profile is readable against the image without a key */
+          var pi2 = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo))) * 255) * 3;
+          ctx.fillStyle = fusion && v > 0.5
+            ? 'rgb(' + fTab[pi2] + ',' + fTab[pi2 + 1] + ',' + fTab[pi2 + 2] + ')'
+            : ANNO;
+          ctx.fillRect(px2 + x, dy + ph2 - v * ph2, 1, 3);
         }
       }
 
