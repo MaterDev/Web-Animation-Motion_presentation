@@ -283,6 +283,82 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .ac-edl-head { color: var(--ac-mute); letter-spacing: 0.14em; text-transform: uppercase; font-size: 8px; padding: 0 3px 4px; }
 
 @media (max-width: 560px) { .ac { --ac-pad: 20px; } .ac-tc { font-size: 38px; line-height: 38px; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §5 · PANEL — industrial machine HMI
+
+   A LIGHT panel with dark windows: the exact inverse of every other world
+   on this sheet, deliberately. Folded steel enamel, silkscreen, pan-head
+   fasteners, indicator lamps and an E-stop.
+
+   There is deliberately almost NO CSS here, and that absence is the point.
+   No gradient, no box-shadow, no filter builds any part of this panel —
+   every surface, every light and every fastener is generated per pixel in
+   `panel-hmi.js` and painted by a canvas. On a sheet whose subject is what
+   canvas can do that the other techniques cannot, a faceplate faked with a
+   gradient stack would be the sheet arguing against itself. What is left
+   below is layout and DOM type: the measure, the stacking context that
+   lets a legend sit over a raster, and the legends themselves.
+   ───────────────────────────────────────────────────────────────────────── */
+.p5 {
+  --p5-panel:    oklch(0.790 0.008  92);   /* light-grey enamel              */
+  --p5-panel-lo: oklch(0.700 0.010  92);   /* the recessed sub-panel         */
+  --p5-edge:     oklch(0.480 0.012  92);   /* folded steel edge              */
+  --p5-ink:      oklch(0.260 0.010  92);   /* silkscreen                     */
+  --p5-win:      oklch(0.150 0.008  92);   /* the display windows            */
+  --p5-run:      oklch(0.780 0.150 125);   /* RUN lamp                       */
+  --p5-warn:     oklch(0.855 0.175  92);   /* signal yellow                  */
+  --p5-stop:     oklch(0.560 0.215  27);   /* the E-stop mushroom            */
+  --p5-trace:    oklch(0.900 0.120  92);   /* in-window bargraph             */
+}
+.p5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*2); }
+@media (min-width: 780px) { .p5-rack { grid-template-columns: 1fr 1fr; } }
+.p5-unit { position: relative; }
+.p5-stage { position: relative; line-height: 0; }
+.p5-stage canvas { display: block; width: 100%; }
+.p5-fallback { position: absolute; inset: 0; display: none; }
+
+/* DOM type over the raster. Positioned from the CSS-pixel box the canvas
+   sized itself from, never from backing-store coordinates, so a change of
+   devicePixelRatio cannot desync a legend from the mark it names. */
+.p5-legend {
+  position: absolute; z-index: 2; pointer-events: none;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--p5-ink); line-height: 1.2;
+}
+.p5-unit-name {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--hz-400); padding-bottom: 6px;
+}
+.p5-unit-name b { color: var(--hz-600); font-weight: 500; }
+
+/* Every drawn control carries a transparent DOM control at the same place:
+   the pixels are the affordance, the DOM is the control, and the
+   accessible name lives where a screen reader can reach it. */
+.p5-hit {
+  position: absolute; z-index: 3; opacity: 0; cursor: pointer;
+  border: 0; padding: 0; background: transparent; border-radius: 50%;
+}
+.p5-hit:focus-visible { opacity: 1; outline: 2px solid var(--p5-warn); outline-offset: 3px; background: transparent; }
+.p5-hit[disabled] { cursor: default; }
+
+.p5-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.p5-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.p5-kv b { display: block; font-family: var(--mono); font-size: 15px; letter-spacing: 0.02em; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world, stating that world's one canonical number.
+   Here it is the MAIN-THREAD frame counter, and the asymmetry is the
+   argument: this is the number that stops. The worker's stays --mono. */
+.p5-kv b.p5-dot {
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 48px; line-height: 48px; color: var(--p5-warn);
+}
+.p5-note {
+  font-family: var(--mono); font-size: 10px; line-height: 1.6; color: var(--hz-500);
+  border-left: 2px solid var(--p5-warn); padding: 7px 10px; margin-top: calc(var(--u)*2); max-width: 78ch;
+}
+.p5-note[hidden] { display: none !important; }
+.p5-note.p5-bad { border-left-color: var(--signal); color: var(--signal); }
+@media (max-width: 560px) { .p5-kv b.p5-dot { font-size: 38px; line-height: 38px; } }
 </style>
 </head>
 <body data-testid="technique-canvas">
@@ -453,22 +529,55 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
     <p class="cv-because">It can leave the main thread, <b>because it needs no DOM.</b>
       A canvas's control can be transferred to a worker once, irreversibly, and from
       then on it is drawn by a thread your layout, your parsing and your blocked
-      <code>for</code> loop cannot touch. Block the main thread below and watch which
-      counter keeps moving.</p>
-    <div class="cv-pair cv-split">
-      <div>
-        <div class="cv-lede">Explanatory graphic</div>
-        <div class="cv-fig" data-testid="g5-stage">
-          <canvas data-testid="g5-canvas"></canvas>
-          <div class="cv-cap">Two threads, one timeline. The main thread's frames stop
-            for the length of the block; the worker's are driven by the compositor and
-            do not.</div>
+      <code>for</code> loop cannot touch. Two identical panels below, from one
+      source. Only the right one is drawn by a worker. Hit the E-stop and watch
+      which instrument is still alive.</p>
+
+    <div class="p5" data-testid="p5-world">
+      <div class="p5-rack" data-testid="p5-rack">
+        <div class="p5-unit" data-testid="p5-unit-main">
+          <div class="p5-unit-name">unit 1 · <b>main thread</b></div>
+          <div class="p5-stage" data-testid="p5-main-stage">
+            <canvas data-testid="p5-main-canvas"></canvas>
+            <span class="p5-legend" data-testid="p5-main-lg-run">run</span>
+            <span class="p5-legend" data-testid="p5-main-lg-warn">free run</span>
+            <span class="p5-legend" data-testid="p5-main-lg-stop">e-stop</span>
+            <button class="p5-hit" data-testid="p5-freerun">Free-run both panels off their own clocks</button>
+            <button class="p5-hit" data-testid="p5-estop">Block the main thread for 800 ms</button>
+          </div>
+        </div>
+        <div class="p5-unit" data-testid="p5-unit-worker">
+          <div class="p5-unit-name">unit 2 · <b data-testid="p5-host">worker</b></div>
+          <div class="p5-stage" data-testid="p5-worker-stage">
+            <canvas data-testid="p5-worker-canvas"></canvas>
+            <canvas class="p5-fallback" data-testid="p5-fallback-canvas"></canvas>
+            <span class="p5-legend" data-testid="p5-worker-lg-run">run</span>
+            <span class="p5-legend" data-testid="p5-worker-lg-warn">free run</span>
+            <span class="p5-legend" data-testid="p5-worker-lg-stop">e-stop</span>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="cv-lede">ACETATE · screen 5</div>
-        <div data-testid="acetate-5-mount"></div>
+
+      <div class="p5-readouts" data-testid="p5-readouts">
+        <div class="p5-kv">main-thread frames<b class="p5-dot" data-testid="p5-main-frames">0</b></div>
+        <div class="p5-kv">worker frames<b data-testid="p5-worker-frames">0</b></div>
+        <div class="p5-kv">worker parity<b data-testid="p5-parity">booting…</b></div>
+        <div class="p5-kv">chrome paint<b data-testid="p5-chrome-ms">—</b></div>
       </div>
+
+      <p class="p5-note" data-testid="p5-note" hidden></p>
+      <p class="cv-instr" data-testid="p5-instr">
+        <b>Both panels are drawn, not styled.</b> The enamel is two octaves of value
+        noise lit by a perturbed surface normal; the fasteners and the E-stop dome are
+        per-pixel Lambert plus Phong from the same light vector; the lamps bloom onto
+        the paint with <code>lighter</code>. No gradient, shadow or filter builds any
+        of it — which is the reason the demonstration works at all. If the panel were
+        CSS, blocking the main thread would stall a graph inside a chassis that went
+        on looking alive, because the chassis would be the compositor's problem and
+        not the thread's. Drawn, <b>the lamps stop blinking with the trace</b>: the
+        whole instrument stalls, which is the true picture. Every legend and every
+        figure here is DOM over the raster; the worker draws no text at all.
+      </p>
     </div>
   </section>
 
@@ -521,7 +630,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 </div>
 
 <script src="../system/wam.js"></script>
-<script src="./acetate-bounce.js"></script>
+<script src="./panel-hmi.js"></script>
 <script>
 /* ════════════════════════════════════════════════════════════════════════
    SL-11 · canvas — one inline block, five sections.
@@ -600,7 +709,11 @@ function resolveRGB(cssColour) {
    rendered black, which is the only reason this was caught. A miss is now
    recorded and reported on the instrument plate rather than absorbed. */
 var acProbe = document.createElement('div');
-acProbe.className = 'ac';
+/* Carries EVERY world scope at once. Each world declares its palette on its
+   own class rather than on :root, so one probe has to wear all of them or a
+   lookup silently returns '' and the sheet draws a fallback colour while
+   claiming to draw the token. Add a class here when a world is added. */
+acProbe.className = 'ac p5';
 acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(acProbe);
 var acRoot = getComputedStyle(acProbe);
@@ -1603,97 +1716,88 @@ var SEC2 = (function () {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
-   §5 · OFF-THREAD
+   §5 · PANEL — off-thread
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
   /* Rule 1 of the boot order: read the setting BEFORE touching the canvas.
      Every other rule depends on this being first, because transfer is
-     one-way and a reduced-motion load must never take that path. */
+     one-way and a reduced-motion load must never take a path it cannot
+     come back from. */
   var startReduced = reduced.matches;
 
-  var c = chassis(5, {
-    caps: '<div class="ac-caps" data-testid="acetate-5-caps">' +
-      '<button class="ac-cap-btn" data-testid="acetate-5-freerun">free-run both</button>' +
-      '<button class="ac-cap-btn" data-testid="acetate-5-block">block main thread 800 ms</button>' +
-      '</div>',
-    work:
-      '<div class="ac-edl" style="grid-template-columns:1fr 1fr">' +
-        '<div><div class="ac-well" data-testid="acetate-5-main-well" style="height:210px">' +
-          '<canvas data-testid="acetate-5-main-canvas"></canvas></div></div>' +
-        '<div><div class="ac-well" data-testid="acetate-5-worker-well" style="height:210px">' +
-          '<canvas data-testid="acetate-5-worker-canvas"></canvas>' +
-          '<canvas data-testid="acetate-5-fallback-canvas" style="position:absolute;inset:0;z-index:3;display:none"></canvas>' +
-        '</div></div>' +
-      '</div>',
-    meta: [
-      { k: 'main frames', v: '0', c: 'src' },
-      { k: 'worker frames', v: '0', c: 'mst' },
-      { k: 'worker parity', v: 'booting…', c: 'mute' }
-    ]
-  });
+  /* The backing store is FIXED, not fitted to the CSS width. It is sized
+     once, before transfer, and can never be resized from here afterwards —
+     the element no longer owns its bitmap. The CSS width is 100% and the
+     height follows the intrinsic ratio, so the panel scales without the
+     chrome ever needing a repaint. */
+  var W = 860, H = 520;
+  var mainCv = $('p5-main-canvas'), wkrCv = $('p5-worker-canvas'), fbCv = $('p5-fallback-canvas');
+  [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; });
 
-  /* label the two strips without animating any chrome */
-  c.work.querySelector('[data-testid="acetate-5-main-well"]').insertAdjacentHTML('beforebegin',
-    '<div class="ac-kv" style="padding-bottom:4px">main thread</div>');
-  c.work.querySelector('[data-testid="acetate-5-worker-well"]').insertAdjacentHTML('beforebegin',
-    '<div class="ac-kv" style="padding-bottom:4px">worker <span data-testid="acetate-5-host">—</span></div>');
-
-  var mainCv = $('acetate-5-main-canvas');
-  var wkrCv = $('acetate-5-worker-canvas');
-  var fbCv = $('acetate-5-fallback-canvas');
-
-  /* The backing stores are fixed, not fitted to CSS width, because they
-     are sized once BEFORE transfer and can never be resized from here
-     afterwards — the element no longer owns its bitmap. */
-  var W = 420, H = 210 * 2;
-  [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; cv.style.width = '100%'; cv.style.height = '210px'; });
-
-  /* One ink set, resolved from the ACETATE tokens here and shipped to the
-     worker in init, so neither side hardcodes a colour. The two that read
-     as translucent arrive PRE-BLENDED against the ground: alpha compositing
-     is one of the two things the main thread's rasteriser and the worker's
-     disagree about, and the parity check below is byte-exact. */
-  function mix(a, b, f) {
-    return [Math.round(a[0] + (b[0] - a[0]) * f),
-            Math.round(a[1] + (b[1] - a[1]) * f),
-            Math.round(a[2] + (b[2] - a[2]) * f)];
-  }
-  function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
-  var GROUND = resolveRGB(token('--ac-well') || '#141210');
+  /* One ink set, resolved from the --p5-* tokens here and shipped to the
+     worker in init, so neither side hardcodes a colour. */
+  function rgbOf(name) { return resolveRGB(token(name)); }
   var INK = {
-    ground:   css(GROUND),
-    slot:     css(mix(GROUND, [255, 255, 255], 0.045)),
-    bar:      css(resolveRGB(token('--ac-mst') || '#eee')),
-    cap:      css(resolveRGB(token('--ac-src') || '#eab308')),
-    over:     css(resolveRGB(token('--ac-signal') || '#d65442')),
-    overline: css(mix(GROUND, resolveRGB(token('--ac-signal') || '#d65442'), 0.55))
+    panel:   rgbOf('--p5-panel'),
+    panelLo: rgbOf('--p5-panel-lo'),
+    edge:    rgbOf('--p5-edge'),
+    ink:     rgbOf('--p5-ink'),
+    win:     rgbOf('--p5-win'),
+    run:     rgbOf('--p5-run'),
+    warn:    rgbOf('--p5-warn'),
+    stop:    rgbOf('--p5-stop'),
+    trace:   rgbOf('--p5-trace')
   };
 
   var mainCtx = mainCv.getContext('2d');
-  var mainRender = self.ACETATE_BOUNCE_RENDER(mainCtx, W, H, INK);
+
+  /* The sheet's two-canvas rule, and §5's exemption from it. Everywhere
+     else chrome is a second canvas painted on resize only, so its per-frame
+     cost is zero. §5 cannot do that: the worker owns exactly one
+     transferred canvas and can never be handed a second. So both units
+     paint chrome ONCE into a buffer and composite it with a single
+     drawImage per frame — the same shape on both threads, because the two
+     panels have to be identical for the comparison to mean anything. */
+  var chromeCv = document.createElement('canvas');
+  chromeCv.width = W; chromeCv.height = H;
+  var chromeT0 = performance.now();
+  var GEOM = self.PANEL_CHROME(chromeCv.getContext('2d'), W, H, INK);
+  var chromeMs = performance.now() - chromeT0;
+  var mainLive = self.PANEL_LIVE(mainCtx, W, H, INK, GEOM);
+
+  var host = 'main', worker = null, blobUrl = null;
+  var mainFrames = 0, workerFrames = 0, freeRun = false, mainRaf = 0;
+  var fbCtx = null, fbLive = null;
+  var note = $('p5-note');
+
+  function mainPaint(t) {
+    mainCtx.drawImage(chromeCv, 0, 0);
+    mainLive(t, self.PANEL_BLINK(t), freeRun);
+  }
+  function fbPaint(t) {
+    if (!fbLive) return;
+    fbCtx.drawImage(chromeCv, 0, 0);
+    fbLive(t, self.PANEL_BLINK(t), freeRun);
+  }
 
   /* host is latched at load. Never a try/catch guard: that would turn a
      structural error — getContext on a transferred element — into a
      swallowed one. */
-  var host = 'main', worker = null, blobUrl = null;
-  var mainFrames = 0, workerFrames = 0, freeRun = false, mainRaf = 0;
-
-  function fail(msg, expected) {
+  function standDown(msg, expected) {
     host = 'main';
     fbCv.style.display = 'block';
-    if (!fbCtx) fbCtx = fbCv.getContext('2d');
-    if (!fbRender) fbRender = self.ACETATE_BOUNCE_RENDER(fbCtx, W, H, INK);
-    $('acetate-5-host').textContent = '— main-thread fallback';
-    c.notice.hidden = false;
-    c.notice.textContent = expected
-      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both strips are drawn by the main thread, which is the correct behaviour here and not a failure.'
-      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both strips are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
-    c.kv(2).textContent = expected ? 'not transferred' : 'fallback';
+    if (!fbCtx) { fbCtx = fbCv.getContext('2d'); fbLive = self.PANEL_LIVE(fbCtx, W, H, INK, GEOM); }
+    $('p5-host').textContent = 'main-thread fallback';
+    note.hidden = false;
+    note.className = expected ? 'p5-note' : 'p5-note p5-bad';
+    note.textContent = expected
+      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both units are drawn by the main thread, which is the correct behaviour here and not a failure.'
+      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both units are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
+    $('p5-parity').textContent = expected ? 'not transferred' : 'fallback';
     demo.render(demo.t);
-    BOOT.settled();
+    fbPaint(demo.t);
   }
-  var fbCtx = null, fbRender = null;
 
   function hashOf(ctx) {
     var d = ctx.getImageData(0, 0, W, H).data, h = 0x811c9dc5, i;
@@ -1701,86 +1805,132 @@ var SEC2 = (function () {
     return h >>> 0;
   }
 
-  var demo = WAM.clock('acetate-5-stage', {
-    el: $('acetate-5'), dur: 12000, poster: 0.42,
+  var demo = WAM.clock('p5-stage', {
+    el: $('p5-world'), dur: 12000, poster: 0.42,
     render: function (t) {
-      mainRender(t);
+      mainPaint(t);
       mainFrames++;
       if (host === 'worker') worker.postMessage({ type: 'render', t: t });
-      else if (fbRender) fbRender(t);
-      c.tc.textContent = timecode(t, 12000);
-      c.kv(0).textContent = mainFrames.toLocaleString();
-      if (host !== 'worker') c.kv(1).textContent = '—';
+      else fbPaint(t);
+      $('p5-main-frames').textContent = mainFrames.toLocaleString();
+      if (host !== 'worker') $('p5-worker-frames').textContent = '—';
     }
   });
   /* WAM.clock's cost meter brackets render(v) with performance.now(). For a
      proxy render that is the cost of postMessage, not the cost of drawing,
      so demo.cost is deliberately never printed for §5. */
 
+  $('p5-chrome-ms').textContent = ms(chromeMs) + ' ms' + (chromeMs > 25 ? ' ⚠' : '');
+
+  /* ── DOM over the raster ───────────────────────────────────────────────
+     Positioned from the CSS-pixel box the canvas sized itself from, never
+     from backing-store coordinates, so a change of devicePixelRatio cannot
+     desync a legend from the mark it names. */
+  function place() {
+    ['main', 'worker'].forEach(function (unit) {
+      var stage = $('p5-' + unit + '-stage');
+      var rect = stage.getBoundingClientRect();
+      if (!rect.width) return;
+      var k = rect.width / W;
+      function at(id, x, y, align) {
+        var el = $(id); if (!el) return;
+        el.style.left = (x * k) + 'px';
+        el.style.top = (y * k) + 'px';
+        el.style.transform = align === 'c' ? 'translate(-50%,0)' : '';
+      }
+      at('p5-' + unit + '-lg-run', GEOM.lamps[0].x, GEOM.lamps[0].y + GEOM.lamps[0].r + 8, 'c');
+      at('p5-' + unit + '-lg-warn', GEOM.lamps[1].x, GEOM.lamps[1].y + GEOM.lamps[1].r + 8, 'c');
+      at('p5-' + unit + '-lg-stop', GEOM.stop.x, GEOM.stop.y + GEOM.stop.r + 14, 'c');
+      if (unit !== 'main') return;
+      [['p5-freerun', GEOM.lamps[1].x, GEOM.lamps[1].y, GEOM.lamps[1].r + 4],
+       ['p5-estop', GEOM.stop.x, GEOM.stop.y, GEOM.stop.r + 8]].forEach(function (row) {
+        var el = $(row[0]);
+        el.style.width = (row[3] * 2 * k) + 'px';
+        el.style.height = (row[3] * 2 * k) + 'px';
+        el.style.left = ((row[1] - row[3]) * k) + 'px';
+        el.style.top = ((row[2] - row[3]) * k) + 'px';
+      });
+    });
+  }
+  place();
+  onResize(place);
+
   if (startReduced || !('transferControlToOffscreen' in wkrCv) || typeof Worker === 'undefined') {
-    fail(startReduced ? 'reduced motion is on, so the canvas was never transferred — transfer is one-way, and a reduced-motion load must not take a path it cannot come back from'
-                      : 'this engine has no OffscreenCanvas transfer', startReduced);
+    standDown(startReduced
+      ? 'reduced motion is on, so the canvas was never transferred — transfer is one-way, and a reduced-motion load must not take a path it cannot come back from'
+      : 'this engine has no OffscreenCanvas transfer', startReduced);
   } else {
     var body =
-      'self.ACETATE_BOUNCE_RENDER = ' + self.ACETATE_BOUNCE_RENDER + ';\n' +
-      '(' + self.ACETATE_BOUNCE_WORKER + ')();\n' +
-      '//# sourceURL=acetate-bounce-worker.js';
+      'self.PANEL_HASH2 = ' + self.PANEL_HASH2 + ';\n' +
+      'self.PANEL_NOISE = ' + self.PANEL_NOISE + ';\n' +
+      'self.PANEL_COMPOSITE = ' + self.PANEL_COMPOSITE + ';\n' +
+      'self.PANEL_FIXTURES = ' + self.PANEL_FIXTURES + ';\n' +
+      'self.PANEL_LAMPS = ' + self.PANEL_LAMPS + ';\n' +
+      'self.PANEL_CHROME = ' + self.PANEL_CHROME + ';\n' +
+      'self.PANEL_LIVE = ' + self.PANEL_LIVE + ';\n' +
+      'self.PANEL_BLINK = ' + self.PANEL_BLINK + ';\n' +
+      '(' + self.PANEL_WORKER + ')();\n' +
+      '//# sourceURL=panel-hmi-worker.js';
     blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
     worker = new Worker(blobUrl);                 /* classic, never {type:'module'} */
-    worker.onerror = function () { fail('the worker failed to start'); };
+    worker.onerror = function () { standDown('the worker failed to start'); };
 
     var pinged = false;
-    var pingTimer = setTimeout(function () { if (!pinged) fail('the worker did not answer a ping within 750 ms'); }, 750);
+    var pingTimer = setTimeout(function () { if (!pinged) standDown('the worker did not answer a ping within 750 ms'); }, 750);
 
     worker.onmessage = function (e) {
       var m = e.data;
       if (m.type === 'pong') {
         pinged = true; clearTimeout(pingTimer);
-        /* Rule 3: ping FIRST, then transfer. Transferring into a dead
-           worker is unrecoverable; pinging first is free. */
+        /* Ping FIRST, then transfer. Transferring into a dead worker is
+           unrecoverable; pinging first is free. */
         var off = wkrCv.transferControlToOffscreen();
         host = 'worker';
-        $('acetate-5-host').textContent = '— OffscreenCanvas, transferred';
+        $('p5-host').textContent = 'worker · OffscreenCanvas';
         worker.postMessage({ type: 'init', canvas: off, w: W, h: H, ink: INK }, [off]);
       } else if (m.type === 'ready') {
         URL.revokeObjectURL(blobUrl);
+        $('p5-chrome-ms').textContent = ms(chromeMs) + ' / ' + ms(m.chromeMs) + ' ms' +
+          (Math.max(chromeMs, m.chromeMs) > 25 ? ' ⚠' : '');
         worker.postMessage({ type: 'render', t: 0.42 });
       } else if (m.type === 'rendered') {
         workerFrames = m.n;
-        c.kv(1).textContent = workerFrames.toLocaleString();
-        if (m.t === 0.42 && c.kv(2).textContent === 'booting…') {
-          /* Boot parity — the positive control for §5's central claim.
-             The same render function, run on a scratch canvas here, must
-             hash to what the worker got. Without this, "the same render,
-             off the main thread" is asserted. */
+        $('p5-worker-frames').textContent = workerFrames.toLocaleString();
+        if (m.t === 0.42 && $('p5-parity').textContent === 'booting…') {
+          /* Boot parity — the positive control for §5's central claim. The
+             same chrome and the same live layer, run on a scratch canvas
+             here, must hash to what the worker got. Without it, "the same
+             render, off the main thread" is asserted. */
           var scratch = document.createElement('canvas');
           scratch.width = W; scratch.height = H;
           var sctx = scratch.getContext('2d', { willReadFrequently: true });
-          self.ACETATE_BOUNCE_RENDER(sctx, W, H, INK)(0.42);
+          var sChrome = document.createElement('canvas');
+          sChrome.width = W; sChrome.height = H;
+          var sGeom = self.PANEL_CHROME(sChrome.getContext('2d'), W, H, INK);
+          sctx.drawImage(sChrome, 0, 0);
+          self.PANEL_LIVE(sctx, W, H, INK, sGeom)(0.42, self.PANEL_BLINK(0.42), false);
           var mine = hashOf(sctx);
           if (mine === m.hash) {
-            c.kv(2).textContent = '✓ 0x' + m.hash.toString(16);
-            c.kv(2).className = 'ac-c-mst';
+            $('p5-parity').textContent = '✓ 0x' + m.hash.toString(16);
             BOOT.settled();
           } else {
-            fail('boot parity failed — worker 0x' + m.hash.toString(16) + ' vs main 0x' + mine.toString(16));
+            standDown('boot parity failed — worker 0x' + m.hash.toString(16) + ' vs main 0x' + mine.toString(16));
           }
         }
       } else if (m.type === 'frame') {
         workerFrames = m.n;
-        c.kv(1).textContent = workerFrames.toLocaleString();
+        $('p5-worker-frames').textContent = workerFrames.toLocaleString();
       }
     };
     worker.postMessage({ type: 'ping' });
   }
 
-  /* Free-run: the worker drives itself off the compositor, and the main
-     strip drives itself off rAF. The two modes are mutually exclusive —
-     otherwise two clocks drive one render. */
+  /* Free-run: the worker drives itself off the compositor, the main unit
+     off its own rAF. Mutually exclusive with the clock — otherwise two
+     clocks drive one render. */
   function setFreeRun(on) {
     freeRun = on;
-    $('acetate-5-freerun').classList.toggle('ac-on', on);
-    $('acetate-5-freerun').textContent = on ? 'stop free-run' : 'free-run both';
+    $('p5-freerun').textContent = on ? 'Stop free-run' : 'Free-run both panels off their own clocks';
     if (on) {
       demo.pause();
       mainFrames = 0; workerFrames = 0;
@@ -1788,10 +1938,9 @@ var SEC2 = (function () {
       var t0 = performance.now();
       (function tick(now) {
         mainFrames++;
-        mainRender(((now - t0) % 12000) / 12000);
-        if (fbRender) fbRender(((now - t0) % 12000) / 12000);
-        c.kv(0).textContent = mainFrames.toLocaleString();
-        c.tc.textContent = timecode(((now - t0) % 12000) / 12000, 12000);
+        var t = ((now - t0) % 12000) / 12000;
+        mainPaint(t); fbPaint(t);
+        $('p5-main-frames').textContent = mainFrames.toLocaleString();
         if (freeRun) mainRaf = requestAnimationFrame(tick);
       })(performance.now());
     } else {
@@ -1800,13 +1949,12 @@ var SEC2 = (function () {
       if (!reduced.matches) demo.play();
     }
   }
-  $('acetate-5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
+  $('p5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
 
-  $('acetate-5-block').addEventListener('click', function () {
+  $('p5-estop').addEventListener('click', function () {
     if (!freeRun) setFreeRun(true);
     var btn = this;
-    btn.disabled = true; btn.textContent = 'blocking…';
-    /* Let the label paint before the thread stops answering. */
+    btn.disabled = true;
     requestAnimationFrame(function () { requestAnimationFrame(function () {
       var m0 = mainFrames, w0 = workerFrames;
       var t0 = performance.now(), end = t0 + 800;
@@ -1818,26 +1966,27 @@ var SEC2 = (function () {
 
          The WORKER's counter cannot be read here, and that asymmetry is
          real rather than a nuisance: the count arrives by postMessage, and
-         a blocked main thread is exactly a main thread that is not draining
-         its message queue. So the worker's figure is taken after a short
-         settle and the window it covers is stated as the longer one. Both
-         errors that remain point the same way — against the result. */
+         a blocked main thread is exactly a main thread that is not
+         draining its message queue. So the worker's figure is taken after a
+         short settle and the window it covers is stated as the longer one.
+         Both errors that remain point the same way — against the result. */
       var dmBlock = mainFrames - m0;
-      var SETTLE = 50;
       setTimeout(function () {
         var span = performance.now() - t0;
         var dmTotal = mainFrames - m0, dw = workerFrames - w0;
-        c.notice.hidden = false;
-        c.notice.textContent = host !== 'worker'
-          ? 'Both strips are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
-          : 'Blocked the main thread for 800 ms. It advanced ' + dmBlock + ' frame' +
+        note.hidden = false;
+        note.className = 'p5-note';
+        note.textContent = host !== 'worker'
+          ? 'Both units are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
+          : 'Blocked the main thread for 800 ms. Unit 1 advanced ' + dmBlock + ' frame' +
             (dmBlock === 1 ? '' : 's') + ' while blocked, and ' + dmTotal + ' across the whole ' +
-            Math.round(span) + ' ms window. The worker advanced ' + dw + ' over that same window — ' +
-            (dmTotal ? (dw / dmTotal).toFixed(0) + '× as many' : 'while the main thread served none') +
+            Math.round(span) + ' ms window — its lamps stopped blinking with its trace, because the ' +
+            'panel is drawn rather than styled. Unit 2 advanced ' + dw + ' over that same window' +
+            (dmTotal ? ', ' + (dw / dmTotal).toFixed(0) + '× as many' : '') +
             '. The worker is counted over the longer window because its count arrives by postMessage, ' +
             'and a blocked thread is precisely one that is not draining its message queue.';
-        btn.disabled = false; btn.textContent = 'block main thread 800 ms';
-      }, SETTLE);
+        btn.disabled = false;
+      }, 50);
     }); });
   });
 
@@ -1848,60 +1997,6 @@ var SEC2 = (function () {
     if (reduced.matches) {
       if (freeRun) setFreeRun(false);
       if (host === 'worker') { worker.postMessage({ type: 'stop' }); worker.postMessage({ type: 'render', t: 0.42 }); }
-    }
-  });
-
-  /* ── graphic: two threads, one timeline ──────────────────────────── */
-  var g = $('g5-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
-  function gsize() { var s = fit(g, 200); gw = s.w; gh = s.h; }
-  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
-
-  var TINT = token('--tint-canvas') || '#e2c23a';
-  var HZ3 = token('--hz-300') || '#333';
-  var HZ4 = token('--hz-400') || '#666';
-  var HZ6 = token('--hz-600') || '#ccc';
-  var SIG = token('--signal') || '#e5484d';
-
-  var gdemo = WAM.clock('g5-stage', {
-    el: $('g5-stage'), dur: 8000, poster: 0.62,
-    render: function (t) {
-      gx.clearRect(0, 0, gw, gh);
-      var mono = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
-      var left = 92 * DPR, w = gw - left - 14 * DPR;
-      var lanes = [{ y: gh * 0.34, label: 'main', blocked: true }, { y: gh * 0.68, label: 'worker', blocked: false }];
-      var blockFrom = 0.38, blockTo = 0.66, i, k, x;
-
-      gx.font = mono; gx.textBaseline = 'middle';
-      lanes.forEach(function (ln) {
-        gx.fillStyle = HZ4; gx.textAlign = 'right';
-        gx.fillText(ln.label, left - 12 * DPR, ln.y);
-        gx.strokeStyle = HZ3; gx.lineWidth = 1;
-        gx.beginPath(); gx.moveTo(left, Math.round(ln.y) + 0.5); gx.lineTo(left + w, Math.round(ln.y) + 0.5); gx.stroke();
-
-        /* one tick per frame, 40 across the lane */
-        for (i = 0; i < 40; i++) {
-          k = i / 40;
-          if (k > t) break;
-          if (ln.blocked && k > blockFrom && k < blockTo) continue;
-          x = left + k * w;
-          gx.fillStyle = ln.blocked ? HZ6 : TINT;
-          gx.fillRect(x, ln.y - 7 * DPR, 2 * DPR, 14 * DPR);
-        }
-      });
-
-      /* the block itself */
-      if (t > blockFrom) {
-        var x0 = left + blockFrom * w, x1 = left + Math.min(t, blockTo) * w;
-        gx.fillStyle = SIG; gx.globalAlpha = 0.16;
-        gx.fillRect(x0, lanes[0].y - 18 * DPR, x1 - x0, 36 * DPR);
-        gx.globalAlpha = 1;
-        gx.strokeStyle = SIG; gx.lineWidth = 1 * DPR;
-        gx.strokeRect(x0, lanes[0].y - 18 * DPR, x1 - x0, 36 * DPR);
-        gx.fillStyle = SIG; gx.textAlign = 'left';
-        gx.fillText('main thread blocked', x0 + 6 * DPR, lanes[0].y - 26 * DPR);
-      }
-      gx.fillStyle = HZ4; gx.textAlign = 'left';
-      gx.fillText('one tick = one frame', left, gh - 12 * DPR);
     }
   });
 })();
