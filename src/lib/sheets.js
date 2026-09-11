@@ -20,6 +20,15 @@ export const PAGES = [
 ];
 
 /** The live reference sheets, shown in the viewer. */
+/* ORDER IS THE DECK'S OWN SPECTRUM, not the slide numbers and not the order
+   these were built in: layout/CSS, SVG, canvas, GIF, video, WebGL, WebGPU,
+   composite. Browser-managed motion first, then the hand-drawn surfaces,
+   then the two pre-baked baselines, then the GPU, ending on the one sheet
+   that is about the pipeline rather than a technique.
+
+   Decided 2026-09-11, which closes the "intentional, or drift?" stub in
+   conductor/product.md. It WAS drift — the old order was neither slide
+   numbers nor the spectrum, it was the order the sheets got built in. */
 export const SHEETS = [
   {
     group: 'Reference',
@@ -44,11 +53,11 @@ export const SHEETS = [
   },
   { group: 'Techniques', code: 'SL-06', name: 'Layout / CSS', note: 'Layout animated by selectors + scroll', file: 'techniques/css.html', tint: 'var(--tint-css)' },
   { group: 'Techniques', code: 'SL-10', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', tint: 'var(--tint-svg)' },
+  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
   { group: 'Techniques', code: 'SL-05', name: 'GIF', note: 'Baseline — pre-baked, no player', file: 'techniques/gif/index.html', tint: 'var(--tint-video)' },
   { group: 'Techniques', code: 'SL-04', name: 'Video', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
-  { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
   { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'GPU shaders, real 3D', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
-  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
+  { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
   { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
 ];
 
