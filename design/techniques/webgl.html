@@ -4,140 +4,2488 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-12 · WebGL — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-12 · webgl
+
+   Two vocabularies, and they must not blend — the rule the canvas sheet set.
+
+   `wg-`  the sheet itself, in the deck's own near-black harness language:
+          the frame around the worlds, and never anything inside one.
+   `rl-`  §1 RELIEF, an exhibition panel in a dark gallery. It carries its
+          own palette, chrome and subject and shares nothing with the sheet
+          but the rule that the subject is shaded and the chrome is flat.
+          See the track's direction.md §1.1 — "only the subject may be
+          shaded" is a criterion here, not a taste: move the light, and a
+          rendered surface responds the way the material would.
+
+   Every class is namespaced because components.css leaks: a bare `.note`,
+   `.plate` or `.well` inherits system styling silently. `.wrap`, `.crumb`,
+   `.head` and `.notes` are the sheet chrome every technique page shares
+   and are deliberately bare.
+   ───────────────────────────────────────────────────────────────────────── */
 :root { --tint: var(--tint-webgl); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); }
-.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.badge { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); z-index: 2; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
-.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*4); }
+p.dek b { color: var(--hz-600); font-weight: 600; }
+
+/* ── the sheet's own furniture ──────────────────────────────────────── */
+.wg-sec { margin: calc(var(--u)*12) 0 0; }
+.wg-sec-head { display: flex; align-items: baseline; gap: 12px; border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-bottom: calc(var(--u)*2); flex-wrap: wrap; }
+.wg-sec-n { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); }
+.wg-sec-head h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0; }
+.wg-because { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*3); }
+.wg-because b { color: var(--hz-600); font-weight: 600; }
+.wg-prose { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin: 0 0 calc(var(--u)*2); }
+.wg-prose b { color: var(--hz-600); font-weight: 600; }
+.wg-prose q { font-style: italic; color: var(--hz-600); }
+.wg-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.wg-instr b { color: var(--hz-500); font-weight: 500; }
+.wg-instr code { color: var(--hz-500); }
+.wg-dagger { color: var(--hz-400); }
+
+/* The one Doto element per world, and it sits HERE — in the harness, at
+   head size — never inside the world. The canvas sheet learned that the
+   deck's headline face wearing a world's colour turns a self-contained
+   screen back into presentation chrome. */
+.wg-band { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: calc(var(--u)*2) 0 calc(var(--u)*2); }
+.wg-dot { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 44px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums; min-width: 3.2ch; }
+.wg-band-l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); max-width: 40ch; line-height: 1.5; }
+.wg-band-l b { color: var(--hz-500); font-weight: 500; }
+
+.wg-scroll { overflow-x: auto; }
+.wg-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: calc(var(--u)*2); min-width: 460px; }
+.wg-table th, .wg-table td { text-align: left; padding: 6px 10px 6px 0; border-bottom: var(--hair) solid var(--hz-200); white-space: nowrap; }
+.wg-table th { color: var(--hz-400); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+.wg-table td { color: var(--hz-600); font-variant-numeric: tabular-nums; }
+.wg-table td.wg-num { color: var(--tint); }
+.wg-guard { font-family: var(--mono); font-size: 10px; padding: 7px 10px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+.wg-guard.wg-ok { color: var(--ok); background: color-mix(in oklch, var(--ok) 12%, transparent); }
+.wg-guard.wg-bad { color: var(--signal); background: color-mix(in oklch, var(--signal) 14%, transparent); }
+.wg-guard.wg-wait { color: var(--hz-500); background: var(--hz-100); }
+.wg-btn {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  border-radius: 4px; padding: 7px 12px; cursor: pointer;
+}
+.wg-btn:hover { border-color: var(--tint); color: var(--tint); }
+.wg-btn[disabled] { opacity: 0.5; cursor: default; }
+.wg-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*3); }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol, .notes ul { padding-left: 1.1em; }
+.notes li { margin-bottom: 8px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §1 · RELIEF — the exhibition wall panel
+
+   The large interpretive screen in a museum gallery, beside a bronze: the
+   panel that shows visitors how the object was made. Dark wall, one warm
+   lamp, flat label typography. The bronze is the only thing shaded; every
+   frame, rule, caption, dial and leader is flat notation — no bevel, no
+   rendered bezel, no simulated panel. That split is the world's whole
+   discipline and it is testable: cover the subject and nothing left should
+   have a highlight.
+
+   Palette from direction.md §4. Grounds at hue 300 run chroma ≤ 0.008 and
+   are effectively achromatic; the hue is not spent. --rl-call at 348 clears
+   the webgpu tint (320) by 28°. --rl-lamp / --rl-obj at 75 sit on the 20°
+   boundary against both neighbours, precedented by --l2-sel.
+   ───────────────────────────────────────────────────────────────────────── */
+.rl {
+  --rl-room:   oklch(0.090 0.008 300);   /* gallery wall, unlit          */
+  --rl-plinth: oklch(0.180 0.006 300);
+  --rl-shadow: oklch(0.050 0.006 300);
+  --rl-rule:   oklch(0.420 0.006 300);   /* flat notation, no bevel      */
+  --rl-ink:    oklch(0.880 0.004 300);   /* label type                   */
+  --rl-dim:    oklch(0.600 0.005 300);
+  --rl-lamp:   oklch(0.960 0.010  75);   /* the gallery lamp, warm       */
+  --rl-obj:    oklch(0.480 0.040  75);   /* the bronze, base albedo      */
+  --rl-verd:   oklch(0.520 0.050 165);   /* the patina — a colour that   */
+                                         /*   happens to copper alloy    */
+  --rl-call:   oklch(0.760 0.140 348);   /* leader + active chapter      */
+  color: var(--rl-ink);
+}
+/* interior gutter ≥ 18 px between the frame and any drawn content;
+   ≥ 12 px between groups. The stage grid is 6 px cells. */
+.rl-panel { background: var(--rl-room); padding: 18px; }
+.rl-mast { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: var(--hair) solid var(--rl-rule); margin-bottom: 18px; }
+.rl-mast-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rl-dim); }
+.rl-mast-t { font-family: var(--sans); font-size: 17px; font-weight: 600; color: var(--rl-ink); letter-spacing: -0.01em; }
+.rl-mast-t i { font-style: italic; font-weight: 500; }
+.rl-mast-s { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; color: var(--rl-dim); }
+
+.rl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 820px) { .rl-grid { grid-template-columns: minmax(0, 1fr) 246px; } }
+
+.rl-stage { position: relative; aspect-ratio: 16 / 9; background: var(--rl-shadow); overflow: hidden; touch-action: none; }
+.rl-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rl-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.rl-stage .rl-lead { fill: none; stroke: var(--rl-call); stroke-width: 1.25; }
+.rl-stage .rl-anchor { fill: none; stroke: var(--rl-call); stroke-width: 1.25; }
+.rl-stage .rl-lead-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; fill: var(--rl-call); }
+.rl-stage .rl-lamp-mark { fill: var(--rl-lamp); }
+.rl-stage .rl-lamp-ring { fill: none; stroke: var(--rl-rule); stroke-width: 1; stroke-dasharray: 2 4; }
+.rl-status {
+  position: absolute; left: 18px; bottom: 14px; font-family: var(--mono); font-size: 9.5px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--rl-dim); pointer-events: none;
+}
+.rl-status[hidden] { display: none !important; }
+.rl-hint { position: absolute; right: 18px; bottom: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rl-rule); pointer-events: none; }
+
+/* the interpretation column — the panel's own typography, flat */
+.rl-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.rl-chapters { display: flex; flex-direction: column; gap: 0; border-top: var(--hair) solid var(--rl-rule); }
+.rl-ch {
+  display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: baseline;
+  text-align: left; padding: 10px 0; border: 0; border-bottom: var(--hair) solid var(--rl-rule);
+  background: transparent; color: var(--rl-dim); cursor: pointer; font: inherit; width: 100%;
+}
+.rl-ch-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--rl-rule); }
+.rl-ch-t { font-family: var(--sans); font-size: 13.5px; font-weight: 600; letter-spacing: -0.005em; }
+.rl-ch-p { grid-column: 2; font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--rl-dim); margin: 4px 0 0; display: none; }
+.rl-ch.rl-on { color: var(--rl-ink); }
+.rl-ch.rl-on .rl-ch-n { color: var(--rl-call); }
+.rl-ch.rl-on .rl-ch-p { display: block; }
+.rl-ch:hover .rl-ch-t { color: var(--rl-ink); }
+
+/* the raking-light dial: a circle, a lamp, an elevation tick. Flat. */
+.rl-dial { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; }
+.rl-dial svg { width: 84px; height: 84px; display: block; overflow: visible; }
+.rl-dial .rl-d-ring { fill: none; stroke: var(--rl-rule); stroke-width: 1; }
+.rl-dial .rl-d-obj { fill: none; stroke: var(--rl-rule); stroke-width: 1; stroke-dasharray: 1.5 3; }
+.rl-dial .rl-d-ray { stroke: var(--rl-lamp); stroke-width: 1; opacity: 0.55; }
+.rl-dial .rl-d-lamp { fill: var(--rl-lamp); }
+.rl-dial .rl-d-el { fill: none; stroke: var(--rl-call); stroke-width: 1.5; }
+.rl-kvs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.rl-kv { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rl-dim); }
+.rl-kv b { display: block; font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--rl-ink); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.rl-kv b.rl-warn { color: var(--rl-call); }
+
+.rl-label { display: flex; gap: 6px 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: var(--hair) solid var(--rl-rule); font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--rl-dim); }
+.rl-label b { color: var(--rl-ink); font-weight: 500; }
+
+/* comparison strip and figure: still inside the world, still flat */
+.rl-sub { background: var(--rl-room); padding: 18px; margin-top: 12px; }
+.rl-sub-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--rl-dim); margin-bottom: 12px; }
+.rl-sub-k b { color: var(--rl-ink); font-weight: 500; }
+.rl-cmp { position: relative; aspect-ratio: 8 / 3; background: var(--rl-shadow); }
+.rl-cmp canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rl-cmp-tags { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; }
+.rl-cmp-tags span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rl-ink); padding: 12px 14px; align-self: start; }
+.rl-cmp-tags span i { display: block; font-style: normal; color: var(--rl-dim); letter-spacing: 0.06em; text-transform: none; margin-top: 3px; }
+.rl-cmp-tags span:last-child { border-left: var(--hair) solid var(--rl-rule); height: 100%; }
+.rl-fig { position: relative; aspect-ratio: 2 / 1; background: var(--rl-shadow); }
+.rl-fig canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rl-fig-tags { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; }
+.rl-fig-tags span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rl-ink); padding: 12px 14px; }
+.rl-fig-tags span i { display: block; font-style: normal; color: var(--rl-dim); letter-spacing: 0.06em; text-transform: none; margin-top: 3px; }
+.rl-fig-tags .rl-basis { position: absolute; right: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--rl-dim); text-transform: none; padding: 0; }
+.rl-fig-tags .rl-basis b { font-weight: 500; }
+.rl-fig-tags .rl-basis .rl-x { color: oklch(0.70 0.18 28); }
+.rl-fig-tags .rl-basis .rl-y { color: oklch(0.80 0.16 130); }
+.rl-fig-tags .rl-basis .rl-z { color: oklch(0.72 0.14 260); }
+.rl-cap { font-family: var(--sans); font-size: 12.5px; line-height: 1.55; color: var(--rl-dim); margin: 12px 0 0; max-width: 78ch; }
+.rl-cap b { color: var(--rl-ink); font-weight: 600; }
+
+/* the harness's measurement block — OUTSIDE every world's product surface.
+   A museum panel does not print frame times; the sheet does, underneath. */
+.wg-bench { margin-top: calc(var(--u)*3); padding-top: calc(var(--u)*2); border-top: var(--hair) dashed var(--hz-200); }
+.wg-bench-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 4px; }
+.wg-bench-k b { color: var(--tint); font-weight: 500; }
+.wg-kvs { display: flex; gap: 10px 28px; flex-wrap: wrap; margin-top: 12px; }
+.wg-kv { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.wg-kv b { display: block; font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--hz-600); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.rl-prompt { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--rl-dim); border-top: var(--hair) solid var(--rl-rule); padding-top: 10px; margin: 0; }
+.rl-prompt b { color: var(--rl-ink); font-weight: 600; }
+.rl-way { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--rl-rule); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §2 · IRIDESCENCE — the animated natural-history plate
+
+   A museum collection's online entry for one specimen: the figure that
+   replaces the photographic plate, because a photograph of an iridescent
+   beetle is wrong at every angle except one. Warm printed paper, taxonomic
+   type, numbered callouts, a scale bar, a spectrum. The light-ground world
+   of the sheet, between two dark ones.
+
+   The subject sweeps the whole hue wheel by construction — the declared
+   exception in direction.md §3.1. The ground is fixed at hue 75, chroma
+   ≤ 0.010; nothing in the chrome carries a hue with a job.
+   ───────────────────────────────────────────────────────────────────────── */
+.ir {
+  --ir-plate: oklch(0.930 0.006  75);   /* printed plate, warm paper     */
+  --ir-ink:   oklch(0.230 0.008  75);
+  --ir-dim:   oklch(0.480 0.010  75);
+  --ir-rule:  oklch(0.640 0.008  75);
+  --ir-scale: oklch(0.430 0.010  75);   /* scale bar, callout leaders    */
+  --ir-void:  oklch(0.140 0.006  75);
+  --ir-body:  oklch(0.260 0.030  60);   /* the chitin itself, unlit      */
+  color: var(--ir-ink);
+}
+.ir-plate { background: var(--ir-plate); padding: 18px; }
+.ir-mast { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ir-dim); padding-bottom: 10px; border-bottom: var(--hair) solid var(--ir-rule); }
+.ir-title { font-family: var(--sans); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--ir-ink); margin: 12px 0 14px; }
+.ir-title i { font-style: italic; font-weight: 600; }
+.ir-title span { font-weight: 400; color: var(--ir-dim); font-size: 13px; }
+.ir-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 820px) { .ir-grid { grid-template-columns: minmax(0, 1fr) 250px; } }
+.ir-stage { position: relative; aspect-ratio: 3 / 2; background: var(--ir-plate); overflow: hidden; touch-action: none; }
+.ir-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ir-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.ir-stage .ir-lead { fill: none; stroke: var(--ir-scale); stroke-width: 1; }
+.ir-stage .ir-anchor { fill: none; stroke: var(--ir-scale); stroke-width: 1; }
+.ir-stage .ir-lead-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; fill: var(--ir-ink); }
+.ir-stage .ir-pol { stroke: var(--ir-scale); stroke-width: 1; stroke-dasharray: 3 3; }
+.ir-stage .ir-pol-n { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; fill: var(--ir-dim); }
+.ir-stage .ir-bar { stroke: var(--ir-ink); stroke-width: 1.5; }
+.ir-stage .ir-bar-n { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; fill: var(--ir-ink); }
+.ir-status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ir-dim); pointer-events: none; }
+.ir-status[hidden] { display: none !important; }
+.ir-hint { position: absolute; right: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ir-rule); pointer-events: none; }
+.ir-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ir-key { list-style: none; margin: 0; padding: 0; border-top: var(--hair) solid var(--ir-rule); }
+.ir-k { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: baseline; width: 100%; text-align: left; padding: 8px 0; border: 0; border-bottom: var(--hair) solid var(--ir-rule); background: transparent; color: var(--ir-dim); cursor: pointer; font: inherit; }
+.ir-k-n { font-family: var(--mono); font-size: 10px; color: var(--ir-rule); }
+.ir-k-t { font-family: var(--sans); font-size: 13px; font-weight: 600; }
+.ir-k-p { grid-column: 2; font-family: var(--sans); font-size: 12px; line-height: 1.5; color: var(--ir-dim); margin: 3px 0 0; display: none; }
+.ir-k.ir-on { color: var(--ir-ink); }
+.ir-k.ir-on .ir-k-n { color: var(--ir-ink); }
+.ir-k.ir-on .ir-k-p { display: block; }
+.ir-spec svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ir-spec .ir-ax { stroke: var(--ir-rule); stroke-width: 1; }
+.ir-spec .ir-tick { font-family: var(--mono); font-size: 7px; letter-spacing: 0.08em; fill: var(--ir-dim); }
+.ir-spec .ir-curve { fill: none; stroke: var(--ir-ink); stroke-width: 1.25; }
+.ir-spec .ir-curve.ir-faint { stroke: var(--ir-rule); stroke-width: 0.9; }
+.ir-spec .ir-peak { fill: var(--ir-ink); }
+.ir-spec-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ir-dim); margin-bottom: 6px; }
+.ir-spec-k b { color: var(--ir-ink); font-weight: 500; }
+.ir-kvs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.ir-kv { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ir-dim); }
+.ir-kv b { display: block; font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--ir-ink); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.ir-prompt { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; color: var(--ir-dim); border-top: var(--hair) solid var(--ir-rule); padding-top: 10px; margin: 0; }
+.ir-prompt b { color: var(--ir-ink); font-weight: 600; }
+.ir-label { display: flex; gap: 6px 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: var(--hair) solid var(--ir-rule); font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ir-dim); }
+.ir-label b { color: var(--ir-ink); font-weight: 500; }
+.ir-sub { background: var(--ir-plate); padding: 18px; margin-top: 12px; }
+.ir-sub-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ir-dim); margin-bottom: 12px; }
+.ir-sub-k b { color: var(--ir-ink); font-weight: 500; }
+.ir-cmp { position: relative; aspect-ratio: 8 / 3; background: var(--ir-plate); }
+.ir-cmp canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ir-cmp-tags { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; }
+.ir-cmp-tags span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ir-ink); padding: 12px 14px; align-self: start; }
+.ir-cmp-tags span i { display: block; font-style: normal; color: var(--ir-dim); letter-spacing: 0.06em; text-transform: none; margin-top: 3px; }
+.ir-cmp-tags span:last-child { border-left: var(--hair) solid var(--ir-rule); height: 100%; }
+.ir-cap { font-family: var(--sans); font-size: 12.5px; line-height: 1.55; color: var(--ir-dim); margin: 12px 0 0; max-width: 78ch; }
+.ir-cap b { color: var(--ir-ink); font-weight: 600; }
+.ir-fig { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: center; }
+@media (min-width: 720px) { .ir-fig { grid-template-columns: 300px minmax(0, 1fr); } }
+.ir-fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ir-fig .ir-lyr-hi { fill: oklch(0.86 0.010 75); stroke: var(--ir-ink); stroke-width: 0.6; }
+.ir-fig .ir-lyr-lo { fill: oklch(0.78 0.012 75); stroke: var(--ir-ink); stroke-width: 0.6; }
+.ir-fig .ir-lyr-sub { fill: var(--ir-body); }
+.ir-fig .ir-fig-t { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.06em; fill: var(--ir-ink); }
+.ir-fig .ir-fig-d { font-family: var(--mono); font-size: 7px; fill: var(--ir-dim); }
+.ir-fig .ir-ray { stroke: var(--ir-ink); stroke-width: 0.8; fill: none; }
+.ir-fig .ir-ray.ir-ray-r { stroke-dasharray: 2 2; }
+.ir-fig-txt { font-family: var(--sans); font-size: 12.5px; line-height: 1.55; color: var(--ir-dim); margin: 0; }
+.ir-fig-txt b { color: var(--ir-ink); font-weight: 600; }
+.ir-fig-txt code { font-family: var(--mono); font-size: 11px; color: var(--ir-ink); background: none; padding: 0; border: 0; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §3 · SEASON — the generative identity system
+
+   The thing a brand studio builds, hands over, and the client runs to make
+   each event's poster. Dark board stock, a triad generated per seed from the
+   deck's own five legal hue windows, a proof grid of four formats from one
+   evaluation, and the specification spread the system ships with — which
+   happens to be the technical explanation.
+
+   --se-p1..3 are set live by the program, always inside the windows.
+   ───────────────────────────────────────────────────────────────────────── */
+.se {
+  --se-stock: oklch(0.105 0.008 288);   /* the board / the screen        */
+  --se-ink:   oklch(0.930 0.004 288);
+  --se-dim:   oklch(0.640 0.006 288);
+  --se-rule:  oklch(0.380 0.006 288);   /* flat notation                 */
+  --se-well:  oklch(0.075 0.008 288);
+  --se-p1:    oklch(0.640 0.180 348);   /* generated per seed —          */
+  --se-p2:    oklch(0.780 0.140 120);   /*   these are the defaults,     */
+  --se-p3:    oklch(0.560 0.170 288);   /*   overwritten on boot         */
+  --se-mark:  oklch(0.960 0.006 288);   /* the brandmark, paper white    */
+  color: var(--se-ink);
+}
+.se-board { background: var(--se-stock); padding: 18px; }
+.se-mast { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: var(--hair) solid var(--se-rule); }
+.se-mast-t { font-family: var(--sans); font-size: 17px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--se-ink); }
+.se-mast-t span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--se-dim); font-size: 13px; margin-left: 10px; }
+.se-mast-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--se-dim); }
+.se-rack { display: flex; gap: 12px 18px; flex-wrap: wrap; align-items: flex-end; padding: 14px 0 18px; }
+.se-fld { display: flex; flex-direction: column; gap: 5px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-dim); }
+.se-sel, .se-btn { font-family: var(--mono); font-size: 10.5px; color: var(--se-ink); background: var(--se-well); border: var(--hair) solid var(--se-rule); border-radius: 0; padding: 7px 10px; cursor: pointer; letter-spacing: 0.02em; }
+.se-sel { min-width: 200px; }
+.se-btn { letter-spacing: 0.12em; text-transform: uppercase; font-size: 9.5px; }
+.se-btn:hover, .se-sel:hover { border-color: var(--se-dim); }
+.se-seed { display: flex; align-items: stretch; }
+.se-seed .se-btn { padding: 7px 10px; }
+.se-seed b { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--se-ink); background: var(--se-well); border-top: var(--hair) solid var(--se-rule); border-bottom: var(--hair) solid var(--se-rule); padding: 7px 14px; min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
+.se-ro { font-family: var(--mono); font-size: 10.5px; color: var(--se-ink); padding: 7px 0; letter-spacing: 0.02em; }
+.se-proof { position: relative; aspect-ratio: 2.06 / 1; background: var(--se-stock); overflow: hidden; }
+.se-proof canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.se-tags { position: absolute; inset: 0; pointer-events: none; }
+.se-tag { position: absolute; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--se-dim); white-space: nowrap; transform: translateY(-100%); padding-bottom: 4px; }
+.se-tag b { color: var(--se-ink); font-weight: 500; }
+.se-status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--se-dim); pointer-events: none; }
+.se-status[hidden] { display: none !important; }
+.se-spread { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin-top: 18px; padding-top: 14px; border-top: var(--hair) solid var(--se-rule); }
+@media (min-width: 820px) { .se-spread { grid-template-columns: 1fr 1fr; } }
+.se-sp-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--se-dim); margin-bottom: 8px; }
+.se-sp-k b { color: var(--se-ink); font-weight: 500; }
+.se-tbl { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10px; }
+.se-tbl td { padding: 5px 8px 5px 0; border-bottom: var(--hair) solid var(--se-rule); color: var(--se-dim); vertical-align: top; }
+.se-tbl td:first-child { color: var(--se-ink); white-space: nowrap; }
+.se-tbl td b { color: var(--se-ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.se-swatches { display: flex; gap: 8px; margin: 4px 0 6px; }
+.se-sw { flex: 1; height: 34px; display: flex; align-items: flex-end; padding: 4px 6px; font-family: var(--mono); font-size: 8px; letter-spacing: 0.08em; color: var(--se-stock); }
+.se-sw.se-sw-1 { background: var(--se-p1); } .se-sw.se-sw-2 { background: var(--se-p2); } .se-sw.se-sw-3 { background: var(--se-p3); }
+.se-sw.se-sw-m { background: var(--se-mark); }
+.se-sw.se-sw-s { background: var(--se-well); color: var(--se-dim); border: var(--hair) solid var(--se-rule); }
+.se-donot { font-family: var(--sans); font-size: 12px; line-height: 1.5; color: var(--se-dim); margin: 0; }
+.se-donot b { color: var(--se-ink); font-weight: 600; }
+.se-windows { display: flex; gap: 4px; margin-top: 6px; }
+.se-win { flex: 1; height: 10px; background: var(--se-well); border: var(--hair) solid var(--se-rule); position: relative; }
+.se-win i { position: absolute; top: 0; bottom: 0; background: var(--se-dim); }
+.se-win-l { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 7.5px; color: var(--se-dim); margin-top: 3px; letter-spacing: 0.04em; }
+
+@media (max-width: 560px) {
+  .wg-dot { font-size: 34px; }
+  .rl-panel, .rl-sub, .ir-plate, .ir-sub, .se-board { padding: 14px; }
+  .rl-fig-tags span i, .rl-cmp-tags span i, .ir-cmp-tags span i { display: none; }
+  .se-sel { min-width: 0; }
+  .se-tag-d { display: none; }
+}
 </style>
 </head>
 <body data-testid="technique-webgl">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-12">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-12" data-testid="crumb-techniques">Techniques</a></div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="crumb"]').style.display = 'none';</script>
+
   <div class="head"><span class="code">SL-12</span><h1>webgl</h1></div>
-  <p class="dek">
-    GPU shaders, real 3D — Three.js. Tens of thousands of points, reactive to the cursor,
-    the brandmark forming in 3D space once the asset exists.
+  <p class="dek" data-testid="dek">
+    WebGL decides how things <b>look</b>. Every pixel below is the value of a
+    function — of position, of the light, of the eye — evaluated when the frame is
+    drawn and discarded when it is done. Nothing is stored. <b>The picture does not
+    exist until the program runs</b>, and this sheet is three portraits of that
+    fact, each a product somebody uses: a museum's interpretation panel, where the
+    parameter is the lamp; a natural-history collection's animated plate, where it
+    is the tilt; and a studio's identity system, where it is the seed. One object at
+    a time, examined — and in each, the thing on screen could not have been drawn
+    any other way.
+  </p>
+  <p class="wg-prose" data-testid="prose-history">
+    The platform once tried to hand this stage to CSS. <b>CSS Custom Filters</b>
+    (Adobe and WebKit, 2012–14) let a stylesheet attach a GLSL program to any
+    element — and deliberately crippled the fragment stage: <q>shaders used in custom
+    CSS filters can't read DOM content texture pixels at all, and also they can't
+    write to screen pixels directly</q>, because a program that branches on the
+    colour of a pixel it did not author can be timed, and timing leaks the pixel.
+    WebGL answered the same threat the other way round: the shader may read
+    anything, provided it is content <i>you</i> supplied — same origin, or
+    CORS-approved. That is why the fragment shader lives behind a surface you feed
+    yourself, and why the world below draws its own object rather than reading the
+    page around it.
+  </p>
+  <p class="wg-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> Timing
+    brackets end at a named sync point — <code>gl.readPixels(0,0,1,1)</code> —
+    because the GPU runs a frame or more behind the CPU, so a bracket with no sync
+    point measures how fast commands were <i>queued</i>, not how long they took.
+    <code>performance.now()</code> is clamped to 1 ms in Firefox and WebKit; a
+    figure marked <span class="wg-dagger">†</span> there is a bound, not a value.
+    WebGL's own GPU timer, <code>EXT_disjoint_timer_query_webgl2</code>, is not
+    used: it ships disabled or coarsened over timing-attack concerns, so the
+    instrument here is coarser than the <code>timestamp-query</code> slide 14 will
+    have — and that asymmetry is part of the difference between the two APIs, not
+    an excuse for it. Renderer <b data-testid="instrument-renderer">…</b> · context
+    <b data-testid="instrument-context">…</b> · clock floor
+    <b data-testid="instrument-floor">…</b> · backing store
+    <b data-testid="instrument-dpr">…</b>
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <span class="badge" id="badge">Loading Three.js…</span>
-    <canvas id="c" data-testid="canvas-el"></canvas>
-  </div>
+  <!-- ═══ §1 · RELIEF ════════════════════════════════════════════════ -->
+  <section class="wg-sec" data-testid="section-1">
+    <div class="wg-sec-head"><span class="wg-sec-n">§1</span><h2>Relief</h2></div>
+    <p class="wg-because">The highlight travels, <b>because the surface is evaluated,
+      not stored.</b> A photograph of a bronze holds one light. This panel holds the
+      bronze — a height field, 1 048 576 samples of it — and computes what the lamp
+      does to it every frame, from wherever the lamp is: a surface normal, a light
+      vector and a view vector per pixel, and a march through the field to find out
+      what stands in the light's way. Move the lamp and the relief appears and
+      vanishes the way it does on a gallery floor, which is the one thing a picture
+      of the object can never show. Put your pointer on the panel and the lamp is
+      yours.</p>
 
-  <div class="controls">
-    <span class="fps">Points: <b id="count">—</b> · Move cursor over the canvas to orbit</span>
-  </div>
+    <div class="wg-band" data-testid="rl-band">
+      <b class="wg-dot" data-testid="rl-azimuth-dot">—</b>
+      <span class="wg-band-l"><b>lamp azimuth</b> · degrees, from the medal's east,
+        anticlockwise · the one number this world turns on</span>
+    </div>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 12</h3>
-    <p>"WebGL — GPU shaders, real 3D; visual: thread demo in WebGL — tens of thousands of
-      particles, now reactive to cursor, brandmark forming in 3D space."</p>
-    <p>Loaded via Three.js from a CDN (this deck's real build should vendor it rather than
-      depend on a live CDN during the talk). What's running is a real reactive point cloud
-      standing in for the thread demo — cursor-driven camera orbit is live. It's a sphere
-      distribution, not the brandmark; that resolve is blocked on the same vector-path
-      dependency as SVG/Canvas.</p>
+    <div class="rl" data-testid="rl-world">
+      <div class="rl-panel" data-testid="rl-panel">
+        <div class="rl-mast">
+          <span class="rl-mast-k" data-testid="rl-mast-k">How it was made</span>
+          <span class="rl-mast-t" data-testid="rl-mast-t"><i>Tide and Sun</i> — cast bronze medal, 88 mm</span>
+          <span class="rl-mast-s" data-testid="rl-mast-s">raking light · 1 lamp</span>
+        </div>
+
+        <div class="rl-grid">
+          <div class="rl-stage" data-testid="rl-stage">
+            <canvas data-testid="rl-canvas"></canvas>
+            <svg data-testid="rl-overlay" aria-hidden="true">
+              <circle class="rl-lamp-ring" data-testid="rl-lamp-ring" cx="0" cy="0" r="0"></circle>
+              <circle class="rl-lamp-mark" data-testid="rl-lamp-mark" cx="0" cy="0" r="3.5"></circle>
+              <polyline class="rl-lead" data-testid="rl-lead" points=""></polyline>
+              <circle class="rl-anchor" data-testid="rl-anchor" cx="0" cy="0" r="5"></circle>
+              <text class="rl-lead-n" data-testid="rl-lead-n" x="0" y="0"></text>
+            </svg>
+            <span class="rl-status" data-testid="rl-status">casting the object…</span>
+            <span class="rl-hint" data-testid="rl-hint">pointer = lamp</span>
+          </div>
+
+          <div class="rl-col">
+            <div class="rl-chapters" data-testid="rl-chapters">
+              <button class="rl-ch rl-on" data-ch="0" data-testid="rl-chapter-seam">
+                <span class="rl-ch-n">01</span><span class="rl-ch-t">The mould seam</span>
+                <span class="rl-ch-p">Two halves of a sand mould met along this line. The
+                  founder cut the flash away, but a seam a tenth of a millimetre high
+                  survives across the field — invisible under the gallery's diffuse light,
+                  and unmistakable when the lamp rakes across it.</span>
+              </button>
+              <button class="rl-ch" data-ch="1" data-testid="rl-chapter-chasing">
+                <span class="rl-ch-n">02</span><span class="rl-ch-t">The chasing</span>
+                <span class="rl-ch-p">After casting, the sky was worked over with a tracer:
+                  parallel cuts 0.6 mm apart, each a twentieth of a millimetre deep. From
+                  the front they read as a texture. From the side they read as a field of
+                  small shadows, and the direction of the tool becomes visible.</span>
+              </button>
+              <button class="rl-ch" data-ch="2" data-testid="rl-chapter-patina">
+                <span class="rl-ch-n">03</span><span class="rl-ch-t">The patina line</span>
+                <span class="rl-ch-p">Copper alloy greens where it is left alone and stays
+                  bright where hands reach it. The line between the two runs where the
+                  medal was held for a century. It is a boundary in colour, not in height —
+                  which is why it shows at every angle and the seam does not.</span>
+              </button>
+            </div>
+
+            <div class="rl-dial" data-testid="rl-dial">
+              <svg viewBox="-42 -42 84 84" aria-hidden="true">
+                <circle class="rl-d-ring" r="38"></circle>
+                <circle class="rl-d-obj" r="15"></circle>
+                <line class="rl-d-ray" data-testid="rl-dial-ray" x1="0" y1="0" x2="38" y2="0"></line>
+                <circle class="rl-d-lamp" data-testid="rl-dial-lamp" cx="38" cy="0" r="3.5"></circle>
+                <path class="rl-d-el" data-testid="rl-dial-el" d=""></path>
+              </svg>
+              <div class="rl-kvs">
+                <div class="rl-kv">azimuth<b data-testid="rl-az">—</b></div>
+                <div class="rl-kv">elevation<b data-testid="rl-el">—</b></div>
+                <div class="rl-kv">view<b data-testid="rl-yaw">—</b></div>
+                <div class="rl-kv">lamps<b data-testid="rl-lamps">1</b></div>
+              </div>
+            </div>
+
+            <p class="rl-prompt" data-testid="rl-prompt"><b>Touch the panel to move the
+              lamp.</b> The relief you see is not on the medal; it is what the light is
+              doing to it. Try the seam from the side, then from above.</p>
+            <span class="rl-way" data-testid="rl-way">Gallery 4 · Metalwork · panel 2 of 3</span>
+          </div>
+        </div>
+
+        <div class="rl-label" data-testid="rl-label">
+          <span><b>2026.12.1</b></span>
+          <span><i>Tide and Sun</i>, medal</span>
+          <span>cast bronze, chased · <b>88 mm</b></span>
+          <span>attributed workshop, 1902</span>
+          <span data-testid="rl-attrib">authored for this panel — no scan was used</span>
+        </div>
+      </div>
+
+      <div class="rl-sub" data-testid="rl-compare">
+        <div class="rl-sub-k"><b>The same lamp, two ways</b> · fixed viewpoint</div>
+        <div class="rl-cmp" data-testid="rl-cmp-stage">
+          <canvas data-testid="rl-cmp-canvas"></canvas>
+          <div class="rl-cmp-tags" aria-hidden="true">
+            <span>evaluated<i>normal · light · eye, per pixel, now</i></span>
+            <span>pre-rendered<i>8 angles, cross-faded — the only route without a shader</i></span>
+          </div>
+        </div>
+        <p class="rl-cap" data-testid="rl-cmp-cap"><b>Left</b> is the surface, evaluated.
+          <b>Right</b> is the route open to an image, a video or a canvas: the same
+          program run once at eight lamp positions, and the eight pictures cross-faded
+          as the lamp moves between them. The in-betweens are mixtures of pictures,
+          not of light, so the highlight does not travel — it fades out at one angle
+          and in at the next, and in the middle both are there at once, with two
+          shadows. Watch the rim. That ghost is what a pre-rendered material looks
+          like the moment the light moves, and it is the failure the shader exists to
+          remove.</p>
+      </div>
+
+      <div class="rl-sub" data-testid="rl-figure">
+        <div class="rl-sub-k"><b>Fig. 1</b> · how this panel knows what the light does</div>
+        <div class="rl-fig" data-testid="rl-fig-stage">
+          <canvas data-testid="rl-fig-canvas"></canvas>
+          <div class="rl-fig-tags" aria-hidden="true">
+            <span>height<i>1024 × 1024 · one number per sample · mm above the wall</i></span>
+            <span>normal<i>derived per pixel, as false colour</i></span>
+            <span class="rl-basis"><b class="rl-x">■ x</b> leans east &nbsp; <b class="rl-y">■ y</b> leans north &nbsp; <b class="rl-z">■ z</b> faces you</span>
+          </div>
+        </div>
+        <p class="rl-cap" data-testid="rl-fig-cap">The object is not a picture anywhere in
+          memory. It is stored as a <b>height field</b> — 1024 × 1024 samples, one 16-bit
+          number each, millimetres above the wall — and from that array the program
+          derives a surface normal at every pixel, on every frame, then lights it with
+          the lamp and the eye where they are now. The left plate is the array itself.
+          The right is the first thing the program computes from it. Everything on the
+          panel above is the second.</p>
+      </div>
+
+    </div>
+
+      <div class="wg-bench" data-testid="rl-bench">
+        <div class="wg-bench-k"><b>§1 measured here</b> · instrument, sync point, control</div>
+        <div class="wg-kvs" data-testid="rl-readouts">
+          <div class="wg-kv">frame, to readPixels<b data-testid="rl-ms">—</b></div>
+          <div class="wg-kv">clock floor<b data-testid="rl-floor">—</b></div>
+          <div class="wg-kv">height field<b data-testid="rl-field">—</b></div>
+          <div class="wg-kv">surface<b data-testid="rl-tris">—</b></div>
+          <div class="wg-kv">lamps<b data-testid="rl-lamps-b">1</b></div>
+        </div>
+        <div class="wg-controls">
+          <button class="wg-btn" data-testid="rl-run-control">run the control · 1 → 4 → 16 lamps</button>
+          <span class="wg-guard wg-wait" data-testid="rl-guard">not yet run</span>
+        </div>
+        <div class="wg-scroll">
+          <table class="wg-table" data-testid="rl-table">
+            <thead><tr><th>lamps</th><th>ms / frame, to readPixels</th><th>× one lamp</th><th>what changed</th></tr></thead>
+            <tbody data-testid="rl-table-body">
+              <tr><td>1</td><td class="wg-num" data-testid="rl-t-1">—</td><td>1.00</td><td>—</td></tr>
+              <tr><td>4</td><td class="wg-num" data-testid="rl-t-4">—</td><td data-testid="rl-r-4">—</td><td>fragment work × 4 · geometry, calls, upload unchanged</td></tr>
+              <tr><td>16</td><td class="wg-num" data-testid="rl-t-16">—</td><td data-testid="rl-r-16">—</td><td>fragment work × 16 · geometry, calls, upload unchanged</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="wg-instr" data-testid="rl-bench-instr">
+          <b>Instrument:</b> <code>performance.now()</code> around one draw, closed by
+          <code>gl.readPixels(0,0,1,1)</code>, which cannot return until the GPU has
+          finished the frame. Median of 9 brackets after 3 warm frames. Floor
+          <b data-testid="rl-bench-floor">…</b>; a reading under twice the floor is marked
+          <span class="wg-dagger">†</span> and is a bound.
+          <b>Control:</b> 1, 4 and 16 lamps spread ±6° about the same azimuth at 1/N
+          intensity each, so the picture is unchanged while the per-pixel evaluation —
+          the shading and the shadow march — runs N times. The surface is
+          <b data-testid="rl-bench-tris">…</b> triangles in every row; the draw is one
+          call in every row; nothing is uploaded in any row. If the reading does not
+          move with the lamps, the bracket is closing on command recording and not on
+          work.
+        </p>
+        <p class="wg-instr" data-testid="rl-bytes">
+          <b>What the pre-rendered route would cost at this panel's size:</b>
+          <span data-testid="rl-bytes-arith">…</span>
+        </p>
+      </div>
+  </section>
+
+  <!-- ═══ §2 · IRIDESCENCE ═══════════════════════════════════════════ -->
+  <section class="wg-sec" data-testid="section-2">
+    <div class="wg-sec-head"><span class="wg-sec-n">§2</span><h2>Iridescence</h2></div>
+    <p class="wg-because">The colour is stored nowhere, <b>because it is computed from
+      the angle.</b> A jewel beetle's wing-case is not green. It is a stack of
+      transparent plates a few hundred nanometres thick, and the green is what those
+      plates do to white light arriving from one direction and leaving toward
+      another: an interference, summed over every wavelength, at every point, for
+      this eye. Change the angle and the colour moves toward blue — the published
+      behaviour, and the one thing a photograph of the specimen gets wrong at every
+      angle but the one it was taken at. There is no texture in the plate below.
+      Tilt it.</p>
+
+    <div class="wg-band" data-testid="ir-band">
+      <b class="wg-dot" data-testid="ir-peak-dot">—</b>
+      <span class="wg-band-l"><b>peak reflected wavelength</b> · nanometres, at the
+        crown of the elytron, at this tilt · the one number this world turns on</span>
+    </div>
+
+    <div class="ir" data-testid="ir-world">
+      <div class="ir-plate" data-testid="ir-panel">
+        <div class="ir-mast">
+          <span data-testid="ir-mast-k">Collection · Coleoptera · Buprestidae</span>
+          <span data-testid="ir-mast-n">Plate XIV · animated</span>
+        </div>
+        <div class="ir-title" data-testid="ir-title"><i>Chrysochroa fulgidissima</i> <span>(Schönherr, 1817) — left elytron, dorsal</span></div>
+
+        <div class="ir-grid">
+          <div class="ir-stage" data-testid="ir-stage">
+            <canvas data-testid="ir-canvas"></canvas>
+            <svg data-testid="ir-overlay" aria-hidden="true">
+              <line class="ir-pol" data-testid="ir-pol" x1="0" y1="0" x2="0" y2="0"></line>
+              <text class="ir-pol-n" data-testid="ir-pol-n" x="0" y="0"></text>
+              <polyline class="ir-lead" data-testid="ir-lead" points=""></polyline>
+              <circle class="ir-anchor" data-testid="ir-anchor" cx="0" cy="0" r="5"></circle>
+              <text class="ir-lead-n" data-testid="ir-lead-n" x="0" y="0"></text>
+              <line class="ir-bar" data-testid="ir-bar" x1="0" y1="0" x2="0" y2="0"></line>
+              <text class="ir-bar-n" data-testid="ir-bar-n" x="0" y="0">5 mm</text>
+            </svg>
+            <span class="ir-status" data-testid="ir-status">preparing the specimen…</span>
+            <span class="ir-hint" data-testid="ir-hint">pointer = tilt</span>
+          </div>
+
+          <div class="ir-col">
+            <ol class="ir-key" data-testid="ir-key">
+              <li><button class="ir-k ir-on" data-k="0" data-testid="ir-callout-striae">
+                <span class="ir-k-n">1</span><span class="ir-k-t">Striae</span>
+                <span class="ir-k-p">Eight longitudinal grooves. The colour is the same
+                  in the groove and on the ridge — the stack is uniform — but the ridge
+                  faces you and the groove wall does not, so they show different
+                  wavelengths at the same instant.</span>
+              </button></li>
+              <li><button class="ir-k" data-k="1" data-testid="ir-callout-punctures">
+                <span class="ir-k-n">2</span><span class="ir-k-t">Punctures</span>
+                <span class="ir-k-p">Rows of pits along each stria. Each one is a small
+                  bowl, and each bowl runs through the whole hue shift across its
+                  width.</span>
+              </button></li>
+              <li><button class="ir-k" data-k="2" data-testid="ir-callout-suture">
+                <span class="ir-k-n">3</span><span class="ir-k-t">Suture</span>
+                <span class="ir-k-p">The straight inner edge, where the two elytra meet.
+                  Tilting about this axis is what the live specimen does when it
+                  moves, and what the mounted one never can.</span>
+              </button></li>
+              <li><button class="ir-k" data-k="3" data-testid="ir-callout-apex">
+                <span class="ir-k-n">4</span><span class="ir-k-t">Apex</span>
+                <span class="ir-k-p">The surface turns away steeply here, so the apex
+                  is the bluest point at every tilt — angle of incidence, not
+                  pigment.</span>
+              </button></li>
+            </ol>
+
+            <div class="ir-spec" data-testid="ir-spectrum">
+              <div class="ir-spec-k"><b>Reflectance</b> at the crown · this tilt · unpolarised</div>
+              <svg viewBox="0 0 230 92" aria-hidden="true">
+                <line class="ir-ax" x1="24" y1="78" x2="226" y2="78"></line>
+                <line class="ir-ax" x1="24" y1="6" x2="24" y2="78"></line>
+                <text class="ir-tick" x="24" y="88" text-anchor="middle">400</text>
+                <text class="ir-tick" x="125" y="88" text-anchor="middle">550</text>
+                <text class="ir-tick" x="226" y="88" text-anchor="middle">700 nm</text>
+                <text class="ir-tick" x="20" y="9" text-anchor="end">1</text>
+                <text class="ir-tick" x="20" y="80" text-anchor="end">0</text>
+                <g data-testid="ir-curves"></g>
+                <path class="ir-curve" data-testid="ir-curve" d=""></path>
+                <circle class="ir-peak" data-testid="ir-peak-mark" cx="0" cy="0" r="2"></circle>
+              </svg>
+            </div>
+
+            <div class="ir-kvs" data-testid="ir-kvs">
+              <div class="ir-kv">tilt<b data-testid="ir-tilt">—</b></div>
+              <div class="ir-kv">polariser<b data-testid="ir-polk">—</b></div>
+              <div class="ir-kv">stack<b data-testid="ir-stack">—</b></div>
+              <div class="ir-kv">layer d · hi / lo<b data-testid="ir-d">—</b></div>
+            </div>
+            <p class="ir-prompt" data-testid="ir-prompt"><b>Move across the plate to tilt
+              the specimen.</b> Watch one puncture: it runs green to blue inside its own
+              rim.</p>
+          </div>
+        </div>
+
+        <div class="ir-label" data-testid="ir-label">
+          <span><b>NHC 1911.4.22</b></span>
+          <span>Honshū, Japan · coll. 1911</span>
+          <span>elytron <b>32 mm</b></span>
+          <span>multilayer <b>n</b> 1.55 / 1.68</span>
+          <span data-testid="ir-attrib">shape authored for this plate — the photograph brought the colour, and the colour was a lie; we kept the shape</span>
+        </div>
+      </div>
+
+      <div class="ir-sub" data-testid="ir-compare">
+        <div class="ir-sub-k"><b>The same tilt, two ways</b> · fixed viewpoint</div>
+        <div class="ir-cmp" data-testid="ir-cmp-stage">
+          <canvas data-testid="ir-cmp-canvas"></canvas>
+          <div class="ir-cmp-tags" aria-hidden="true">
+            <span>computed<i>interference, per pixel, at this angle</i></span>
+            <span>baked<i>coloured once at 0°, stored, then tilted</i></span>
+          </div>
+        </div>
+        <p class="ir-cap" data-testid="ir-cmp-cap"><b>Left</b> computes the stack at every
+          pixel for the angle it is actually at. <b>Right</b> is what an image, a video
+          or a canvas can hold: the specimen's colour rendered once at 0°, stored as a
+          texture, and tilted like a decal on the same shape. It keeps its green at
+          every angle. The real one does not — and the difference is not a nicer
+          material; it is a fact about the animal the right-hand plate cannot
+          state.</p>
+      </div>
+
+      <div class="ir-sub" data-testid="ir-figure">
+        <div class="ir-sub-k"><b>Fig. 2</b> · the layer stack, in section</div>
+        <div class="ir-fig">
+          <svg viewBox="0 0 300 150" data-testid="ir-fig-svg" aria-hidden="true"></svg>
+          <p class="ir-fig-txt" data-testid="ir-fig-txt">A cross-section of the elytron's
+            outer cuticle: <span data-testid="ir-fig-n">12</span> alternating plates of
+            high- and low-index chitin, <b>n 1.68 / 1.55</b>, each a quarter-wave thick
+            at the design wavelength. A ray reflected from each interface returns with a
+            path difference of <code>2·n·d·cos θ</code>; where those differences agree,
+            the reflections add. At normal incidence they agree at
+            <b data-testid="ir-fig-l0">—</b>; tilted to <span data-testid="ir-fig-th">—</span>
+            the agreement moves to <b data-testid="ir-fig-l1">—</b>, because
+            <code>cos θ</code> inside the stack has shrunk. Shorter. Bluer. No pigment
+            was consulted.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="wg-bench" data-testid="ir-bench">
+      <div class="wg-bench-k"><b>§2 measured here</b> · instrument, sync point, control</div>
+      <div class="wg-kvs" data-testid="ir-readouts">
+        <div class="wg-kv">frame, to readPixels<b data-testid="ir-ms">—</b></div>
+        <div class="wg-kv">clock floor<b data-testid="ir-floor">—</b></div>
+        <div class="wg-kv">shift per 10° · at 0°<b data-testid="ir-shift0">—</b></div>
+        <div class="wg-kv">shift per 10° · at 30°<b data-testid="ir-shift30">—</b></div>
+        <div class="wg-kv">wavelengths per pixel<b data-testid="ir-nlam">—</b></div>
+      </div>
+      <div class="wg-controls">
+        <button class="wg-btn" data-testid="ir-run-control">run the control · 1 → 4 → 12 layers</button>
+        <span class="wg-guard wg-wait" data-testid="ir-guard">not yet run</span>
+      </div>
+      <div class="wg-scroll">
+        <table class="wg-table" data-testid="ir-table">
+          <thead><tr><th>layers</th><th>ms / frame, to readPixels</th><th>× one layer</th><th>what changed</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td class="wg-num" data-testid="ir-t-1">—</td><td>1.00</td><td>—</td></tr>
+            <tr><td>4</td><td class="wg-num" data-testid="ir-t-4">—</td><td data-testid="ir-r-4">—</td><td>transfer-matrix passes × 4 · geometry, calls, upload unchanged</td></tr>
+            <tr><td>12</td><td class="wg-num" data-testid="ir-t-12">—</td><td data-testid="ir-r-12">—</td><td>transfer-matrix passes × 12 · geometry, calls, upload unchanged</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="wg-instr" data-testid="ir-bench-instr">
+        <b>Instrument:</b> as §1 — <code>performance.now()</code> closed by
+        <code>gl.readPixels(0,0,1,1)</code>, median of 9 after 3 warm frames, floor
+        printed above. <b>Control:</b> the number of layers in the stack, 1 → 4 → 12,
+        at constant geometry. Every pixel multiplies one 2×2 complex matrix per layer
+        per wavelength per polarisation, so the per-pixel work scales with the
+        layers and nothing else does. The 1-layer specimen is a different colour —
+        thin, washed, a soap film — which is the point: the layers are not a cost
+        knob, they are the animal. <b>The hue shift</b> is the model's own, from the
+        same function that shades the pixels: the peak of the unpolarised reflectance
+        at the crown, at 0° against 10° and at 30° against 40°. The literature gives
+        the direction — shorter with incidence, indices 1.6–1.7 — and the sheet holds
+        itself to that direction. It does not claim a cited magnitude.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ §3 · SEASON ════════════════════════════════════════════════ -->
+  <section class="wg-sec" data-testid="section-3">
+    <div class="wg-sec-head"><span class="wg-sec-n">§3</span><h2>Season</h2></div>
+    <p class="wg-because">The program is the artwork, <b>because it has no
+      resolution.</b> A studio builds an identity system for a concert hall's season
+      and hands it over; the client runs it. What the client runs is one fragment
+      program: evaluated at 7016 × 9933 it is the A2 print file, evaluated at
+      1920 × 1080 sixty times a second it is the foyer screen, and the two cannot
+      disagree because they are the same function at two sets of coordinates. The
+      title is set into the motif through a field the motif computes — a
+      <b>dependent read</b>, sampling one image at coordinates found in another,
+      which nothing in CSS or SVG can do at all. Pick an event.</p>
+
+    <div class="wg-band" data-testid="se-band">
+      <b class="wg-dot" data-testid="se-seed-dot">—</b>
+      <span class="wg-band-l"><b>seed</b> · the client's one dial · the season
+        re-generates from it every 37 s, or when you turn it</span>
+    </div>
+
+    <div class="se" data-testid="se-world">
+      <div class="se-board" data-testid="se-board">
+        <div class="se-mast">
+          <span class="se-mast-t" data-testid="se-mast-t">Lantern Hall<span>identity system · autumn season 2026 · v3.1</span></span>
+          <span class="se-mast-k" data-testid="se-mast-k">proofing</span>
+        </div>
+
+        <div class="se-rack" data-testid="se-rack">
+          <label class="se-fld">event
+            <select class="se-sel" data-testid="se-event">
+              <option value="0">Night Music — Sat 17 Oct 2026</option>
+              <option value="1">The Glass Orchestra — Fri 6 Nov 2026</option>
+              <option value="2">Winter Lantern Walk — Sat 12 Dec 2026</option>
+              <option value="3">Open Rehearsal — Sun 24 Jan 2027</option>
+            </select>
+          </label>
+          <div class="se-fld">venue<span class="se-ro" data-testid="se-venue">Main Hall</span></div>
+          <div class="se-fld">seed
+            <span class="se-seed">
+              <button class="se-btn" data-testid="se-seed-down" aria-label="previous seed">−</button>
+              <b data-testid="se-seed">—</b>
+              <button class="se-btn" data-testid="se-seed-up" aria-label="next seed">+</button>
+            </span>
+          </div>
+          <div class="se-fld">&nbsp;<button class="se-btn" data-testid="se-regen">regenerate season</button></div>
+        </div>
+
+        <div class="se-proof" data-testid="se-proof">
+          <canvas data-testid="se-canvas"></canvas>
+          <div class="se-tags" aria-hidden="true">
+            <span class="se-tag" data-testid="se-tag-a2"><b>A2 poster</b><span class="se-tag-d"> · 420 × 594 mm · print</span></span>
+            <span class="se-tag" data-testid="se-tag-six"><b>6-sheet</b><span class="se-tag-d"> · 1200 × 1800 mm · print</span></span>
+            <span class="se-tag" data-testid="se-tag-dooh"><b>foyer screen</b><span class="se-tag-d"> · 1920 × 1080 · 11 s loop</span></span>
+            <span class="se-tag" data-testid="se-tag-social"><b>social</b><span class="se-tag-d"> · 1080 × 1080 · still</span></span>
+          </div>
+          <span class="se-status" data-testid="se-status">compiling the season…</span>
+        </div>
+
+        <div class="se-spread" data-testid="se-spread">
+          <div>
+            <div class="se-sp-k"><b>Parameters</b> · this proof</div>
+            <table class="se-tbl">
+              <tr><td>seed</td><td><b data-testid="se-p-seed">—</b></td></tr>
+              <tr><td>field scale</td><td><b data-testid="se-p-scale">—</b> · domain-warped fBm, 5 octaves</td></tr>
+              <tr><td>displacement gain</td><td><b data-testid="se-p-gain">—</b> · print · loop peaks <b data-testid="se-p-gain2">—</b></td></tr>
+              <tr><td>palette</td><td>hues <b data-testid="se-p-hues">—</b> · one from each of three windows</td></tr>
+              <tr><td>mark</td><td><b data-testid="se-p-mark">—</b> particles · resolve at 3.5 s, release at 8.5 s</td></tr>
+            </table>
+            <div class="se-sp-k" style="margin-top:14px"><b>Swatches</b> · generated</div>
+            <div class="se-swatches">
+              <span class="se-sw se-sw-1" data-testid="se-sw-1">P1</span>
+              <span class="se-sw se-sw-2" data-testid="se-sw-2">P2</span>
+              <span class="se-sw se-sw-3" data-testid="se-sw-3">P3</span>
+              <span class="se-sw se-sw-m" data-testid="se-sw-m">mark</span>
+              <span class="se-sw se-sw-s" data-testid="se-sw-s">stock</span>
+            </div>
+          </div>
+          <div>
+            <div class="se-sp-k"><b>Format matrix</b> · one evaluation each</div>
+            <table class="se-tbl">
+              <tr><td>A2 poster</td><td>7016 × 9933 px at 300 dpi · title top, date foot</td></tr>
+              <tr><td>6-sheet</td><td>1200 × 1800 mm · 4252 × 6378 px at 90 dpi</td></tr>
+              <tr><td>foyer screen</td><td>1920 × 1080 · 60 fps · 11 s loop · mark resolves</td></tr>
+              <tr><td>social</td><td>1080 × 1080 · centred · still of loop frame 0</td></tr>
+            </table>
+            <div class="se-sp-k" style="margin-top:14px"><b>Do not</b></div>
+            <p class="se-donot"><b>Do not rasterise the motif for print</b> — evaluate it
+              at the output size. <b>Do not pick a hue outside the five windows.</b>
+              <b>Do not place the mark over a photograph;</b> it forms from the motif or
+              not at all.</p>
+            <div class="se-sp-k" style="margin-top:14px"><b>Hue rule</b> · accents live only here</div>
+            <div class="se-windows" aria-hidden="true">
+              <span class="se-win"><i style="left:0%;width:9.7%"></i><i style="left:31.9%;width:2.8%"></i><i style="left:45.8%;width:2.8%"></i><i style="left:79.2%;width:4.2%"></i><i style="left:94.4%;width:5.6%"></i></span>
+            </div>
+            <div class="se-win-l"><span>0</span><span>0–35 · 115–125 · 165–175 · 285–300 · 340–360</span><span>360°</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wg-bench" data-testid="se-bench">
+      <div class="wg-bench-k"><b>§3 measured here</b> · two figures, and one of them is a contract</div>
+      <div class="wg-kvs" data-testid="se-readouts">
+        <div class="wg-kv">loop frame, to readPixels<b data-testid="se-ms">—</b></div>
+        <div class="wg-kv">clock floor<b data-testid="se-floor">—</b></div>
+        <div class="wg-kv">particles<b data-testid="se-n">—</b></div>
+        <div class="wg-kv">bytes uploaded per frame<b data-testid="se-bytes">—</b></div>
+        <div class="wg-kv">upload sync point<b data-testid="se-sync">—</b></div>
+      </div>
+      <div class="wg-controls">
+        <button class="wg-btn" data-testid="se-run-area">1 · resolution: 1× → 4× → 16× area</button>
+        <button class="wg-btn" data-testid="se-run-xfer">2 · transfer: 8 → 32 → 128 → 248 B per particle</button>
+        <span class="wg-guard wg-wait" data-testid="se-guard">not yet run</span>
+      </div>
+      <div class="wg-scroll">
+        <table class="wg-table" data-testid="se-area-table">
+          <thead><tr><th>output</th><th>pixels</th><th>ms, to readPixels</th><th>ms per Mpx</th><th>what changed</th></tr></thead>
+          <tbody>
+            <tr><td>1× · A2 tile</td><td data-testid="se-a-px-1">—</td><td class="wg-num" data-testid="se-a-1">—</td><td data-testid="se-a-r-1">—</td><td>—</td></tr>
+            <tr><td>4× area</td><td data-testid="se-a-px-4">—</td><td class="wg-num" data-testid="se-a-4">—</td><td data-testid="se-a-r-4">—</td><td>raster area × 4 · same program, same uniforms, one call</td></tr>
+            <tr><td>16× area</td><td data-testid="se-a-px-16">—</td><td class="wg-num" data-testid="se-a-16">—</td><td data-testid="se-a-r-16">—</td><td>raster area × 16 · same program, same uniforms, one call</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="wg-scroll">
+        <table class="wg-table" data-testid="se-xfer-table">
+          <thead><tr><th>bytes / particle</th><th>bytes / frame</th><th>ms, upload + draw, to sync</th><th>× 8 B</th><th>what changed</th></tr></thead>
+          <tbody>
+            <tr><td>8</td><td data-testid="se-x-b-8">—</td><td class="wg-num" data-testid="se-x-8">—</td><td>1.00</td><td>position only — the real frame</td></tr>
+            <tr><td>32</td><td data-testid="se-x-b-32">—</td><td class="wg-num" data-testid="se-x-32">—</td><td data-testid="se-x-r-32">—</td><td>stride padded · same particles, same integration, same draw</td></tr>
+            <tr><td>128</td><td data-testid="se-x-b-128">—</td><td class="wg-num" data-testid="se-x-128">—</td><td data-testid="se-x-r-128">—</td><td>stride padded · same particles, same integration, same draw</td></tr>
+            <tr><td>248</td><td data-testid="se-x-b-248">—</td><td class="wg-num" data-testid="se-x-248">—</td><td data-testid="se-x-r-248">—</td><td>stride padded to WebGL's 255 B ceiling · 31× the bytes of the real frame</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="wg-instr" data-testid="se-bench-instr">
+        <b>Figure 1, resolution.</b> The A2 tile's program evaluated offscreen at
+        1×, 4× and 16× its area, bracketed to <code>readPixels</code>. Area is the
+        control the canvas track proved a blind clock cannot fake: raster costs
+        time and costs submission nothing. The ms-per-megapixel column is the
+        number a print operator wants — it says what 7016 × 9933 will cost.
+        <b>Figure 2, the transfer — the number slide 14 prints its zero
+        against.</b> The mark is <b data-testid="se-xfer-n">—</b> particles integrated
+        on the CPU and uploaded every frame with <code>bufferSubData</code>; WebGL has
+        no compute stage to keep them on the GPU. The bracket opens before the upload
+        and closes at a named sync point: a <code>fenceSync</code> polled with
+        <code>clientWaitSync</code> inside the same task, and if the fence never
+        signals inside the task — Chromium updates sync status between tasks — the
+        bracket falls back to <code>readPixels</code> and says so. <b>Control:</b>
+        bytes per frame, by padding the vertex stride at constant particle count, up to 31× the real frame's bytes — 248 B is the widest stride WebGL allows.
+        The integration and the draw do not change; only the bytes do. A
+        particle-count sweep would scale the CPU integration too and prove less than
+        it appears to. <b>The particle count is the contract with §3 of slide 14</b>,
+        which re-runs the same count with the CPU out of the loop.
+      </p>
+    </div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the instrument, and its floor.</b> Every printed figure carries the
+        method that produced it. Where the instrument cannot resolve a value the sheet
+        prints a bound, never a zero.</li>
+      <li><b>A timing bracket needs a sync point.</b> The GPU runs behind the CPU by
+        design; <code>readPixels</code> is the wall it cannot run past. A bracket
+        without it measured how quickly a frame was <i>described</i>.</li>
+      <li><b>A control must vary the thing the instrument might be missing.</b> Here
+        that is fragment work. Lamps multiply the per-pixel evaluation and nothing
+        else — not the geometry, not the draw count, not an upload — so a reading
+        that follows them is a reading of the shader.</li>
+      <li><b>The audience sees the API.</b> There is no Three.js on this sheet. The
+        loader that was going to be borrowed was not needed once the object became a
+        height field, and a material system would have put an abstraction between the
+        room and the fragment program, which is the entire subject.</li>
+      <li><b>Only the subject is shaded.</b> Cover the medal and nothing that remains —
+        frame, rule, dial, leader, label — has a highlight, a bevel or a shadow. The
+        test for the medal itself is stricter than taste: move the light. A rendered
+        surface responds the way the material would; a painting of one does not.</li>
+    </ol>
+    <h3 style="margin-top:22px">Fiction, and what is not fiction</h3>
+    <p><b>The medal is invented.</b> No such object, workshop or accession exists.
+      The direction for this sheet asked for a CC0 scan; the Smithsonian's 3D host
+      refused every non-browser client, and the per-object licence check the direction
+      itself warned about is exactly the thing a hurried build gets wrong. So the
+      object is cast in code when the page loads — a slab, a rim, seventy-two beads,
+      an inscription set on an arc in the deck's own type, a sun, fourteen rays, six
+      wave bands, a mould seam, a field of chasing, a scatter of casting pores and a
+      patina — twelve named operations into one array, in about a third of a second.
+      That array is a real height field, the lighting is a real calculation over it,
+      and <b>the measurements are real</b>.</p>
+    <p><b>The specimen is a real species and an invented specimen.</b>
+      <i>Chrysochroa fulgidissima</i>, the Japanese jewel beetle, is the textbook
+      case of multilayer interference in an elytron; the accession, the locality and
+      the shape are authored. The refractive indices and the quarter-wave stack are
+      the model in the literature, simplified to two alternating indices. The
+      colours are computed, not chosen.</p>
+    <p><b>Lantern Hall does not exist.</b> No such venue, season, event or studio.
+      The identity system is real in the only sense that matters here: one program,
+      four formats, a client-facing dial, and a specification spread. The
+      measurements — including the transfer figure another sheet depends on — are
+      real, and were taken on this machine when this page loaded.</p>
+    <p>A fourth portrait — a type specimen as a distance field — is specified and
+      conditional; it is built only if it can show something native text cannot.</p>
   </div>
 </div>
 
-<script type="module">
-import * as THREE from '../vendor/three.module.js';
+<script src="../system/wam.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   SL-12 · webgl — one inline block, one world for now.
 
-const canvas = document.getElementById('c');
-const badge = document.getElementById('badge');
-const countEl = document.getElementById('count');
-const frame = canvas.closest('.canvas-frame');
+   Everything visible is a pure render(t) registered with WAM.clock, so the
+   scrub, the autoplay and the reduced-motion poster are callers of one
+   function. Two named exceptions, both viewer state rather than accumulated
+   state: the pointer's hold on the lamp, and the chapter the viewer picked
+   under reduced motion. Both are read by render(t); neither is written by
+   it.
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-camera.position.z = 4.2;
+   Raw WebGL2. No Three.js — see the notes.
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
 
-const N = 24000;
-const positions = new Float32Array(N * 3);
-for (let i = 0; i < N; i++) {
-  // roughly uniform points on a sphere shell
-  const u = Math.random(), v = Math.random();
-  const theta = 2 * Math.PI * u, phi = Math.acos(2 * v - 1);
-  const r = 1.6 + (Math.random() - 0.5) * 0.08;
-  positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-  positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-  positions[i * 3 + 2] = r * Math.cos(phi);
+var $ = function (id) { return document.querySelector('[data-testid="' + id + '"]'); };
+var TAU = Math.PI * 2, DEG = Math.PI / 180;
+var DPR = Math.min(2, window.devicePixelRatio || 1);
+var reduced = matchMedia('(prefers-reduced-motion: reduce)');
+var CLOCK_FLOOR = WAM.clockRes();
+
+/* ── colours ──────────────────────────────────────────────────────────── */
+/* Neither WebGL nor anything in this block parses oklch(). Canvas 2D does,
+   natively, so paint one pixel with the token and read the sRGB bytes
+   back — an actual colour-space conversion rather than string handling.
+   Then to linear, because the shader adds light and sRGB is not additive. */
+var TOKEN_MISSES = [];
+var pxc = document.createElement('canvas'); pxc.width = pxc.height = 1;
+var pxx = pxc.getContext('2d', { willReadFrequently: true });
+function linRGB(el, name) {
+  var v = getComputedStyle(el).getPropertyValue(name).trim();
+  if (!v) { TOKEN_MISSES.push(name); v = '#ff00ff'; }
+  pxx.fillStyle = '#000'; pxx.fillRect(0, 0, 1, 1);
+  pxx.fillStyle = v; pxx.fillRect(0, 0, 1, 1);
+  var d = pxx.getImageData(0, 0, 1, 1).data;
+  var f = function (c) { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  return [f(d[0]), f(d[1]), f(d[2])];
 }
-const geo = new THREE.BufferGeometry();
-geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-/* THREE.Color's parser doesn't understand oklch() — confirmed via
-   a real render, it silently fell back to white (no error, just
-   the wrong colour). The first fix attempt (reading the value back
-   via getComputedStyle) was ALSO wrong: current Chrome preserves
-   oklch() through getComputedStyle rather than normalising it to
-   rgb(), so that path returns the literal string unchanged.
-   Canvas 2D, unlike THREE.Color, does parse oklch() natively
-   (verified working in canvas.html) — so paint 1px with it and
-   read the real sRGB bytes back. That's an actual colour-space
-   conversion, not string manipulation. */
-function resolveToRGB(cssColor) {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = cssColor;
-  ctx.fillRect(0, 0, 1, 1);
-  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-  return `rgb(${r}, ${g}, ${b})`;
+/* ── small matrices, column-major ─────────────────────────────────────── */
+function perspective(fovy, aspect, near, far) {
+  var f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+  return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]);
 }
-const tintRGB = resolveToRGB(getComputedStyle(document.documentElement).getPropertyValue('--tint').trim());
-const mat = new THREE.PointsMaterial({ size: 0.014, color: new THREE.Color(tintRGB), transparent: true, opacity: 0.85 });
-const points = new THREE.Points(geo, mat);
-scene.add(points);
+function ortho(l, r, b, t, n, f) {
+  return new Float32Array([2 / (r - l), 0, 0, 0, 0, 2 / (t - b), 0, 0, 0, 0, -2 / (f - n), 0, -(r + l) / (r - l), -(t + b) / (t - b), -(f + n) / (f - n), 1]);
+}
+function lookAt(e, c, u) {
+  var zx = e[0] - c[0], zy = e[1] - c[1], zz = e[2] - c[2], l = Math.hypot(zx, zy, zz); zx /= l; zy /= l; zz /= l;
+  var xx = u[1] * zz - u[2] * zy, xy = u[2] * zx - u[0] * zz, xz = u[0] * zy - u[1] * zx; l = Math.hypot(xx, xy, xz); xx /= l; xy /= l; xz /= l;
+  var yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+  return new Float32Array([xx, yx, zx, 0, xy, yy, zy, 0, xz, yz, zz, 0,
+    -(xx * e[0] + xy * e[1] + xz * e[2]), -(yx * e[0] + yy * e[1] + yz * e[2]), -(zx * e[0] + zy * e[1] + zz * e[2]), 1]);
+}
+function mul(a, b) {
+  var o = new Float32Array(16);
+  for (var c = 0; c < 4; c++) for (var r = 0; r < 4; r++)
+    o[c * 4 + r] = a[r] * b[c * 4] + a[4 + r] * b[c * 4 + 1] + a[8 + r] * b[c * 4 + 2] + a[12 + r] * b[c * 4 + 3];
+  return o;
+}
+function project(m, p) {
+  var x = m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12];
+  var y = m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13];
+  var w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
+  return [x / w, y / w];
+}
 
-countEl.textContent = N.toLocaleString();
-badge.remove();
+/* ── the object: twelve operations into one array ─────────────────────── */
+/* FIELD mm of wall covered by the texture, N samples across it. 1024 over
+   96 mm is 10.67 samples per millimetre, so the chasing at 0.6 mm pitch
+   is six samples wide and the seam at 0.35 mm half-width is four. */
+var N = 1024, FIELD = 96, PX = N / FIELD, R = 44.0;
+var SEAM_A = -22 * DEG, CHASE_A = 35 * DEG;
 
-let mx = 0, my = 0;
-frame.addEventListener('pointermove', e => {
-  const r = frame.getBoundingClientRect();
-  mx = ((e.clientX - r.left) / r.width - 0.5) * 2;
-  my = ((e.clientY - r.top) / r.height - 0.5) * 2;
+function hash2(i, j) { var n = (i * 374761393 + j * 668265263) | 0; n = (n ^ (n >>> 13)) * 1274126177 | 0; return ((n ^ (n >>> 16)) >>> 0) / 4294967296; }
+function vnoise(x, y) {
+  var xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi;
+  fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy);
+  var a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return (a + (b - a) * fx) + ((c + (d - c) * fx) - (a + (b - a) * fx)) * fy;
+}
+function fbm(x, y) { return (vnoise(x, y) * 0.5 + vnoise(x * 2.03 + 7.1, y * 2.03 + 3.3) * 0.25 + vnoise(x * 4.1 + 1.7, y * 4.1 + 9.2) * 0.125) / 0.875; }
+function boxBlur(src, n, rad) {
+  var tmp = new Float32Array(n * n), out = new Float32Array(n * n), w = 2 * rad + 1, i, j, s;
+  for (j = 0; j < n; j++) {
+    var row = j * n; s = 0;
+    for (i = -rad; i <= rad; i++) s += src[row + Math.min(n - 1, Math.max(0, i))];
+    for (i = 0; i < n; i++) { tmp[row + i] = s / w; s += src[row + Math.min(n - 1, i + rad + 1)] - src[row + Math.max(0, i - rad)]; }
+  }
+  for (i = 0; i < n; i++) {
+    s = 0;
+    for (j = -rad; j <= rad; j++) s += tmp[Math.min(n - 1, Math.max(0, j)) * n + i];
+    for (j = 0; j < n; j++) { out[j * n + i] = s / w; s += tmp[Math.min(n - 1, j + rad + 1) * n + i] - tmp[Math.max(0, j - rad) * n + i]; }
+  }
+  return out;
+}
+/* The inscription is set on an arc in Inter, the deck's own reading face,
+   rasterised once and softened so the letters read as cast rather than
+   cut. Row 0 of the raster is the TOP of the image; row 0 of the texture
+   is the BOTTOM, so the rows are flipped on the way across. */
+function rasterInscription() {
+  var c = document.createElement('canvas'); c.width = c.height = N;
+  var x = c.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0, 0, N, N);
+  x.fillStyle = '#fff'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.font = '700 ' + Math.round(4.6 * PX) + 'px Inter, system-ui, sans-serif';
+  function arc(text, radius, centreDeg, flip) {
+    var widths = [], total = 0, i, gap = 0.55 * PX;
+    for (i = 0; i < text.length; i++) { widths.push(x.measureText(text[i]).width); total += widths[i] + gap; }
+    total -= gap;
+    var rp = radius * PX, start = centreDeg * DEG + (flip ? -1 : 1) * (total / 2) / rp, a = start;
+    for (i = 0; i < text.length; i++) {
+      var adv = (widths[i] / 2) / rp;
+      a += flip ? adv : -adv;
+      x.save(); x.translate(N / 2 + radius * PX * Math.cos(a), N / 2 - radius * PX * Math.sin(a));
+      x.rotate(flip ? a + Math.PI / 2 : -a + Math.PI / 2);
+      x.fillText(text[i], 0, 0); x.restore();
+      a += flip ? adv + gap / rp : -(adv + gap / rp);
+    }
+  }
+  arc('TIDE  ·  AND  ·  SUN', 36.6, 90, false);
+  arc('MCMII', 36.6, 270, true);
+  var d = x.getImageData(0, 0, N, N).data, a = new Float32Array(N * N);
+  for (var j = 0; j < N; j++) for (var i = 0; i < N; i++) a[(N - 1 - j) * N + i] = d[(j * N + i) * 4] / 255;
+  a = boxBlur(a, N, 2); a = boxBlur(a, N, 2);
+  return a;
+}
+function author() {
+  var t0 = performance.now();
+  var h = new Float32Array(N * N), pat = new Float32Array(N * N);
+  var raised = new Uint8Array(N * N);
+  var ins = rasterInscription();
+  var i, j, k, x, y, r;
+  var sSin = Math.sin(SEAM_A), sCos = Math.cos(SEAM_A), cSin = Math.sin(CHASE_A), cCos = Math.cos(CHASE_A);
+  var RAY_N = 14, RAY_S = Math.PI / (RAY_N - 1);
+  for (j = 0; j < N; j++) {
+    y = (j + 0.5) / PX - FIELD / 2;
+    for (i = 0; i < N; i++) {
+      x = (i + 0.5) / PX - FIELD / 2; k = j * N + i;
+      r = Math.hypot(x, y);
+      if (r > R) { h[k] = 0; continue; }
+      /* 1 · slab with a quarter-round edge, 2 · a slight overall dome */
+      var e = r - (R - 1.4);
+      var z = e <= 0 ? 2.4 : 2.4 * Math.sqrt(Math.max(0, 1 - (e / 1.4) * (e / 1.4)));
+      z += 0.18 * (1 - (r / R) * (r / R));
+      var up = 0;
+      /* 3 · rim */
+      var dr = (r - 42.2) / 1.0; if (dr > -1 && dr < 1) { z += 0.55 * Math.sqrt(1 - dr * dr); up = 1; }
+      /* 4 · seventy-two beads */
+      var ang = Math.atan2(y, x), bstep = TAU / 72, ba = Math.round(ang / bstep) * bstep;
+      var bd = Math.hypot(x - 40.3 * Math.cos(ba), y - 40.3 * Math.sin(ba)) / 0.52;
+      if (bd < 1) { z += 0.30 * Math.sqrt(1 - bd * bd); up = 1; }
+      /* 5 · the inscription */
+      if (ins[k] > 0.02) { z += 0.42 * Math.min(1, ins[k] * 1.15); up = 1; }
+      if (r < 33.5) {
+        if (y > -4) {
+          /* 6 · the sun, 7 · fourteen rays */
+          var sd = Math.hypot(x, y - 10) / 7;
+          if (sd < 1) { z += 0.9 * Math.sqrt(1 - sd * sd); up = 1; }
+          var ra = Math.atan2(y - 10, x), rr = Math.hypot(x, y - 10);
+          if (rr > 8.2 && rr < 31 && ra > -0.02 && ra < Math.PI + 0.02) {
+            var ca = Math.round(ra / RAY_S) * RAY_S;
+            var perp = Math.abs(-Math.sin(ca) * x + Math.cos(ca) * (y - 10));
+            var w = 1.5 - 0.7 * (rr - 8.2) / 22.8, q = perp / w;
+            var fade = Math.min(1, (31 - rr) / 2, (rr - 8.2) / 1.5, (y + 4) / 1.5);
+            if (q < 1 && fade > 0) { z += 0.38 * Math.sqrt(1 - q * q) * fade; up = 1; }
+          }
+          /* 8 · the chasing: a tracer at 35°, 0.6 mm pitch, 0.05 mm deep,
+             everywhere in the sky that nothing stands proud of */
+          if (!up && r < 33) {
+            var qq = x * cCos + y * cSin, fr = qq / 0.6 - Math.floor(qq / 0.6);
+            var gd = Math.abs(fr - 0.5) / 0.30;
+            if (gd < 1) z -= 0.055 * (1 - gd * gd) * (0.7 + 0.3 * vnoise(qq * 0.8, (x * -cSin + y * cCos) * 0.3));
+          }
+        } else {
+          /* 9 · six wave bands, crested, sinuous, cross-hatched in the troughs */
+          var band = Math.floor((-4 - y) / 4.5);
+          var yy = y + 1.1 * Math.sin(x / 6 + band * 0.9);
+          var ph = ((-4 - yy) / 4.5) % 1; if (ph < 0) ph += 1;
+          var crest = 1 - Math.abs(ph - 0.5) * 2;
+          var sea = Math.min(1, (-4 - y) / 1.5, (33 - r) / 1.5);
+          if (sea > 0) {
+            z += 0.32 * Math.pow(crest, 1.6) * sea;
+            if (crest < 0.35) {
+              var u1 = (x + y) * 0.7071 / 0.7, u2 = (x - y) * 0.7071 / 0.7;
+              var g1 = Math.abs(u1 - Math.floor(u1) - 0.5) / 0.28, g2 = Math.abs(u2 - Math.floor(u2) - 0.5) / 0.28;
+              if (g1 < 1) z -= 0.035 * (1 - g1 * g1) * sea;
+              if (g2 < 1) z -= 0.035 * (1 - g2 * g2) * sea;
+            } else up = 1;
+          }
+        }
+      }
+      /* 10 · the mould seam: a ridge along one line across everything, most
+         of it chased away, some of it not */
+      var sp = Math.abs(-sSin * x + sCos * y), along = sCos * x + sSin * y;
+      if (sp < 0.38) {
+        var keep = 0.5 + 0.5 * Math.sin(along / 9 + 1.0);
+        var amp = keep < 0.4 ? 0.03 : 0.12;
+        z += amp * (1 - (sp / 0.38) * (sp / 0.38)) * (0.85 + 0.3 * vnoise(along * 1.7, 3.3));
+      }
+      /* 11 · casting texture */
+      z += 0.02 * (fbm(x * 1.9, y * 1.9) - 0.5) * 2;
+      h[k] = z; raised[k] = up;
+    }
+  }
+  /* 11b · pores, stamped */
+  for (var p = 0; p < 160; p++) {
+    var pa = hash2(p, 11) * TAU, pr = Math.sqrt(hash2(p, 23)) * 41;
+    var cx = pr * Math.cos(pa), cy = pr * Math.sin(pa), rad = 0.22 + hash2(p, 37) * 0.4, dep = 0.08 + hash2(p, 41) * 0.12;
+    var i0 = Math.max(0, Math.floor((cx - rad + FIELD / 2) * PX)), i1 = Math.min(N - 1, Math.ceil((cx + rad + FIELD / 2) * PX));
+    var j0 = Math.max(0, Math.floor((cy - rad + FIELD / 2) * PX)), j1 = Math.min(N - 1, Math.ceil((cy + rad + FIELD / 2) * PX));
+    for (j = j0; j <= j1; j++) for (i = i0; i <= i1; i++) {
+      var dd = Math.hypot((i + 0.5) / PX - FIELD / 2 - cx, (j + 0.5) / PX - FIELD / 2 - cy) / rad;
+      if (dd < 1) h[j * N + i] -= dep * (1 - dd * dd);
+    }
+  }
+  /* 12 · the patina: verdigris in the recesses, worn off the highs, and
+     polished away entirely where the medal was held */
+  var mean = boxBlur(h, N, 7);
+  for (j = 0; j < N; j++) {
+    y = (j + 0.5) / PX - FIELD / 2;
+    for (i = 0; i < N; i++) {
+      x = (i + 0.5) / PX - FIELD / 2; k = j * N + i; r = Math.hypot(x, y);
+      if (r > R) { pat[k] = 0; continue; }
+      var cav = Math.min(1, Math.max(0, (mean[k] - h[k]) * 3));
+      var pv = 0.45 + 0.30 * (fbm(x * 0.35 + 5, y * 0.35 + 2) - 0.5) * 2 + 0.4 * cav;
+      if (h[k] > 3.0) pv *= 0.55;
+      if (r > 41.4 && r < 43.2) pv *= 0.7;
+      var f = (x + 14) + 0.6 * (y + 24) + 2.5 * Math.sin(y / 5) + 1.5 * (fbm(x * 0.5, y * 0.5) - 0.5);
+      var held = f < -1.5 ? 1 : f > 1.5 ? 0 : (1.5 - f) / 3;
+      held = held * held * (3 - 2 * held);
+      pat[k] = Math.min(1, Math.max(0, pv + (0.06 - pv) * held));
+    }
+  }
+  var rg = new Float32Array(N * N * 2);
+  for (k = 0; k < N * N; k++) { rg[k * 2] = h[k]; rg[k * 2 + 1] = pat[k]; }
+  return { rg: rg, ms: performance.now() - t0 };
+}
+
+/* ── shaders ──────────────────────────────────────────────────────────── */
+var VS = '#version 300 es\nprecision highp float;\n' +
+'in vec2 a_p; uniform sampler2D u_h; uniform float u_field; uniform mat4 u_vp; uniform float u_flat;\n' +
+'out vec3 v_p; out vec2 v_uv;\n' +
+'void main(){ vec2 uv = a_p/u_field + 0.5; float h = 0.0;\n' +
+'  if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) h = texture(u_h, uv).r;\n' +
+'  h *= (1.0 - u_flat); v_p = vec3(a_p, h); v_uv = uv; gl_Position = u_vp * vec4(v_p, 1.0); }';
+
+/* The whole world is this program. Per pixel: a normal from the height
+   field by finite difference, a march along each lamp's ray through the
+   same field for occlusion, a GGX lobe for the bronze, a Lambert term for
+   the patina, and a room term shaped by cavity. Nothing here is looked up
+   in a picture; every term is a function of position, light and eye. */
+var FS = '#version 300 es\nprecision highp float;\n' +
+'in vec3 v_p; in vec2 v_uv; out vec4 o;\n' +
+'uniform sampler2D u_h; uniform float u_field, u_R; uniform vec3 u_eye;\n' +
+'uniform int u_nl; uniform vec3 u_lp[16]; uniform float u_li[16];\n' +
+'uniform vec3 u_lamp, u_bronze, u_patina, u_wall, u_room; uniform int u_mode;\n' +
+'const float N = ' + N.toFixed(1) + ';\n' +
+'vec2 fetch2(vec2 uv){ vec2 st = uv*N - 0.5; vec2 f = fract(st); ivec2 i = ivec2(floor(st)); ivec2 mx = ivec2(int(N)-1);\n' +
+'  vec2 a = texelFetch(u_h, clamp(i, ivec2(0), mx), 0).rg; vec2 b = texelFetch(u_h, clamp(i+ivec2(1,0), ivec2(0), mx), 0).rg;\n' +
+'  vec2 c = texelFetch(u_h, clamp(i+ivec2(0,1), ivec2(0), mx), 0).rg; vec2 d = texelFetch(u_h, clamp(i+ivec2(1,1), ivec2(0), mx), 0).rg;\n' +
+'  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y); }\n' +
+'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }\n' +
+'float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y); }\n' +
+'float wallH(vec2 p){ return 0.010*(vn(p*1.7)-0.5) + 0.004*(vn(p*7.0+3.0)-0.5); }\n' +
+'float Hall(vec2 p){ vec2 uv = p/u_field + 0.5; float disc = step(length(p), u_R);\n' +
+'  float inside = step(0.0, uv.x)*step(uv.x, 1.0)*step(0.0, uv.y)*step(uv.y, 1.0);\n' +
+'  return mix(wallH(p), fetch2(clamp(uv, 0.0, 1.0)).r, disc*inside); }\n' +
+'vec3 normalAt(vec2 p){ float e = u_field/N;\n' +
+'  float dx = (Hall(p+vec2(e,0.0)) - Hall(p-vec2(e,0.0)))/(2.0*e); float dy = (Hall(p+vec2(0.0,e)) - Hall(p-vec2(0.0,e)))/(2.0*e);\n' +
+'  return normalize(vec3(-dx,-dy,1.0)); }\n' +
+'float shadow(vec3 p, vec3 L){ if (L.z < 0.03) return 0.0; float s = 1.0; float t = 0.22;\n' +
+'  for (int i = 0; i < 28; i++){ vec3 q = p + L*t; if (q.z > 3.9) break; float h = Hall(q.xy);\n' +
+'    s = min(s, clamp((q.z - h)/(0.055*t), 0.0, 1.0)); t += 0.20 + t*0.11; } return s; }\n' +
+'void main(){ vec2 p2 = v_p.xy; float r = length(p2);\n' +
+'  float disc = 1.0 - smoothstep(u_R - 0.12, u_R + 0.12, r);\n' +
+'  vec2 hp = fetch2(clamp(v_uv, 0.0, 1.0)); float h = Hall(p2); vec3 n = normalAt(p2);\n' +
+'  if (u_mode == 1){ float g = clamp(h/3.9, 0.0, 1.0); o = vec4(vec3(pow(g, 1.0/1.8)), 1.0); return; }\n' +
+'  if (u_mode == 2){ o = vec4(n*0.5+0.5, 1.0); return; }\n' +
+'  float pat = disc*hp.g; vec3 V = normalize(u_eye - v_p);\n' +
+'  vec3 albedo = mix(u_wall, mix(u_bronze, u_patina, pat), disc);\n' +
+'  float metal = disc*(0.92 - pat*0.72); float rough = mix(0.86, mix(0.34, 0.70, pat), disc);\n' +
+'  vec3 F0 = mix(vec3(0.04), albedo, metal); vec3 kd = albedo*(1.0-metal) + albedo*0.10*disc;\n' +
+'  float ndv = max(dot(n,V), 1e-3); vec3 col = vec3(0.0); vec3 pz = v_p + vec3(0.0,0.0,0.03);\n' +
+'  for (int i = 0; i < 16; i++){ if (i >= u_nl) break;\n' +
+'    vec3 Lv = u_lp[i] - v_p; float dist = length(Lv); vec3 L = Lv/dist; float ndl = dot(n,L); if (ndl <= 0.0) continue;\n' +
+'    float sh = shadow(pz, L); if (sh <= 0.0) continue;\n' +
+'    float att = u_li[i] * 4.2 * 90000.0/(dist*dist);\n' +
+'    vec3 Hh = normalize(L+V); float ndh = max(dot(n,Hh),0.0); float a = rough*rough, a2 = a*a;\n' +
+'    float D = a2/(3.14159*pow(ndh*ndh*(a2-1.0)+1.0, 2.0)); float k = (rough+1.0)*(rough+1.0)/8.0;\n' +
+'    float G = (ndv/(ndv*(1.0-k)+k))*(ndl/(ndl*(1.0-k)+k)); vec3 F = F0 + (1.0-F0)*pow(1.0-max(dot(Hh,V),0.0),5.0);\n' +
+'    vec3 spec = D*G*F/(4.0*ndv*ndl + 1e-4);\n' +
+'    col += (kd/3.14159 + spec)*u_lamp*att*ndl*sh; }\n' +
+'  float e6 = 0.6; float mn = (Hall(p2+vec2(e6,0.0))+Hall(p2-vec2(e6,0.0))+Hall(p2+vec2(0.0,e6))+Hall(p2-vec2(0.0,e6)))*0.25;\n' +
+'  float ao = clamp(1.0 + (h - mn)*2.2, 0.35, 1.0);\n' +
+'  col += albedo*(u_lamp*0.075 + u_room*1.5)*(0.55 + 0.45*n.z)*ao;\n' +
+'  col = 1.0 - exp(-col*1.7); col = pow(col, vec3(1.0/2.2)); o = vec4(col, 1.0); }';
+
+var BLEND_VS = '#version 300 es\nout vec2 v; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); v = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }';
+var BLEND_FS = '#version 300 es\nprecision highp float; in vec2 v; out vec4 o; uniform sampler2D u_a, u_b; uniform float u_f;\n' +
+'void main(){ o = mix(texture(u_a, v), texture(u_b, v), u_f); }';
+
+/* ── one GL world per canvas ──────────────────────────────────────────── */
+var rlEl = $('rl-world');
+var COL = {
+  lamp: linRGB(rlEl, '--rl-lamp'), bronze: linRGB(rlEl, '--rl-obj'), patina: linRGB(rlEl, '--rl-verd'),
+  wall: linRGB(rlEl, '--rl-plinth'), room: linRGB(rlEl, '--rl-room')
+};
+var GRID_W = 220, GRID_H = 124, GRID_X = 512, GRID_Y = 288;
+var TRIS = GRID_X * GRID_Y * 2;
+var LAMP_D = 300;
+
+function compile(gl, vs, fs) {
+  function sh(type, src) {
+    var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  var p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+function makeWorld(canvas, rg) {
+  var gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
+  if (!gl) return null;
+  var prog = compile(gl, VS, FS), blend = compile(gl, BLEND_VS, BLEND_FS);
+  var U = {};
+  ['u_h', 'u_field', 'u_R', 'u_vp', 'u_flat', 'u_eye', 'u_nl', 'u_lamp', 'u_bronze', 'u_patina', 'u_wall', 'u_room', 'u_mode'].forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+  var U_LP = [], U_LI = [];
+  for (var i = 0; i < 16; i++) { U_LP.push(gl.getUniformLocation(prog, 'u_lp[' + i + ']')); U_LI.push(gl.getUniformLocation(prog, 'u_li[' + i + ']')); }
+  var BU = { a: gl.getUniformLocation(blend, 'u_a'), b: gl.getUniformLocation(blend, 'u_b'), f: gl.getUniformLocation(blend, 'u_f') };
+
+  /* the height field, as RG16F: r height mm, g patina. NEAREST, and the
+     shader does its own bilinear from texelFetch — half-float linear
+     filtering is an extension, and one code path beats two. */
+  var tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16F, N, N, 0, gl.RG, gl.FLOAT, rg);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  /* the surface: a grid of GRID_X × GRID_Y cells over the wall, displaced
+     in the vertex shader by the same texture */
+  var vx = new Float32Array((GRID_X + 1) * (GRID_Y + 1) * 2), n = 0;
+  for (var j = 0; j <= GRID_Y; j++) for (var i2 = 0; i2 <= GRID_X; i2++) { vx[n++] = (i2 / GRID_X - 0.5) * GRID_W; vx[n++] = (j / GRID_Y - 0.5) * GRID_H; }
+  var ix = new Uint32Array(GRID_X * GRID_Y * 6); n = 0;
+  for (j = 0; j < GRID_Y; j++) for (i2 = 0; i2 < GRID_X; i2++) {
+    var a = j * (GRID_X + 1) + i2, b = a + 1, c = a + GRID_X + 1, d = c + 1;
+    ix[n++] = a; ix[n++] = b; ix[n++] = c; ix[n++] = b; ix[n++] = d; ix[n++] = c;
+  }
+  var vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, vx, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ix, gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  var emptyVao = gl.createVertexArray();
+
+  gl.enable(gl.DEPTH_TEST); gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK);
+  var px = new Uint8Array(4);
+
+  /* view: { vp, eye, lamps:[{az, el, i}], mode, flat } — every uniform is
+     set from it on every draw, so a draw is a pure function of the view. */
+  function draw(view, x, y, w, h) {
+    gl.viewport(x, y, w, h); gl.scissor(x, y, w, h); gl.enable(gl.SCISSOR_TEST);
+    gl.clearColor(COL.room[0], COL.room[1], COL.room[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(prog); gl.bindVertexArray(vao);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(U.u_h, 0);
+    gl.uniform1f(U.u_field, FIELD); gl.uniform1f(U.u_R, R + 0.6); gl.uniformMatrix4fv(U.u_vp, false, view.vp);
+    gl.uniform1f(U.u_flat, view.flat ? 1 : 0); gl.uniform3fv(U.u_eye, view.eye); gl.uniform1i(U.u_mode, view.mode || 0);
+    gl.uniform3fv(U.u_lamp, COL.lamp); gl.uniform3fv(U.u_bronze, COL.bronze); gl.uniform3fv(U.u_patina, COL.patina);
+    gl.uniform3fv(U.u_wall, COL.wall); gl.uniform3fv(U.u_room, COL.room);
+    var lamps = view.lamps || []; gl.uniform1i(U.u_nl, lamps.length);
+    for (var i = 0; i < lamps.length; i++) {
+      var L = lamps[i], ce = Math.cos(L.el * DEG);
+      gl.uniform3f(U_LP[i], LAMP_D * ce * Math.cos(L.az * DEG), LAMP_D * ce * Math.sin(L.az * DEG), LAMP_D * Math.sin(L.el * DEG));
+      gl.uniform1f(U_LI[i], L.i);
+    }
+    gl.drawElements(gl.TRIANGLES, ix.length, gl.UNSIGNED_INT, 0);
+    gl.bindVertexArray(null); gl.disable(gl.SCISSOR_TEST);
+  }
+  /* The named sync point. readPixels cannot return until every command
+     before it has executed, so the bracket that ends here has waited for
+     the GPU rather than for the driver to accept a description of work. */
+  function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+
+  /* offscreen targets for the pre-rendered comparison */
+  function makeTarget(w, h) {
+    var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    var rb = gl.createRenderbuffer(); gl.bindRenderbuffer(gl.RENDERBUFFER, rb); gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+    var fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { tex: t, fb: fb, rb: rb, w: w, h: h };
+  }
+  function renderInto(target, view) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target.fb); draw(view, 0, 0, target.w, target.h); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  function blit(ta, tb, f, x, y, w, h) {
+    gl.viewport(x, y, w, h); gl.scissor(x, y, w, h); gl.enable(gl.SCISSOR_TEST); gl.disable(gl.DEPTH_TEST);
+    gl.useProgram(blend); gl.bindVertexArray(emptyVao);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ta.tex); gl.uniform1i(BU.a, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, tb.tex); gl.uniform1i(BU.b, 1);
+    gl.uniform1f(BU.f, f); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.enable(gl.DEPTH_TEST); gl.disable(gl.SCISSOR_TEST); gl.activeTexture(gl.TEXTURE0);
+  }
+  function freeTarget(t) { gl.deleteTexture(t.tex); gl.deleteRenderbuffer(t.rb); gl.deleteFramebuffer(t.fb); }
+  return { gl: gl, draw: draw, sync: sync, makeTarget: makeTarget, renderInto: renderInto, blit: blit, freeTarget: freeTarget };
+}
+
+/* ── the world's state ────────────────────────────────────────────────── */
+/* Three cycles: the lamp's arc, the chapter beat, the viewer's sway. 41,
+   17 and 9 — no pair has a ratio expressible with numerator and
+   denominator both ≤ 6, so nothing locks. dur is their product, so every
+   cycle closes exactly at t = 1 and render(t) stays pure. */
+var C_LIGHT = 41, C_CHAPTER = 17, C_LEAD = 2.3, C_YAW = 9, DUR_S = C_LIGHT * C_CHAPTER * C_YAW;
+var CHAPTERS = [
+  { az: 68, el: 15, anchor: [18, -7.3], label: '01' },
+  { az: 305, el: 17, anchor: [-24, 16], label: '02' },
+  { az: 90, el: 52, anchor: [-14.5, -20], label: '03' }
+];
+var pointer = null;      /* {az, el} while the pointer holds the lamp */
+var step = 0;            /* the chapter the viewer picked, under reduced motion */
+var lampCount = 1;       /* the control's knob; 1 outside the control */
+
+function viewState(t) {
+  /* the first rAF timestamp can trail the performance.now() the clock was
+     started from, so t arrives a hair under zero; wrap rather than floor */
+  var T = (((t % 1) + 1) % 1) * DUR_S;
+  var s = {};
+  var chapter = Math.floor(T / C_CHAPTER) % 3;
+  var lead = Math.min(1, (T % C_CHAPTER) / C_LEAD);
+  var az = (T / C_LIGHT % 1) * 360, el = 24, yaw = 12 * Math.sin(TAU * T / C_YAW);
+  if (reduced.matches) { chapter = step; lead = 1; az = CHAPTERS[step].az; el = CHAPTERS[step].el; yaw = 0; }
+  if (pointer) { az = pointer.az; el = pointer.el; }
+  s.chapter = chapter; s.lead = lead; s.az = az; s.el = el; s.yaw = yaw;
+  s.lamps = lampsFor(az, el, lampCount);
+  return s;
+}
+/* N lamps about the same azimuth at 1/N each: same picture, N× the work */
+function lampsFor(az, el, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) { var f = n === 1 ? 0 : (i / (n - 1) - 0.5) * 2; out.push({ az: az + f * 6, el: el + f * 1.5, i: 1 / n }); }
+  return out;
+}
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+var status = $('rl-status');
+var main = null, cmp = null, fig = null;
+var stage = $('rl-stage'), mainCanvas = $('rl-canvas'), cmpCanvas = $('rl-cmp-canvas'), figCanvas = $('rl-fig-canvas');
+var overlay = $('rl-overlay'), leadEl = $('rl-lead'), anchorEl = $('rl-anchor'), leadN = $('rl-lead-n'), lampMark = $('rl-lamp-mark'), lampRing = $('rl-lamp-ring');
+var demo = null;
+var prerender = { targets: [], w: 0, h: 0 };
+var PRE_N = 8, PRE_EL = 24;
+var msSamples = [], frameN = 0;
+
+function fail(msg) { status.hidden = false; status.textContent = msg; }
+
+function instrumentPlate(gl) {
+  var name = 'unavailable';
+  try {
+    var ext = gl.getExtension('WEBGL_debug_renderer_info');
+    name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  } catch (e) { /* the name is a courtesy, not a measurement */ }
+  $('instrument-renderer').textContent = name;
+  $('instrument-context').textContent = gl.getParameter(gl.VERSION);
+  var fl = CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms';
+  $('instrument-floor').textContent = fl;
+  $('instrument-dpr').textContent = DPR + '× device pixels';
+  $('rl-floor').textContent = fl; $('rl-bench-floor').textContent = fl;
+  $('rl-field').textContent = N + ' × ' + N + ' · RG16F';
+  $('rl-tris').textContent = TRIS.toLocaleString() + ' tris';
+  $('rl-bench-tris').textContent = TRIS.toLocaleString();
+  if (TOKEN_MISSES.length) {
+    $('instrument-plate').insertAdjacentHTML('beforeend', ' <b style="color:var(--signal)">' + TOKEN_MISSES.length +
+      ' token(s) did not resolve: ' + TOKEN_MISSES.join(', ') + ' — every colour drawn from them is a fallback, not the design system.</b>');
+  }
+}
+
+function fit(canvas) {
+  var r = canvas.getBoundingClientRect();
+  var w = Math.max(1, Math.round(r.width * DPR)), h = Math.max(1, Math.round(r.height * DPR));
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; return true; }
+  return false;
+}
+
+function cameraMain(yaw, aspect) {
+  var D = 192, eye = [D * Math.sin(yaw * DEG), 14, D * Math.cos(yaw * DEG)];
+  return { eye: eye, vp: mul(perspective(28 * DEG, aspect, 20, 900), lookAt(eye, [0, 0, 1.5], [0, 1, 0])) };
+}
+function cameraFixed(aspect) {
+  var eye = [0, 8, 205];
+  return { eye: eye, vp: mul(perspective(28 * DEG, aspect, 20, 900), lookAt(eye, [0, 0, 1.5], [0, 1, 0])) };
+}
+
+/* the eight pre-renders: the same program, eight lamp positions, once */
+function buildPrerenders() {
+  var w = cmpCanvas.width >> 1, h = cmpCanvas.height;
+  if (w < 2 || h < 2) return;
+  if (prerender.w === w && prerender.h === h && prerender.targets.length) return;
+  prerender.targets.forEach(cmp.freeTarget); prerender.targets = [];
+  var cam = cameraFixed(w / h);
+  for (var i = 0; i < PRE_N; i++) {
+    var t = cmp.makeTarget(w, h);
+    cmp.renderInto(t, { vp: cam.vp, eye: cam.eye, lamps: lampsFor(i * 360 / PRE_N, PRE_EL, 1), mode: 0 });
+    prerender.targets.push(t);
+  }
+  prerender.w = w; prerender.h = h;
+}
+
+function drawFigure() {
+  fit(figCanvas);
+  var w = figCanvas.width >> 1, h = figCanvas.height;
+  var half = FIELD / 2, ar = w / h;
+  var vp = ortho(-half * ar, half * ar, -half, half, -50, 50);
+  var view = { vp: vp, eye: [0, 0, 100], lamps: [], flat: true };
+  fig.draw(Object.assign({ mode: 1 }, view), 0, 0, w, h);
+  fig.draw(Object.assign({ mode: 2 }, view), w, 0, w, h);
+}
+
+function renderMain(s, bracket) {
+  fit(mainCanvas);
+  var cam = cameraMain(s.yaw, mainCanvas.width / mainCanvas.height);
+  var view = { vp: cam.vp, eye: cam.eye, lamps: s.lamps, mode: 0 };
+  var ms = -1;
+  if (bracket) { var t0 = performance.now(); main.draw(view, 0, 0, mainCanvas.width, mainCanvas.height); main.sync(); ms = performance.now() - t0; }
+  else main.draw(view, 0, 0, mainCanvas.width, mainCanvas.height);
+  return { cam: cam, ms: ms };
+}
+function renderCompare(s) {
+  if (fit(cmpCanvas)) buildPrerenders();
+  var w = cmpCanvas.width >> 1, h = cmpCanvas.height;
+  var cam = cameraFixed(w / h);
+  cmp.draw({ vp: cam.vp, eye: cam.eye, lamps: lampsFor(s.az, s.el, 1), mode: 0 }, 0, 0, w, h);
+  /* the cross-fade: the two pre-rendered angles either side of the lamp */
+  var u = (s.az / 360 % 1 + 1) % 1 * PRE_N, a = Math.floor(u) % PRE_N, b = (a + 1) % PRE_N;
+  if (prerender.targets.length) cmp.blit(prerender.targets[a], prerender.targets[b], u - Math.floor(u), w, 0, w, h);
+}
+
+var lastChapter = -1;
+function renderOverlay(s, cam) {
+  var r = stage.getBoundingClientRect(), W = r.width, Hh = r.height;
+  overlay.setAttribute('viewBox', '0 0 ' + W + ' ' + Hh);
+  var ch = CHAPTERS[s.chapter];
+  var pt = project(cam.vp, [ch.anchor[0], ch.anchor[1], 3.2]);
+  var ax = (pt[0] * 0.5 + 0.5) * W, ay = (0.5 - pt[1] * 0.5) * Hh;
+  /* the leader draws away from the anchor to a label, at the chapter's beat */
+  var dir = s.chapter === 1 ? -1 : 1, lx = ax + dir * 74, ly = ay - 46, ex = lx + dir * 18;
+  var L = s.lead;
+  var p1 = [ax + (lx - ax) * Math.min(1, L * 1.6), ay + (ly - ay) * Math.min(1, L * 1.6)];
+  var pts = ax + ',' + ay + ' ' + p1[0] + ',' + p1[1];
+  if (L > 0.625) pts += ' ' + (lx + (ex - lx) * (L - 0.625) / 0.375) + ',' + ly;
+  leadEl.setAttribute('points', pts);
+  anchorEl.setAttribute('cx', ax); anchorEl.setAttribute('cy', ay); anchorEl.setAttribute('r', 4 + 4 * Math.min(1, L * 3));
+  leadN.setAttribute('x', dir > 0 ? ex + 6 : ex - 6); leadN.setAttribute('y', ly + 3.5);
+  leadN.setAttribute('text-anchor', dir > 0 ? 'start' : 'end');
+  leadN.textContent = L >= 1 ? ch.label : '';
+  /* the lamp, as a flat marker on a ring about the medal's centre */
+  var c0 = project(cam.vp, [0, 0, 2.4]), cx = (c0[0] * 0.5 + 0.5) * W, cy = (0.5 - c0[1] * 0.5) * Hh;
+  var rad = Math.max(0, Math.min(W, Hh) * 0.5 - 16);
+  lampRing.setAttribute('cx', cx); lampRing.setAttribute('cy', cy); lampRing.setAttribute('r', rad);
+  var scale = 1 - s.el / 90 * 0.6;
+  lampMark.setAttribute('cx', cx + rad * scale * Math.cos(s.az * DEG)); lampMark.setAttribute('cy', cy - rad * scale * Math.sin(s.az * DEG));
+  if (s.chapter !== lastChapter) {
+    lastChapter = s.chapter;
+    document.querySelectorAll('.rl-ch').forEach(function (b) { b.classList.toggle('rl-on', +b.dataset.ch === s.chapter); });
+  }
+}
+var dialRay = $('rl-dial-ray'), dialLamp = $('rl-dial-lamp'), dialEl = $('rl-dial-el');
+var azDot = $('rl-azimuth-dot'), azEl = $('rl-az'), elEl = $('rl-el'), yawEl = $('rl-yaw'), msEl = $('rl-ms'), lampsEl = $('rl-lamps'), mastS = $('rl-mast-s');
+var lastAzInt = -1;
+function renderReadouts(s) {
+  var azi = Math.round(s.az) % 360;
+  if (azi !== lastAzInt) { lastAzInt = azi; azDot.textContent = azi + '°'; azEl.textContent = azi + '°'; }
+  elEl.textContent = Math.round(s.el) + '°';
+  yawEl.textContent = (s.yaw >= 0 ? '+' : '−') + Math.abs(s.yaw).toFixed(1) + '°';
+  var x = 38 * Math.cos(s.az * DEG), y = -38 * Math.sin(s.az * DEG);
+  dialRay.setAttribute('x2', x); dialRay.setAttribute('y2', y);
+  dialLamp.setAttribute('cx', x); dialLamp.setAttribute('cy', y);
+  /* elevation as an arc from the horizon, drawn on the dial's rim */
+  var a0 = -s.az * DEG, a1 = a0 - s.el * DEG * 0.5;
+  dialEl.setAttribute('d', 'M' + (30 * Math.cos(a0)) + ',' + (30 * Math.sin(a0)) + ' A30,30 0 0 0 ' + (30 * Math.cos(a1)) + ',' + (30 * Math.sin(a1)));
+  if (lampsEl.textContent !== String(s.lamps.length)) { lampsEl.textContent = s.lamps.length; mastS.textContent = 'raking light · ' + s.lamps.length + (s.lamps.length === 1 ? ' lamp' : ' lamps'); }
+}
+function fmtMs(ms) { return ms < CLOCK_FLOOR * 2 ? '≤ ' + (CLOCK_FLOOR * 2).toFixed(2) + ' ms †' : ms.toFixed(2) + ' ms'; }
+function median(a) { var b = a.slice().sort(function (x, y) { return x - y; }); return b[b.length >> 1]; }
+
+function render(t) {
+  var s = viewState(t);
+  frameN++;
+  /* one bracketed frame in twelve: the sync point stalls the pipeline,
+     and a stall every frame would measure the stalls */
+  var bracket = (frameN % 12 === 0) || reduced.matches;
+  var out = renderMain(s, bracket);
+  if (out.ms >= 0) { msSamples.push(out.ms); if (msSamples.length > 8) msSamples.shift(); msEl.textContent = fmtMs(median(msSamples)) + (msSamples.length < 8 ? ' ·' : ''); }
+  renderCompare(s);
+  renderOverlay(s, out.cam);
+  renderReadouts(s);
+}
+
+/* ── the control ──────────────────────────────────────────────────────── */
+var guard = $('rl-guard'), runBtn = $('rl-run-control');
+function runControl() {
+  if (!main) return;
+  runBtn.disabled = true; guard.className = 'wg-guard wg-wait'; guard.textContent = 'running…';
+  var t = demo ? demo.t : 0, s0 = viewState(t), res = {};
+  [1, 4, 16].forEach(function (n) {
+    var s = Object.assign({}, s0, { lamps: lampsFor(s0.az, s0.el, n) });
+    for (var w = 0; w < 3; w++) { renderMain(s, false); main.sync(); }
+    var xs = [];
+    for (var i = 0; i < 9; i++) xs.push(renderMain(s, true).ms);
+    res[n] = median(xs);
+  });
+  renderMain(s0, false);
+  ['1', '4', '16'].forEach(function (n) { $('rl-t-' + n).textContent = fmtMs(res[n]); if (n !== '1') $('rl-r-' + n).textContent = (res[n] / Math.max(res[1], CLOCK_FLOOR)).toFixed(2) + '×'; });
+  /* the guard: the 16-lamp reading must move by more than the clock can
+     be wrong about, or the bracket is not seeing fragment work */
+  var moved = res[16] - res[1];
+  if (res[1] < CLOCK_FLOOR * 2 && res[16] < CLOCK_FLOOR * 2) {
+    guard.className = 'wg-guard wg-bad'; guard.textContent = 'every row is under the floor — this clock cannot see this work; the readings are bounds';
+  } else if (moved > CLOCK_FLOOR * 2 && res[16] > res[1] * 2) {
+    guard.className = 'wg-guard wg-ok'; guard.textContent = 'reading follows the lamps: +' + moved.toFixed(2) + ' ms at 16 — the bracket is closing on fragment work';
+  } else {
+    guard.className = 'wg-guard wg-bad'; guard.textContent = 'reading did not follow the lamps (+' + moved.toFixed(2) + ' ms at 16) — the bracket is closing on submission, not work';
+  }
+  runBtn.disabled = false;
+}
+function bytesArithmetic() {
+  var w = mainCanvas.width, h = mainCanvas.height, per = w * h * 3, all = per * 360;
+  var gb = all / 1e9, mb = per / 1e6;
+  $('rl-bytes-arith').innerHTML = w + ' × ' + h + ' device pixels × 3 bytes = <b>' + mb.toFixed(1) + ' MB per lamp position</b>; ' +
+    '× 360 azimuths at one elevation = <b>' + gb.toFixed(2) + ' GB</b>, and it would still ghost between the degrees and hold for no other elevation, viewpoint or lamp count. ' +
+    'The height field is ' + N + ' × ' + N + ' × 2 channels × 2 bytes = <b>' + (N * N * 4 / 1e6).toFixed(1) + ' MB</b> and answers every one of them. ' +
+    'The eight pictures the strip above actually cross-fades are ' + (prerender.w * prerender.h * 4 * PRE_N / 1e6).toFixed(1) + ' MB of GPU memory for one fixed viewpoint.';
+}
+
+/* ── the viewer's hand on the lamp ────────────────────────────────────── */
+function pointerLamp(e) {
+  var r = stage.getBoundingClientRect();
+  var x = (e.clientX - r.left) / r.width - 0.5, y = 0.5 - (e.clientY - r.top) / r.height;
+  var az = Math.atan2(y * r.height, x * r.width) / DEG; if (az < 0) az += 360;
+  var d = Math.hypot(x * r.width, y * r.height) / (Math.min(r.width, r.height) * 0.5);
+  pointer = { az: az, el: 10 + 60 * Math.max(0, Math.min(1, 1 - d)) };
+  if (demo && !demo.playing) demo.render(demo.t);
+}
+stage.addEventListener('pointermove', pointerLamp);
+stage.addEventListener('pointerdown', pointerLamp);
+stage.addEventListener('pointerleave', function () { pointer = null; if (demo && !demo.playing) demo.render(demo.t); });
+
+document.querySelectorAll('.rl-ch').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var k = +b.dataset.ch;
+    if (reduced.matches) { step = k; if (demo) demo.render(demo.t); return; }
+    /* seek to the start of that chapter's next window, and keep playing —
+       t is the only thing that moved */
+    if (!demo) return;
+    var T = demo.t * DUR_S, cyc = Math.floor(T / (C_CHAPTER * 3)) * C_CHAPTER * 3, target = cyc + k * C_CHAPTER;
+    if (target <= T) target += C_CHAPTER * 3;
+    demo.seek((target % DUR_S) / DUR_S); demo.play();
+  });
 });
+runBtn.addEventListener('click', runControl);
+reduced.addEventListener('change', function () { if (demo) demo.render(demo.t); });
 
-function resize() {
-  const r = frame.getBoundingClientRect();
-  renderer.setSize(r.width, r.height, false);
-  camera.aspect = r.width / r.height;
-  camera.updateProjectionMatrix();
+function boot() {
+  var probe = document.createElement('canvas').getContext('webgl2');
+  if (!probe) { fail('WebGL2 is not available here — this panel has nothing to draw with'); return; }
+  var obj = author();
+  try {
+    main = makeWorld(mainCanvas, obj.rg); cmp = makeWorld(cmpCanvas, obj.rg); fig = makeWorld(figCanvas, obj.rg);
+  } catch (e) { fail('shader failed: ' + e.message); return; }
+  if (!main || !cmp || !fig) { fail('WebGL2 context refused'); return; }
+  instrumentPlate(main.gl);
+  status.hidden = true;
+  $('rl-attrib').textContent = 'authored for this panel in ' + Math.round(obj.ms) + ' ms — no scan was used';
+  mainCanvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); fail('WebGL context lost — the GPU took the surface back'); });
+  fit(mainCanvas); fit(cmpCanvas); buildPrerenders(); drawFigure();
+  new ResizeObserver(function () { if (demo && !demo.playing) demo.render(demo.t); drawFigure(); bytesArithmetic(); }).observe(stage);
+  demo = WAM.clock('rl-stage', { render: render, el: rlEl, dur: DUR_S * 1000, poster: 5 / DUR_S });
+  /* under reduced motion the poster is the only frame, and the first frame
+     carries shader warm-up: draw it again so the bracket reads the work */
+  if (reduced.matches) { msSamples.length = 0; demo.render(demo.t); }
+  bytesArithmetic();
 }
-new ResizeObserver(resize).observe(frame);
-resize();
 
-function tick() {
-  points.rotation.y += 0.0022 + mx * 0.01;
-  points.rotation.x += (my * 0.4 - points.rotation.x) * 0.03;
-  renderer.render(scene, camera);
-  requestAnimationFrame(tick);
+/* Inter must be resident before the inscription is set, or the medal is
+   lettered in whatever the engine had to hand. */
+var fontReady = document.fonts && document.fonts.load ? document.fonts.load('700 48px Inter') : Promise.resolve();
+fontReady.then(boot, boot);
+
+/* shared with the other worlds on this sheet — one copy of the matrices,
+   the colour resolver, the compiler and the clock facts */
+window.WG = { $: $, TAU: TAU, DEG: DEG, DPR: DPR, reduced: reduced, CLOCK_FLOOR: CLOCK_FLOOR, TOKEN_MISSES: TOKEN_MISSES,
+  linRGB: linRGB, perspective: perspective, ortho: ortho, lookAt: lookAt, mul: mul, project: project, compile: compile,
+  median: median, fmtMs: fmtMs, hash2: hash2, vnoise: vnoise, fbm: fbm, fontReady: fontReady };
+
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   §2 · IRIDESCENCE — the animated natural-history plate
+
+   The specimen is a height field like §1's, and that is where the likeness
+   ends: nothing in this program is lit by a lamp. Every pixel runs a
+   transfer-matrix calculation over a stack of thin plates for twelve
+   wavelengths and two polarisations, at the angle between the surface and
+   THIS eye, and converts the resulting spectrum to a colour through the CIE
+   observer. No texture. No colour in the file.
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+var W = window.WG, $ = W.$, TAU = W.TAU, DEG = W.DEG, DPR = W.DPR, reduced = W.reduced;
+var N = 1024, FIELD = 36, PX = N / FIELD;
+var EL_X0 = -5.5, EL_L = 16, EL_W = 11;          /* suture edge, half-length, max width (mm) */
+var AXIS = [EL_X0 + 4.4, 0];                      /* the tilt axis, along the elytron */
+var N_HI = 1.68, N_LO = 1.55, N_SUB = 1.56, L0 = 560;
+var NLAM = 12;
+
+/* ── the specimen: an elytron, authored ───────────────────────────────── */
+function width(u) {
+  if (u < 0.35) { var s = 1 - u / 0.35; return 9.2 + 1.8 * (1 - s * s * s); }
+  var v = (u - 0.35) / 0.65; return EL_W * Math.sqrt(Math.max(0, 1 - v * v));
 }
-tick();
+function author() {
+  var t0 = performance.now();
+  var rg = new Float32Array(N * N * 2), i, j, x, y;
+  var STR_N = 8, STR_0 = 0.09, STR_P = 0.82 / 7;
+  for (j = 0; j < N; j++) {
+    y = (j + 0.5) / PX - FIELD / 2;
+    var u = (y + EL_L) / (2 * EL_L);
+    for (i = 0; i < N; i++) {
+      x = (i + 0.5) / PX - FIELD / 2;
+      var k = (j * N + i) * 2;
+      if (u < 0 || u > 1) continue;
+      var w = width(u), v = (x - EL_X0) / w;
+      if (v < 0 || v > 1) continue;
+      /* the dome across the width, tapered along the length */
+      var dome = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(2 * v - 1), 2.2)), 0.55);
+      var z = 3.0 * (0.72 + 0.28 * Math.sin(Math.PI * u)) * dome;
+      /* striae, punctures, interstrial convexity */
+      var sk = Math.round((v - STR_0) / STR_P), vk = STR_0 + sk * STR_P;
+      if (sk >= 0 && sk < STR_N) {
+        var dv = (v - vk) * w;
+        if (Math.abs(dv) < 0.16) z -= 0.09 * (1 - (dv / 0.16) * (dv / 0.16));
+        var ps = (y / 0.85) - Math.floor(y / 0.85) - 0.5, dy = ps * 0.85, dd = Math.hypot(dv, dy) / 0.17;
+        if (dd < 1) z -= 0.06 * (1 - dd * dd);
+      }
+      z += 0.035 * 0.5 * (1 - Math.cos(TAU * (v - STR_0) / STR_P)) * dome;
+      z += 0.006 * (W.fbm(x * 3.1, y * 3.1) - 0.5);
+      if (u < 0.03) z *= u / 0.03;
+      rg[k] = Math.max(0, z); rg[k + 1] = 1;
+    }
+  }
+  return { rg: rg, ms: performance.now() - t0 };
+}
+
+/* ── the model, in JS, for the plot and the printed figures ───────────── */
+/* Characteristic-matrix method for a lossless stack. Returns reflectance
+   for one wavelength (nm), one cosine of incidence, one polarisation. The
+   GLSL below is this function transcribed; the plot and the pixels agree
+   because they are the same arithmetic. */
+function tmm(lam, cosi, layers, tscale, pol) {
+  var sini2 = 1 - cosi * cosi;
+  var eta0 = pol ? 1 / cosi : cosi;
+  var m11 = [1, 0], m12 = [0, 0], m21 = [0, 0], m22 = [1, 0];
+  for (var j = 0; j < layers; j++) {
+    var n = (j % 2 === 0) ? N_HI : N_LO, d = (L0 / (4 * n)) * tscale;
+    var cosj = Math.sqrt(Math.max(0, 1 - sini2 / (n * n)));
+    var eta = pol ? n / cosj : n * cosj;
+    var del = TAU * n * d * cosj / lam, c = Math.cos(del), s = Math.sin(del);
+    /* Mj = [[c, -i s/eta], [-i eta s, c]] */
+    var a11 = [c, 0], a12 = [0, -s / eta], a21 = [0, -eta * s], a22 = [c, 0];
+    var n11 = cadd(cmul(m11, a11), cmul(m12, a21)), n12 = cadd(cmul(m11, a12), cmul(m12, a22));
+    var n21 = cadd(cmul(m21, a11), cmul(m22, a21)), n22 = cadd(cmul(m21, a12), cmul(m22, a22));
+    m11 = n11; m12 = n12; m21 = n21; m22 = n22;
+  }
+  var coss = Math.sqrt(Math.max(0, 1 - sini2 / (N_SUB * N_SUB)));
+  var etas = pol ? N_SUB / coss : N_SUB * coss;
+  var B = cadd(m11, cscale(m12, etas)), C = cadd(m21, cscale(m22, etas));
+  var num = csub(cscale(B, eta0), C), den = cadd(cscale(B, eta0), C);
+  var r = cdiv(num, den);
+  return r[0] * r[0] + r[1] * r[1];
+}
+function cmul(a, b) { return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]]; }
+function cadd(a, b) { return [a[0] + b[0], a[1] + b[1]]; }
+function csub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+function cscale(a, s) { return [a[0] * s, a[1] * s]; }
+function cdiv(a, b) { var d = b[0] * b[0] + b[1] * b[1]; return [(a[0] * b[0] + a[1] * b[1]) / d, (a[1] * b[0] - a[0] * b[1]) / d]; }
+function Runpol(lam, cosi, layers, tscale) { return 0.5 * (tmm(lam, cosi, layers, tscale, 0) + tmm(lam, cosi, layers, tscale, 1)); }
+function spectrum(cosi, layers, tscale, n) {
+  var out = [];
+  for (var k = 0; k < n; k++) { var lam = 400 + 300 * k / (n - 1); out.push([lam, Runpol(lam, cosi, layers, tscale)]); }
+  return out;
+}
+function peak(cosi, layers, tscale) {
+  var best = 0, bl = 0;
+  for (var lam = 400; lam <= 700; lam += 1) { var r = Runpol(lam, cosi, layers, tscale); if (r > best) { best = r; bl = lam; } }
+  return bl;
+}
+
+/* ── shaders ──────────────────────────────────────────────────────────── */
+var VS = '#version 300 es\nprecision highp float;\n' +
+'in vec2 a_p; uniform sampler2D u_h; uniform float u_field; uniform mat4 u_vp; uniform mat3 u_rot; uniform vec2 u_axis; uniform float u_bake;\n' +
+'out vec3 v_p; out vec3 v_o; out vec2 v_uv;\n' +
+'void main(){ vec2 uv = a_p/u_field + 0.5; float h = 0.0;\n' +
+'  if (uv.x > 0.0 && uv.x < 1.0 && uv.y > 0.0 && uv.y < 1.0) h = texture(u_h, uv).r;\n' +
+'  vec3 op = vec3(a_p, h); v_o = op; v_uv = uv;\n' +
+'  vec3 wp = u_rot * (op - vec3(u_axis, 0.0)) + vec3(u_axis, 0.0); v_p = wp;\n' +
+'  gl_Position = mix(u_vp * vec4(wp, 1.0), vec4(uv*2.0-1.0, 0.0, 1.0), u_bake); }';
+
+var FS = '#version 300 es\nprecision highp float;\n' +
+'in vec3 v_p; in vec3 v_o; in vec2 v_uv; out vec4 o;\n' +
+'uniform sampler2D u_h, u_baked; uniform float u_field; uniform mat3 u_rot; uniform vec3 u_eye; uniform vec2 u_res;\n' +
+'uniform int u_nl, u_nlam; uniform float u_tscale, u_wipe; uniform int u_mode;\n' +
+'uniform vec3 u_paper, u_body, u_keyDir, u_key, u_sky;\n' +
+'const float N = ' + N.toFixed(1) + '; const float NHI = ' + N_HI + ', NLO = ' + N_LO + ', NSUB = ' + N_SUB + ', L0 = ' + L0.toFixed(1) + ';\n' +
+'vec2 fetch2(vec2 uv){ vec2 st = uv*N - 0.5; vec2 f = fract(st); ivec2 i = ivec2(floor(st)); ivec2 mx = ivec2(int(N)-1);\n' +
+'  vec2 a = texelFetch(u_h, clamp(i, ivec2(0), mx), 0).rg; vec2 b = texelFetch(u_h, clamp(i+ivec2(1,0), ivec2(0), mx), 0).rg;\n' +
+'  vec2 c = texelFetch(u_h, clamp(i+ivec2(0,1), ivec2(0), mx), 0).rg; vec2 d = texelFetch(u_h, clamp(i+ivec2(1,1), ivec2(0), mx), 0).rg;\n' +
+'  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y); }\n' +
+'float H(vec2 p){ vec2 uv = clamp(p/u_field + 0.5, 0.0, 1.0); return fetch2(uv).r; }\n' +
+'vec3 nObj(vec2 p){ float e = u_field/N; float dx = (H(p+vec2(e,0.0)) - H(p-vec2(e,0.0)))/(2.0*e); float dy = (H(p+vec2(0.0,e)) - H(p-vec2(0.0,e)))/(2.0*e); return normalize(vec3(-dx,-dy,1.0)); }\n' +
+'vec2 cm(vec2 a, vec2 b){ return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x); }\n' +
+/* the transfer-matrix pass: one 2×2 complex matrix per layer */
+/* the transfer-matrix pass: one 2×2 complex matrix per layer, both
+   polarisations in one walk. Loop bounds are uniforms on purpose — a
+   constant bound invites the compiler to unroll twelve layers by twelve
+   wavelengths, and the compile then blocks the page for seconds. */
+'vec2 tmm(float lam, float cosi){ float sini2 = 1.0 - cosi*cosi; vec2 eta0 = vec2(cosi, 1.0/cosi);\n' +
+'  vec2 s11 = vec2(1,0), s12 = vec2(0), s21 = vec2(0), s22 = vec2(1,0), p11 = vec2(1,0), p12 = vec2(0), p21 = vec2(0), p22 = vec2(1,0);\n' +
+'  for (int j = 0; j < u_nl; j++){ float n = (j % 2 == 0) ? NHI : NLO; float d = (L0/(4.0*n))*u_tscale;\n' +
+'    float cosj = sqrt(max(0.0, 1.0 - sini2/(n*n))); float es = n*cosj, ep = n/cosj;\n' +
+'    float del = 6.2831853*n*d*cosj/lam; float c = cos(del), sn = sin(del);\n' +
+'    vec2 a11 = vec2(c,0), a22 = vec2(c,0);\n' +
+'    vec2 a12 = vec2(0,-sn/es), a21 = vec2(0,-es*sn);\n' +
+'    vec2 n11 = cm(s11,a11)+cm(s12,a21), n12 = cm(s11,a12)+cm(s12,a22), n21 = cm(s21,a11)+cm(s22,a21), n22 = cm(s21,a12)+cm(s22,a22); s11 = n11; s12 = n12; s21 = n21; s22 = n22;\n' +
+'    a12 = vec2(0,-sn/ep); a21 = vec2(0,-ep*sn);\n' +
+'    n11 = cm(p11,a11)+cm(p12,a21); n12 = cm(p11,a12)+cm(p12,a22); n21 = cm(p21,a11)+cm(p22,a21); n22 = cm(p21,a12)+cm(p22,a22); p11 = n11; p12 = n12; p21 = n21; p22 = n22; }\n' +
+'  float coss = sqrt(max(0.0, 1.0 - sini2/(NSUB*NSUB))); vec2 etas = vec2(NSUB*coss, NSUB/coss);\n' +
+'  vec2 Bs = s11 + s12*etas.x, Cs = s21 + s22*etas.x; vec2 nums = Bs*eta0.x - Cs, dens = Bs*eta0.x + Cs;\n' +
+'  vec2 Bp = p11 + p12*etas.y, Cp = p21 + p22*etas.y; vec2 nump = Bp*eta0.y - Cp, denp = Bp*eta0.y + Cp;\n' +
+'  vec2 rs = vec2(dot(nums,dens), nums.y*dens.x - nums.x*dens.y)/dot(dens,dens); vec2 rp = vec2(dot(nump,denp), nump.y*denp.x - nump.x*denp.y)/dot(denp,denp);\n' +
+'  return vec2(dot(rs,rs), dot(rp,rp)); }\n' +
+/* CIE 1931 observer, Wyman–Sloan–Shirley multi-lobe fit */
+'float g(float x, float mu, float s1, float s2){ float s = x < mu ? s1 : s2; float t = (x-mu)/s; return exp(-0.5*t*t); }\n' +
+'vec3 xyzBar(float l){ return vec3(1.056*g(l,599.8,37.9,31.0) + 0.362*g(l,442.0,16.0,26.7) - 0.065*g(l,501.1,20.4,26.2),\n' +
+'  0.821*g(l,568.8,46.9,40.5) + 0.286*g(l,530.9,16.3,31.1), 1.217*g(l,437.0,11.8,36.0) + 0.681*g(l,459.0,26.0,13.8)); }\n' +
+'const mat3 XYZ2RGB = mat3(3.2406, -0.9689, 0.0557, -1.5372, 1.8758, -0.2040, -0.4986, 0.0415, 1.0570);\n' +
+/* the spectrum → a colour. polMix 0 = unpolarised, 1 = s only (a linear polariser) */
+'vec3 stackColour(float cosi, float polMix){ vec3 acc = vec3(0.0), wht = vec3(0.0);\n' +
+'  for (int k = 0; k < u_nlam; k++){ float lam = 400.0 + 300.0*(float(k)+0.5)/float(u_nlam);\n' +
+'    vec2 R2 = tmm(lam, cosi); float R = mix(0.5*(R2.x + R2.y), R2.x, polMix);\n' +
+'    vec3 xb = xyzBar(lam); acc += xb*R; wht += xb; }\n' +
+'  vec3 rgb = XYZ2RGB*acc, rw = XYZ2RGB*wht; return max(rgb/rw, 0.0); }\n' +
+'void main(){\n' +
+'  vec2 hp = fetch2(clamp(v_uv, 0.0, 1.0)); float mask = hp.g;\n' +
+'  if (mask < 0.5){ o = vec4(u_paper, 1.0); return; }\n' +
+'  vec3 n = normalize(u_rot * nObj(v_o.xy)); vec3 V = normalize(u_eye - v_p); vec3 L = normalize(u_keyDir);\n' +
+'  float ndl = max(dot(n,L), 0.0); float ndv = clamp(dot(n,V), 0.02, 1.0);\n' +
+'  float polMix = step(u_wipe, gl_FragCoord.x/u_res.x);\n' +
+'  vec3 col;\n' +
+'  if (u_mode == 1){ vec3 baked = texture(u_baked, v_uv).rgb; o = vec4(baked*(0.72 + 0.28*ndl), 1.0); return; }\n' +
+'  vec3 Hh = normalize(L+V); float ndh = max(dot(n,Hh),0.0);\n' +
+'  float a = 0.24*0.24, a2 = a*a; float D = a2/(3.14159*pow(ndh*ndh*(a2-1.0)+1.0, 2.0));\n' +
+'  vec3 Renv = stackColour(ndv, polMix);\n' +
+'  col = u_body*(0.06 + 0.30*ndl) + Renv*u_sky*(0.16 + 0.60*pow(max(n.z,0.0), 1.6)) + mix(Renv, vec3(1.0), 0.35)*u_key*D*ndl*0.30;\n' +
+'  col = mix(col, vec3(dot(col, vec3(0.30, 0.59, 0.11))), 0.14);\n' +
+'  col = 1.0 - exp(-col*1.25); col = pow(col, vec3(1.0/2.2)); o = vec4(col, 1.0); }';
+
+/* ── GL worlds ────────────────────────────────────────────────────────── */
+var irEl = $('ir-world');
+var COL = { paper: W.linRGB(irEl, '--ir-plate'), body: W.linRGB(irEl, '--ir-body') };
+var KEY_DIR = [0.35, 0.40, 0.85], KEY = [1.0, 0.97, 0.92], SKY = [0.92, 0.94, 1.0];
+var GRID_W = 14, GRID_H = 35, GX = 224, GY = 560, TRIS = GX * GY * 2;
+
+function makeWorld(canvas, rg) {
+  var gl = canvas.getContext('webgl2', { antialias: true, alpha: false, powerPreference: 'high-performance' });
+  if (!gl) return null;
+  var prog = W.compile(gl, VS, FS), U = {};
+  ['u_h', 'u_baked', 'u_field', 'u_vp', 'u_rot', 'u_axis', 'u_bake', 'u_eye', 'u_res', 'u_nl', 'u_nlam', 'u_tscale', 'u_wipe', 'u_mode', 'u_paper', 'u_body', 'u_keyDir', 'u_key', 'u_sky']
+    .forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
+  var tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16F, N, N, 0, gl.RG, gl.FLOAT, rg);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  var vx = new Float32Array((GX + 1) * (GY + 1) * 2), n = 0, i, j;
+  for (j = 0; j <= GY; j++) for (i = 0; i <= GX; i++) { vx[n++] = (i / GX - 0.5) * GRID_W + AXIS[0]; vx[n++] = (j / GY - 0.5) * GRID_H; }
+  var ix = new Uint32Array(GX * GY * 6); n = 0;
+  for (j = 0; j < GY; j++) for (i = 0; i < GX; i++) { var a = j * (GX + 1) + i, b = a + 1, c = a + GX + 1, d = c + 1; ix[n++] = a; ix[n++] = b; ix[n++] = c; ix[n++] = b; ix[n++] = d; ix[n++] = c; }
+  var vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+  var vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, vx, gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  var ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ix, gl.STATIC_DRAW);
+  gl.bindVertexArray(null);
+  gl.enable(gl.DEPTH_TEST);
+  var px = new Uint8Array(4), baked = null, bakeFb = null;
+
+  function rotY(tiltDeg) { var c = Math.cos(tiltDeg * DEG), s = Math.sin(tiltDeg * DEG); return new Float32Array([c, 0, -s, 0, 1, 0, s, 0, c]); }
+  function draw(view, x, y, w, h) {
+    gl.viewport(x, y, w, h); gl.scissor(x, y, w, h); gl.enable(gl.SCISSOR_TEST);
+    gl.clearColor(COL.paper[0], COL.paper[1], COL.paper[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.useProgram(prog); gl.bindVertexArray(vao);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex); gl.uniform1i(U.u_h, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, baked || tex); gl.uniform1i(U.u_baked, 1);
+    gl.uniform1f(U.u_field, FIELD); gl.uniformMatrix4fv(U.u_vp, false, view.vp); gl.uniformMatrix3fv(U.u_rot, false, rotY(view.tilt));
+    gl.uniform2f(U.u_axis, AXIS[0], AXIS[1]); gl.uniform1f(U.u_bake, view.bake ? 1 : 0); gl.uniform3fv(U.u_eye, view.eye);
+    gl.uniform2f(U.u_res, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.uniform1i(U.u_nl, view.layers); gl.uniform1i(U.u_nlam, NLAM); gl.uniform1f(U.u_tscale, view.tscale); gl.uniform1f(U.u_wipe, view.wipe); gl.uniform1i(U.u_mode, view.mode || 0);
+    gl.uniform3fv(U.u_paper, COL.paper); gl.uniform3fv(U.u_body, COL.body); gl.uniform3fv(U.u_keyDir, KEY_DIR); gl.uniform3fv(U.u_key, KEY); gl.uniform3fv(U.u_sky, SKY);
+    gl.drawElements(gl.TRIANGLES, ix.length, gl.UNSIGNED_INT, 0);
+    gl.bindVertexArray(null); gl.disable(gl.SCISSOR_TEST);
+  }
+  function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+  /* bake: the shading at tilt 0, written into uv space — what a texture
+     artist would ship, and the whole of what the right-hand pane knows */
+  function bake(view) {
+    if (!baked) {
+      baked = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, baked);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, N, N, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      bakeFb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, bakeFb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, baked, 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, bakeFb);
+    var saved = baked; baked = null;
+    draw(Object.assign({}, view, { bake: true, tilt: 0, mode: 0 }), 0, 0, N, N);
+    baked = saved;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  return { gl: gl, draw: draw, sync: sync, bake: bake };
+}
+
+/* ── state ────────────────────────────────────────────────────────────── */
+/* 13, 29, 7, 19 — no pair reduces to a ratio of small integers */
+var C_TILT = 13, C_THICK = 29, C_POL = 7, C_CALL = 19, C_LEAD = 1.8, DUR_S = C_TILT * C_THICK * C_POL * C_CALL;
+var CALLS = [
+  { anchor: [EL_X0 + 3.4, 3.5], label: '1' },
+  { anchor: [EL_X0 + 6.6, -6.0], label: '2' },
+  { anchor: [EL_X0 + 0.4, 0.0], label: '3' },
+  { anchor: [EL_X0 + 2.6, 14.6], label: '4' }
+];
+var pointer = null, step = 0, layerCount = 12;
+function viewState(t) {
+  var T = (((t % 1) + 1) % 1) * DUR_S, s = {};
+  s.tilt = 40 * Math.sin(TAU * T / C_TILT);
+  s.tscale = 1 + 0.10 * Math.sin(TAU * T / C_THICK);
+  s.wipe = 0.5 + 0.62 * Math.sin(TAU * T / C_POL);
+  s.call = Math.floor(T / C_CALL) % 4; s.lead = Math.min(1, (T % C_CALL) / C_LEAD);
+  if (reduced.matches) { s.tilt = 0; s.tscale = 1; s.wipe = 2; s.call = step; s.lead = 1; }
+  if (pointer) s.tilt = pointer.tilt;
+  s.layers = layerCount;
+  return s;
+}
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+var status = $('ir-status'), stage = $('ir-stage'), mainCanvas = $('ir-canvas'), cmpCanvas = $('ir-cmp-canvas');
+var overlay = $('ir-overlay');
+var main = null, cmp = null, demo = null, msSamples = [], frameN = 0, bakedFor = -1;
+function fail(msg) { status.hidden = false; status.textContent = msg; }
+function fit(canvas) {
+  var r = canvas.getBoundingClientRect(), w = Math.max(1, Math.round(r.width * DPR)), h = Math.max(1, Math.round(r.height * DPR));
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; return true; } return false;
+}
+function camera(aspect, fov) {
+  var eye = [AXIS[0], -18, 66];
+  return { eye: eye, vp: W.mul(W.perspective((fov || 29) * DEG, aspect, 10, 400), W.lookAt(eye, [AXIS[0], 0, 1.2], [0, 1, 0])) };
+}
+function renderMain(s, bracket) {
+  fit(mainCanvas);
+  var Wd = mainCanvas.width, Hd = mainCanvas.height, ms = -1, cam;
+  var t0 = bracket ? performance.now() : 0;
+  if (reduced.matches) {
+    /* composed, not subtracted: five positions across the plate, the
+       angle dependence laid out at once */
+    var cw = Math.floor(Wd / 5); cam = camera(cw / Hd, 31);
+    for (var k = 0; k < 5; k++) main.draw({ vp: cam.vp, eye: cam.eye, tilt: -40 + 20 * k, tscale: 1, wipe: 2, layers: s.layers }, k * cw, 0, cw, Hd);
+  } else {
+    cam = camera(Wd / Hd);
+    main.draw({ vp: cam.vp, eye: cam.eye, tilt: s.tilt, tscale: s.tscale, wipe: s.wipe, layers: s.layers }, 0, 0, Wd, Hd);
+  }
+  if (bracket) { main.sync(); ms = performance.now() - t0; }
+  return { cam: cam, ms: ms };
+}
+function renderCompare(s) {
+  fit(cmpCanvas);
+  var w = cmpCanvas.width >> 1, h = cmpCanvas.height, cam = camera(w / h, 34);
+  var base = { vp: cam.vp, eye: cam.eye, tilt: s.tilt, tscale: s.tscale, wipe: 2, layers: s.layers };
+  if (bakedFor !== s.layers) { cmp.bake(base); bakedFor = s.layers; }
+  cmp.draw(base, 0, 0, w, h);
+  cmp.draw(Object.assign({}, base, { mode: 1 }), w, 0, w, h);
+}
+var leadEl = $('ir-lead'), anchorEl = $('ir-anchor'), leadN = $('ir-lead-n'), polEl = $('ir-pol'), polN = $('ir-pol-n'), barEl = $('ir-bar'), barN = $('ir-bar-n');
+var lastCall = -1;
+function renderOverlay(s, cam) {
+  var r = stage.getBoundingClientRect(), Wc = r.width, Hc = r.height;
+  overlay.setAttribute('viewBox', '0 0 ' + Wc + ' ' + Hc);
+  var strip = reduced.matches, cw = strip ? Wc / 5 : Wc, ox = strip ? cw * 2 : 0;
+  function toScreen(p, tilt) {
+    var c = Math.cos(tilt * DEG), sn = Math.sin(tilt * DEG);
+    var wx = c * (p[0] - AXIS[0]) + sn * p[2] + AXIS[0], wz = -sn * (p[0] - AXIS[0]) + c * p[2];
+    var q = W.project(cam.vp, [wx, p[1], wz]);
+    return [ox + (q[0] * 0.5 + 0.5) * cw, (0.5 - q[1] * 0.5) * Hc];
+  }
+  var tilt = strip ? 0 : s.tilt, ca = CALLS[s.call], a = toScreen([ca.anchor[0], ca.anchor[1], 3.1], tilt);
+  var dir = ca.anchor[0] > AXIS[0] ? 1 : -1, lx = a[0] + dir * 64, ly = a[1] - 30, ex = lx + dir * 14, L = s.lead;
+  var p1 = [a[0] + (lx - a[0]) * Math.min(1, L * 1.6), a[1] + (ly - a[1]) * Math.min(1, L * 1.6)];
+  var pts = a[0] + ',' + a[1] + ' ' + p1[0] + ',' + p1[1];
+  if (L > 0.625) pts += ' ' + (lx + (ex - lx) * (L - 0.625) / 0.375) + ',' + ly;
+  leadEl.setAttribute('points', pts); anchorEl.setAttribute('cx', a[0]); anchorEl.setAttribute('cy', a[1]); anchorEl.setAttribute('r', 3 + 3 * Math.min(1, L * 3));
+  leadN.setAttribute('x', dir > 0 ? ex + 5 : ex - 5); leadN.setAttribute('y', ly + 3.5); leadN.setAttribute('text-anchor', dir > 0 ? 'start' : 'end');
+  leadN.textContent = L >= 1 ? ca.label : '';
+  /* the polariser's edge, flat, with its name */
+  var show = !strip && s.wipe > 0.02 && s.wipe < 0.98;
+  polEl.setAttribute('x1', s.wipe * Wc); polEl.setAttribute('x2', s.wipe * Wc); polEl.setAttribute('y1', 14); polEl.setAttribute('y2', Hc - 14);
+  polEl.style.display = show ? '' : 'none';
+  var polRight = s.wipe < 0.72;
+  polN.setAttribute('x', s.wipe * Wc + (polRight ? 6 : -6)); polN.setAttribute('y', 24); polN.setAttribute('text-anchor', polRight ? 'start' : 'end');
+  polN.textContent = show ? (polRight ? 'polariser →' : '← polariser') : '';
+  /* the scale bar: 5 mm on the paper plane, projected */
+  var b0 = toScreen([AXIS[0] - 6.4, -15.5, 0], 0), b1 = toScreen([AXIS[0] - 1.4, -15.5, 0], 0);
+  barEl.setAttribute('x1', b0[0]); barEl.setAttribute('y1', b0[1]); barEl.setAttribute('x2', b1[0]); barEl.setAttribute('y2', b1[1]);
+  barN.setAttribute('x', b0[0]); barN.setAttribute('y', b0[1] + 12);
+  if (s.call !== lastCall) { lastCall = s.call; document.querySelectorAll('.ir-k').forEach(function (b) { b.classList.toggle('ir-on', +b.dataset.k === s.call); }); }
+}
+var curveEl = $('ir-curve'), curvesG = $('ir-curves'), peakMark = $('ir-peak-mark'), peakDot = $('ir-peak-dot');
+var tiltEl = $('ir-tilt'), polkEl = $('ir-polk'), stackEl = $('ir-stack'), dEl = $('ir-d'), figN = $('ir-fig-n'), figL0 = $('ir-fig-l0'), figL1 = $('ir-fig-l1'), figTh = $('ir-fig-th');
+var figSvg = $('ir-fig-svg'), lastKey = '';
+function curvePath(cosi, layers, tscale) {
+  var sp = spectrum(cosi, layers, tscale, 46), d = '';
+  for (var k = 0; k < sp.length; k++) { var x = 24 + (sp[k][0] - 400) / 300 * 202, y = 78 - sp[k][1] * 72; d += (k ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1); }
+  return d;
+}
+function renderReadouts(s) {
+  /* the crown's normal faces the eye at tilt 0; the incidence there is the tilt itself */
+  var cosi = Math.cos(Math.min(89, Math.abs(s.tilt)) * DEG);
+  var key = [Math.round(s.tilt), s.tscale.toFixed(3), s.layers].join('|');
+  if (key !== lastKey) {
+    lastKey = key;
+    curveEl.setAttribute('d', curvePath(cosi, s.layers, s.tscale));
+    var pk = peak(cosi, s.layers, s.tscale);
+    peakMark.setAttribute('cx', 24 + (pk - 400) / 300 * 202); peakMark.setAttribute('cy', 78 - Runpol(pk, cosi, s.layers, s.tscale) * 72);
+    peakDot.textContent = pk + ' nm';
+    if (reduced.matches && !curvesG.childNodes.length) {
+      [-40, -20, 20, 40].forEach(function (tt) {
+        var p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('class', 'ir-curve ir-faint');
+        p.setAttribute('d', curvePath(Math.cos(tt * DEG), s.layers, s.tscale)); curvesG.appendChild(p);
+      });
+    }
+    var dhi = (L0 / (4 * N_HI)) * s.tscale, dlo = (L0 / (4 * N_LO)) * s.tscale;
+    dEl.textContent = dhi.toFixed(0) + ' / ' + dlo.toFixed(0) + ' nm';
+    stackEl.textContent = s.layers + (s.layers === 1 ? ' layer' : ' layers');
+    figN.textContent = s.layers;
+    figL0.textContent = peak(1, s.layers, s.tscale) + ' nm';
+    figTh.textContent = Math.abs(Math.round(s.tilt)) + '°';
+    figL1.textContent = pk + ' nm';
+    drawFig(s);
+  }
+  tiltEl.textContent = (s.tilt >= 0 ? '+' : '−') + Math.abs(s.tilt).toFixed(0) + '°';
+  polkEl.textContent = reduced.matches || s.wipe >= 0.98 ? 'off' : s.wipe <= 0.02 ? 's-pol, whole plate' : 'right of the line';
+}
+/* Fig. 2, drawn flat from the current parameters */
+function drawFig(s) {
+  var layers = s.layers, dhi = (L0 / (4 * N_HI)) * s.tscale, dlo = (L0 / (4 * N_LO)) * s.tscale;
+  var h = '', y = 22, scale = 0.105, x0 = 40, wdt = 170, i;
+  for (i = 0; i < layers; i++) {
+    var hi = i % 2 === 0, d = hi ? dhi : dlo, hh = d * scale;
+    h += '<rect class="' + (hi ? 'ir-lyr-hi' : 'ir-lyr-lo') + '" x="' + x0 + '" y="' + y.toFixed(1) + '" width="' + wdt + '" height="' + hh.toFixed(1) + '"></rect>';
+    if (i < 2) h += '<text class="ir-fig-d" x="' + (x0 + wdt + 6) + '" y="' + (y + hh / 2 + 2.5).toFixed(1) + '">n ' + (hi ? N_HI : N_LO) + ' · ' + d.toFixed(0) + ' nm</text>';
+    y += hh;
+  }
+  h += '<rect class="ir-lyr-sub" x="' + x0 + '" y="' + y.toFixed(1) + '" width="' + wdt + '" height="' + Math.max(8, 142 - y).toFixed(1) + '"></rect>';
+  h += '<text class="ir-fig-d" x="' + (x0 + wdt + 6) + '" y="' + (y + 10).toFixed(1) + '">chitin · n ' + N_SUB + '</text>';
+  /* two rays: incident, and the reflections from the first two interfaces */
+  var th = Math.abs(s.tilt) * DEG, dx = Math.sin(th) * 26, dy = Math.cos(th) * 26, ax = x0 + 70, ay = 22;
+  h += '<path class="ir-ray" d="M' + (ax - dx) + ',' + (ay - dy) + ' L' + ax + ',' + ay + '"></path>';
+  h += '<path class="ir-ray ir-ray-r" d="M' + ax + ',' + ay + ' L' + (ax + dx) + ',' + (ay - dy) + '"></path>';
+  var d2 = dhi * scale, cx = ax + Math.tan(Math.asin(Math.sin(th) / N_HI)) * d2;
+  h += '<path class="ir-ray ir-ray-r" d="M' + ax + ',' + ay + ' L' + cx.toFixed(1) + ',' + (ay + d2).toFixed(1) + ' L' + (2 * cx - ax).toFixed(1) + ',' + ay + ' L' + (2 * cx - ax + dx).toFixed(1) + ',' + (ay - dy).toFixed(1) + '"></path>';
+  h += '<text class="ir-fig-t" x="' + x0 + '" y="14">air · θ = ' + Math.abs(Math.round(s.tilt)) + '°</text>';
+  h += '<text class="ir-fig-t" x="' + (x0 + wdt + 6) + '" y="14">' + layers + ' plates</text>';
+  figSvg.innerHTML = h;
+}
+function render(t) {
+  var s = viewState(t); frameN++;
+  var bracket = (frameN % 12 === 0) || reduced.matches;
+  var out = renderMain(s, bracket);
+  if (out.ms >= 0) { msSamples.push(out.ms); if (msSamples.length > 8) msSamples.shift(); $('ir-ms').textContent = W.fmtMs(W.median(msSamples)) + (msSamples.length < 8 ? ' ·' : ''); }
+  renderCompare(s); renderOverlay(s, out.cam); renderReadouts(s);
+}
+
+/* ── the control ──────────────────────────────────────────────────────── */
+var guard = $('ir-guard'), runBtn = $('ir-run-control');
+function runControl() {
+  if (!main) return;
+  runBtn.disabled = true; guard.className = 'wg-guard wg-wait'; guard.textContent = 'running…';
+  var s0 = viewState(demo ? demo.t : 0), res = {};
+  [1, 4, 12].forEach(function (nl) {
+    var s = Object.assign({}, s0, { layers: nl });
+    for (var w = 0; w < 3; w++) { renderMain(s, false); main.sync(); }
+    var xs = []; for (var i = 0; i < 9; i++) xs.push(renderMain(s, true).ms);
+    res[nl] = W.median(xs);
+  });
+  renderMain(s0, false);
+  ['1', '4', '12'].forEach(function (n) { $('ir-t-' + n).textContent = W.fmtMs(res[n]); if (n !== '1') $('ir-r-' + n).textContent = (res[n] / Math.max(res[1], W.CLOCK_FLOOR)).toFixed(2) + '×'; });
+  var moved = res[12] - res[1];
+  if (res[1] < W.CLOCK_FLOOR * 2 && res[12] < W.CLOCK_FLOOR * 2) { guard.className = 'wg-guard wg-bad'; guard.textContent = 'every row is under the floor — this clock cannot see this work; the readings are bounds'; }
+  else if (moved > W.CLOCK_FLOOR * 2 && res[12] > res[1] * 1.5) { guard.className = 'wg-guard wg-ok'; guard.textContent = 'reading follows the stack: +' + moved.toFixed(2) + ' ms at 12 layers — the bracket is closing on the interference'; }
+  else { guard.className = 'wg-guard wg-bad'; guard.textContent = 'reading did not follow the stack (+' + moved.toFixed(2) + ' ms) — the bracket is closing on submission, not work'; }
+  runBtn.disabled = false;
+}
+function shiftFigures() {
+  var l0 = peak(1, 12, 1), l10 = peak(Math.cos(10 * DEG), 12, 1), l30 = peak(Math.cos(30 * DEG), 12, 1), l40 = peak(Math.cos(40 * DEG), 12, 1);
+  var s0 = l10 - l0, s30 = l40 - l30;
+  $('ir-shift0').textContent = (s0 > 0 ? '+' : '') + s0 + ' nm' + (s0 < 0 ? ' · shorter ✓' : ' · not shorter ✗');
+  $('ir-shift30').textContent = (s30 > 0 ? '+' : '') + s30 + ' nm' + (s30 < 0 ? ' · shorter ✓' : ' · not shorter ✗');
+  $('ir-nlam').textContent = NLAM + ' × 2 polarisations';
+  var fl = W.CLOCK_FLOOR < 1 ? (W.CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : W.CLOCK_FLOOR.toFixed(2) + ' ms';
+  $('ir-floor').textContent = fl;
+}
+
+/* ── the viewer's hand on the tilt ────────────────────────────────────── */
+function pointerTilt(e) {
+  var r = stage.getBoundingClientRect(); var x = (e.clientX - r.left) / r.width - 0.5;
+  pointer = { tilt: Math.max(-40, Math.min(40, x * 100)) };
+  if (demo && !demo.playing) demo.render(demo.t);
+}
+stage.addEventListener('pointermove', pointerTilt); stage.addEventListener('pointerdown', pointerTilt);
+stage.addEventListener('pointerleave', function () { pointer = null; if (demo && !demo.playing) demo.render(demo.t); });
+document.querySelectorAll('.ir-k').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var k = +b.dataset.k;
+    if (reduced.matches) { step = k; if (demo) demo.render(demo.t); return; }
+    if (!demo) return;
+    var T = demo.t * DUR_S, cyc = Math.floor(T / (C_CALL * 4)) * C_CALL * 4, target = cyc + k * C_CALL;
+    if (target <= T) target += C_CALL * 4;
+    demo.seek((target % DUR_S) / DUR_S); demo.play();
+  });
+});
+runBtn.addEventListener('click', runControl);
+reduced.addEventListener('change', function () { if (demo) demo.render(demo.t); });
+
+function boot() {
+  var obj = author();
+  try { main = makeWorld(mainCanvas, obj.rg); cmp = makeWorld(cmpCanvas, obj.rg); }
+  catch (e) { fail('shader failed: ' + e.message); return; }
+  if (!main || !cmp) { fail('WebGL2 context refused'); return; }
+  status.hidden = true;
+  $('ir-attrib').textContent = 'shape authored for this plate in ' + Math.round(obj.ms) + ' ms — the photograph brought the colour, and the colour was a lie; we kept the shape';
+  mainCanvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); fail('WebGL context lost'); });
+  shiftFigures();
+  new ResizeObserver(function () { if (demo && !demo.playing) demo.render(demo.t); }).observe(stage);
+  demo = WAM.clock('ir-stage', { render: render, el: irEl, dur: DUR_S * 1000, poster: 3 / DUR_S });
+  if (reduced.matches) { msSamples.length = 0; demo.render(demo.t); }
+}
+W.fontReady.then(boot, boot);
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   §3 · SEASON — the generative identity system
+
+   One fragment program, four viewports, four formats. The motif is a
+   domain-warped noise field posterised into a triad; the title is a
+   texture sampled at coordinates the field computes — the dependent read.
+   The mark is particles integrated on the CPU and uploaded every frame,
+   because WebGL has nowhere else to integrate them, and the cost of that
+   upload is the figure slide 14 is waiting for.
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
+var W = window.WG, $ = W.$, TAU = W.TAU, DEG = W.DEG, DPR = W.DPR, reduced = W.reduced;
+
+var EVENTS = [
+  { title: 'Night\nMusic', date: 'Sat 17 Oct 2026 · 20:00', venue: 'Main Hall' },
+  { title: 'The Glass\nOrchestra', date: 'Fri 6 Nov 2026 · 19:30', venue: 'Main Hall' },
+  { title: 'Winter\nLantern Walk', date: 'Sat 12 Dec 2026 · from 16:00', venue: 'Grounds & Foyer' },
+  { title: 'Open\nRehearsal', date: 'Sun 24 Jan 2027 · 11:00', venue: 'Studio 2' }
+];
+var WINDOWS = [[0, 35], [115, 125], [165, 175], [285, 300], [340, 360]];
+var NP = 24000;
+/* 19, 37, 6, 11 — no pair reduces to a ratio of small integers */
+var C_FIELD = 19, C_SEED = 37, C_TYPE = 6, C_LOOP = 11, DUR_S = C_FIELD * C_SEED * C_TYPE * C_LOOP;
+
+/* ── shaders ──────────────────────────────────────────────────────────── */
+var QUAD_VS = '#version 300 es\nout vec2 v; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); v = p; gl_Position = vec4(p*2.0-1.0, 0.0, 1.0); }';
+var SEASON_FS = '#version 300 es\nprecision highp float;\nin vec2 v; out vec4 o;\n' +
+'uniform float u_aspect, u_seed, u_scale, u_gain; uniform vec2 u_flow; uniform sampler2D u_type; uniform float u_typeOn;\n' +
+'uniform vec3 u_stock, u_c1, u_c2, u_c3, u_mark;\n' +
+'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }\n' +
+'float vn(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f); return mix(mix(hash(i),hash(i+vec2(1,0)),f.x), mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x), f.y); }\n' +
+'float fbm(vec2 p){ float a = 0.5, s = 0.0; mat2 R = mat2(0.8, 0.6, -0.6, 0.8); for (int i = 0; i < 5; i++){ s += a*vn(p); p = R*p*2.02 + 3.1; a *= 0.5; } return s; }\n' +
+'float aa(float th, float f){ float w = fwidth(f)*0.9; return smoothstep(th - w, th + w, f); }\n' +
+'void main(){ vec2 p = vec2(v.x*u_aspect, v.y)*u_scale + u_seed*7.31;\n' +
+/* domain warp: q, then r, then the field. r is also the displacement */
+'  vec2 q = vec2(fbm(p + u_flow), fbm(p + vec2(5.2,1.3) - u_flow));\n' +
+'  vec2 r = vec2(fbm(p + 4.0*q + vec2(1.7,9.2)), fbm(p + 4.0*q + vec2(8.3,2.8)));\n' +
+'  float f = fbm(p + 3.0*r);\n' +
+'  vec3 col = u_stock;\n' +
+'  col = mix(col, u_c1, aa(0.47, f)); col = mix(col, u_c3, aa(0.575, f)); col = mix(col, u_c1, aa(0.60, f)); col = mix(col, u_c2, aa(0.655, f)); col = mix(col, u_stock, aa(0.685, f));\n' +
+/* fine contour lines, in the stock, so the field is legible as a field */
+'  float lv = f*14.0; float ln = abs(fract(lv) - 0.5); float lw = fwidth(lv); col = mix(col, u_stock, 0.22*(1.0 - smoothstep(0.0, lw*1.2, ln)));\n' +
+/* the dependent read: the title, sampled where the field says */
+'  vec2 disp = (r - 0.5)*u_gain*vec2(1.0/u_aspect, 1.0);\n' +
+'  float a = texture(u_type, vec2(v.x, 1.0 - v.y) + disp).a * u_typeOn;\n' +
+'  col = mix(col, u_mark, a);\n' +
+'  o = vec4(pow(col, vec3(1.0/2.2)), 1.0); }';
+var PT_VS = '#version 300 es\nin vec2 a_p; uniform float u_size; void main(){ gl_Position = vec4(a_p*2.0-1.0, 0.0, 1.0); gl_PointSize = u_size; }';
+var PT_FS = '#version 300 es\nprecision mediump float; out vec4 o; uniform vec3 u_col; uniform float u_alpha; void main(){ vec2 d = gl_PointCoord - 0.5; if (dot(d,d) > 0.25) discard; o = vec4(u_col, u_alpha); }';
+
+/* ── colour per seed ──────────────────────────────────────────────────── */
+function triad(seed) {
+  var pick = [], used = {};
+  for (var i = 0; i < 3; i++) {
+    var k, tries = 0; do { k = Math.floor(W.hash2(seed * 3 + i + tries * 17, 91 + i) * 5); tries++; } while (used[k]);
+    used[k] = 1; var win = WINDOWS[k];
+    pick.push(Math.round(win[0] + (win[1] - win[0]) * W.hash2(seed * 7 + i, 17)));
+  }
+  return [
+    'oklch(0.640 0.165 ' + pick[0] + ')',
+    'oklch(0.800 0.120 ' + pick[1] + ')',
+    'oklch(0.560 0.150 ' + pick[2] + ')',
+    pick
+  ];
+}
+
+/* ── boot ─────────────────────────────────────────────────────────────── */
+var seEl = $('se-world'), status = $('se-status'), canvas = $('se-canvas'), proof = $('se-proof');
+var gl = null, season = null, pts = null, SU = {}, PU = {}, emptyVao = null, ptVao = null, ptBuf = null;
+var typeTex = [], tiles = [], eventIx = 0, seedBase = 412, demo = null, frameN = 0, msSamples = [];
+var COL = {};
+var particles = new Float32Array(NP * 2), targets = new Float32Array(NP * 2), lastPhase = -1, simSeed = -1;
+var syncName = '—';
+
+function fail(m) { status.hidden = false; status.textContent = m; }
+function fit() {
+  var r = canvas.getBoundingClientRect(), w = Math.max(1, Math.round(r.width * DPR)), h = Math.max(1, Math.round(r.height * DPR));
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; return true; } return false;
+}
+/* the proof grid: A2 and 6-sheet at full height, the screen over the social
+   cut on the right — all in units of the canvas height */
+function layout() {
+  var H = canvas.height, g = Math.round(0.012 * H), tag = Math.round(0.055 * H), full = H - g - tag;
+  var a2 = Math.round(full * 0.7071), six = Math.round(full * 0.6667), wr = Math.round((full - tag) / 1.5625);
+  var dh = Math.round(wr * 9 / 16), sh = full - tag - dh;
+  tiles = [
+    { key: 'a2', x: g, y: g, w: a2, h: full, fmt: 'poster' },
+    { key: 'six', x: 2 * g + a2, y: g, w: six, h: full, fmt: 'poster' },
+    { key: 'dooh', x: 3 * g + a2 + six, y: g + sh + tag, w: wr, h: dh, fmt: 'screen' },
+    { key: 'social', x: 3 * g + a2 + six, y: g, w: wr, h: sh, fmt: 'social' }
+  ];
+  /* the tags sit above each tile, in CSS pixels */
+  var r = proof.getBoundingClientRect(), sx = r.width / canvas.width, sy = r.height / canvas.height;
+  tiles.forEach(function (t) { var el = $('se-tag-' + t.key); el.style.left = (t.x * sx) + 'px'; el.style.top = ((canvas.height - t.y - t.h) * sy) + 'px'; });
+}
+/* the title, set once per tile as a texture — the DOM holds the same
+   strings in the rack, so nothing exists only in pixels */
+function rasterType(t, ev) {
+  var c = document.createElement('canvas'); c.width = t.w; c.height = t.h; var x = c.getContext('2d');
+  x.clearRect(0, 0, t.w, t.h); x.fillStyle = '#fff'; x.textBaseline = 'alphabetic';
+  var lines = ev.title.split('\n'), m = Math.round(t.h * 0.05);
+  if (t.fmt === 'poster') {
+    var fs = Math.round(t.w * 0.19); x.font = '800 ' + fs + 'px Inter, system-ui, sans-serif'; x.textAlign = 'left';
+    lines.forEach(function (l, i) { x.fillText(l, m, m + fs * 0.92 + i * fs * 1.0); });
+    x.font = '500 ' + Math.round(t.w * 0.045) + 'px "JetBrains Mono", monospace'; x.fillText(ev.date, m, t.h - m - Math.round(t.w * 0.06)); x.fillText('LANTERN HALL · ' + ev.venue.toUpperCase(), m, t.h - m);
+  } else if (t.fmt === 'screen') {
+    var fs2 = Math.round(t.h * 0.19); x.font = '800 ' + fs2 + 'px Inter, system-ui, sans-serif'; x.textAlign = 'left';
+    lines.forEach(function (l, i) { x.fillText(l, m, t.h * 0.42 + i * fs2 * 1.0); });
+    x.font = '500 ' + Math.round(t.h * 0.05) + 'px "JetBrains Mono", monospace'; x.fillText(ev.date, m, t.h - m);
+  } else {
+    var fs3 = Math.round(t.w * 0.14); x.font = '800 ' + fs3 + 'px Inter, system-ui, sans-serif'; x.textAlign = 'center';
+    lines.forEach(function (l, i) { x.fillText(l, t.w / 2, t.h * 0.44 + i * fs3 * 1.0); });
+    x.font = '500 ' + Math.round(t.w * 0.045) + 'px "JetBrains Mono", monospace'; x.fillText(ev.date, t.w / 2, t.h - m * 1.6);
+  }
+  return c;
+}
+function uploadType(i, c) {
+  if (!typeTex[i]) { typeTex[i] = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, typeTex[i]); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); }
+  gl.bindTexture(gl.TEXTURE_2D, typeTex[i]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+}
+function rebuildType() { var ev = EVENTS[eventIx]; tiles.forEach(function (t, i) { uploadType(i, rasterType(t, ev)); }); }
+
+/* the mark: an L, sampled into targets in the screen tile's own uv */
+function buildTargets() {
+  var c = document.createElement('canvas'); c.width = c.height = 256; var x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.font = '900 230px Inter, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('L', 128, 140);
+  var d = x.getImageData(0, 0, 256, 256).data, list = [];
+  for (var j = 0; j < 256; j += 1) for (var i = 0; i < 256; i += 1) if (d[(j * 256 + i) * 4 + 3] > 128) list.push([i / 256, 1 - j / 256]);
+  for (var k = 0; k < NP; k++) { var p = list[Math.floor(W.hash2(k, 5) * list.length)]; targets[k * 2] = 0.66 + p[0] * 0.30; targets[k * 2 + 1] = 0.16 + p[1] * 0.70; }
+}
+/* CPU integration. Path-dependent by construction — like §1 of the canvas
+   sheet — so a jump rebuilds from a seeded state with a fixed run. */
+function resetParticles(seed) {
+  for (var k = 0; k < NP; k++) { particles[k * 2] = W.hash2(k, seed); particles[k * 2 + 1] = W.hash2(k + 7, seed); }
+  simSeed = seed;
+}
+function stepParticles(phase, seed) {
+  var gather = Math.min(1, Math.max(0, (phase - 0.12) / 0.26)) * (1 - Math.min(1, Math.max(0, (phase - 0.66) / 0.26)));
+  gather = gather * gather * (3 - 2 * gather);
+  var kA = 0.006 + 0.09 * gather, wander = 0.0022 * (1 - gather) + 0.0002, ph = phase * TAU + seed;
+  for (var k = 0; k < NP; k++) {
+    var i = k * 2, x = particles[i], y = particles[i + 1];
+    var vx = Math.sin(y * 11 + ph) * wander + Math.cos(x * 7 - ph * 1.3) * wander * 0.6, vy = Math.cos(x * 9 - ph) * wander - Math.sin(y * 6 + ph * 0.7) * wander * 0.6;
+    x += (targets[i] - x) * kA + vx; y += (targets[i + 1] - y) * kA + vy;
+    if (x < 0) x += 1; if (x > 1) x -= 1; if (y < 0) y += 1; if (y > 1) y -= 1;
+    particles[i] = x; particles[i + 1] = y;
+  }
+}
+function simTo(phase, seed) {
+  var jump = simSeed !== seed || lastPhase < 0 || Math.abs(phase - lastPhase) > 0.05 && Math.abs(phase - lastPhase) < 0.95;
+  if (jump) { resetParticles(seed); var p0 = ((phase - 0.4) % 1 + 1) % 1; for (var s = 0; s < 48; s++) stepParticles(((p0 + (phase - p0 + 1) % 1 * s / 48) % 1), seed); }
+  else stepParticles(phase, seed);
+  lastPhase = phase;
+}
+
+function drawTile(t, u, lamp) {
+  gl.viewport(t.x, t.y, t.w, t.h); gl.scissor(t.x, t.y, t.w, t.h); gl.enable(gl.SCISSOR_TEST);
+  gl.useProgram(season); gl.bindVertexArray(emptyVao);
+  gl.uniform1f(SU.u_aspect, t.w / t.h); gl.uniform1f(SU.u_seed, u.seed); gl.uniform1f(SU.u_scale, u.scale); gl.uniform1f(SU.u_gain, u.gain);
+  gl.uniform2f(SU.u_flow, u.flow[0], u.flow[1]); gl.uniform1f(SU.u_typeOn, 1);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, typeTex[u.typeIx]); gl.uniform1i(SU.u_type, 0);
+  gl.uniform3fv(SU.u_stock, COL.stock); gl.uniform3fv(SU.u_c1, COL.c1); gl.uniform3fv(SU.u_c2, COL.c2); gl.uniform3fv(SU.u_c3, COL.c3); gl.uniform3fv(SU.u_mark, COL.mark);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.disable(gl.SCISSOR_TEST);
+}
+function drawPoints(t, arr, stride) {
+  gl.viewport(t.x, t.y, t.w, t.h); gl.scissor(t.x, t.y, t.w, t.h); gl.enable(gl.SCISSOR_TEST);
+  gl.useProgram(pts); gl.bindVertexArray(ptVao); gl.bindBuffer(gl.ARRAY_BUFFER, ptBuf);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, arr);                    /* ← the upload */
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, stride, 0);
+  gl.uniform1f(PU.u_size, 1.25 * DPR); gl.uniform3fv(PU.u_col, COL.mark); gl.uniform1f(PU.u_alpha, 0.55);
+  gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.drawArrays(gl.POINTS, 0, NP); gl.disable(gl.BLEND);
+  gl.bindVertexArray(null); gl.disable(gl.SCISSOR_TEST);
+}
+var px = new Uint8Array(4);
+function sync() { gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+/* the named sync point for the transfer: a fence, polled inside the task.
+   If the browser only updates fence status between tasks, this never
+   signals, and the bracket closes at readPixels instead — and prints so. */
+var fenceWorks = null;
+function fenceSync() {
+  if (fenceWorks === false) { sync(); return 'readPixels (fence does not signal in-task here)'; }
+  var f = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0); gl.flush();
+  var t0 = performance.now(), st, limit = fenceWorks === null ? 12 : 60;
+  do { st = gl.clientWaitSync(f, 0, 0); } while (st === gl.TIMEOUT_EXPIRED && performance.now() - t0 < limit);
+  gl.deleteSync(f);
+  if (st === gl.TIMEOUT_EXPIRED) { fenceWorks = false; sync(); return 'readPixels (fence does not signal in-task here)'; }
+  fenceWorks = true; return 'fenceSync + clientWaitSync';
+}
+
+function applySeed(seed) {
+  var tr = triad(seed);
+  seEl.style.setProperty('--se-p1', tr[0]); seEl.style.setProperty('--se-p2', tr[1]); seEl.style.setProperty('--se-p3', tr[2]);
+  COL.c1 = W.linRGB(seEl, '--se-p1'); COL.c2 = W.linRGB(seEl, '--se-p2'); COL.c3 = W.linRGB(seEl, '--se-p3');
+  $('se-p-hues').textContent = tr[3].join(' · ') + '°';
+  $('se-p-seed').textContent = seed; $('se-seed').textContent = seed; $('se-seed-dot').textContent = seed;
+}
+var lastSeed = -1;
+function viewState(t) {
+  var T = (((t % 1) + 1) % 1) * DUR_S, s = {};
+  s.seed = (seedBase + Math.floor(T / C_SEED)) % 1000;
+  s.phase = (T % C_LOOP) / C_LOOP;
+  var fa = TAU * T / C_FIELD; s.flow = [0.35 * Math.cos(fa), 0.35 * Math.sin(fa)];
+  var ty = 0.5 - 0.5 * Math.cos(TAU * T / C_TYPE); s.gain = 0.075 * ty * ty;
+  if (reduced.matches) { s.phase = 0; s.flow = [0.35, 0]; s.gain = 0.012; s.seed = seedBase; }
+  return s;
+}
+function render(t) {
+  var s = viewState(t); frameN++;
+  if (fit()) { layout(); rebuildType(); }
+  if (s.seed !== lastSeed) { applySeed(s.seed); lastSeed = s.seed; }
+  gl.clearColor(COL.stock[0], COL.stock[1], COL.stock[2], 1); gl.clear(gl.COLOR_BUFFER_BIT);
+  var scale = 2.2, still = { seed: s.seed, scale: scale, gain: 0.012, flow: [0.35, 0] };
+  var bracket = (frameN % 12 === 0) || reduced.matches, t0 = bracket ? performance.now() : 0;
+  if (reduced.matches) {
+    /* four proofs at four seeds; the screen shows its first and its middle frame */
+    drawTile(tiles[0], Object.assign({}, still, { typeIx: 0 }));
+    drawTile(tiles[1], Object.assign({}, still, { seed: (s.seed + 1) % 1000, typeIx: 1 }));
+    drawTile(tiles[3], Object.assign({}, still, { seed: (s.seed + 3) % 1000, typeIx: 3 }));
+    var d = tiles[2], half = { x: d.x, y: d.y, w: d.w >> 1, h: d.h }, half2 = { x: d.x + (d.w >> 1) + 2, y: d.y, w: (d.w >> 1) - 2, h: d.h };
+    drawTile(half, Object.assign({}, still, { seed: (s.seed + 2) % 1000, typeIx: 2, gain: 0.0 }));
+    drawTile(half2, Object.assign({}, still, { seed: (s.seed + 2) % 1000, typeIx: 2, gain: 0.06, flow: [-0.35, 0] }));
+    resetParticles(s.seed + 2); for (var k = 0; k < 60; k++) stepParticles(0.5, s.seed + 2);
+    drawPoints(half2, particles, 8);
+  } else {
+    drawTile(tiles[0], Object.assign({}, still, { typeIx: 0 }));
+    drawTile(tiles[1], Object.assign({}, still, { typeIx: 1 }));
+    drawTile(tiles[3], Object.assign({}, still, { typeIx: 3 }));
+    /* only the screen moves: same program, the loop's coordinates */
+    drawTile(tiles[2], { seed: s.seed, scale: scale, gain: s.gain, flow: s.flow, typeIx: 2 });
+    simTo(s.phase, s.seed);
+    drawPoints(tiles[2], particles, 8);
+  }
+  if (bracket) { sync(); var ms = performance.now() - t0; msSamples.push(ms); if (msSamples.length > 8) msSamples.shift(); $('se-ms').textContent = W.fmtMs(W.median(msSamples)) + (msSamples.length < 8 ? ' ·' : ''); }
+  $('se-p-gain').textContent = '0.012'; $('se-p-gain2').textContent = '0.075';
+}
+
+/* ── the two benches ──────────────────────────────────────────────────── */
+var guard = $('se-guard');
+function fmtPx(n) { return n >= 1e6 ? (n / 1e6).toFixed(2) + ' Mpx' : Math.round(n / 1e3) + ' kpx'; }
+function runArea() {
+  $('se-run-area').disabled = true; guard.className = 'wg-guard wg-wait'; guard.textContent = 'running the area sweep…';
+  var t = tiles[0], base = { seed: lastSeed, scale: 2.2, gain: 0.012, flow: [0.35, 0], typeIx: 0 }, res = {};
+  [1, 2, 4].forEach(function (m) {
+    var w = t.w * m, h = t.h * m;
+    var tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    var fb = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    var tile = { x: 0, y: 0, w: w, h: h };
+    for (var k = 0; k < 3; k++) { drawTile(tile, base); sync(); }
+    var xs = [];
+    for (var i = 0; i < 7; i++) { var t0 = performance.now(); drawTile(tile, base); sync(); xs.push(performance.now() - t0); }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.deleteFramebuffer(fb); gl.deleteTexture(tex);
+    res[m * m] = { ms: W.median(xs), px: w * h };
+  });
+  [1, 4, 16].forEach(function (a) { $('se-a-px-' + a).textContent = fmtPx(res[a].px); $('se-a-' + a).textContent = W.fmtMs(res[a].ms); $('se-a-r-' + a).textContent = (res[a].ms / (res[a].px / 1e6)).toFixed(2); });
+  var moved = res[16].ms - res[1].ms;
+  guard.className = moved > W.CLOCK_FLOOR * 2 && res[16].ms > res[1].ms * 2 ? 'wg-guard wg-ok' : 'wg-guard wg-bad';
+  guard.textContent = moved > W.CLOCK_FLOOR * 2 ? 'area: reading follows the pixels, +' + moved.toFixed(2) + ' ms at 16× — the bracket is closing on raster' : 'area: reading did not follow the pixels — the bracket is closing on submission';
+  $('se-run-area').disabled = false;
+}
+function runTransfer() {
+  $('se-run-xfer').disabled = true; guard.className = 'wg-guard wg-wait'; guard.textContent = 'running the transfer sweep…';
+  var d = tiles[2], res = {}, lastSync = '';
+  [8, 32, 128, 248].forEach(function (pad) {
+    var floats = pad / 4, arr = new Float32Array(NP * floats);
+    for (var k = 0; k < NP; k++) { arr[k * floats] = particles[k * 2]; arr[k * floats + 1] = particles[k * 2 + 1]; }
+    for (var w = 0; w < 3; w++) { drawPoints(d, arr, pad); fenceSync(); }
+    var xs = [];
+    for (var i = 0; i < 9; i++) { var t0 = performance.now(); drawPoints(d, arr, pad); lastSync = fenceSync(); xs.push(performance.now() - t0); }
+    res[pad] = W.median(xs);
+    $('se-x-b-' + pad).textContent = (NP * pad / 1024).toFixed(0) + ' KB';
+  });
+  syncName = lastSync; $('se-sync').textContent = syncName;
+  [8, 32, 128, 248].forEach(function (pad) { $('se-x-' + pad).textContent = W.fmtMs(res[pad]); if (pad !== 8) $('se-x-r-' + pad).textContent = (res[pad] / Math.max(res[8], W.CLOCK_FLOOR)).toFixed(2) + '×'; });
+  var moved = res[248] - res[8];
+  guard.className = moved > W.CLOCK_FLOOR * 2 ? 'wg-guard wg-ok' : 'wg-guard wg-bad';
+  guard.textContent = moved > W.CLOCK_FLOOR * 2 ? 'transfer: reading follows the bytes, +' + moved.toFixed(2) + ' ms at 248 B — the bracket is closing on the upload; the real frame\'s upload is the 8 B row' : 'transfer: reading did not follow the bytes (+' + moved.toFixed(2) + ' ms at 31× the bytes) — under the floor, or the bracket is closing on recording';
+  $('se-run-xfer').disabled = false;
+}
+
+/* ── the rack ─────────────────────────────────────────────────────────── */
+$('se-event').addEventListener('change', function (e) { eventIx = +e.target.value; $('se-venue').textContent = EVENTS[eventIx].venue; rebuildType(); if (demo && !demo.playing) demo.render(demo.t); });
+function setSeed(v) { seedBase = ((v % 1000) + 1000) % 1000; lastSeed = -1; if (demo) demo.render(demo.t); }
+$('se-seed-down').addEventListener('click', function () { setSeed(seedBase - 1); });
+$('se-seed-up').addEventListener('click', function () { setSeed(seedBase + 1); });
+$('se-regen').addEventListener('click', function () { setSeed(Math.floor(Math.random() * 1000)); });
+$('se-run-area').addEventListener('click', runArea);
+$('se-run-xfer').addEventListener('click', runTransfer);
+reduced.addEventListener('change', function () { if (demo) demo.render(demo.t); });
+
+function boot() {
+  gl = canvas.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
+  if (!gl) { fail('WebGL2 is not available here'); return; }
+  try { season = W.compile(gl, QUAD_VS, SEASON_FS); pts = W.compile(gl, PT_VS, PT_FS); }
+  catch (e) { fail('shader failed: ' + e.message); return; }
+  ['u_aspect', 'u_seed', 'u_scale', 'u_gain', 'u_flow', 'u_type', 'u_typeOn', 'u_stock', 'u_c1', 'u_c2', 'u_c3', 'u_mark'].forEach(function (n) { SU[n] = gl.getUniformLocation(season, n); });
+  ['u_size', 'u_col', 'u_alpha'].forEach(function (n) { PU[n] = gl.getUniformLocation(pts, n); });
+  emptyVao = gl.createVertexArray();
+  ptVao = gl.createVertexArray(); gl.bindVertexArray(ptVao); ptBuf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, ptBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, NP * 248, gl.STREAM_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0); gl.bindVertexArray(null);
+  COL.stock = W.linRGB(seEl, '--se-stock'); COL.mark = W.linRGB(seEl, '--se-mark');
+  buildTargets(); resetParticles(seedBase);
+  fit(); layout(); rebuildType();
+  status.hidden = true;
+  $('se-n').textContent = NP.toLocaleString(); $('se-xfer-n').textContent = NP.toLocaleString(); $('se-p-mark').textContent = NP.toLocaleString();
+  $('se-bytes').textContent = (NP * 8 / 1024).toFixed(0) + ' KB · 2 × float32';
+  $('se-p-scale').textContent = '2.2';
+  var fl = W.CLOCK_FLOOR < 1 ? (W.CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : W.CLOCK_FLOOR.toFixed(2) + ' ms';
+  $('se-floor').textContent = fl;
+  canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); fail('WebGL context lost'); });
+  new ResizeObserver(function () { if (demo && !demo.playing) demo.render(demo.t); }).observe(proof);
+  demo = WAM.clock('se-proof', { render: render, el: seEl, dur: DUR_S * 1000, poster: 2.4 / DUR_S });
+  if (reduced.matches) { msSamples.length = 0; demo.render(demo.t); }
+}
+W.fontReady.then(boot, boot);
+})();
 </script>
 
 </body>
