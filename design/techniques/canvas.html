@@ -120,7 +120,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
   --ac-sg-4: oklch(0.850 0.130  92);
   --ac-sg-5: oklch(0.970 0.018  95);
 
-  --ac-pad: 34px;
+  --ac-pad: 34px;      /* the rack ears — no content ever inside them */
+  --ac-gutter: 20px;   /* and breathing room between the ear and the content */
 }
 
 /* chassis ─────────────────────────────────────────────────────────────── */
@@ -179,7 +180,11 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .ac-ear.ac-l { left: 0; }
 .ac-ear.ac-r { right: 0; transform: scaleX(-1); }
 
-.ac-body { position: relative; z-index: 2; padding: 0 var(--ac-pad); }
+/* The ears are 34px wide and the body used to be padded by exactly that, so
+   every control and every line of type started at the millimetre the ear
+   ended and the banner's last words were clipped by the right ear. Content
+   needs a gutter INSIDE the chassis, not just clearance from it. */
+.ac-body { position: relative; z-index: 2; padding: 0 calc(var(--ac-pad) + var(--ac-gutter)); }
 
 /* banner — identical on all five screens (Requirement 4) ─────────────── */
 .ac-banner {
@@ -192,7 +197,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
   color: var(--ac-ink); text-transform: uppercase;
 }
 .ac-build { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-mute); }
-.ac-prog { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-dim); margin-left: auto; }
+.ac-prog { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-dim); margin-left: auto; min-width: 0; }
 .ac-prog b { color: var(--ac-src); font-weight: 400; }
 
 /* section rail — five lamps, the current one lit ─────────────────────── */
@@ -287,7 +292,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .ac-edl-row.ac-on { background: color-mix(in oklch, var(--ac-evt) 24%, transparent); color: var(--ac-ink); }
 .ac-edl-head { color: var(--ac-mute); letter-spacing: 0.14em; text-transform: uppercase; font-size: 8px; padding: 0 3px 4px; }
 
-@media (max-width: 560px) { .ac { --ac-pad: 20px; } .ac-tc { font-size: 20px; line-height: 24px; } }
+@media (max-width: 560px) { .ac { --ac-pad: 20px; --ac-gutter: 12px; } .ac-tc { font-size: 20px; line-height: 24px; } }
 
 /* ─────────────────────────────────────────────────────────────────────────
    §5 · TRANSPORT — two classic players
@@ -410,6 +415,52 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
    A visualizer has exactly one: the frame it is on. */
 .v1-kv b.v1-dot { font-size: 30px; line-height: 34px; color: var(--v1-a2); letter-spacing: 0.04em; }
 @media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 24px; line-height: 28px; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §2 · SCREEN — a prepress screening console, at 20×
+
+   A light world on paper, which is the inverse of every other world on this
+   sheet. Nothing here is a gradient: continuous tone is reproduced the way
+   a press reproduces it, by putting down dots of four inks at four angles
+   and letting the eye do the mixing. That is a clustered-dot ordered dither
+   with a stated ruling, and it is the sharpest form of this sheet's medium
+   argument — CSS renders a smooth gradient effortlessly and cannot render a
+   screened one at all.
+
+   Process cyan at hue 225 is a STATED EXCEPTION: it sits 10° from
+   --tint-css 235, and you cannot rotate process cyan and have it still be
+   cyan. CMYK is what makes this world legible without a legend, which is
+   the same reason the precipitation ramp on the SVG sheet breaks its own
+   chroma ceiling. Declared, not overlooked.
+   ───────────────────────────────────────────────────────────────────────── */
+.h2 {
+  --h2-stock:  oklch(0.885 0.022  88);   /* newsprint                        */
+  --h2-ink-k:  oklch(0.215 0.008 250);   /* process black, faintly cool      */
+  --h2-ink-c:  oklch(0.660 0.130 225);   /* process cyan — stated exception  */
+  --h2-ink-m:  oklch(0.620 0.230 350);   /* process magenta                  */
+  --h2-ink-y:  oklch(0.900 0.175 100);   /* process yellow                   */
+  --h2-rule:   oklch(0.560 0.014  88);   /* trim marks, plate type           */
+  --h2-sub:    oklch(0.700 0.012  88);
+}
+/* Every world carries an interior gutter. Controls and type sitting hard
+   against a world's own edge is the single most consistent way this sheet
+   has looked unfinished, and it is a padding value, not a design problem. */
+.h2 { --h2-gutter: 22px; }
+.h2-stage { position: relative; line-height: 0; background: var(--h2-stock); padding: 10px var(--h2-gutter); }
+.h2-stage canvas { display: block; width: 100%; }
+.h2-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--h2-gutter) 2px; background: var(--h2-stock); }
+.h2-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--h2-ink-k); background: transparent;
+  border: 1px solid var(--h2-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.h2-btn.h2-on { color: var(--h2-stock); background: var(--h2-ink-k); border-color: var(--h2-ink-k); }
+.h2-btn.h2-c.h2-on { background: var(--h2-ink-c); border-color: var(--h2-ink-c); }
+.h2-btn.h2-m.h2-on { background: var(--h2-ink-m); border-color: var(--h2-ink-m); }
+.h2-btn.h2-y.h2-on { background: var(--h2-ink-y); border-color: var(--h2-ink-y); color: var(--h2-ink-k); }
+.h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
+.h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
+.h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 </style>
 </head>
 <body data-testid="technique-canvas">
@@ -503,33 +554,66 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
   <section class="cv-sec" data-testid="section-2">
     <div class="cv-sec-head"><span class="cv-sec-n">§2</span><h2>Batching</h2></div>
     <p class="cv-because">Cost is calls, <b>because there are no objects.</b>
-      There is no retained list of 50 000 things for the engine to optimise over —
-      there is only the sequence of commands you issue, and the price is set by which
-      commands those are. Two tables, because there are two questions: what the
-      <i>method</i> costs on a provably identical picture, and what the <i>mark</i>
-      costs once you let the picture change.</p>
-    <div class="cv-pair">
-      <div>
-        <div class="cv-lede">Explanatory graphic</div>
-        <div class="cv-fig" data-testid="g2-stage">
-          <canvas data-testid="g2-canvas"></canvas>
-          <div class="cv-cap">Per-frame cost of the four methods, drawn from the live
-            run beside it. Bars are to scale; the fastest is the baseline.</div>
-        </div>
+      There is no retained list of things for the engine to optimise over — only
+      the sequence of commands you issue, and the price is set by which commands
+      those are. The console below is a halftone at 20×, and a halftone is nothing
+      but marks: every frame puts down tens of thousands of dots in four inks at
+      four angles. The instrument and the technique are the same object, so
+      changing how the dots are drawn changes the cost of the picture you are
+      looking at.</p>
+
+    <div class="h2" data-testid="h2-world">
+      <div class="h2-bar" data-testid="h2-bar">
+        <button class="h2-btn h2-on" data-m="arc" data-testid="h2-method-arc">arc per dot</button>
+        <button class="h2-btn" data-m="batched" data-testid="h2-method-batched">one batched path</button>
+        <button class="h2-btn" data-m="sprite" data-testid="h2-method-sprite">drawImage sprite</button>
+        <button class="h2-btn" data-m="rect" data-testid="h2-method-rect">fillRect square</button>
+        <span style="flex:1"></span>
+        <button class="h2-btn h2-c h2-on" data-ch="c" data-testid="h2-plate-c">cyan 15°</button>
+        <button class="h2-btn h2-m h2-on" data-ch="m" data-testid="h2-plate-m">magenta 75°</button>
+        <button class="h2-btn h2-y h2-on" data-ch="y" data-testid="h2-plate-y">yellow 0°</button>
+        <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">black 45°</button>
+        <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
+        <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
       </div>
-      <div>
-        <div class="cv-lede">ACETATE · screen 2</div>
-        <div data-testid="acetate-2-mount"></div>
+      <div class="h2-stage" data-testid="h2-stage">
+        <canvas data-testid="h2-canvas"></canvas>
+      </div>
+      <div class="h2-plate" data-testid="h2-readouts">
+        <div class="h2-kv">dots this frame<b data-testid="h2-dots">—</b></div>
+        <div class="h2-kv">draw + sync<b data-testid="h2-cost">—</b></div>
+        <div class="h2-kv">ruling<b data-testid="h2-ruling">—</b></div>
+        <div class="h2-kv">screen angles<b data-testid="h2-angles">Y 0 · C 15 · K 45 · M 75</b></div>
       </div>
     </div>
+
+    <p class="cv-instr" data-testid="h2-instr">
+      <b>Three facts hold this picture together and all three are printable.</b>
+      Only three screens can sit at mutual 30° separation, so yellow takes the 15°
+      collision — because it is the faintest of the four — and yellow runs at 108%
+      of the others' frequency to suppress the residual beat. What comes out is a
+      <b>rosette</b>: a controlled, least-objectionable moiré, which is what a press
+      does on purpose where this deck's other sheets avoid moiré on purpose.
+      <b>The plates above are drifting</b>, so you can watch the rosette break
+      into a coarse beat as they leave their separation and re-form as they
+      return: the angle is not a setting on a still picture, it is the variable,
+      moving. <i>Lock to standard angles</i> stops it dead, which is why the
+      standard set is standard.
+      <b>Dot gain</b> is the other one: ink spreads into paper, so coverage is
+      pushed by <code>c + 0.12·sin(πc)</code> — 12% at the midtone, nothing at
+      either end. Turn it off and the whole page goes pale, which is what a plate
+      looks like before the press has had it.
+    </p>
 
     <div class="cv-scroll">
       <table class="cv-table" data-testid="table-a">
         <caption class="cv-cap" style="text-align:left;caption-side:top">
-          <b>Table A — the same picture, four ways.</b> One mark specification for every
-          row: a 4×4 axis-aligned opaque square at integer coordinates, in one resolved
-          ink, at seeded positions. A method is admitted only if its output is
-          pixel-identical to the <code>fillRect</code> reference.
+          <b>Table A — the same picture, four ways.</b> The console above changes
+          method live; this is the same question asked rigorously. One mark
+          specification for every row: a 4×4 axis-aligned opaque square at integer
+          coordinates, in one resolved ink, at seeded positions. A method is
+          admitted only if its output is pixel-identical to the
+          <code>fillRect</code> reference.
         </caption>
         <thead><tr><th>method</th><th>ms / frame</th><th>× fastest</th><th>pixels differing</th></tr></thead>
         <tbody data-testid="table-a-body"><tr><td colspan="4">measuring…</td></tr></tbody>
@@ -541,8 +625,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       <table class="cv-table" data-testid="table-b">
         <caption class="cv-cap" style="text-align:left;caption-side:top">
           <b>Table B — and what the mark itself costs.</b> Here the pictures are
-          <i>different</i> and that is the subject: an antialiased disc of equal area
-          against the hard square, and integer against fractional coordinates.
+          <i>different</i> and that is the subject: an antialiased disc of equal
+          area against the hard square, and integer against fractional coordinates.
         </caption>
         <thead><tr><th>mark</th><th>ms / frame</th><th>× square</th><th>area drawn</th></tr></thead>
         <tbody data-testid="table-b-body"><tr><td colspan="4">measuring…</td></tr></tbody>
@@ -550,9 +634,10 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
     </div>
     <p class="cv-instr" data-testid="table-notes">
       <b>Integer snapping is deliberate and is a small lie about real drawing</b> —
-      nobody snaps a particle field to integers. Table B is where the truth of that
-      gets its own number. Floor: <b data-testid="table-floor">…</b> ·
-      marks per frame: <b data-testid="table-n">…</b> · sync point:
+      nobody snaps a halftone to integers, and the console above does not. Table B
+      is where the truth of that gets its own number. Floor:
+      <b data-testid="table-floor">…</b> · marks per frame:
+      <b data-testid="table-n">…</b> · sync point:
       <code>getImageData(0,0,1,1)</code>, measured at
       <b data-testid="table-synccost">…</b> on its own.
     </p>
@@ -801,7 +886,7 @@ var acProbe = document.createElement('div');
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-acProbe.className = 'ac t5 v1';
+acProbe.className = 'ac t5 v1 h2';
 acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(acProbe);
 var acRoot = getComputedStyle(acProbe);
@@ -1354,183 +1439,195 @@ var SEC2 = (function () {
   return { measure: measure, RESULT: RESULT, N: N, METHODS: METHODS, INK: INK };
 })();
 
+/* ════════════════════════════════════════════════════════════════════════
+   §2 · SCREEN — the console
+   ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  /* ── ACETATE 2 · CORRELATION — a goniometer ──────────────────────────
-     A goniometer plots left against right as a rotated scatter of sample
-     pairs, which means its entire content IS N marks. So drawing it three
-     ways is the instrument doing its own job rather than a benchmark
-     bolted onto a picture — and the points are redrawn every frame, where
-     a static overview would be drawn once. */
-  var LIVE_N = 50000;
-  var BL = new Float32Array(LIVE_N), BR = new Float32Array(LIVE_N);
-  (function () {
-    var r = rng(0x9E3779B9), i, u, w, corr;
-    for (i = 0; i < LIVE_N; i++) {
-      u = i / LIVE_N;
-      w = Math.sin(u * TAU * 97) * 0.6 + Math.sin(u * TAU * 311) * 0.3 + (r() - 0.5) * 0.5;
-      corr = 0.62 + 0.3 * Math.sin(u * TAU * 3);
-      BL[i] = w;
-      BR[i] = w * corr + (r() - 0.5) * (1 - corr) * 1.6;
+  var W = 1200, H = 560;
+  var cv = $('h2-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
+
+  var STOCK = resolveRGB(token('--h2-stock'));
+  var INK = {
+    c: resolveRGB(token('--h2-ink-c')), m: resolveRGB(token('--h2-ink-m')),
+    y: resolveRGB(token('--h2-ink-y')), k: resolveRGB(token('--h2-ink-k'))
+  };
+  var RULE = self.SKIN_CSS(resolveRGB(token('--h2-rule')));
+
+  /* The standard process set. Only three screens can sit at mutual 30°
+     separation, so yellow takes the 15° collision — it is the faintest of
+     the four — and yellow runs at 108% of the others' frequency to suppress
+     the residual beat it would otherwise make with cyan. The rosette that
+     comes out is a controlled, least-objectionable moiré: the one place in
+     this deck where moiré is the intended outcome rather than the hazard. */
+  var PLATES = [
+    { ch: 'y', deg: 0,  freq: 1.08 },
+    { ch: 'c', deg: 15, freq: 1.00 },
+    { ch: 'k', deg: 45, freq: 1.00 },
+    { ch: 'm', deg: 75, freq: 1.00 }
+  ];
+  /* 12 device px at 20×. The first pass ran an 8px cell and put 45 456 dots
+     on every frame at 44 ms, which is a quarter of a second of latency on a
+     section about latency. A coarser ruling is also more legible at this
+     magnification: the rosette needs its dots separable by eye, and at 8px
+     they were not quite. */
+  var CELL = 12;
+  var on = { c: true, m: true, y: true, k: true };
+  var method = 'arc', gain = true, costs = [], dots = 0, locked = false;
+
+  /* The separation. A continuous-tone field authored as CMYK coverage
+     directly — there is no photograph here and nothing is decoded. */
+  function cov(u, v, ch, t) {
+    var a = Math.sin(u * 5.1 + t * TAU * 0.5) * Math.cos(v * 3.7 - t * TAU * 0.3);
+    var b = Math.exp(-((u - 0.34) * (u - 0.34) + (v - 0.46) * (v - 0.46)) * 6.5);
+    var d = Math.exp(-((u - 0.72) * (u - 0.72) * 3 + (v - 0.58) * (v - 0.58) * 9));
+    var val;
+    if (ch === 'k') val = 0.14 + 0.34 * b + 0.12 * a;
+    else if (ch === 'c') val = 0.30 + 0.42 * b - 0.20 * d + 0.10 * a;
+    else if (ch === 'm') val = 0.22 + 0.30 * d + 0.26 * b - 0.10 * a;
+    else val = 0.36 + 0.34 * d + 0.16 * a;
+    val *= 0.72 + 0.28 * Math.sin(t * TAU + u * 1.4);
+    return val < 0 ? 0 : val > 1 ? 1 : val;
+  }
+
+  /* Ink spreads into paper. 12% at the midtone, nothing at either end —
+     which is what newsprint does, and what makes a screen look printed
+     rather than computed. Turn it off and the page goes pale. */
+  function dotGain(c) { return gain ? Math.min(1, c + 0.12 * Math.sin(Math.PI * c)) : c; }
+
+  var sprites = {};
+  function sprite(ch, r) {
+    var key = ch + '|' + Math.round(r * 4);
+    if (sprites[key]) return sprites[key];
+    var d = Math.max(2, Math.ceil(r * 2) + 2), c = document.createElement('canvas');
+    c.width = c.height = d;
+    var x = c.getContext('2d');
+    x.fillStyle = self.SKIN_CSS(INK[ch]);
+    x.beginPath(); x.arc(d / 2, d / 2, r, 0, TAU); x.fill();
+    sprites[key] = c;
+    return c;
+  }
+
+  /* THE SCREEN TURNS. This is the section's motion and it is also the
+     section's subject: a halftone's whole character is set by the angle
+     between its plates, so drifting them is not decoration applied to a
+     still picture — it is the variable itself, moving. */
+  function angleOf(p, t) {
+    return p.deg + (locked ? 0 : 7.5 * Math.sin(t * TAU + p.deg * 0.017));
+  }
+
+  function screenPlate(p, t) {
+    var deg = angleOf(p, t) * Math.PI / 180, ca = Math.cos(deg), sa = Math.sin(deg);
+    var cell = CELL / p.freq;
+    /* walk the ROTATED lattice and place a dot per cell, rather than
+       walking pixels and testing each one — a halftone is a set of marks,
+       and this section is about what marks cost */
+    /* Iterate the lattice's own bounding box, not a square big enough to
+       contain every rotation of it. The first version walked
+       (2·diag+1)² cells per plate and threw away nine in ten of them
+       off-screen — 449 000 iterations to place 45 000 dots, and the cost
+       showed up as 45 ms a frame on a section whose subject is cost.
+       Un-rotating the four canvas corners gives the exact range. */
+    var i, j, lx, ly, x, y, c, r, n = 0, k;
+    var iMin = Infinity, iMax = -Infinity, jMin = Infinity, jMax = -Infinity;
+    var corners = [[-W / 2, -H / 2], [W / 2, -H / 2], [-W / 2, H / 2], [W / 2, H / 2]];
+    for (k = 0; k < 4; k++) {
+      var px2 = corners[k][0], py2 = corners[k][1];
+      var u = (px2 * ca + py2 * sa) / cell, v = (-px2 * sa + py2 * ca) / cell;
+      if (u < iMin) iMin = u; if (u > iMax) iMax = u;
+      if (v < jMin) jMin = v; if (v > jMax) jMax = v;
     }
-  })();
-
-  var c = chassis(2, {
-    caps: '<div class="ac-caps" data-testid="acetate-2-caps">' +
-      ['fillrect', 'batched', 'sprite', 'imagedata'].map(function (k, i) {
-        return '<button class="ac-cap-btn' + (i === 0 ? ' ac-on' : '') + '" data-m="' + k + '" data-testid="acetate-2-method-' + k + '">' +
-          ['fillRect', 'batched path', 'drawImage', 'putImageData'][i] + '</button>';
-      }).join('') + '</div>',
-    work: '<div class="ac-well" data-testid="acetate-2-well"><canvas data-testid="acetate-2-canvas"></canvas></div>',
-    meta: [
-      { k: 'points / frame', v: LIVE_N.toLocaleString(), c: 'aux' },
-      { k: 'draw + sync', v: '—', c: 'aux' },
-      { k: 'correlation', v: '—', c: 'src' }
-    ]
-  });
-
-  var a = $('acetate-2-canvas'), aw = 0, ah = 0;
-  var ax = a.getContext('2d', { willReadFrequently: true });
-  var lbuf = null, l32 = null;
-  function asize() {
-    var s = fit(a, 300); aw = s.w; ah = s.h;
-    lbuf = ax.createImageData(aw, ah); l32 = new Uint32Array(lbuf.data.buffer);
-  }
-  asize(); onResize(function () { asize(); demo.render(demo.t); });
-
-  var AUX = resolveRGB(token('--ac-aux') || '#6ec07a');
-  var GRD = resolveRGB(token('--ac-grid') || '#555');
-  var PACK = (200 << 24) | (AUX[2] << 16) | (AUX[1] << 8) | AUX[0];
-  var FILL = 'rgba(' + AUX[0] + ',' + AUX[1] + ',' + AUX[2] + ',0.78)';
-  var spr = document.createElement('canvas'); spr.width = spr.height = 2;
-  (function () { var s = spr.getContext('2d'); s.fillStyle = FILL; s.fillRect(0, 0, 2, 2); })();
-
-  var method = 'fillrect', liveCost = [], lastCost = 0;
-
-  function scatter(t) {
-    var cx = aw / 2, cy = ah / 2, k = Math.min(aw, ah) * 0.30;
-    /* phase-shifted deliberately: a plain sin(t·2π) returns the same gain at
-       t = 0, 0.5 and 1, which are exactly the three values the QC sweep
-       samples — the field would have been checked three times in the same
-       state and reported as covered. */
-    var g = 0.55 + 0.42 * Math.sin(t * TAU * 1.5 + 0.9), i, l, r, x, y, o;
-    if (method === 'imagedata') l32.fill(0);
-    else if (method === 'batched') { ax.fillStyle = FILL; ax.beginPath(); }
-    else ax.fillStyle = FILL;
-
-    for (i = 0; i < LIVE_N; i++) {
-      l = BL[i] * g; r = BR[i] * g;
-      x = (cx + (l - r) * k) | 0;
-      y = (cy - (l + r) * k * 0.72) | 0;
-      if (x < 0 || y < 0 || x >= aw - 1 || y >= ah - 1) continue;
-      if (method === 'fillrect') ax.fillRect(x, y, 2, 2);
-      else if (method === 'batched') ax.rect(x, y, 2, 2);
-      else if (method === 'sprite') ax.drawImage(spr, x, y);
-      else { o = y * aw + x; l32[o] = PACK; l32[o + 1] = PACK; o += aw; l32[o] = PACK; l32[o + 1] = PACK; }
+    iMin = Math.floor(iMin) - 1; iMax = Math.ceil(iMax) + 1;
+    jMin = Math.floor(jMin) - 1; jMax = Math.ceil(jMax) + 1;
+    ctx.fillStyle = self.SKIN_CSS(INK[p.ch]);
+    if (method === 'batched') ctx.beginPath();
+    for (j = jMin; j <= jMax; j++) {
+      for (i = iMin; i <= iMax; i++) {
+        lx = i * cell; ly = j * cell;
+        x = lx * ca - ly * sa + W / 2;
+        y = lx * sa + ly * ca + H / 2;
+        if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
+        c = dotGain(cov(x / W, y / H, p.ch, t));
+        if (c < 0.02) continue;
+        r = cell * 0.5 * Math.sqrt(c / 0.7854);      /* area → radius */
+        if (r > cell * 0.78) r = cell * 0.78;
+        n++;
+        if (method === 'arc') { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
+        else if (method === 'batched') { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); }
+        else if (method === 'sprite') { var sp = sprite(p.ch, r); ctx.drawImage(sp, x - sp.width / 2, y - sp.height / 2); }
+        else { ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      }
     }
-    if (method === 'batched') ax.fill();
-    else if (method === 'imagedata') ax.putImageData(lbuf, 0, 0);
+    if (method === 'batched') ctx.fill();
+    return n;
   }
 
-  function graticule() {
-    var cx = aw / 2, cy = ah / 2, k = Math.min(aw, ah) * 0.30, i;
-    ax.strokeStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',0.6)';
-    ax.lineWidth = 1;
-    for (i = 1; i <= 3; i++) { ax.beginPath(); ax.arc(cx, cy, k * i * 0.62, 0, TAU); ax.stroke(); }
-    ax.beginPath(); ax.moveTo(cx, cy - k * 1.9); ax.lineTo(cx, cy + k * 1.9);
-    ax.moveTo(cx - k * 1.9, cy); ax.lineTo(cx + k * 1.9, cy); ax.stroke();
-    ax.save(); ax.translate(cx, cy); ax.rotate(-Math.PI / 4);
-    ax.strokeStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',0.95)';
-    ax.beginPath(); ax.moveTo(0, -k * 1.5); ax.lineTo(0, k * 1.5); ax.stroke();
-    ax.restore();
-    ax.fillStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',1)';
-    ax.font = (9 * DPR) + 'px ' + (token('--mono') || 'monospace');
-    ax.fillText('L', cx - k * 1.55, cy - k * 1.3);
-    ax.fillText('R', cx + k * 1.42, cy - k * 1.3);
-    ax.fillText('+1', cx + 6 * DPR, cy - k * 1.75);
-    ax.fillText('−1', cx + 6 * DPR, cy + k * 1.85);
+  function trimMarks() {
+    var i, L = 26;
+    ctx.strokeStyle = RULE; ctx.lineWidth = 1;
+    [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (c) {
+      ctx.beginPath();
+      ctx.moveTo(c[0] + (c[0] ? -L : L) * 0.15, c[1] + 0.5); ctx.lineTo(c[0] + (c[0] ? -L : L), c[1] + 0.5);
+      ctx.moveTo(c[0] + 0.5, c[1] + (c[1] ? -L : L) * 0.15); ctx.lineTo(c[0] + 0.5, c[1] + (c[1] ? -L : L));
+      ctx.stroke();
+    });
+    /* the register target — four inks through one mark, which is the one
+       piece of furniture that says "this came off a press" */
+    var cx = W / 2, cy = 16;
+    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy); ctx.lineTo(cx + 14, cy);
+    ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 14); ctx.stroke();
   }
 
-  var demo = WAM.clock('acetate-2-stage', {
-    el: $('acetate-2'), dur: 9000, poster: 0.25,
+  var demo = WAM.clock('h2-stage', {
+    el: $('h2-world'), dur: 16000, poster: 0.3,
     render: function (t) {
-      ax.clearRect(0, 0, aw, ah);
-      graticule();
-      /* The live cost is bracketed the same way the tables are: the clock
-         stops at the sync point, never before it. */
-      var t0 = performance.now();
-      scatter(t);
-      sync(ax);
-      var dt = performance.now() - t0;
-      liveCost.push(dt); if (liveCost.length > 20) liveCost.shift();
-      lastCost = median(liveCost);
+      ctx.fillStyle = self.SKIN_CSS(STOCK);
+      ctx.fillRect(0, 0, W, H);
 
-      c.tc.textContent = timecode(t, 9000);
-      c.kv(1).innerHTML = ms(lastCost) + ' ms' + atFloor(lastCost);
-      c.kv(2).textContent = (0.62 + 0.3 * Math.sin(t * TAU * 3)).toFixed(2);
+      var t0 = performance.now(), n = 0, i;
+      /* MULTIPLY, because that is what ink on ink does. Subtractive
+         compositing is physically correct here rather than stylistically
+         preferred, and it is why the overlaps darken instead of covering. */
+      ctx.globalCompositeOperation = 'multiply';
+      for (i = 0; i < PLATES.length; i++) if (on[PLATES[i].ch]) n += screenPlate(PLATES[i], t);
+      ctx.globalCompositeOperation = 'source-over';
+      sync(ctx);
+      var dt = performance.now() - t0;
+      costs.push(dt); if (costs.length > 20) costs.shift();
+      dots = n;
+
+      trimMarks();
+      $('h2-dots').textContent = n.toLocaleString();
+      $('h2-cost').innerHTML = ms(median(costs)) + ' ms' + atFloor(median(costs));
+      $('h2-ruling').textContent = CELL + ' px cell at 20×';
+      $('h2-angles').textContent = locked
+        ? 'Y 0 · C 15 · K 45 · M 75 — locked'
+        : PLATES.map(function (p) { return p.ch.toUpperCase() + ' ' + angleOf(p, t).toFixed(1); }).join(' · ');
     }
   });
 
-  $('acetate-2-caps').addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-m]'); if (!b) return;
-    method = b.dataset.m;
-    liveCost = [];
-    [].forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('ac-on', x === b); });
+  $('h2-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.m) {
+      method = b.dataset.m;
+      costs = [];
+      [].forEach.call(this.querySelectorAll('[data-m]'), function (x) { x.classList.toggle('h2-on', x === b); });
+    } else if (b.dataset.ch) {
+      on[b.dataset.ch] = !on[b.dataset.ch];
+      b.classList.toggle('h2-on', on[b.dataset.ch]);
+    } else if (b === $('h2-gain')) {
+      gain = !gain;
+      b.classList.toggle('h2-on', gain);
+    } else if (b === $('h2-lock')) {
+      locked = !locked;
+      b.classList.toggle('h2-on', locked);
+      b.textContent = locked ? 'release the screen' : 'lock to standard angles';
+    }
     demo.render(demo.t);
   });
 
-  /* ── graphic: the four methods to scale ──────────────────────────── */
-  var g = $('g2-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
-  function gsize() { var s = fit(g, 210); gw = s.w; gh = s.h; }
-  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
-
-  var TINT = token('--tint-canvas') || '#e2c23a';
-  var HZ4 = token('--hz-400') || '#666';
-  var HZ5 = token('--hz-500') || '#999';
-  var HZ6 = token('--hz-600') || '#ccc';
-
-  /* The graphic is 400 px of stage, not a table: the full method names are
-     right there in Table A and would have to be clipped to fit here. */
-  var SHORT = {
-    'fillRect per call': 'fillRect ×50k',
-    'rect batched into one path': 'one batched path',
-    'drawImage sprite': 'drawImage ×50k',
-    'putImageData, composed once': 'putImageData ×1'
-  };
-
-  var gdemo = WAM.clock('g2-stage', {
-    el: $('g2-stage'), dur: 6000, poster: 1,
-    render: function (t) {
-      gx.clearRect(0, 0, gw, gh);
-      var rows = SEC2.RESULT.a, mono = (10 * DPR) + 'px ' + (token('--mono') || 'monospace');
-      gx.font = mono;
-      if (!rows.length) {
-        gx.fillStyle = HZ5;
-        gx.fillText('measuring — ' + SEC2.N.toLocaleString() + ' marks × 4 methods × 7 reps…', 12 * DPR, gh / 2);
-        return;
-      }
-      var max = 0, i;
-      for (i = 0; i < rows.length; i++) max = Math.max(max, rows[i].ms);
-      var pad = 196 * DPR, top = 18 * DPR, bh = (gh - top - 14 * DPR) / rows.length;
-      /* reveal is the only motion, and it is over by t = 0.35 */
-      var reveal = Math.min(1, t / 0.35);
-      for (i = 0; i < rows.length; i++) {
-        var y = top + i * bh, w = (rows[i].ms / max) * (gw - pad - 58 * DPR) * reveal;
-        gx.fillStyle = HZ5; gx.textAlign = 'right';
-        gx.fillText(SHORT[rows[i].label] || rows[i].label, pad - 10 * DPR, y + bh * 0.62);
-        gx.textAlign = 'left';
-        gx.fillStyle = rows[i].ms === Math.min.apply(null, rows.map(function (r) { return r.ms; })) ? TINT : HZ4;
-        gx.fillRect(pad, y + bh * 0.22, Math.max(1, w), bh * 0.5);
-        gx.fillStyle = HZ6;
-        gx.fillText(ms(rows[i].ms) + ' ms', pad + w + 8 * DPR, y + bh * 0.62);
-      }
-      gx.fillStyle = HZ4; gx.textAlign = 'left';
-      gx.fillText('ms / frame · ' + SEC2.N.toLocaleString() + ' marks · median of 7 · sync point closed', 12 * DPR, 12 * DPR);
-    }
-  });
-
-  /* Measured after first paint so the sheet is on screen before the main
-     thread is taken for a second, and never inside a rAF callback. */
-  BOOT.when(function () { SEC2.measure(); gdemo.render(gdemo.t); reportTokenMisses(); });
+  BOOT.when(function () { SEC2.measure(); reportTokenMisses(); });
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
