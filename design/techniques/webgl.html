@@ -148,7 +148,7 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .rlp-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--rlp-dim); margin-bottom: 6px; }
 .rlp-opts { display: flex; gap: 6px; flex-wrap: wrap; }
 .rlp-opt { font-family: var(--sans); font-size: 12px; color: var(--rlp-ink); background: transparent; border: var(--hair) solid var(--rlp-rule); border-radius: 3px; padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
-.rlp-opt.rl-on { border-color: var(--rlp-ink); box-shadow: inset 0 0 0 1px var(--rlp-ink); }
+.rlp-opt.rl-on { border-color: var(--rlp-ink); outline: 1px solid var(--rlp-ink); outline-offset: -2px; }
 .rlp-opt:hover { border-color: var(--rlp-dim); }
 .rlp-cta { font-family: var(--sans); font-size: 12.5px; font-weight: 600; color: var(--rlp-bg); background: var(--rlp-ink); border: 0; border-radius: 3px; padding: 10px 14px; cursor: pointer; }
 .rlp-cta.rl-on { background: var(--rlp-acc); color: var(--rlp-bg); }
@@ -314,7 +314,7 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .se-types { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .se-type { text-align: left; font-family: var(--sans); font-size: 12px; color: var(--se-ink); background: var(--se-well); border: var(--hair) solid var(--se-rule); padding: 8px 10px; cursor: pointer; }
 .se-type span { display: block; font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--se-dim); margin-top: 3px; }
-.se-type.se-on { border-color: var(--se-ink); box-shadow: inset 0 0 0 1px var(--se-ink); }
+.se-type.se-on { border-color: var(--se-ink); outline: 1px solid var(--se-ink); outline-offset: -2px; }
 .se-seed { display: flex; align-items: stretch; }
 .se-seed b { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--se-ink); background: var(--se-well); border-top: var(--hair) solid var(--se-rule); border-bottom: var(--hair) solid var(--se-rule); padding: 7px 14px; min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
 .se-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--se-rule); outline: none; margin: 8px 0 2px; }
@@ -1244,7 +1244,7 @@ function buildMuseum(gltf) {
   return {
     kind: 'mesh', scene, cam, chapters, aspect: '', hint: 'drag = turn', band: ['orbit', 'degrees of yaw about the object · the one number this page turns on'],
     prog: 'MeshStandardMaterial · normal + roughness maps · room environment', asset: 'Marble Bust 01 · Poly Haven · CC0 · 1k',
-    state(T) { const s = {}; s.chapter = Math.floor(T / C_CHAPTER) % 3; s.lead = Math.min(1, (T % C_CHAPTER) / C_LEAD); s.yaw = (T / 27 % 1) * 360; s.pitch = 8 + 4 * Math.sin(TAU * T / C_YAW);
+    state(T) { const s = {}; s.chapter = Math.floor(T / C_CHAPTER) % 3; s.lead = Math.min(1, (T % C_CHAPTER) / C_LEAD); s.yaw = (T / 27 % 1) * 360; s.pitch = 8 + 4 * Math.sin(TAU * T / 11);
       if (reduced.matches) { s.chapter = Math.min(step, 2); s.lead = 1; s.yaw = chapters[s.chapter].yaw; s.pitch = chapters[s.chapter].pitch; }
       if (drag) { s.yaw = drag.yaw; s.pitch = drag.pitch; } s.doto = `${((Math.round(s.yaw) % 360) + 360) % 360}°`; return s; },
     frame(s, aspect, o) { o = o || {}; cam.aspect = aspect; cam.updateProjectionMatrix(); const y = (o.yaw === undefined ? s.yaw : o.yaw) * DEG, p = s.pitch * DEG, rr = 2.3;
