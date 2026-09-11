@@ -4,116 +4,3379 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-11 · Canvas — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-11 · canvas
+
+   Two vocabularies live on this sheet and they must not blend.
+
+   `cv-`  the sheet itself, in the deck's own near-black harness language —
+          the page frame around the worlds, and never anything inside one.
+   `v1- h2- b3- r4- t5-`  the five worlds, one per section. Each carries its
+          own palette, its own chrome and its own subject: a visualizer, a
+          prepress console, a board editor, a radiology workstation and a
+          pair of media players. They share a process — an index-limited
+          palette with a stated dither — and deliberately nothing else.
+          See the track's style-direction-v3.md.
+
+   Every class here is namespaced because components.css leaks: a bare
+   `.note`, `.plate`, `.well` or `.meter` inherits system styling silently
+   and with no console error. `.wrap`, `.crumb`, `.head` and `.notes` are
+   the sheet chrome svg.html already established and are deliberately bare.
+   ───────────────────────────────────────────────────────────────────────── */
 :root { --tint: var(--tint-canvas); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); }
-.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
-.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*4); }
+
+/* ── the sheet's own furniture ──────────────────────────────────────── */
+.cv-sec { margin: calc(var(--u)*12) 0 0; }
+.cv-sec-head { display: flex; align-items: baseline; gap: 12px; border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-bottom: calc(var(--u)*2); flex-wrap: wrap; }
+.cv-sec-n { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); }
+.cv-sec-head h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0; }
+.cv-because { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*3); }
+.cv-because b { color: var(--hz-600); font-weight: 600; }
+.cv-lede { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 8px; }
+/* Worlds run the full measure, stacked under their prose, never beside an
+   explanatory pane. The two-column version gave every world about half the
+   width, and the crowding showed first in the screens with the most
+   furniture — a banner, a rail, a control row, a well and a transport all
+   stacked into 490px. Horizontal space is the cheapest thing this sheet can
+   give a demo and it was spending it on a column. */
+.cv-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*4); }
+
+/* explanatory-graphic shell: the deck's harness, never ACETATE's */
+.cv-fig { background: var(--hz-050); border-radius: 8px; box-shadow: var(--recess); padding: 10px; }
+.cv-fig canvas { display: block; width: 100%; border-radius: 4px; }
+.cv-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.5; letter-spacing: 0.06em; color: var(--hz-400); padding: 8px 4px 2px; }
+.cv-cap b { color: var(--hz-500); font-weight: 500; }
+
+.cv-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*2); }
+.cv-readout { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; color: var(--hz-500); }
+.cv-readout b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.cv-scroll { overflow-x: auto; }
+.cv-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: calc(var(--u)*2); min-width: 460px; }
+.cv-table th, .cv-table td { text-align: left; padding: 6px 10px 6px 0; border-bottom: var(--hair) solid var(--hz-200); white-space: nowrap; }
+.cv-table th { color: var(--hz-400); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+.cv-table td { color: var(--hz-600); font-variant-numeric: tabular-nums; }
+.cv-table td.cv-num { color: var(--tint); }
+.cv-table tr.cv-best td { color: var(--ok, var(--tint)); }
+.cv-dagger { color: var(--hz-400); }
+.cv-guard { font-family: var(--mono); font-size: 10px; padding: 7px 10px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+.cv-guard.cv-ok { color: var(--ok, #7bd88f); background: color-mix(in oklch, var(--ok, #7bd88f) 12%, transparent); }
+.cv-guard.cv-bad { color: var(--signal, #e5484d); background: color-mix(in oklch, var(--signal, #e5484d) 14%, transparent); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; }
+.notes li { margin-bottom: 8px; }
+
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §5 · TRANSPORT — two classic players
+
+   The register this replaced painted a photoreal machine panel and it looked
+   fake, which is what a simulated material does on an emissive surface. What
+   is here now is a blitter: flat colours, integer rectangles, a hand-set
+   bitmap font, and bevels that are four colours and six lines with zero
+   interpolation. Nothing below is a gradient, a shadow or a filter. The
+   entire chassis of both players is drawn.
+
+   --t5-lcd sits at hue 125 rather than the famous display green at 145,
+   which is --tint-svg exactly. Pulled to 125 it clears by 20° and still
+   reads as the same colour class. It is also §1's analyser floor, and that
+   shared value is the one deliberate relation between the two worlds on this
+   sheet that come from the same product family. Nowhere else.
+   ───────────────────────────────────────────────────────────────────────── */
+.t5 {
+  --t5-face:    oklch(0.400 0.006 258);   /* chassis                        */
+  --t5-hi:      oklch(0.560 0.008 258);   /* bevel HI                       */
+  --t5-lt:      oklch(0.470 0.007 258);
+  --t5-sh:      oklch(0.310 0.008 258);
+  --t5-dk:      oklch(0.245 0.008 258);
+  --t5-well:    oklch(0.115 0.010 258);   /* display well                   */
+  --t5-lcd:     oklch(0.840 0.135 125);   /* the display green              */
+  --t5-lcd-dim: oklch(0.520 0.070 125);
+  --t5-sig:     oklch(0.620 0.200  28);   /* over / clip                    */
+
+  /* UNIT 2 IS A DIFFERENT SKIN, and that is the whole reason skins existed:
+     the player was one program and everybody's looked different. Two
+     identical panels would also be a picture of one panel, and what this
+     section proves is about threads rather than about copy-paste.
+
+     Warmer chassis, amber display. Amber at hue 78 clears --tint-canvas 95
+     by 17° and was the other display colour of the period, so unit 2 reads
+     as a sibling rather than as a different product. */
+  --t5b-face:    oklch(0.430 0.012  78);
+  --t5b-hi:      oklch(0.590 0.014  78);
+  --t5b-lt:      oklch(0.500 0.013  78);
+  --t5b-sh:      oklch(0.335 0.014  78);
+  --t5b-dk:      oklch(0.265 0.013  78);
+  --t5b-well:    oklch(0.125 0.012  60);
+  --t5b-lcd:     oklch(0.830 0.150  78);
+  --t5b-lcd-dim: oklch(0.520 0.085  78);
+  --t5b-sig:     oklch(0.640 0.190  22);
+}
+.t5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*3); }
+@media (min-width: 780px) { .t5-rack { grid-template-columns: 1fr 1fr; } }
+.t5-stage { position: relative; line-height: 0; }
+.t5-stage canvas { display: block; width: 100%; image-rendering: pixelated; }
+/* `.t5-stage canvas` is one class plus one type — specificity 0,1,1 — and
+   `.t5-fallback` is one class, 0,1,0. The more specific rule won, the
+   fallback canvas was displayed over a perfectly healthy worker from the
+   first frame, and unit 2 rendered as a black rectangle while every readout
+   beside it said the worker was alive. The bug was not in the worker, the
+   protocol, the transfer or the parity check; it was four points of
+   specificity. Qualified, so the two rules are not arguing. */
+.t5-stage canvas.t5-fallback { position: absolute; inset: 0; display: none; }
+.t5-unit-name {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--hz-400); padding-bottom: 6px;
+}
+.t5-unit-name b { color: var(--hz-600); font-weight: 500; }
+/* The marquee and the clock are blitted from a bitmap font, and a raster is
+   somewhere a screen reader cannot go. The same strings live here, visually
+   hidden but readable, so drawn text is never the only copy. */
+.t5-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.t5-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*3); }
+.t5-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--t5-face);
+  border: 1px solid var(--t5-dk); border-top-color: var(--t5-hi); border-left-color: var(--t5-hi);
+  border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.t5-btn.t5-on { color: var(--t5-well); background: var(--t5-lcd); border-color: var(--t5-lcd-dim); }
+.t5-btn[disabled] { opacity: 0.5; cursor: default; }
+.t5-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.t5-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.t5-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world. Here it is the MAIN-THREAD frame counter, and
+   the asymmetry is the argument: this is the number that stops. */
+/* NO DOTO INSIDE A WORLD. It was here as "one canonical number per world",
+   and it was the deck's own headline face wearing a world's colour — which
+   made each screen read as presentation chrome rather than as its own
+   self-contained thing. That is the exact failure these worlds exist to
+   avoid, arriving through the one typographic token allowed to cross them.
+   The number is still the one that stops; it is now set in the world's own
+   voice. Doto stays outside, in the harness, where it belongs. */
+.t5-kv b.t5-dot { font-size: 30px; line-height: 34px; color: var(--t5-lcd); letter-spacing: 0.04em; }
+.t5-note {
+  font-family: var(--mono); font-size: 10px; line-height: 1.6; color: var(--hz-500);
+  border-left: 2px solid var(--t5-lcd); padding: 7px 10px; margin-top: calc(var(--u)*2); max-width: 78ch;
+}
+.t5-note[hidden] { display: none !important; }
+.t5-note.t5-bad { border-left-color: var(--signal); color: var(--signal); }
+@media (max-width: 560px) { .t5-kv b.t5-dot { font-size: 24px; line-height: 28px; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §1 · TRAILS — a full-screen visualizer
+
+   The field is a framebuffer that is never cleared. Everything you see is
+   the previous frame, faded and fed back — which is what persistence means
+   and what this section is for.
+
+   There is almost no CSS here and there is nothing to style: the world is
+   one canvas and a strip showing the palette it was quantised to. The
+   palette below is 24 entries and the field is frozen to it every frame, so
+   the analyser bands across sixteen steps. The banding is the material, not
+   an artefact of it — and it is the sharpest medium argument the sheet has,
+   because CSS renders a smooth gradient effortlessly and cannot render an
+   index-limited one at all.
+   ───────────────────────────────────────────────────────────────────────── */
+.v1 {
+  --v1-void: oklch(0.060 0.008 265);   /* the never-cleared field           */
+  --v1-grid: oklch(0.180 0.010 265);   /* dotted graticule behind it        */
+  --v1-a0:   oklch(0.520 0.150 125);   /* analyser ramp floor               */
+  --v1-a1:   oklch(0.700 0.165 100);
+  --v1-a2:   oklch(0.800 0.170  85);
+  --v1-a3:   oklch(0.740 0.185  62);   /* the sheet's one declared exception */
+  --v1-a4:   oklch(0.600 0.215  28);   /* ceiling                           */
+  --v1-peak: oklch(0.860 0.008 265);   /* peak cap — grey, as it was        */
+  --v1-o0:   oklch(0.900 0.020 265);   /* oscilloscope, achromatic-cool so   */
+  --v1-o4:   oklch(0.550 0.030 265);   /* it never merges with the ramp     */
+  --v1-hi:   oklch(0.300 0.012 265);   /* bevel HI                          */
+  --v1-lt:   oklch(0.230 0.012 265);   /* bevel LT                          */
+  --v1-sh:   oklch(0.120 0.010 265);   /* bevel SH                          */
+  --v1-dk:   oklch(0.085 0.010 265);   /* bevel DK                          */
+  --v1-face: oklch(0.155 0.010 265);   /* frame face                        */
+  --v1-ink:  oklch(0.780 0.010 265);   /* legend                            */
+}
+.v1-stage { position: relative; line-height: 0; }
+.v1-stage canvas { display: block; width: 100%; }
+.v1-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--v1-ink);
+  max-width: 74ch; padding: 8px 2px 2px; opacity: 0.72;
+}
+.v1-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*2); }
+.v1-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--v1-ink); background: var(--v1-face);
+  border: 1px solid var(--v1-dk); border-top-color: var(--v1-hi); border-left-color: var(--v1-hi);
+  border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.v1-btn.v1-on { color: var(--v1-void); background: var(--v1-a2); border-color: var(--v1-a4); }
+.v1-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.v1-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.v1-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world, stating that world's one canonical number.
+   A visualizer has exactly one: the frame it is on. */
+.v1-kv b.v1-dot { font-size: 30px; line-height: 34px; color: var(--v1-a2); letter-spacing: 0.04em; }
+@media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 24px; line-height: 28px; } }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §2 · SCREEN — a prepress screening console, at 20×
+
+   A light world on paper, which is the inverse of every other world on this
+   sheet. Nothing here is a gradient: continuous tone is reproduced the way
+   a press reproduces it, by putting down dots of four inks at four angles
+   and letting the eye do the mixing. That is a clustered-dot ordered dither
+   with a stated ruling, and it is the sharpest form of this sheet's medium
+   argument — CSS renders a smooth gradient effortlessly and cannot render a
+   screened one at all.
+
+   Process cyan at hue 225 is a STATED EXCEPTION: it sits 10° from
+   --tint-css 235, and you cannot rotate process cyan and have it still be
+   cyan. CMYK is what makes this world legible without a legend, which is
+   the same reason the precipitation ramp on the SVG sheet breaks its own
+   chroma ceiling. Declared, not overlooked.
+   ───────────────────────────────────────────────────────────────────────── */
+.h2 {
+  --h2-stock:  oklch(0.885 0.022  88);   /* newsprint                        */
+  --h2-ink-k:  oklch(0.215 0.008 250);   /* process black, faintly cool      */
+  --h2-ink-c:  oklch(0.660 0.130 225);   /* process cyan — stated exception  */
+  --h2-ink-m:  oklch(0.620 0.230 350);   /* process magenta                  */
+  --h2-ink-y:  oklch(0.900 0.175 100);   /* process yellow                   */
+  --h2-rule:   oklch(0.560 0.014  88);   /* trim marks, plate type           */
+  --h2-sub:    oklch(0.700 0.012  88);
+}
+/* Every world carries an interior gutter. Controls and type sitting hard
+   against a world's own edge is the single most consistent way this sheet
+   has looked unfinished, and it is a padding value, not a design problem. */
+.h2 { --h2-gutter: 22px; }
+.h2-stage { position: relative; line-height: 0; background: var(--h2-stock); padding: 10px var(--h2-gutter); }
+.h2-stage canvas { display: block; width: 100%; }
+.h2-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--h2-gutter) 2px; background: var(--h2-stock); }
+.h2-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--h2-ink-k); background: transparent;
+  border: 1px solid var(--h2-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.h2-btn.h2-on { color: var(--h2-stock); background: var(--h2-ink-k); border-color: var(--h2-ink-k); }
+.h2-btn.h2-c.h2-on { background: var(--h2-ink-c); border-color: var(--h2-ink-c); }
+.h2-btn.h2-m.h2-on { background: var(--h2-ink-m); border-color: var(--h2-ink-m); }
+.h2-btn.h2-y.h2-on { background: var(--h2-ink-y); border-color: var(--h2-ink-y); color: var(--h2-ink-k); }
+.h2-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--h2-ink-k);
+  max-width: 74ch; padding: 4px var(--h2-gutter) 10px; background: var(--h2-stock); opacity: 0.8;
+}
+.h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
+.h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
+.h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §3 · NETWORK — a transit map, Seattle, 1994
+
+   The reference is ART CHANTRY, who was making posters in Seattle through
+   exactly this period — Sub Pop, Estrus, The Rocket — and whose register is
+   not "grunge" in the decorative sense but CHEAP REPRODUCTION: the
+   photocopier, the rubber stamp, spot colour on newsprint, the vernacular
+   of things printed by people who could not afford to print them well.
+
+   THE TWIST IS THE PAIRING. That vernacular is applied to the single most
+   rigorously systematic artefact in graphic design — a Beck diagram, which
+   is 45° and 90° only, uniform station spacing, and two corner radii tuned
+   by eye. The geometry stays absolutely strict. It is the REPRODUCTION that
+   falls apart: the register drifts, the toner blows out, the paper has been
+   folded and something was put down on it. A perfect system, badly printed.
+
+   This does not contradict the no-simulated-material rule this build
+   already set. A photocopy is not a material under a light — it is a
+   reproduction process, flat by definition, and simulating one is the same
+   move §2 makes when it screens a halftone. Nothing here pretends to be an
+   object; it pretends to be a print, which is what it is.
+   ───────────────────────────────────────────────────────────────────────── */
+.n3 {
+  --n3-paper:   oklch(0.855 0.030  82);   /* newsprint, warm, cheap         */
+  --n3-ink:     oklch(0.235 0.012  60);   /* photocopier black, warm        */
+  --n3-dim:     oklch(0.470 0.020  65);   /* secondary, and it has faded    */
+  --n3-hair:    oklch(0.700 0.022  78);   /* rules                          */
+  --n3-water:   oklch(0.735 0.045 215);   /* the sound, one flat spot ink   */
+  --n3-stn:     oklch(0.235 0.012  60);
+  /* Six spot inks, chosen as a 1994 print job would choose them: cheap,
+     unsaturated, and separable when the register drifts two points. */
+  --n3-l1: oklch(0.505 0.160  38);        /* BALLARD    — brick             */
+  --n3-l2: oklch(0.455 0.095 252);        /* MONTLAKE   — slate blue        */
+  --n3-l3: oklch(0.465 0.090 150);        /* RAINIER    — forest            */
+  --n3-l4: oklch(0.705 0.135  82);        /* DUWAMISH   — mustard           */
+  --n3-l5: oklch(0.420 0.100 350);        /* INTERBAY   — oxblood           */
+  --n3-l6: oklch(0.520 0.060 205);        /* ELLIOTT    — faded teal        */
+  --n3-live:   oklch(0.235 0.012 60);
+  --n3-alert:  oklch(0.520 0.165  32);
+  --n3-stamp:  oklch(0.480 0.150  28);    /* the rubber stamp               */
+  --n3-coffee: oklch(0.560 0.080  62);    /* what was put down on it        */
+  --n3-gutter: 22px;
+}
+.n3-world { background: oklch(0.145 0.010 70); }
+.n3-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--n3-gutter) 4px; }
+.n3-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--n3-paper); background: transparent;
+  border: 1px solid oklch(1 0 0 / 0.22); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.n3-btn.n3-on { color: oklch(0.145 0.010 70); background: var(--n3-paper); border-color: var(--n3-paper); }
+.n3-stage { position: relative; line-height: 0; padding: 6px var(--n3-gutter); }
+.n3-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.n3-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.n3-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: oklch(0.72 0.02 75);
+  max-width: 74ch; padding: 6px var(--n3-gutter) 4px;
+}
+.n3-shell { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*2); padding: 8px var(--n3-gutter) 18px; }
+@media (min-width: 860px) { .n3-shell { grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); } }
+.n3-board { background: oklch(0.195 0.012 70); padding: 12px 14px; }
+.n3-board-head {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: oklch(0.62 0.02 75); padding-bottom: 8px; border-bottom: 1px solid oklch(1 0 0 / 0.14);
+}
+.n3-row {
+  display: grid; grid-template-columns: 18px 1fr 64px 52px; gap: 10px; align-items: baseline;
+  font-family: var(--mono); font-size: 12px; color: var(--n3-paper); padding: 5px 0;
+  font-variant-numeric: tabular-nums;
+}
+.n3-row .n3-bullet { width: 12px; height: 12px; align-self: center; }
+.n3-row .n3-due { text-align: right; color: var(--n3-l4); }
+.n3-row .n3-plat { text-align: right; color: oklch(0.60 0.02 75); font-size: 10px; }
+.n3-status { display: flex; flex-direction: column; gap: 4px; }
+.n3-line-row {
+  display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center;
+  font-family: var(--mono); font-size: 10.5px; color: var(--n3-paper);
+  padding: 5px 0; border-bottom: 1px solid oklch(1 0 0 / 0.10);
+}
+.n3-line-row i { display: block; height: 8px; }
+.n3-line-row b { font-weight: 500; letter-spacing: 0.06em; }
+.n3-line-row span { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.62 0.02 75); }
+.n3-line-row span.n3-delay { color: var(--n3-alert); }
+.n3-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.60 0.02 75); }
+.n3-kv b { display: block; font-family: var(--mono); font-size: 13px; color: var(--n3-paper); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.n3-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 2px var(--n3-gutter) 16px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §4 · READ — a radiology soft-copy workstation
+
+   This world is deliberately ACHROMATIC, and it is the only world on the
+   sheet whose lack of colour is a standard rather than a shortage. DICOM
+   Part 14's Grayscale Standard Display Function is a real worldwide
+   calibration for medical displays — constant perceived contrast at every
+   grey level — and a reading room is colourless on purpose.
+
+   One colour is allowed in: the overlay annotation, which is how a
+   workstation has always separated what the machine measured from what a
+   person wrote on it. The heat ramp is the second LUT, and switching
+   between them is the demonstration — same pixels, read back and mapped
+   two ways.
+   ───────────────────────────────────────────────────────────────────────── */
+.r4 {
+  --r4-void:  oklch(0.080 0 0);           /* the surround                    */
+  --r4-frame: oklch(0.170 0 0);
+  --r4-rule:  oklch(0.320 0 0);
+  --r4-ink:   oklch(0.870 0 0);
+  --r4-anno:  oklch(0.880 0.155 108);     /* overlay annotation — one colour */
+  --r4-roi:   oklch(0.640 0.190  27);     /* the region of interest          */
+  --r4-gutter: 20px;
+}
+.r4-world { background: var(--r4-void); }
+.r4-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 14px var(--r4-gutter) 4px; }
+.r4-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--r4-ink); background: transparent;
+  border: 1px solid var(--r4-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.r4-btn.r4-on { color: var(--r4-void); background: var(--r4-anno); border-color: var(--r4-anno); }
+.r4-stage { position: relative; line-height: 0; padding: 8px var(--r4-gutter); }
+.r4-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.r4-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--r4-ink);
+  max-width: 74ch; padding: 4px var(--r4-gutter) 8px; opacity: 0.6;
+}
+.r4-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 6px var(--r4-gutter) 18px; }
+.r4-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--r4-rule); }
+.r4-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--r4-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.r4-kv b.r4-anno { color: var(--r4-anno); }
 </style>
 </head>
 <body data-testid="technique-canvas">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-11">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-11" data-testid="crumb-techniques">Techniques</a></div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="crumb"]').style.display = 'none';</script>
+
   <div class="head"><span class="code">SL-11</span><h1>canvas</h1></div>
-  <p class="dek">
-    Imperative pixel drawing, CPU-bound, no DOM overhead — the count jumps from tens of
-    SVG nodes to thousands of points with no per-particle element cost.
+  <p class="dek" data-testid="dek">
+    Canvas has no scene graph. That one absence is the whole technique: it is why
+    nothing erases itself, why cost is counted in calls rather than in objects, why
+    the pointer has to be rebuilt by hand, why the surface can be read back, and why
+    it can leave the main thread. Five sections, each pairing the consequence with a
+    screen from <b>ACETATE</b> — a lacquer transfer desk that exists only here.
+  </p>
+  <p class="cv-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> Timing brackets
+    end at a named sync point — <code>getImageData(0,0,1,1)</code> — because Chrome
+    records 2D commands and rasterises them later, so a bracket with no sync point
+    measures command <i>submission</i> and not drawing. Figures at or near the clock
+    floor are marked <span class="cv-dagger">†</span>; the floor itself is printed
+    beside every table. <code>performance.now()</code> is clamped to 1 ms in Firefox
+    and WebKit, so a figure marked <span class="cv-dagger">†</span> there is a bound,
+    not a value. Renderer: <b data-testid="instrument-renderer">…</b> · clock floor
+    <b data-testid="instrument-floor">…</b> · backing store <b data-testid="instrument-dpr">…</b>
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <canvas id="c" data-testid="canvas-el"></canvas>
-  </div>
+  <!-- ═══ §1 · PERSISTENCE ═══════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-1">
+    <div class="cv-sec-head"><span class="cv-sec-n">§1</span><h2>Persistence</h2></div>
+    <p class="cv-because">Nothing erases itself, <b>because nothing was stored.</b>
+      A DOM node you move leaves nothing behind — the browser knows where it was.
+      Canvas keeps no record of a mark once it is drawn, so the previous frame is
+      still on the surface unless you remove it yourself. Clearing is a decision,
+      and the field below is what happens when you decide not to: every frame is
+      replaced by a faded copy of itself, scaled a fraction about its centre.</p>
 
-  <div class="controls">
-    <button class="ibtn primary" id="toggle">⏸ Pause</button>
-    <span class="fps">Particles: <b id="count">0</b> · Frame time: <b id="ft">—</b></span>
-  </div>
+    <div class="v1" data-testid="v1-world">
+      <div class="v1-stage" data-testid="v1-explain-stage">
+        <canvas data-testid="v1-explain"></canvas>
+      </div>
+      <p class="v1-cap" data-testid="v1-explain-cap">How one mark ages. Each
+        generation is the one before it, dimmed by the decay and scaled 1.006 about
+        the field's centre — so a mark drifts outward as it fades, and the ladder
+        below it is what the palette does to that fade: sixteen steps, no dither,
+        which is why the trail bands instead of dissolving.</p>
+      <div class="v1-stage" data-testid="v1-stage">
+        <canvas data-testid="v1-canvas"></canvas>
+      </div>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 11</h3>
-    <p>"Canvas 2D — imperative pixel drawing, CPU-bound, good for generative work; visual:
-      thread demo in Canvas 2D at a visibly higher particle count (thousands), no DOM
-      overhead."</p>
-    <p>What's running above is a real particle field (~1,800 points, drifting) as a stand-in
-      for the thread demo — proving out the escalation in particle count this slide argues
-      for. It isn't resolving into the brandmark yet; that needs the actual vector path
-      data, same open dependency as the SVG page.</p>
+      <div class="v1-bar" data-testid="v1-bar">
+        <button class="v1-btn v1-on" data-mode="analyser" data-testid="v1-mode-analyser">analyser</button>
+        <button class="v1-btn" data-mode="scope" data-testid="v1-mode-scope">oscilloscope</button>
+        <button class="v1-btn" data-testid="v1-clear">clear the field</button>
+        <button class="v1-btn" data-testid="v1-quantise">quantise: on</button>
+      </div>
+
+      <div class="v1-readouts" data-testid="v1-readouts">
+        <div class="v1-kv">frame<b class="v1-dot" data-testid="v1-frame">0</b></div>
+        <div class="v1-kv">palette<b data-testid="v1-palette">—</b></div>
+        <div class="v1-kv">decay per frame<b data-testid="v1-decay">—</b></div>
+        <div class="v1-kv">quantise cost<b data-testid="v1-qcost">—</b></div>
+      </div>
+
+      <p class="cv-instr" data-testid="v1-instr">
+        <b>Two operations on a surface that keeps what it is given, and neither
+        has an equivalent outside canvas.</b> First the field is <i>replaced</i> by
+        a faded copy of itself scaled 1.006 about its centre — the canvas reading
+        its own output, so the trail drifts outward as it dims. Replaced, not drawn
+        over: drawing the previous frame back on top adds a second copy, the field
+        gains brightness every frame and saturates to white inside a second, and it
+        looks like a fault in the arithmetic rather than in the compositing mode.
+        Then the new marks. The analyser's bars <i>replace</i>, because a bar is an
+        object and its trail comes from the pass above; the oscilloscope's line is
+        composited with <code>lighter</code> at partial alpha, so where the trace
+        crosses its own history the two brighten instead of one hiding the other.
+        Finally the whole field is frozen to a <b data-testid="v1-instr-pal">24</b>-entry
+        palette with no dither, which is why the trail steps rather than fading
+        smoothly. <b>The banding is the material.</b> Press <i>clear the field</i> to
+        see what the surface was holding — and note that it comes back, because
+        nothing here is stored.
+      </p>
+      <p class="cv-instr" data-testid="v1-idem">
+        <b>This is the one demo on the sheet that is path-dependent by
+        construction</b>, which is a problem the sheet has to answer rather than
+        hide: <code>render(t)</code> is supposed to give the same picture at the
+        same <code>t</code> from any prior frame, and a framebuffer that accumulates
+        cannot. So it does both. A small step forward accumulates, which is the real
+        thing; a jump — a scrub, the poster frame, the QC pass — rebuilds the field
+        from empty by running a fixed <b data-testid="v1-steps">—</b> steps up to
+        <code>t</code>. Reconstruction is deterministic, so idempotency holds where
+        it is checked, and the accumulation stays honest where it is watched.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ §2 · BATCHING ═══════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-2">
+    <div class="cv-sec-head"><span class="cv-sec-n">§2</span><h2>Batching</h2></div>
+    <p class="cv-because">Cost is calls, <b>because there are no objects.</b>
+      There is no retained list of things for the engine to optimise over — only
+      the sequence of commands you issue, and the price is set by which commands
+      those are. The console below is a halftone at 20×, and a halftone is nothing
+      but marks: every frame puts down tens of thousands of dots in four inks at
+      four angles. The instrument and the technique are the same object, so
+      changing how the dots are drawn changes the cost of the picture you are
+      looking at.</p>
+
+    <div class="h2" data-testid="h2-world">
+      <div class="h2-bar" data-testid="h2-bar">
+        <button class="h2-btn h2-on" data-m="arc" data-testid="h2-method-arc">arc per dot</button>
+        <button class="h2-btn" data-m="batched" data-testid="h2-method-batched">one batched path</button>
+        <button class="h2-btn" data-m="sprite" data-testid="h2-method-sprite">drawImage sprite</button>
+        <button class="h2-btn" data-m="rect" data-testid="h2-method-rect">fillRect square</button>
+        <span style="flex:1"></span>
+        <button class="h2-btn h2-c h2-on" data-ch="c" data-testid="h2-plate-c">cyan 15°</button>
+        <button class="h2-btn h2-m h2-on" data-ch="m" data-testid="h2-plate-m">magenta 75°</button>
+        <button class="h2-btn h2-y h2-on" data-ch="y" data-testid="h2-plate-y">yellow 0°</button>
+        <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">black 45°</button>
+        <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
+        <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
+        <button class="h2-btn h2-on" data-testid="h2-proof">proof sequence</button>
+        <button class="h2-btn h2-on" data-testid="h2-loupe">loupe</button>
+      </div>
+      <div class="h2-stage" data-testid="h2-explain-stage">
+        <canvas data-testid="h2-explain"></canvas>
+      </div>
+      <p class="h2-cap" data-testid="h2-explain-cap">The four separations, each at
+        its own angle, and what they make together. Below: coverage from 0 to 100%,
+        and the dot that carries it — area, not width, which is why a 50% tone is a
+        dot of radius 0.40 of the cell rather than half of it.</p>
+      <div class="h2-stage" data-testid="h2-stage">
+        <canvas data-testid="h2-canvas"></canvas>
+      </div>
+      <div class="h2-plate" data-testid="h2-readouts">
+        <div class="h2-kv">dots this frame<b data-testid="h2-dots">—</b></div>
+        <div class="h2-kv">draw + sync<b data-testid="h2-cost">—</b></div>
+        <div class="h2-kv">ruling<b data-testid="h2-ruling">—</b></div>
+        <div class="h2-kv">screen angles<b data-testid="h2-angles">Y 0 · C 15 · K 45 · M 75</b></div>
+      </div>
+    </div>
+
+    <p class="cv-instr" data-testid="h2-instr">
+      <b>Three facts hold this picture together and all three are printable.</b>
+      Only three screens can sit at mutual 30° separation, so yellow takes the 15°
+      collision — because it is the faintest of the four — and yellow runs at 108%
+      of the others' frequency to suppress the residual beat. What comes out is a
+      <b>rosette</b>: a controlled, least-objectionable moiré, which is what a press
+      does on purpose where this deck's other sheets avoid moiré on purpose.
+      <b>The plates above are drifting</b>, so you can watch the rosette break
+      into a coarse beat as they leave their separation and re-form as they
+      return: the angle is not a setting on a still picture, it is the variable,
+      moving. <i>Lock to standard angles</i> stops it dead, which is why the
+      standard set is standard.
+      <b>Dot gain</b> is the other one: ink spreads into paper, so coverage is
+      pushed by <code>c + 0.12·sin(πc)</code> — 12% at the midtone, nothing at
+      either end. Turn it off and the whole page goes pale, which is what a plate
+      looks like before the press has had it.
+    </p>
+
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-a">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table A — the same picture, four ways.</b> The console above changes
+          method live; this is the same question asked rigorously. One mark
+          specification for every row: a 4×4 axis-aligned opaque square at integer
+          coordinates, in one resolved ink, at seeded positions. A method is
+          admitted only if its output is pixel-identical to the
+          <code>fillRect</code> reference.
+        </caption>
+        <thead><tr><th>method</th><th>ms / frame</th><th>× fastest</th><th>pixels differing</th></tr></thead>
+        <tbody data-testid="table-a-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="cv-guard" data-testid="table-a-guard">verifying…</div>
+
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-b">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table B — and what the mark itself costs.</b> Here the pictures are
+          <i>different</i> and that is the subject: an antialiased disc of equal
+          area against the hard square, and integer against fractional coordinates.
+        </caption>
+        <thead><tr><th>mark</th><th>ms / frame</th><th>× square</th><th>area drawn</th></tr></thead>
+        <tbody data-testid="table-b-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="cv-instr" data-testid="table-notes">
+      <b>Integer snapping is deliberate and is a small lie about real drawing</b> —
+      nobody snaps a halftone to integers, and the console above does not. Table B
+      is where the truth of that gets its own number. Floor:
+      <b data-testid="table-floor">…</b> · marks per frame:
+      <b data-testid="table-n">…</b> · sync point:
+      <code>getImageData(0,0,1,1)</code>, measured at
+      <b data-testid="table-synccost">…</b> on its own.
+    </p>
+  </section>
+
+  <!-- ═══ §3 · HIT TESTING ════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-3">
+    <div class="cv-sec-head"><span class="cv-sec-n">§3</span><h2>Hit testing</h2></div>
+    <p class="cv-because">The pointer is rebuilt by hand, <b>because there are no
+      nodes.</b> No element means no <code>:hover</code>, no event target, no
+      accessibility tree. The answer is a second surface nobody sees: draw
+      everything again in a colour that <i>is</i> its identity, then read the one
+      pixel under the cursor and decode it. A transit map is the most natural
+      possible use of that idea, because a line already <i>is</i> its colour.
+      <b>Move the pointer over the map.</b></p>
+
+    <div class="n3 n3-world" data-testid="n3-world">
+      <div class="n3-bar" data-testid="n3-bar">
+        <button class="n3-btn" data-testid="n3-layer">show the pick surface</button>
+        <button class="n3-btn n3-on" data-testid="n3-run">run the service</button>
+        <button class="n3-btn n3-on" data-testid="n3-labels">station names</button>
+        <button class="n3-btn n3-on" data-testid="n3-zones">zones &amp; water</button>
+      </div>
+      <div class="n3-stage" data-testid="n3-stage">
+        <canvas data-testid="n3-canvas"></canvas>
+        <!-- the poster's display type, duplicated where a screen reader can
+             reach it. Drawn type is never the only copy on this sheet. -->
+        <span class="n3-sr" data-testid="n3-poster-text">The Network. Six lines,
+          sixty-three stations, first train 05:12, last train 00:41. Drawn live in
+          HTML canvas.</span>
+      </div>
+      <p class="n3-cap" data-testid="n3-cap">The pick surface is the second map. Every
+        line and every station is drawn on it again in a flat colour that encodes what
+        it is — red and green carry the index, blue says whether it is a line or a
+        station, and alpha separates a hit from the paper. It is never composited to
+        the screen. Switch to it and you are looking at the thing the pointer sees.</p>
+
+      <div class="n3-shell" data-testid="n3-shell">
+        <div class="n3-board" data-testid="n3-board">
+          <div class="n3-board-head">
+            <span data-testid="n3-board-station">hover a station</span>
+            <span data-testid="n3-board-clock">--:--</span>
+          </div>
+          <div data-testid="n3-board-rows"></div>
+        </div>
+        <div class="n3-status" data-testid="n3-status"></div>
+      </div>
+
+      <div class="n3-plate" data-testid="n3-readouts">
+        <div class="n3-kv">stations<b data-testid="n3-stations">—</b></div>
+        <div class="n3-kv">objects on the map<b data-testid="n3-objects">—</b></div>
+        <div class="n3-kv">pixel read<b data-testid="n3-pixel">—</b></div>
+        <div class="n3-kv">decoded<b data-testid="n3-decoded">nothing under the pointer</b></div>
+        <div class="n3-kv">read cost<b data-testid="n3-readcost">—</b></div>
+      </div>
+    </div>
+
+    <p class="cv-instr" data-testid="n3-instr">
+      <b>The cost of the read does not move with the object count</b>, and that is why
+      this technique survives. A scene graph answers "what is under the pointer" by
+      walking a tree; a pick buffer answers it by looking at one pixel, so the answer
+      costs the same whether the map carries forty objects or forty thousand. What it
+      costs instead is a second full draw every frame — the trade, stated rather than
+      hidden, and the reason the pick surface is rebuilt at the same <code>t</code> as
+      the map. A pick buffer one frame out of date is the classic defect here: the
+      picture moves and the hit regions do not, and it fails silently.
+      <b>The board and the status panel are not decoration.</b> Every arrival time is
+      computed from where a train actually is on the line — distance remaining over
+      speed — and a line reads <i>minor delays</i> because a train on it is being
+      held, not because a timer said so. One state, two readers.
+    </p>
+  </section>
+
+  <!-- ═══ §4 · READBACK ═══════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-4">
+    <div class="cv-sec-head"><span class="cv-sec-n">§4</span><h2>Readback</h2></div>
+    <p class="cv-because">The surface can be read back, <b>uniquely on this
+      spectrum.</b> SVG can tell you where a node is; it cannot tell you what colour
+      a pixel ended up. Canvas can, synchronously, for any region — and once a
+      drawing surface can be read, it stops being an output and becomes an input.
+      Everything on the right of the workstation below is <i>derived from the image
+      on the left by reading it</i>: the histogram, the window, the region
+      statistics, and the mark that assembles itself out of the pixels.</p>
+
+    <div class="r4 r4-world" data-testid="r4-world">
+      <div class="r4-bar" data-testid="r4-bar">
+        <button class="r4-btn r4-on" data-lut="gsdf" data-testid="r4-lut-gsdf">GSDF grey</button>
+        <button class="r4-btn" data-lut="iron" data-testid="r4-lut-iron">heat</button>
+        <button class="r4-btn r4-on" data-testid="r4-cine">cine</button>
+        <button class="r4-btn r4-on" data-testid="r4-roi">region</button>
+        <button class="r4-btn r4-on" data-testid="r4-auto">auto window</button>
+        <button class="r4-btn r4-on" data-testid="r4-fusion">fusion</button>
+        <button class="r4-btn" data-testid="r4-ramp">ramp: spectral</button>
+        <button class="r4-btn r4-on" data-testid="r4-rotate">rotate the map</button>
+        <button class="r4-btn" data-testid="r4-recon">reconstruct from readback</button>
+      </div>
+      <div class="r4-stage" data-testid="r4-stage">
+        <canvas data-testid="r4-canvas"></canvas>
+      </div>
+      <p class="r4-cap" data-testid="r4-cap">Drag on the image to set window and
+        level — the two numbers every reading room argues about. They do not change
+        the scan; they change which slice of its range the display spends its greys
+        on, which is why the same pixels can show bone or soft tissue and never both
+        at once. Left alone they sweep on their own, widening and sliding the way a
+        pair of hands does while reading; the first drag takes them off it.</p>
+      <div class="r4-plate" data-testid="r4-readouts">
+        <div class="r4-kv">slice<b data-testid="r4-slice">—</b></div>
+        <div class="r4-kv">window / level<b class="r4-anno" data-testid="r4-wwwl">—</b></div>
+        <div class="r4-kv">region mean ± sd<b data-testid="r4-roistat">—</b></div>
+        <div class="r4-kv">fusion overlay<b class="r4-anno" data-testid="r4-fusion-stat">—</b></div>
+        <div class="r4-kv">pixels read this frame<b data-testid="r4-read">—</b></div>
+        <div class="r4-kv">readback cost<b data-testid="r4-readcost">—</b></div>
+      </div>
+    </div>
+
+    <p class="cv-instr" data-testid="r4-instr">
+      <b>Nothing on the right is stored, and that is the point of the section.</b>
+      The histogram is counted out of the pixels every frame; the region statistics
+      are computed from the pixels inside the box; the mark is assembled from the
+      pixels above a threshold. Change the slice, the window, the level or the LUT
+      and all of them follow, because none of them is a copy of the image — they are
+      all questions asked of it. A retained-mode surface can tell you where its
+      objects are and it cannot answer any of these, because the answer is not in
+      the objects. It is in the pixels the objects turned into.
+    </p>
+  </section>
+
+  <!-- ═══ §5 · OFF-THREAD ═════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-5">
+    <div class="cv-sec-head"><span class="cv-sec-n">§5</span><h2>Off-thread</h2></div>
+    <p class="cv-because">It can leave the main thread, <b>because it needs no DOM.</b>
+      A canvas's control can be transferred to a worker once, irreversibly, and from
+      then on it is drawn by a thread your layout, your parsing and your blocked
+      <code>for</code> loop cannot touch. Two identical players below, from one
+      source, every pixel of both of them drawn. Only the right one is drawn by a
+      worker. Block the main thread and watch which title is still scrolling.</p>
+
+    <div class="t5" data-testid="t5-world">
+      <div class="t5-rack" data-testid="t5-rack">
+        <div>
+          <div class="t5-unit-name">unit 1 · <b>main thread</b></div>
+          <div class="t5-stage" data-testid="t5-main-stage">
+            <canvas data-testid="t5-main-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-main-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
+          </div>
+        </div>
+        <div>
+          <div class="t5-unit-name">unit 2 · <b data-testid="t5-host">worker</b></div>
+          <div class="t5-stage" data-testid="t5-worker-stage">
+            <canvas data-testid="t5-worker-canvas"></canvas>
+            <canvas class="t5-fallback" data-testid="t5-fallback-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-worker-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="t5-bar" data-testid="t5-bar">
+        <button class="t5-btn" data-testid="t5-freerun">free-run both</button>
+        <button class="t5-btn" data-testid="t5-block">block the main thread 800 ms</button>
+      </div>
+
+      <div class="t5-readouts" data-testid="t5-readouts">
+        <div class="t5-kv">main-thread frames<b class="t5-dot" data-testid="t5-main-frames">0</b></div>
+        <div class="t5-kv">worker frames<b data-testid="t5-worker-frames">0</b></div>
+        <div class="t5-kv">worker parity<b data-testid="t5-parity">booting…</b></div>
+        <div class="t5-kv">chassis paint<b data-testid="t5-chrome-ms">—</b></div>
+      </div>
+
+      <p class="t5-note" data-testid="t5-note" hidden></p>
+      <p class="cv-instr" data-testid="t5-instr">
+        <b>Both players are drawn, and drawn the same way: a blitter.</b> Flat
+        colours, integer rectangles, a hand-set 5×6 bitmap font, and bevels that are
+        four colours and six lines with no interpolation — a bevel here is a
+        <i>notation</i> for depth, the way a contour line is, not a simulation of
+        light. The font is hand-set rather than rasterised because text rendering is
+        the least portable thing in a browser and the parity check below is
+        byte-exact; a bitmap font cannot disagree with itself, which is also why
+        skins shipped one. <b>The scrolling title is the mark that freezes</b> — a
+        stalled marquee is exactly what a hung player looked like, and everyone in
+        the room has seen one. Both strings are duplicated in the DOM, because a
+        raster is somewhere a screen reader cannot go.
+      </p>
+    </div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the instrument, and its floor.</b> Every printed figure carries the
+        method that produced it. Where the instrument cannot resolve a value the sheet
+        prints a bound, never a zero.</li>
+      <li><b>A timing bracket needs a sync point.</b> Chrome defers 2D rasterisation.
+        The first version of §2 measured command submission and reported that 2 300×
+        the drawn area was free. With the sync point it costs 2.2×, and that correction
+        is why §2 has two tables instead of one confident number.</li>
+      <li><b>A control must vary the thing the instrument might be missing.</b> A
+        mark-count control passes happily on a blind clock; only an area sweep catches
+        it.</li>
+      <li><b>Headless and headed can agree and both be wrong.</b> They did, here. The
+        agreement made a GPU explanation feel like a resolution.</li>
+      <li><b>If the finding inverts, the sheet says so.</b> Batching 50 000 marks into
+        one path is <i>slower</i> than issuing 50 000 calls, which is the opposite of
+        the folklore. It is stated on output proven pixel-identical, because that is
+        where a counter-intuitive claim has to stand.</li>
+    </ol>
+    <h3 style="margin-top:22px">How the chrome was checked</h3>
+    <p>The five ACETATE screens are generated from one template, so their chrome is
+      one object rather than five copies somebody has to keep in step. Verified by
+      cloning each chassis into a single fixed, integer-aligned slot — comparing them
+      where they live measures where each landed on the device-pixel grid, not whether
+      the chrome is the same — and screenshotting three regions of each:</p>
+    <ul style="padding-left:1.1em">
+      <li><b>Banner: 0 of 18 696 pixels differ, across all five.</b></li>
+      <li>Section rail: two of the four pairs byte-identical; the other two differ on
+        about 1 300 pixels by at most 57 levels. Identical markup, so this is
+        sub-device-pixel placement — the five units are different heights and land on
+        the grid differently.</li>
+      <li>Transport: differs, and mostly by design. Suppressing the faceplate grain
+        drops the difference from 58 000 pixels to 20 000 and the worst channel delta
+        from 24 to 14, which says most of it is the machined finish: the grain is one
+        continuous 300 px texture anchored at the top of the unit, so a taller unit
+        shows a different part of it at the foot. That is what a real faceplate does.</li>
+    </ul>
+    <p>The same run is the evidence for the rule above it. Nothing outside the working
+      area moves; the timecode digits, the readouts and the traces are data and do.</p>
+
+    <h3 style="margin-top:22px">Fiction, and what is not fiction</h3>
+    <p><b>ACETATE is invented.</b> No artist, label or release named on this sheet
+      exists; the programme material is a stated mathematical construction, not a
+      recording, and nothing here decodes or plays audio. The measurements are real.</p>
   </div>
 </div>
 
+<script src="../system/wam.js"></script>
+<script src="./skin.js"></script>
+<script src="./transport.js"></script>
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const countEl = document.getElementById('count');
-const ftEl = document.getElementById('ft');
-const toggleBtn = document.getElementById('toggle');
+/* ════════════════════════════════════════════════════════════════════════
+   SL-11 · canvas — one inline block, five sections.
 
-let running = true;
-let dpr = Math.min(2, window.devicePixelRatio || 1);
-let W, H, particles = [];
-const N = 1800;
+   Everything visible is a pure render(t) registered with WAM.clock, so the
+   scrub, the autoplay, the reduced-motion poster and the QC filmstrip are
+   four callers of one function. The exception is named and guarded: §5's
+   worker free-run computes its own t, which is the whole point of §5 and is
+   checked by frame counters rather than by idempotency.
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
 
-function resize() {
-  const r = canvas.getBoundingClientRect();
-  W = canvas.width = r.width * dpr;
-  H = canvas.height = r.height * dpr;
-}
-function seed() {
-  particles = Array.from({ length: N }, () => ({
-    x: Math.random() * W, y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.4 * dpr, vy: (Math.random() - 0.5) * 0.4 * dpr,
-    r: (0.8 + Math.random() * 1.6) * dpr,
-  }));
-  countEl.textContent = N;
-}
-resize(); seed();
-window.addEventListener('resize', () => { resize(); });
+var $ = function (id) { return document.querySelector('[data-testid="' + id + '"]'); };
+var TAU = Math.PI * 2;
+var DPR = Math.min(2, window.devicePixelRatio || 1);
+var root = getComputedStyle(document.documentElement);
 
-const tintRGB = getComputedStyle(document.documentElement).getPropertyValue('--tint');
-let last = performance.now();
-function frame(now) {
-  const dt = now - last; last = now;
-  if (running) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = tintRGB || '#7dd3fc';
-    for (const p of particles) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-      ctx.globalAlpha = 0.55;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ftEl.textContent = dt.toFixed(2) + 'ms';
+/* ── instruments ──────────────────────────────────────────────────────── */
+
+/* The named sync point. Chrome records 2D commands and rasterises them
+   later, so a bracket that ends without one measures how fast commands were
+   SUBMITTED. getImageData forces every queued command to resolve. Called
+   alone it costs ~0 ms — measured below and printed — so whatever it adds
+   to a bracket is work that had simply not happened yet when the clock
+   stopped. */
+function sync(ctx) { ctx.getImageData(0, 0, 1, 1); }
+
+/* performance.now() is not the same clock in every engine: roughly 100 µs in
+   Chromium, clamped to 1 ms in Firefox and WebKit as an anti-fingerprinting
+   measure. Bounded by wall time rather than iteration count, because under a
+   1 ms clamp "sample 40 000 times" is forty seconds of blocked main thread. */
+var CLOCK_FLOOR = (function () {
+  var min = Infinity, deadline = performance.now() + 4, a, b;
+  while (performance.now() < deadline) {
+    a = performance.now(); b = performance.now();
+    if (b > a && b - a < min) min = b - a;
   }
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
+  return min === Infinity ? 1 : min;
+})();
 
-toggleBtn.addEventListener('click', () => {
-  running = !running;
-  toggleBtn.textContent = running ? '⏸ Pause' : '▶ Resume';
+function median(a) {
+  var s = a.slice().sort(function (x, y) { return x - y; });
+  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+}
+/* A figure within five floors of the clock's resolution is a bound, not a
+   value, and gets said so rather than printed as though it were measured. */
+function atFloor(ms) { return ms < CLOCK_FLOOR * 5 ? '<span class="cv-dagger">†</span>' : ''; }
+function ms(v) { return v < 10 ? v.toFixed(2) : v.toFixed(1); }
+
+/* xorshift32. Math.random() cannot be used anywhere a picture has to be
+   reproduced: Table A's whole claim is that four methods drew the SAME
+   marks, and that is only checkable if the coordinates repeat exactly. */
+function rng(seed) {
+  var s = seed >>> 0 || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+/* One ink, resolved from the token, parsed once. Every method draws in this
+   array — including putImageData, which is where a hardcoded triple would
+   otherwise sit and silently stop tracking the token. */
+function resolveRGB(cssColour) {
+  var c = document.createElement('canvas'); c.width = c.height = 1;
+  var x = c.getContext('2d');
+  x.fillStyle = cssColour; x.fillRect(0, 0, 1, 1);
+  var d = x.getImageData(0, 0, 1, 1).data;
+  return [d[0], d[1], d[2]];
+}
+/* Each world declares its palette on its own class, not on :root, so a
+   plain getComputedStyle(documentElement) lookup returns '' for every one
+   of them — and every call site had a hex fallback, so the sheet drew in
+   plausible wrong colours and said nothing about it. One world's LUT had no
+   fallback, rendered black, and that is the only reason this was ever
+   caught. A miss is now recorded and reported on the instrument plate
+   rather than absorbed. Add a class below when a world is added. */
+var worldProbe = document.createElement('div');
+/* Carries EVERY world scope at once. Each world declares its palette on its
+   own class rather than on :root, so one probe has to wear all of them or a
+   lookup silently returns '' and the sheet draws a fallback colour while
+   claiming to draw the token. Add a class here when a world is added. */
+worldProbe.className = 'v1 h2 n3 r4 t5';
+worldProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
+document.body.appendChild(worldProbe);
+var worldRoot = getComputedStyle(worldProbe);
+var TOKEN_MISSES = [];
+function token(name) {
+  var v = root.getPropertyValue(name).trim() || worldRoot.getPropertyValue(name).trim();
+  if (!v) TOKEN_MISSES.push(name);
+  return v;
+}
+
+/* Every stage sizes its backing store to the device pixel ratio and
+   re-renders at the CURRENT t on resize — never at 0, which would make a
+   window drag look like a seek. */
+function fit(cv, cssH) {
+  var w = cv.parentNode.clientWidth || cv.clientWidth || 600;
+  cv.style.height = cssH + 'px';
+  cv.width = Math.max(1, Math.round(w * DPR));
+  cv.height = Math.max(1, Math.round(cssH * DPR));
+  return { w: cv.width, h: cv.height };
+}
+var _resizers = [];
+function onResize(fn) { _resizers.push(fn); }
+var _rt = 0;
+window.addEventListener('resize', function () {
+  clearTimeout(_rt);
+  _rt = setTimeout(function () { _resizers.forEach(function (f) { f(); }); }, 120);
 });
+
+/* §2's measurement takes the main thread for about a second, and §5's
+   worker boot is gated on a 750 ms ping. Running the measurement first
+   starves the pong and §5 falls back to the main thread on a machine where
+   the worker was perfectly healthy — measured, headed Chromium. So the
+   measurement waits for §5 to settle, with its own deadline in case §5
+   never reports at all. */
+var BOOT = (function () {
+  var done = false, q = [];
+  function fire() { if (done) return; done = true; q.forEach(function (f) { setTimeout(f, 60); }); q = []; }
+  setTimeout(fire, 4000);
+  return { when: function (f) { if (done) setTimeout(f, 60); else q.push(f); }, settled: fire };
+})();
+
+/* ── instrument plate ─────────────────────────────────────────────────── */
+(function () {
+  var probe = document.createElement('canvas').getContext('webgl');
+  var name = 'unavailable';
+  if (probe) {
+    var ext = probe.getExtension('WEBGL_debug_renderer_info');
+    name = ext ? probe.getParameter(ext.UNMASKED_RENDERER_WEBGL) : (probe.getParameter(probe.RENDERER) || 'unnamed');
+  }
+  $('instrument-renderer').textContent = name;
+  $('instrument-floor').textContent = CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms';
+  $('instrument-dpr').textContent = DPR + '× device pixels';
+})();
+
+/* Run last: every token the sheet asked for has been asked for by then. */
+function reportTokenMisses() {
+  if (!TOKEN_MISSES.length) return;
+  var p2 = $('instrument-plate');
+  var uniq = TOKEN_MISSES.filter(function (v, i, a) { return a.indexOf(v) === i; });
+  p2.insertAdjacentHTML('beforeend',
+    ' <b style="color:var(--signal)">' + uniq.length + ' token(s) did not resolve: ' + uniq.join(', ') +
+    ' — every colour drawn from them is a fallback, not the design system.</b>');
+}
+
+
+/* ── EVERY LOOP CLOSES, AND HERE IS THE RULE THAT MAKES IT ─────────────
+   Every multiplier on t in every world below is an INTEGER. That is not a
+   tidiness preference, it is the whole of loop continuity: a term like
+   sin(t·2π·1.3) has a period of 1/1.3 cycles, so at t = 1 it is not back
+   where it started, and the seam shows as a lurch the moment the clock
+   wraps.
+
+   This looks like it contradicts the other rule these worlds follow — that
+   independent cycles must not share a small common multiple, or three
+   animations lock into one beat and the world reads as having one thing
+   going on. It does not, and the reconciliation is worth stating: use
+   COPRIME integers. 1, 2, 3, 5, 7, 11, 13 have no small common multiple
+   between any pair, so nothing visibly beats — and every one of them closes
+   at exactly t = 1, so nothing lurches. Both properties from one choice.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ════════════════════════════════════════════════════════════════════════
+   §1 · TRAILS — persistence
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var W = 960, H = 420;
+  var cv = $('v1-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
+
+  var PAL_ANCHORS = ['--v1-a0', '--v1-a1', '--v1-a2', '--v1-a3', '--v1-a4'].map(function (n) { return resolveRGB(token(n)); });
+  var SCOPE_ANCHORS = [resolveRGB(token('--v1-o0')), resolveRGB(token('--v1-o4'))];
+  var VOID = resolveRGB(token('--v1-void'));
+  var GRID = resolveRGB(token('--v1-grid'));
+  var PEAK = resolveRGB(token('--v1-peak'));
+
+  /* 24 entries: 1 void + 1 grid + 16 analyser steps + 5 oscilloscope + 1 peak.
+     Frozen, and the freezing is the subject — a 16-step ramp bands, and a
+     dither here would hide the only thing worth looking at. */
+  var PALETTE = [VOID, GRID]
+    .concat(self.SKIN_RAMP(PAL_ANCHORS, 16))
+    .concat(self.SKIN_RAMP(SCOPE_ANCHORS, 5))
+    .concat([PEAK]);
+
+  var BEVEL = {
+    hi: token('--v1-hi'), lt: token('--v1-lt'),
+    sh: token('--v1-sh'), dk: token('--v1-dk'), face: token('--v1-face')
+  };
+  var FRAME = 14, STRIP = 16;                       /* chrome, in backing px */
+  var FX = FRAME, FY = FRAME, FW = W - FRAME * 2, FH = H - FRAME * 2 - STRIP - 6;
+
+  var DECAY = { analyser: 0.055, scope: 0.042 };
+  var FEEDBACK = 1.006;
+  var STEPS = 40;                                   /* reconstruction depth */
+  var mode = 'analyser', quantise = true, frames = 0, lastT = -1, qCost = [];
+  var QCACHE = self.SKIN_CACHE();
+
+  $('v1-palette').textContent = PALETTE.length + ' entries';
+  $('v1-instr-pal').textContent = PALETTE.length;
+  $('v1-steps').textContent = STEPS;
+  $('v1-decay').textContent = (DECAY[mode] * 100).toFixed(1) + '%';
+
+  /* The field lives on its own buffer so the chrome is never fed back into
+     itself — a bevel that decayed and drifted would be very pretty and would
+     stop being chrome. Chrome is painted once, over the field, every frame:
+     the sheet's two-canvas rule collapsed into one canvas because there is
+     only one surface here and the field has to sit under the frame. */
+  var field = document.createElement('canvas');
+  field.width = FW; field.height = FH;
+  var fx = field.getContext('2d', { willReadFrequently: true });
+  var scratch = document.createElement('canvas');
+  scratch.width = FW; scratch.height = FH;
+  var sx = scratch.getContext('2d');
+
+  /* The field is TRANSPARENT-backed, not filled with the void colour, and
+     that is load-bearing rather than tidy. Fading works by removing alpha —
+     `destination-out` subtracts, which is the only operation that actually
+     erases — and an opaque buffer has no alpha to remove. The void is
+     painted underneath at compose time instead. */
+  function clearField() { fx.globalCompositeOperation = 'source-over'; fx.clearRect(0, 0, FW, FH); }
+  clearField();
+
+  /* ── one step of the world ────────────────────────────────────────────
+     Three operations on a surface that keeps what it is given, and not one
+     of them has an equivalent outside canvas. */
+  function step(t) {
+    /* 1 · DECAY AND FEEDBACK, in one pass. The previous frame is taken,
+       and the field is REPLACED by a faded copy of it scaled 1.006 about
+       the centre — so the trail drifts outward as it dims. The canvas is
+       reading its own output, which is the one place on this sheet a
+       scaled drawImage is permitted, because here it is content rather
+       than chrome.
+
+       `copy` rather than `source-over` is the whole trick. Drawing the
+       previous frame back over itself ADDS a second copy, so the field
+       gains brightness every frame and saturates to white inside a
+       second — which is exactly what the first version of this did, and
+       it looked like a bug in the maths rather than in the compositing
+       mode. Replacing cannot run away. */
+    sx.globalCompositeOperation = 'copy';
+    sx.drawImage(field, 0, 0);
+    fx.globalCompositeOperation = 'copy';
+    fx.globalAlpha = 1 - DECAY[mode];
+    fx.drawImage(scratch,
+      -(FW * (FEEDBACK - 1)) / 2, -(FH * (FEEDBACK - 1)) / 2,
+      FW * FEEDBACK, FH * FEEDBACK);
+    fx.globalAlpha = 1;
+
+    /* 2 · THE NEW MARKS. The analyser's bars are solid and replace — a
+       bar is an object, and its trail comes from the pass above. The
+       scope's line is composited with `lighter` at partial alpha, so
+       where the trace crosses its own history the two brighten instead
+       of one hiding the other. */
+    if (mode === 'analyser') {
+      fx.globalCompositeOperation = 'source-over';
+      analyser(t);
+    } else {
+      fx.globalCompositeOperation = 'lighter';
+      fx.globalAlpha = 0.55;
+      scope(t);
+      fx.globalAlpha = 1;
+    }
+    fx.globalCompositeOperation = 'source-over';
+  }
+
+  /* Programme material is a STATED MATHEMATICAL CONSTRUCTION, not a
+     recording: three detuned partials under a slow envelope, plus a
+     deterministic per-band offset. Nothing here decodes or plays audio. */
+  function band(i, n, t) {
+    var u = i / n;
+    var v = 0.46
+      + 0.30 * Math.sin(t * TAU * 2 + u * 9.1)
+      + 0.17 * Math.sin(t * TAU * 7 + u * 23.7)
+      + 0.11 * Math.sin(t * TAU * 13 + u * 4.3);
+    v *= Math.pow(1 - u, 0.7) * (0.55 + 0.45 * Math.sin(t * TAU + 0.9));
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
+
+  function analyser(t) {
+    var N = 48, gap = 2, bw = Math.max(1, Math.floor((FW - gap * (N - 1)) / N));
+    var i, v, h, x, y, idx;
+    for (i = 0; i < N; i++) {
+      v = band(i, N, t);
+      h = Math.round(v * (FH - 8));
+      x = i * (bw + gap);
+      y = FH - h;
+      /* the colour comes from the bar's own height, which is how every
+         analyser of the era coloured itself: the ramp IS the scale */
+      idx = Math.min(15, Math.floor(v * 16));
+      fx.fillStyle = self.SKIN_CSS(PALETTE[2 + idx]);
+      fx.fillRect(x, y, bw, h);
+      /* peak cap, grey, as it was */
+      fx.fillStyle = self.SKIN_CSS(PEAK);
+      fx.fillRect(x, Math.max(0, y - 3), bw, 2);
+    }
+  }
+
+  function scope(t) {
+    var i, N = FW, x, y, v;
+    fx.strokeStyle = self.SKIN_CSS(PALETTE[18]);
+    fx.lineWidth = 2;
+    fx.beginPath();
+    for (i = 0; i <= N; i += 2) {
+      x = i;
+      v = Math.sin(i * 0.021 + t * TAU * 2) * 0.5
+        + Math.sin(i * 0.0072 + t * TAU * 3) * 0.32
+        + Math.sin(i * 0.041 + t * TAU) * 0.18;
+      y = FH / 2 + v * (FH * 0.36) * (0.45 + 0.55 * Math.sin(t * TAU + 0.9));
+      if (i === 0) fx.moveTo(x, y); else fx.lineTo(x, y);
+    }
+    fx.stroke();
+  }
+
+  /* ── chrome ───────────────────────────────────────────────────────────
+     A frame, a sunken bevel, and the palette the field was frozen to. Each
+     world shows the sheet it was cut from: the construction is furniture,
+     which is the sheet's "measured, not claimed" discipline applied to its
+     own making rather than only to its numbers. */
+  /* Chrome is painted in TWO passes, under and over the field, and the
+     first version was one pass after it — which filled the whole canvas
+     with the frame's face colour and painted the field out entirely on
+     every frame. The world rendered a perfect black rectangle and its own
+     frame counter went on climbing beside it, which is the failure mode
+     this sheet exists to warn about: an instrument reporting that it is
+     working while showing nothing. */
+  function chromeUnder() {
+    ctx.fillStyle = BEVEL.face;
+    ctx.fillRect(0, 0, W, H);
+  }
+  function chromeOver() {
+    var EDGE = { hi: BEVEL.hi, lt: BEVEL.lt, sh: BEVEL.sh, dk: BEVEL.dk };
+    self.SKIN_BEVEL(ctx, 0, 0, W, H, false, EDGE);
+    self.SKIN_BEVEL(ctx, FX - 2, FY - 2, FW + 4, FH + 4, true, EDGE);
+    var i, cw = Math.floor((FW - 2) / PALETTE.length);
+    for (i = 0; i < PALETTE.length; i++) {
+      ctx.fillStyle = self.SKIN_CSS(PALETTE[i]);
+      ctx.fillRect(FX + i * cw, FY + FH + 6, cw - 1, STRIP);
+    }
+    self.SKIN_BEVEL(ctx, FX - 1, FY + FH + 5, cw * PALETTE.length + 1, STRIP + 2, true, EDGE);
+  }
+
+  function compose() {
+    var px, t0;
+    chromeUnder();
+    ctx.fillStyle = self.SKIN_CSS(VOID);
+    ctx.fillRect(FX, FY, FW, FH);
+    ctx.drawImage(field, FX, FY);
+    if (quantise) {
+      t0 = performance.now();
+      px = ctx.getImageData(FX, FY, FW, FH);
+      self.SKIN_QUANTISE(px.data, FW, FH, PALETTE, 0, QCACHE);
+      ctx.putImageData(px, FX, FY);
+      qCost.push(performance.now() - t0);
+      if (qCost.length > 20) qCost.shift();
+      $('v1-qcost').innerHTML = ms(median(qCost)) + ' ms' + atFloor(median(qCost));
+    } else {
+      $('v1-qcost').textContent = 'off';
+    }
+    chromeOver();
+  }
+
+  /* ── render(t) ────────────────────────────────────────────────────────
+     This is the one demo on the sheet that is path-dependent by
+     construction, and the sheet has to answer that rather than hide it.
+     render(t) is supposed to give the same picture at the same t from any
+     prior frame; a framebuffer that accumulates cannot.
+
+     So it does both, and which one runs is decided by the size of the jump.
+     A small step forward accumulates — that is the real thing, and it is
+     what you watch. A jump (a scrub, the poster frame, the QC pass that
+     calls t=0.42 from t=0.1 and from t=0.9) rebuilds the field from empty by
+     running a fixed number of steps up to t. Reconstruction is
+     deterministic, so idempotency holds exactly where it is checked, and
+     the accumulation stays honest exactly where it is watched. */
+  var demo = WAM.clock('v1-stage', {
+    el: $('v1-world'), dur: 11000, poster: 0.62,
+    render: function (t) {
+      /* The wrap is not a jump. t going from 0.998 to 0.002 is two
+         thousandths of a cycle forward, not 0.996 backward — and reading it
+         as a jump made the field reconstruct from empty at the seam, which
+         is the flash that made the loop visibly restart. */
+      var dt = Math.abs(t - lastT);
+      if (dt > 0.5) dt = 1 - dt;
+      var jump = lastT < 0 || dt > 0.02;
+      if (jump) {
+        clearField();
+        for (var i = 1; i <= STEPS; i++) step(t * (i / STEPS));
+      } else {
+        step(t);
+      }
+      lastT = t;
+      frames++;
+      $('v1-frame').textContent = frames.toLocaleString();
+      compose();
+    }
+  });
+
+  /* ── the explanatory graphic, in this world's own language ──────────
+     Not a pane in the deck's harness beside the world — that is what made
+     every section open in presentation chrome. It is drawn on the same
+     palette, with the same bevel, inside the same frame, because an
+     explanation of a world belongs to it. */
+  (function () {
+    var EW = 960, EH = 172;
+    var ec = $('v1-explain'), ex = ec.getContext('2d');
+    ec.width = EW; ec.height = EH;
+    var GENS = 9;
+
+    WAM.clock('v1-explain-stage', {
+      el: $('v1-explain-stage'), dur: 11000, poster: 0.5,
+      render: function (t) {
+        ex.fillStyle = BEVEL.face; ex.fillRect(0, 0, EW, EH);
+        var EDGE = { hi: BEVEL.hi, lt: BEVEL.lt, sh: BEVEL.sh, dk: BEVEL.dk };
+        self.SKIN_BEVEL(ex, 0, 0, EW, EH, false, EDGE);
+
+        var padX = 16, padY = 16, innerW = EW - padX * 2, innerH = EH - padY * 2;
+        ex.fillStyle = self.SKIN_CSS(VOID);
+        ex.fillRect(padX, padY, innerW, innerH);
+        self.SKIN_BEVEL(ex, padX - 2, padY - 2, innerW + 4, innerH + 4, true, EDGE);
+
+        var mono = '10px ' + (token('--mono') || 'monospace');
+        ex.font = mono;
+
+        /* left: one mark, nine generations, six frames apart. The radius is
+           the TRUE feedback scale — 1.006 per frame, so 1.33x over 48 — and
+           not an exaggeration of it. The first version compounded 46 frames
+           per step instead of 6 and drew a final disc nine times the size,
+           which looked more like the idea and was a picture of a number
+           nobody measured. */
+        var i, cy = padY + innerH * 0.44, r, lvl, idx;
+        var GEN_STEP = 6;
+        var pitch = (innerW * 0.60) / GENS;
+        for (i = 0; i < GENS; i++) {
+          lvl = Math.pow(1 - DECAY[mode], i * GEN_STEP);
+          r = 13 * Math.pow(FEEDBACK, i * GEN_STEP);
+          idx = Math.max(0, Math.min(15, Math.round(lvl * 15)));
+          var cx = padX + 34 + i * pitch;
+          ex.fillStyle = self.SKIN_CSS(PALETTE[2 + idx]);
+          ex.beginPath(); ex.arc(cx, cy, r, 0, TAU); ex.fill();
+          ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+          ex.fillText(i === 0 ? 'NOW' : '\u2212' + (i * GEN_STEP), cx - 9, padY + innerH - 12);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('ONE MARK, EVERY SIXTH FRAME \u2014 DIMMED BY DECAY, GROWN BY FEEDBACK', padX + 14, padY + 18);
+        ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+        ex.fillText('\u00d7' + Math.pow(FEEDBACK, 48).toFixed(2) + ' OVER 48 FRAMES', padX + 14, padY + 34);
+
+        /* right: the same fade twice. Smooth on top, and quantised to the
+           palette's sixteen steps below it — so the banding is not asserted,
+           it is the visible difference between two strips. */
+        var gx0 = padX + innerW * 0.66, gw = innerW * 0.30, bh = 22, n = 46, j, u, v2;
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('SMOOTH', gx0, padY + 18);
+        for (j = 0; j < n; j++) {
+          u = j / (n - 1);
+          v2 = Math.pow(1 - DECAY[mode], u * 54);
+          ex.fillStyle = 'rgb(' + Math.round(PALETTE[17][0] * v2 + PALETTE[0][0] * (1 - v2)) + ',' +
+                                  Math.round(PALETTE[17][1] * v2 + PALETTE[0][1] * (1 - v2)) + ',' +
+                                  Math.round(PALETTE[17][2] * v2 + PALETTE[0][2] * (1 - v2)) + ')';
+          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26, gw / n + 1, bh);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[23]);
+        ex.fillText('QUANTISED \u2014 16 STEPS, NO DITHER', gx0, padY + 26 + bh + 18);
+        for (j = 0; j < n; j++) {
+          u = j / (n - 1);
+          v2 = Math.pow(1 - DECAY[mode], u * 54);
+          idx = Math.max(0, Math.min(15, Math.round(v2 * 15)));
+          ex.fillStyle = self.SKIN_CSS(PALETTE[2 + idx]);
+          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26 + bh + 24, gw / n + 1, bh);
+        }
+        ex.fillStyle = self.SKIN_CSS(PALETTE[1]);
+        ex.fillText('0', gx0, padY + 26 + bh * 2 + 60);
+        ex.fillText('54 FRAMES', gx0 + gw - 56, padY + 26 + bh * 2 + 60);
+      }
+    });
+  })();
+
+  $('v1-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.mode) {
+      mode = b.dataset.mode;
+      [].forEach.call(this.querySelectorAll('[data-mode]'), function (x) { x.classList.toggle('v1-on', x === b); });
+      $('v1-decay').textContent = (DECAY[mode] * 100).toFixed(1) + '%';
+      lastT = -1;
+      demo.render(demo.t);
+    } else if (b === $('v1-clear')) {
+      /* Clearing is a decision. Making it a button is the section's whole
+         argument put under the reader's finger — and the field comes back,
+         because nothing here was ever stored. */
+      clearField();
+      compose();
+    } else if (b === $('v1-quantise')) {
+      quantise = !quantise;
+      b.textContent = 'quantise: ' + (quantise ? 'on' : 'off');
+      b.classList.toggle('v1-on', !quantise);
+      demo.render(demo.t);
+    }
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §2 · BATCHING
+   ════════════════════════════════════════════════════════════════════════ */
+var SEC2 = (function () {
+  var N = 50000, MW = 900, MH = 600, REPS = 7;
+  var INK = resolveRGB(token('--tint-canvas') || '#e2c23a');
+
+  /* One mark specification for the whole of Table A: a 4×4 axis-aligned
+     opaque square at integer coordinates in one resolved ink. Seeded, so
+     every method draws marks in the same places and "the same picture" is
+     a checkable statement rather than an assertion. */
+  var XS = new Int32Array(N), YS = new Int32Array(N);
+  (function () {
+    var r = rng(0xC0FFEE), i;
+    for (i = 0; i < N; i++) {
+      XS[i] = (r() * (MW - 4)) | 0;
+      YS[i] = (r() * (MH - 4)) | 0;
+    }
+  })();
+
+  var mc = document.createElement('canvas');
+  mc.width = MW; mc.height = MH;
+  var mx = mc.getContext('2d', { willReadFrequently: true });
+  var FILL = 'rgb(' + INK[0] + ',' + INK[1] + ',' + INK[2] + ')';
+
+  var sprite = document.createElement('canvas');
+  sprite.width = sprite.height = 4;
+  (function () { var s = sprite.getContext('2d'); s.fillStyle = FILL; s.fillRect(0, 0, 4, 4); })();
+
+  var buf = mx.createImageData(MW, MH);
+  var b32 = new Uint32Array(buf.data.buffer);
+  /* little-endian ABGR. Built from the SAME resolved ink as every other
+     method — a hardcoded triple here is how one path silently stops
+     tracking the token. */
+  var PACK = (255 << 24) | (INK[2] << 16) | (INK[1] << 8) | INK[0];
+
+  var METHODS = [
+    { key: 'fillrect', label: 'fillRect per call', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i], YS[i], 4, 4);
+      } },
+    { key: 'batched', label: 'rect batched into one path', draw: function () {
+        mx.fillStyle = FILL; mx.beginPath();
+        for (var i = 0; i < N; i++) mx.rect(XS[i], YS[i], 4, 4);
+        mx.fill();
+      } },
+    { key: 'sprite', label: 'drawImage sprite', draw: function () {
+        for (var i = 0; i < N; i++) mx.drawImage(sprite, XS[i], YS[i]);
+      } },
+    { key: 'imagedata', label: 'putImageData, composed once', draw: function () {
+        var i, x, y, o;
+        for (i = 0; i < N; i++) {
+          x = XS[i]; y = YS[i]; o = y * MW + x;
+          b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+        }
+        mx.putImageData(buf, 0, 0);
+      } }
+  ];
+  function clearFor(m) {
+    mx.clearRect(0, 0, MW, MH);
+    if (m.key === 'imagedata') b32.fill(0);
+  }
+  function timeOne(m) {
+    clearFor(m);
+    var t0 = performance.now();
+    m.draw();
+    sync(mx);
+    return performance.now() - t0;
+  }
+
+  /* Table B changes the mark on purpose, so the pictures differ and the
+     difference IS the finding. r = √(16/π) gives a disc of the same area as
+     the 4×4 square — the coverage axis held while the edge treatment and
+     the coordinate alignment vary. */
+  var R = Math.sqrt(16 / Math.PI);
+  var MARKS = [
+    { label: 'square 4×4, integer coords', cov: '16 px, hard edge', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i], YS[i], 4, 4);
+      } },
+    { label: 'square 4×4, fractional coords', cov: '16 px + antialiased edge', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i] + 0.37, YS[i] + 0.61, 4, 4);
+      } },
+    { label: 'disc of equal area, integer coords', cov: '16 px, antialiased', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) { mx.beginPath(); mx.arc(XS[i] + 2, YS[i] + 2, R, 0, TAU); mx.fill(); }
+      } },
+    { label: 'disc of equal area, fractional coords', cov: '16 px, antialiased', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) { mx.beginPath(); mx.arc(XS[i] + 2.37, YS[i] + 2.61, R, 0, TAU); mx.fill(); }
+      } }
+  ];
+
+  var RESULT = { a: [], b: [], syncCost: 0, ran: false };
+
+  function measure() {
+    var i, j, s, reps, ref = null;
+
+    /* what the sync point costs on its own, so the reader can see it is
+       not what the brackets are measuring */
+    reps = [];
+    for (j = 0; j < 20; j++) { s = performance.now(); sync(mx); reps.push(performance.now() - s); }
+    RESULT.syncCost = median(reps);
+
+    for (i = 0; i < METHODS.length; i++) {
+      timeOne(METHODS[i]);                                  /* warm */
+      reps = [];
+      for (j = 0; j < REPS; j++) reps.push(timeOne(METHODS[i]));
+      /* the picture this method actually produced, captured AFTER timing so
+         the getImageData cost never lands inside a bracket */
+      clearFor(METHODS[i]); METHODS[i].draw();
+      var px = mx.getImageData(0, 0, MW, MH).data;
+      var diff = 0;
+      if (ref === null) ref = px;
+      else { for (var k = 0; k < px.length; k += 4) if (px[k] !== ref[k] || px[k + 1] !== ref[k + 1] || px[k + 2] !== ref[k + 2] || px[k + 3] !== ref[k + 3]) diff++; }
+      RESULT.a.push({ label: METHODS[i].label, ms: median(reps), diff: diff });
+    }
+
+    for (i = 0; i < MARKS.length; i++) {
+      mx.clearRect(0, 0, MW, MH); MARKS[i].draw(); sync(mx);   /* warm */
+      reps = [];
+      for (j = 0; j < REPS; j++) {
+        mx.clearRect(0, 0, MW, MH);
+        s = performance.now(); MARKS[i].draw(); sync(mx); reps.push(performance.now() - s);
+      }
+      RESULT.b.push({ label: MARKS[i].label, cov: MARKS[i].cov, ms: median(reps) });
+    }
+    RESULT.ran = true;
+    paint();
+  }
+
+  function paint() {
+    var a = RESULT.a, b = RESULT.b, i, fastest = Infinity, slowest = 0, rows = '';
+    for (i = 0; i < a.length; i++) { if (a[i].ms < fastest) fastest = a[i].ms; if (a[i].ms > slowest) slowest = a[i].ms; }
+    for (i = 0; i < a.length; i++) {
+      rows += '<tr' + (a[i].ms === fastest ? ' class="cv-best"' : '') + '>' +
+        '<td>' + a[i].label + '</td>' +
+        '<td class="cv-num">' + ms(a[i].ms) + atFloor(a[i].ms) + '</td>' +
+        '<td>' + (a[i].ms / fastest).toFixed(1) + '×</td>' +
+        '<td>' + (i === 0 ? 'reference' : a[i].diff.toLocaleString()) + '</td></tr>';
+    }
+    $('table-a-body').innerHTML = rows;
+
+    var bad = a.filter(function (r, i2) { return i2 > 0 && r.diff > 0; });
+    var guard = $('table-a-guard');
+    var total = (MW * MH).toLocaleString();
+    if (bad.length) {
+      guard.className = 'cv-guard cv-bad';
+      guard.innerHTML = '✗ output NOT identical — ' + bad.map(function (r) { return r.label + ': ' + r.diff.toLocaleString(); }).join(', ') +
+        ' of ' + total + ' pixels differ. The spread above is contaminated and the sheet says so.';
+    } else {
+      guard.className = 'cv-guard cv-ok';
+      guard.innerHTML = '✓ identical output verified — 0 of ' + total + ' pixels differ across all four methods. ' +
+        'Spread fastest to slowest: <b>' + (slowest / fastest).toFixed(1) + '×</b>.';
+    }
+
+    rows = '';
+    var base = b.length ? b[0].ms : 1;
+    for (i = 0; i < b.length; i++) {
+      rows += '<tr><td>' + b[i].label + '</td><td class="cv-num">' + ms(b[i].ms) + atFloor(b[i].ms) +
+        '</td><td>' + (b[i].ms / base).toFixed(2) + '×</td><td>' + b[i].cov + '</td></tr>';
+    }
+    $('table-b-body').innerHTML = rows;
+
+    $('table-floor').textContent = CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms';
+    $('table-n').textContent = N.toLocaleString() + ' per frame, ' + MW + '×' + MH;
+    $('table-synccost').innerHTML = RESULT.syncCost < CLOCK_FLOOR
+      ? 'below the clock floor — under ' + (CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms')
+      : ms(RESULT.syncCost) + ' ms' + atFloor(RESULT.syncCost);
+  }
+
+  return { measure: measure, RESULT: RESULT, N: N, METHODS: METHODS, INK: INK };
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §2 · SCREEN — the console
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var W = 1200, H = 560;
+  var cv = $('h2-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
+
+  var STOCK = resolveRGB(token('--h2-stock'));
+  var INK = {
+    c: resolveRGB(token('--h2-ink-c')), m: resolveRGB(token('--h2-ink-m')),
+    y: resolveRGB(token('--h2-ink-y')), k: resolveRGB(token('--h2-ink-k'))
+  };
+  var RULE = self.SKIN_CSS(resolveRGB(token('--h2-rule')));
+
+  /* The standard process set. Only three screens can sit at mutual 30°
+     separation, so yellow takes the 15° collision — it is the faintest of
+     the four — and yellow runs at 108% of the others' frequency to suppress
+     the residual beat it would otherwise make with cyan. The rosette that
+     comes out is a controlled, least-objectionable moiré: the one place in
+     this deck where moiré is the intended outcome rather than the hazard. */
+  var PLATES = [
+    { ch: 'y', deg: 0,  freq: 1.08 },
+    { ch: 'c', deg: 15, freq: 1.00 },
+    { ch: 'k', deg: 45, freq: 1.00 },
+    { ch: 'm', deg: 75, freq: 1.00 }
+  ];
+  /* 12 device px at 20×. The first pass ran an 8px cell and put 45 456 dots
+     on every frame at 44 ms, which is a quarter of a second of latency on a
+     section about latency. A coarser ruling is also more legible at this
+     magnification: the rosette needs its dots separable by eye, and at 8px
+     they were not quite. */
+  var CELL = 12;
+  var on = { c: true, m: true, y: true, k: true };
+  var method = 'arc', gain = true, costs = [], dots = 0, locked = false;
+  var proofing = true, loupeOn = true, plateCount = 4;
+  var zoom = 1, ax0 = 0, ay0 = 0, cellScale = 1;
+
+  /* ── the artwork ─────────────────────────────────────────────────────
+     A HALFTONE OF NOTHING IS A TEXTURE; A HALFTONE OF SOMETHING IS AN
+     IMAGE. The first version screened an abstract tone field and it was a
+     moving surface with nothing to look at, because there was nothing
+     underneath it to resolve into.
+
+     So there is a job on the press now. It is drawn once, in full colour,
+     to an off-screen canvas — and then READ BACK and separated into four
+     plates, which is exactly the order of operations a prepress department
+     works in. Nothing is decoded and no photograph is used: every mark on
+     it is drawn here. */
+  var AW = 900, AH = 420;
+  var art = document.createElement('canvas');
+  art.width = AW; art.height = AH;
+  var ADATA = null;
+  (function () {
+    var a = art.getContext('2d', { willReadFrequently: true });
+    a.fillStyle = '#efe7d2'; a.fillRect(0, 0, AW, AH);
+    /* three process-ish discs, overprinted — the shape every colour chart
+       on every press wall has, and the reason CMYK is legible at a glance */
+    var discs = [
+      [AW * 0.30, AH * 0.46, 150, 'rgba(0,160,220,0.88)'],
+      [AW * 0.44, AH * 0.62, 150, 'rgba(225,0,120,0.80)'],
+      [AW * 0.38, AH * 0.30, 130, 'rgba(250,205,0,0.85)']
+    ];
+    discs.forEach(function (d) {
+      a.fillStyle = d[3];
+      a.beginPath(); a.arc(d[0], d[1], d[2], 0, TAU); a.fill();
+    });
+    /* a tonal sweep, which is what actually exercises a screen: every
+       coverage from nothing to solid, in one band */
+    var g = a.createLinearGradient(AW * 0.60, 0, AW, 0);
+    g.addColorStop(0, 'rgba(20,20,26,0)'); g.addColorStop(1, 'rgba(20,20,26,1)');
+    a.fillStyle = g; a.fillRect(AW * 0.60, AH * 0.10, AW * 0.36, AH * 0.34);
+    /* and the headline, because a press sheet has type on it */
+    a.fillStyle = '#14141a';
+    a.font = '900 132px ' + (token('--sans') || 'sans-serif');
+    a.fillText('SL-11', AW * 0.06, AH * 0.90);
+    a.font = '600 30px ' + (token('--mono') || 'monospace');
+    a.fillText('FOUR COLOUR PROCESS', AW * 0.62, AH * 0.66);
+    a.font = '500 19px ' + (token('--mono') || 'monospace');
+    a.fillText('175 LPI · GMG PROOF · SHEET 1 OF 1', AW * 0.62, AH * 0.74);
+    ADATA = a.getImageData(0, 0, AW, AH).data;
+  })();
+
+  /* RGB to CMYK, the ordinary way, with GCR pulling the common component
+     into black — which is what makes four plates cheaper than three and is
+     why a black plate exists at all. */
+  function sample(ax, ay, ch) {
+    if (ax < 0 || ay < 0 || ax >= AW || ay >= AH) return 0;
+    var o = (((ay | 0) * AW) + (ax | 0)) * 4;
+    var r = ADATA[o] / 255, g = ADATA[o + 1] / 255, b = ADATA[o + 2] / 255;
+    var k = 1 - Math.max(r, g, b);
+    if (ch === 'k') return k;
+    if (k >= 0.999) return 0;
+    if (ch === 'c') return (1 - r - k) / (1 - k);
+    if (ch === 'm') return (1 - g - k) / (1 - k);
+    return (1 - b - k) / (1 - k);
+  }
+
+  /* Ink spreads into paper. 12% at the midtone, nothing at either end —
+     which is what newsprint does, and what makes a screen look printed
+     rather than computed. Turn it off and the page goes pale. */
+  function dotGain(c) { return gain ? Math.min(1, c + 0.12 * Math.sin(Math.PI * c)) : c; }
+
+  var sprites = {};
+  function sprite(ch, r) {
+    var key = ch + '|' + Math.round(r * 4);
+    if (sprites[key]) return sprites[key];
+    var d = Math.max(2, Math.ceil(r * 2) + 2), c = document.createElement('canvas');
+    c.width = c.height = d;
+    var x = c.getContext('2d');
+    x.fillStyle = self.SKIN_CSS(INK[ch]);
+    x.beginPath(); x.arc(d / 2, d / 2, r, 0, TAU); x.fill();
+    sprites[key] = c;
+    return c;
+  }
+
+  /* THE SCREEN TURNS. This is the section's motion and it is also the
+     section's subject: a halftone's whole character is set by the angle
+     between its plates, so drifting them is not decoration applied to a
+     still picture — it is the variable itself, moving. */
+  function angleOf(p, t) {
+    return p.deg + (locked ? 0 : 7.5 * Math.sin(t * TAU + p.deg * 0.017));
+  }
+
+  function screenPlate(p, t) {
+    var deg = angleOf(p, t) * Math.PI / 180, ca = Math.cos(deg), sa = Math.sin(deg);
+    /* cellScale is what makes the loupe a loupe. Magnifying the artwork
+       while holding the ruling constant is a digital zoom — you get more
+       picture at the same dot size, which is not what a linen tester does.
+       A real one magnifies the PAPER, so the dots grow with the image and
+       you see fewer of them. Scaling the cell and the view together is the
+       whole difference. */
+    var cell = (CELL * cellScale) / p.freq;
+    /* walk the ROTATED lattice and place a dot per cell, rather than
+       walking pixels and testing each one — a halftone is a set of marks,
+       and this section is about what marks cost */
+    /* Iterate the lattice's own bounding box, not a square big enough to
+       contain every rotation of it. The first version walked
+       (2·diag+1)² cells per plate and threw away nine in ten of them
+       off-screen — 449 000 iterations to place 45 000 dots, and the cost
+       showed up as 45 ms a frame on a section whose subject is cost.
+       Un-rotating the four canvas corners gives the exact range. */
+    var i, j, lx, ly, x, y, c, r, n = 0, k;
+    var iMin = Infinity, iMax = -Infinity, jMin = Infinity, jMax = -Infinity;
+    var corners = [[-W / 2, -H / 2], [W / 2, -H / 2], [-W / 2, H / 2], [W / 2, H / 2]];
+    for (k = 0; k < 4; k++) {
+      var px2 = corners[k][0], py2 = corners[k][1];
+      var u = (px2 * ca + py2 * sa) / cell, v = (-px2 * sa + py2 * ca) / cell;
+      if (u < iMin) iMin = u; if (u > iMax) iMax = u;
+      if (v < jMin) jMin = v; if (v > jMax) jMax = v;
+    }
+    iMin = Math.floor(iMin) - 1; iMax = Math.ceil(iMax) + 1;
+    jMin = Math.floor(jMin) - 1; jMax = Math.ceil(jMax) + 1;
+    ctx.fillStyle = self.SKIN_CSS(INK[p.ch]);
+    if (method === 'batched') ctx.beginPath();
+    for (j = jMin; j <= jMax; j++) {
+      for (i = iMin; i <= iMax; i++) {
+        lx = i * cell; ly = j * cell;
+        x = lx * ca - ly * sa + W / 2;
+        y = lx * sa + ly * ca + H / 2;
+        if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
+        c = dotGain(sample(ax0 + (x - W / 2) / zoom, ay0 + (y - H / 2) / zoom, p.ch));
+        if (c < 0.02) continue;
+        r = cell * 0.5 * Math.sqrt(c / 0.7854);      /* area → radius */
+        if (r > cell * 0.78) r = cell * 0.78;
+        n++;
+        if (method === 'arc') { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
+        else if (method === 'batched') { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, TAU); }
+        else if (method === 'sprite') { var sp = sprite(p.ch, r); ctx.drawImage(sp, x - sp.width / 2, y - sp.height / 2); }
+        else { ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+      }
+    }
+    if (method === 'batched') ctx.fill();
+    return n;
+  }
+
+  function trimMarks() {
+    var i, L = 26;
+    ctx.strokeStyle = RULE; ctx.lineWidth = 1;
+    [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (c) {
+      ctx.beginPath();
+      ctx.moveTo(c[0] + (c[0] ? -L : L) * 0.15, c[1] + 0.5); ctx.lineTo(c[0] + (c[0] ? -L : L), c[1] + 0.5);
+      ctx.moveTo(c[0] + 0.5, c[1] + (c[1] ? -L : L) * 0.15); ctx.lineTo(c[0] + 0.5, c[1] + (c[1] ? -L : L));
+      ctx.stroke();
+    });
+    /* the register target — four inks through one mark, which is the one
+       piece of furniture that says "this came off a press" */
+    var cx = W / 2, cy = 16;
+    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 14, cy); ctx.lineTo(cx + 14, cy);
+    ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 14); ctx.stroke();
+  }
+
+  var demo = WAM.clock('h2-stage', {
+    el: $('h2-world'), dur: 16000, poster: 0.3,
+    render: function (t) {
+      ctx.fillStyle = self.SKIN_CSS(STOCK);
+      ctx.fillRect(0, 0, W, H);
+
+      /* THE PRESS RUNS AND THE LOUPE MOVES. Magnification sweeps between
+         roughly 1x and 6x and the view drifts across the sheet, so the
+         picture resolves out of the rosette and dissolves back into it —
+         which is the one thing about halftones that has to be SEEN rather
+         than explained, and it is the reason this section exists at all. */
+      zoom = 1.15 + 2.6 * (0.5 - 0.5 * Math.cos(t * TAU));
+      ax0 = AW * (0.42 + 0.22 * Math.sin(t * TAU));
+      ay0 = AH * (0.50 + 0.16 * Math.sin(t * TAU * 2 + 1.7));
+
+      /* the proof sequence: yellow down first, then cyan, magenta, black —
+         the order a sheet actually goes through a press, and the reason a
+         proof is read plate by plate rather than only at the end */
+      /* Weighted, not even: one, two, three, then the full sheet for half
+         the cycle. An even four-way split spends three quarters of its time
+         on an incomplete proof, and the complete one is the thing worth
+         looking at — the incomplete ones are how it got there. */
+      if (proofing) plateCount = [1, 2, 3, 4, 4, 4][Math.floor(t * 6) % 6];
+
+      var t0 = performance.now(), n = 0, i;
+      /* MULTIPLY, because that is what ink on ink does. Subtractive
+         compositing is physically correct here rather than stylistically
+         preferred, and it is why the overlaps darken instead of covering. */
+      ctx.globalCompositeOperation = 'multiply';
+      for (i = 0; i < PLATES.length; i++) {
+        if (!on[PLATES[i].ch]) continue;
+        if (proofing && i >= plateCount) continue;
+        n += screenPlate(PLATES[i], t);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      sync(ctx);
+      var dt = performance.now() - t0;
+      costs.push(dt); if (costs.length > 20) costs.shift();
+      dots = n;
+
+      /* ── the loupe ─────────────────────────────────────────────────
+         A press operator's linen tester, and the reason one is on every
+         press in the world: you cannot judge register or dot shape at
+         reading distance. Inside the ring the same sheet is screened at
+         three times the magnification, so the image and its dots are on
+         screen at once — which is the comparison the whole section is
+         about. */
+      if (loupeOn) {
+        var lr = 118;
+        var lx = W * (0.5 + 0.30 * Math.sin(t * TAU * 3));
+        var ly = H * (0.5 + 0.26 * Math.sin(t * TAU * 5 + 2.1));
+        var keepZ = zoom, keepX = ax0, keepY = ay0;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.clip();
+        ctx.fillStyle = self.SKIN_CSS(STOCK);
+        ctx.fillRect(lx - lr, ly - lr, lr * 2, lr * 2);
+        /* re-screen the same sheet, three times closer, around the point
+           the ring is actually over */
+        var LOUPE = 3;
+        ax0 = keepX + (lx - W / 2) / keepZ;
+        ay0 = keepY + (ly - H / 2) / keepZ;
+        zoom = keepZ * LOUPE;
+        cellScale = LOUPE;
+        ctx.translate(lx - W / 2, ly - H / 2);
+        ctx.globalCompositeOperation = 'multiply';
+        for (i = 0; i < PLATES.length; i++) {
+          if (!on[PLATES[i].ch]) continue;
+          if (proofing && i >= plateCount) continue;
+          screenPlate(PLATES[i], t);
+        }
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.restore();
+        zoom = keepZ; ax0 = keepX; ay0 = keepY; cellScale = 1;
+        /* the ring: a machined barrel, in the same flat notation as every
+           other bevel on this sheet */
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 7;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 3, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = RULE; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 6, 0, TAU); ctx.stroke();
+      }
+
+      trimMarks();
+      $('h2-dots').textContent = n.toLocaleString();
+      $('h2-cost').innerHTML = ms(median(costs)) + ' ms' + atFloor(median(costs));
+      $('h2-ruling').textContent = CELL + ' px cell · ' + zoom.toFixed(1) + '× on the sheet'
+        + (proofing ? ' · plate ' + plateCount + ' of 4' : '');
+      $('h2-angles').textContent = locked
+        ? 'Y 0 · C 15 · K 45 · M 75 — locked'
+        : PLATES.map(function (p) { return p.ch.toUpperCase() + ' ' + angleOf(p, t).toFixed(1); }).join(' · ');
+    }
+  });
+
+  /* ── the explanatory graphic, in this world's own language ──────────
+     A press proof: the four separations, what they make together, and the
+     tone ramp that says what a dot of a given size is worth. Printed on the
+     same stock, in the same four inks, at the same angles as the console —
+     because an explanation of a world belongs to it. */
+  (function () {
+    var EW = 1200, EH = 186;
+    var ec = $('h2-explain'), ex = ec.getContext('2d');
+    ec.width = EW; ec.height = EH;
+
+    function patch(x, y, w, h, plates, tone, t) {
+      ex.save();
+      ex.beginPath(); ex.rect(x, y, w, h); ex.clip();
+      ex.fillStyle = self.SKIN_CSS(STOCK); ex.fillRect(x, y, w, h);
+      ex.globalCompositeOperation = 'multiply';
+      plates.forEach(function (p) {
+        var deg = p.deg * Math.PI / 180, ca = Math.cos(deg), sa = Math.sin(deg);
+        var cell = CELL / p.freq, i, j, lx, ly, px2, py2, c, r;
+        var reach = Math.ceil(Math.max(w, h) / cell) + 2;
+        ex.fillStyle = self.SKIN_CSS(INK[p.ch]);
+        for (j = -reach; j <= reach; j++) {
+          for (i = -reach; i <= reach; i++) {
+            lx = i * cell; ly = j * cell;
+            px2 = lx * ca - ly * sa + x + w / 2;
+            py2 = lx * sa + ly * ca + y + h / 2;
+            if (px2 < x - cell || py2 < y - cell || px2 > x + w + cell || py2 > y + h + cell) continue;
+            c = dotGain(tone);
+            if (c < 0.02) continue;
+            r = cell * 0.5 * Math.sqrt(c / 0.7854);
+            if (r > cell * 0.78) r = cell * 0.78;
+            ex.beginPath(); ex.arc(px2, py2, r, 0, TAU); ex.fill();
+          }
+        }
+      });
+      ex.globalCompositeOperation = 'source-over';
+      ex.restore();
+      ex.strokeStyle = RULE; ex.lineWidth = 1;
+      ex.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    }
+
+    WAM.clock('h2-explain-stage', {
+      el: $('h2-explain-stage'), dur: 16000, poster: 0.3,
+      render: function (t) {
+        ex.fillStyle = self.SKIN_CSS(STOCK);
+        ex.fillRect(0, 0, EW, EH);
+        ex.font = '11px ' + (token('--mono') || 'monospace');
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+
+        /* the separations, each alone, then the four together */
+        var pw = 116, ph = 116, py = 34, gap = 14, x0 = 18;
+        var tone = 0.52 + 0.2 * Math.sin(t * TAU);
+        PLATES.forEach(function (p, i) {
+          var x = x0 + i * (pw + gap);
+          patch(x, py, pw, ph, [p], tone, t);
+          ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+          ex.fillText(p.ch.toUpperCase() + '  ' + p.deg + '°', x, py - 8);
+        });
+        var xc = x0 + 4 * (pw + gap) + 10;
+        /* Half the tone for the four-colour patch: at 68% coverage in four
+           inks a multiply stack is simply black, and the rosette — the thing
+           the patch exists to show — disappears into it. */
+        patch(xc, py, pw + 30, ph, PLATES, tone * 0.5, t);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+        ex.fillText('TOGETHER — THE ROSETTE', xc, py - 8);
+
+        /* the tone ramp: coverage against the dot that carries it. Area,
+           not width, which is the thing people get wrong about halftones. */
+        var rx = xc + pw + 60, rw = EW - rx - 20, ry = py, steps = 11, i2;
+        ex.fillText('COVERAGE 0 → 100%', rx, py - 8);
+        for (i2 = 0; i2 < steps; i2++) {
+          var c2 = i2 / (steps - 1);
+          var cw = rw / steps;
+          patch(rx + i2 * cw, ry, cw - 2, ph * 0.62, [PLATES[2]], c2, t);
+        }
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-sub')));
+        ex.fillText('r = cell/2 · √(coverage / π)   —   AREA, NOT WIDTH', rx, ry + ph * 0.62 + 18);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-ink-k')));
+        ex.fillText('TONE ' + Math.round(tone * 100) + '%', x0, py + ph + 20);
+        ex.fillStyle = self.SKIN_CSS(resolveRGB(token('--h2-sub')));
+        ex.fillText('dot gain ' + (gain ? 'ON — coverage pushed by 0.12·sin(πc)' : 'OFF — the plate, before the press has had it'), x0 + 110, py + ph + 20);
+      }
+    });
+  })();
+
+  $('h2-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.m) {
+      method = b.dataset.m;
+      costs = [];
+      [].forEach.call(this.querySelectorAll('[data-m]'), function (x) { x.classList.toggle('h2-on', x === b); });
+    } else if (b.dataset.ch) {
+      on[b.dataset.ch] = !on[b.dataset.ch];
+      b.classList.toggle('h2-on', on[b.dataset.ch]);
+    } else if (b === $('h2-gain')) {
+      gain = !gain;
+      b.classList.toggle('h2-on', gain);
+    } else if (b === $('h2-lock')) {
+      locked = !locked;
+      b.classList.toggle('h2-on', locked);
+      b.textContent = locked ? 'release the screen' : 'lock to standard angles';
+    } else if (b === $('h2-proof')) {
+      proofing = !proofing; plateCount = 4;
+      b.classList.toggle('h2-on', proofing);
+    } else if (b === $('h2-loupe')) {
+      loupeOn = !loupeOn;
+      b.classList.toggle('h2-on', loupeOn);
+    }
+    demo.render(demo.t);
+  });
+
+  BOOT.when(function () { SEC2.measure(); reportTokenMisses(); });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §3 · NETWORK — hit testing
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  /* THE WORLD IS A POSTER, and the map is one element inside it. A transit
+     diagram on its own is a utility; set inside a composition — a title
+     block, a measure, a colophon, a key that is designed rather than
+     appended — it is a piece of graphic design that happens to be live.
+     Everything here is drawn: the type, the rules, the chips, the map.
+
+     Poster proportions rather than screen ones: the margin is generous and
+     constant, and the map is optically centred rather than mathematically,
+     because a title block above it wants more air below than above. */
+  var W = 1240, H = 860;
+  var MARGIN = 58, TITLE_H = 132, FOOT_H = 116;
+  var cv = $('n3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
+
+  /* the pick surface: a second map the same size that is never composited */
+  var pk = document.createElement('canvas');
+  pk.width = W; pk.height = H;
+  var px = pk.getContext('2d', { willReadFrequently: true });
+
+  var PAPER_RGB = resolveRGB(token('--n3-paper'));
+  var PAPER = self.SKIN_CSS(PAPER_RGB);
+  var INK   = self.SKIN_CSS(resolveRGB(token('--n3-ink')));
+  var DIM   = self.SKIN_CSS(resolveRGB(token('--n3-dim')));
+  var HAIR  = self.SKIN_CSS(resolveRGB(token('--n3-hair')));
+  var WATER = self.SKIN_CSS(resolveRGB(token('--n3-water')));
+  var LIVE  = self.SKIN_CSS(resolveRGB(token('--n3-live')));
+  var ALERT = self.SKIN_CSS(resolveRGB(token('--n3-alert')));
+
+  /* ── the network ─────────────────────────────────────────────────────
+     Hand-authored on a 44 × 22 grid, 45° and 90° only. Diagrammatic, not
+     geographic: the grid is the whole point of the convention, and a
+     network generated from random coordinates gives itself away in one
+     second because real diagrams have no arbitrary angles in them. */
+  var GX = 44, GY = 22;
+  var MAP_X = MARGIN, MAP_Y = MARGIN + TITLE_H;
+  var MAP_W = W - MARGIN * 2, MAP_H = H - MAP_Y - FOOT_H - MARGIN;
+  function gx(x) { return MAP_X + (x / GX) * MAP_W; }
+  function gy(y) { return MAP_Y + (y / GY) * MAP_H; }
+  var PAD = MARGIN;
+
+  var LINES = [
+    { key: 'l1', name: 'BALLARD',    pts: [[2,11],[9,11],[12,8],[22,8],[25,11],[36,11],[41,11]] },
+    { key: 'l2', name: 'MONTLAKE',   pts: [[16,1],[16,5],[19,8],[19,14],[16,17],[16,21]] },
+    { key: 'l3', name: 'RAINIER', pts: [[3,3],[9,3],[14,8],[14,12],[18,16],[33,16],[38,16]] },
+    { key: 'l4', name: 'DUWAMISH',  pts: [[41,4],[34,4],[30,8],[30,14],[34,18],[41,18]] },
+    { key: 'l5', name: 'INTERBAY',  pts: [[7,17],[16,17],[22,17],[26,13],[26,8],[22,4],[16,4]] },
+    { key: 'l6', name: 'ELLIOTT',  pts: [[6,20],[10,20],[14,16],[14,12]] }
+  ];
+  LINES.forEach(function (L, i) { L.i = i; L.colour = self.SKIN_CSS(resolveRGB(token('--n3-' + L.key))); });
+
+  /* Uniform station spacing regardless of distance is the convention that
+     makes a diagram a diagram — the map is a topology, and spacing it by
+     real distance is the single most common way a fake one gives itself
+     away. Stations are laid at a fixed step along each line, plus one at
+     every terminus. */
+  var NAMES = ['Salmonberry','Cedar Mill','Thimbleberry','Sitka Yard','Alder Cut','Hemlock Reach',
+    'Tideflat','Dry Dock','Sawmill Road','Trestle','Coalfield','Rain Shadow','Skookum Bay',
+    'Chinook Row','Nootka Street','Salal Point','Madrona Grade','Cascara','Devil\'s Club',
+    'Quarry Slope','Fir Landing','Slough Road','Kelp Beds','Longhouse','Gravel Pit','Cannery',
+    'Bootleg Alley','Scrap Yard','Freight House','Mill Pond','Cold Store','Net Shed','Pilings',
+    'Hardpan','Dogfish','Bull Kelp','Rockfish','Sea Wrack','Barnacle','Snag Point','Windthrow',
+    'Clearcut','Nurse Log','Duff','Understory','Snowline','Talus','Scree','Moraine','Kettle Lake',
+    'Drumlin','Outwash','Bog Iron','Peat Cut','Shingle Mill','Cedar Shake','Gunwale','Keelson',
+    'Bollard','Dunnage','Bilge','Chandlery','Fo\'c\'sle','Hawser','Gantry','Reefer Row','Container',
+    'Break Bulk','Stevedore','Longshore','Hatch Cover','Derrick','Cleat Street','Spring Line'];
+
+
+  /* Names are consumed, never recycled. The first pass wrapped the list
+     with a modulo and produced two Granary Yards, two Cable Wharfs and two
+     Marsh Ends on one map — which is the single fastest way to tell a
+     reader that nobody looked at it. If the list runs out the map says so
+     rather than repeating itself. */
+  var STATIONS = [], nameAt = 0;
+  function nextName() {
+    return nameAt < NAMES.length ? NAMES[nameAt++] : 'Unnamed ' + (++nameAt - NAMES.length);
+  }
+  function segLen(a, b) { return Math.hypot(gx(b[0]) - gx(a[0]), gy(b[1]) - gy(a[1])); }
+  LINES.forEach(function (L) {
+    var acc = [0], i, total = 0;
+    for (i = 1; i < L.pts.length; i++) { total += segLen(L.pts[i - 1], L.pts[i]); acc.push(total); }
+    L.acc = acc; L.len = total;
+    var STEP = 74, n = Math.max(2, Math.round(total / STEP)), k;
+    L.stops = [];
+    for (k = 0; k <= n; k++) L.stops.push((k / n) * total);
+  });
+
+  function atDist(L, d) {
+    var i, a, b, segd;
+    for (i = 1; i < L.acc.length; i++) {
+      if (d <= L.acc[i] || i === L.acc.length - 1) {
+        a = L.pts[i - 1]; b = L.pts[i];
+        segd = L.acc[i] - L.acc[i - 1];
+        var u = segd ? (d - L.acc[i - 1]) / segd : 0;
+        u = u < 0 ? 0 : u > 1 ? 1 : u;
+        return {
+          x: gx(a[0]) + (gx(b[0]) - gx(a[0])) * u,
+          y: gy(a[1]) + (gy(b[1]) - gy(a[1])) * u,
+          dx: gx(b[0]) - gx(a[0]), dy: gy(b[1]) - gy(a[1])
+        };
+      }
+    }
+    return { x: gx(L.pts[0][0]), y: gy(L.pts[0][1]), dx: 1, dy: 0 };
+  }
+
+  /* Build stations, merging any two that land within 16px into one
+     interchange — which is what an interchange IS: one place, several
+     lines, drawn once. */
+  LINES.forEach(function (L) {
+    L.stations = [];
+    L.stops.forEach(function (d, k) {
+      var p = atDist(L, d), i, found = null;
+      for (i = 0; i < STATIONS.length; i++) {
+        if (Math.hypot(STATIONS[i].x - p.x, STATIONS[i].y - p.y) < 17) { found = STATIONS[i]; break; }
+      }
+      if (!found) {
+        found = { id: STATIONS.length, x: p.x, y: p.y, lines: [], name: nextName(), term: false };
+        STATIONS.push(found);
+      }
+      if (found.lines.indexOf(L.i) < 0) found.lines.push(L.i);
+      if (k === 0 || k === L.stops.length - 1) found.term = true;
+      L.stations.push({ st: found, d: d });
+    });
+  });
+
+  var ROUTE_COUNT = STATIONS.length;
+  $('n3-stations').textContent = ROUTE_COUNT.toLocaleString();
+  $('n3-objects').textContent = (ROUTE_COUNT + LINES.length + LINES.reduce(function (a, L) { return a + L.stations.length; }, 0)).toLocaleString();
+
+  /* ── the service ─────────────────────────────────────────────────────
+     Trains, and a held one. A transit map is the one subject on this sheet
+     whose motion needs no dilation to be honest: a train really does move
+     along a fixed path at a speed a person can watch, in both directions,
+     stopping at stops. Everything the shell prints is derived from these
+     positions and from nothing else. */
+  var TRAINS = [];
+  LINES.forEach(function (L) {
+    var n = Math.max(2, Math.round(L.len / 260)), k;
+    for (k = 0; k < n; k++) TRAINS.push({ line: L, phase: k / n, dir: 1, held: false });
+  });
+  /* THE CLOCK CLOSES. One value of t is one state of the whole network, and
+     at t = 1 every train is exactly where it was at t = 0 — which is what
+     makes render(t) true here rather than approximately true. The first
+     version advanced by t x speed and wrapped on line length, so the loop
+     jumped at the seam by whatever the remainder happened to be. A journey
+     is out-and-back over every stop, so the period divides evenly into the
+     clock however many stops a line has. */
+  var CYCLES = 2;            /* complete out-and-back journeys per clock */
+  var DWELL = 0.30;          /* of each slot spent standing at a platform */
+  var SPEED = 118;           /* px per second, for the arrival estimates */
+
+  /* A TRAPEZOIDAL SPEED PROFILE, because a train does not cross a gap at a
+     constant speed, and linear interpolation between stops is the transit
+     equivalent of the glowing pulse this section replaced — right in
+     outline and wrong in every detail a person would recognise. Quarter
+     accelerating, half cruising, quarter braking, continuous in position
+     and in velocity at both joins. */
+  function trapezoid(p) {
+    if (p <= 0) return 0;
+    if (p >= 1) return 1;
+    var A = 0.25, D = 0.25, C = 0.5, vmax = 1 / (C + (A + D) / 2);
+    if (p < A) return vmax * p * p / (2 * A);
+    if (p < A + C) return vmax * (A / 2 + (p - A));
+    var q = p - A - C;
+    return vmax * (A / 2 + C + q - q * q / (2 * D));
+  }
+
+  function trainAt(tr, t) {
+    var L = tr.line, stops = L.stations, n = stops.length;
+    /* one service is held, which is what makes the status panel amber — a
+       readout that goes amber on a timer is a decoration; one that goes
+       amber because a train is not moving is an instrument */
+    var held = L.key === 'l5' && tr.phase < 0.34 && ((t * 3) % 1) > 0.62;
+    tr.held = held;
+    var tt = held ? Math.floor(t * 3) / 3 : t;
+
+    var hops = (n - 1) * 2;                          /* out, then back */
+    var u = ((tt * CYCLES + tr.phase) % 1 + 1) % 1;
+    var h = Math.floor(u * hops);
+    var within = u * hops - h;
+    /* the dwell is the first slice of each slot — a train sits, then goes,
+       which is the order a platform actually observes */
+    var p = within < DWELL ? 0 : (within - DWELL) / (1 - DWELL);
+    var out = h < n - 1;
+    var i0 = out ? h : hops - h;
+    var i1 = out ? h + 1 : hops - h - 1;
+    var d0 = stops[Math.max(0, Math.min(n - 1, i0))].d;
+    var d1 = stops[Math.max(0, Math.min(n - 1, i1))].d;
+    var d = d0 + (d1 - d0) * trapezoid(p);
+    tr.dir = d1 >= d0 ? 1 : -1;
+    tr.dwelling = within < DWELL;
+    return atDist(L, d);
+  }
+
+  var showPick = false, running = true, labelsOn = true, zonesOn = true;
+  var hover = { kind: null, id: -1 }, readCosts = [], selected = null;
+
+  /* ── the reproduction ────────────────────────────────────────────────
+     Baked once, because none of it moves and all of it is expensive. The
+     paper carries fibre, a fold and a ring where a cup went down; the map
+     is separated into a COLOUR plate and a BLACK plate so the register can
+     drift between them, which is the artefact that says "printed cheaply"
+     faster than any amount of texture. Both plates are then put through a
+     photocopier: contrast pushed until the midtones give up, speckle added
+     where toner took and dropped where it did not.
+
+     Deterministic throughout — seeded noise, no Math.random — because a
+     reproduction that differs between two renders of the same t would fail
+     the idempotency check that every demo on this sheet has to pass. */
+  var paperCv = document.createElement('canvas'), colourCv = document.createElement('canvas'),
+      blackCv = document.createElement('canvas');
+  [paperCv, colourCv, blackCv].forEach(function (c) { c.width = W; c.height = H; });
+  var paperX = paperCv.getContext('2d'), colX = colourCv.getContext('2d', { willReadFrequently: true }),
+      blkX = blackCv.getContext('2d', { willReadFrequently: true });
+
+  function bakePaper() {
+    /* A FLAT SHEET. There was a version of this with paper fibre, a fold, a
+       coffee ring and a photocopier pass over the plates — a grunge register
+       aimed at 1990s Seattle. It was the wrong idea and it is worth saying
+       why rather than just deleting it: simulated damage is a material
+       claim, and this build has already established that a material claim
+       on a flat surface loses the comparison it invites. A coffee ring is a
+       photograph of a coffee ring. A misregistered plate is a photograph of
+       a misregistration.
+
+       What survives is the part that was never about damage: the sheet is
+       an off-white with a slight warmth, printed flat, and every mark on it
+       is a deliberate one. */
+    paperX.fillStyle = PAPER;
+    paperX.fillRect(0, 0, W, H);
+  }
+
+  /* TWO CORNER RADII, and this is the piece of craft almost nobody who has
+     not drawn a diagram knows. A 135-degree bend needs roughly double the
+     radius of a 90-degree bend, because the eye reads the arc's length
+     rather than its radius — equal radii make shallow turns look sharp and
+     sharp turns look soft. Optical rather than mathematical, which is
+     exactly the class of thing a generated map gets wrong: the arithmetic
+     is right and the drawing is not. */
+  function linePath(c, L, w, colour) {
+    c.strokeStyle = colour; c.lineWidth = w;
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    c.beginPath();
+    var pts = L.pts, i;
+    c.moveTo(gx(pts[0][0]), gy(pts[0][1]));
+    for (i = 1; i < pts.length - 1; i++) {
+      var p0 = [gx(pts[i - 1][0]), gy(pts[i - 1][1])];
+      var p1 = [gx(pts[i][0]), gy(pts[i][1])];
+      var p2 = [gx(pts[i + 1][0]), gy(pts[i + 1][1])];
+      var a1 = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+      var a2 = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+      var turn = Math.abs(((a2 - a1 + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+      var r = turn > 1.2 ? w * 1.5 : w * 3.0;
+      r = Math.min(r, Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) * 0.45,
+                      Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) * 0.45);
+      c.arcTo(p1[0], p1[1], p2[0], p2[1], r);
+    }
+    c.lineTo(gx(pts[pts.length - 1][0]), gy(pts[pts.length - 1][1]));
+    c.stroke();
+  }
+
+  function drawRiver() {
+    ctx.strokeStyle = WATER;
+    ctx.lineWidth = 34;
+    ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-10, gy(18.6));
+    ctx.bezierCurveTo(gx(11), gy(17.0), gx(19), gy(20.6), gx(28), gy(18.2));
+    ctx.bezierCurveTo(gx(34), gy(16.8), gx(38), gy(17.6), W + 10, gy(16.9));
+    ctx.stroke();
+  }
+
+  function drawZones() {
+    var i;
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
+    ctx.setLineDash([5, 5]);
+    var ry = [MAP_H * 0.34, MAP_H * 0.50];
+    for (i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.ellipse(gx(21), gy(11), MAP_W * (0.26 + i * 0.16), ry[i], 0, 0, TAU);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.fillStyle = DIM;
+    ctx.font = '10px ' + (token('--mono') || 'monospace');
+    /* the label sits INSIDE its own ring, on the boundary, which is where a
+       zone label goes — outside it belongs to the next zone out */
+    ctx.fillText('ZONE 1', gx(21) - 20, gy(11) - ry[0] + 15);
+    ctx.fillText('ZONE 2', gx(21) - 20, gy(11) - ry[1] + 15);
+  }
+
+  function drawStation(st, emph) {
+    var multi = st.lines.length > 1;
+    if (multi) {
+      /* an interchange is a hollow ring, because it is a PLACE rather than
+         a stop on one line — the distinction the whole vocabulary rests on */
+      ctx.fillStyle = PAPER;
+      ctx.beginPath(); ctx.arc(st.x, st.y, emph ? 9 : 7.5, 0, TAU); ctx.fill();
+      ctx.strokeStyle = emph ? ALERT : INK; ctx.lineWidth = emph ? 3 : 2.2;
+      ctx.beginPath(); ctx.arc(st.x, st.y, emph ? 9 : 7.5, 0, TAU); ctx.stroke();
+    } else {
+      /* a single-line stop is a tick across the line, not a dot */
+      var L = LINES[st.lines[0]], near = nearestDir(L, st);
+      ctx.strokeStyle = emph ? ALERT : INK; ctx.lineWidth = emph ? 3.5 : 2.4;
+      ctx.beginPath();
+      ctx.moveTo(st.x - near.ny * 6, st.y + near.nx * 6);
+      ctx.lineTo(st.x + near.ny * 6, st.y - near.nx * 6);
+      ctx.stroke();
+    }
+  }
+
+  function nearestDir(L, st) {
+    var best = null, bd = Infinity, i;
+    for (i = 0; i < L.stations.length; i++) {
+      var d = Math.hypot(L.stations[i].st.x - st.x, L.stations[i].st.y - st.y);
+      if (d < bd) { bd = d; best = L.stations[i]; }
+    }
+    var p = atDist(L, best ? best.d : 0);
+    var m = Math.hypot(p.dx, p.dy) || 1;
+    return { nx: p.dx / m, ny: p.dy / m };
+  }
+
+  /* LABEL PLACEMENT IS MOST OF THE CRAFT IN A REAL DIAGRAM, and it is the
+     part a generated map gets wrong first. Two things have to be avoided,
+     not one: another label, and a LINE. A name printed across a route is
+     the more obvious fault of the two and the easier one to miss in code,
+     because a label-versus-label test passes it happily.
+
+     The line test reads the pick surface — the same off-screen identity map
+     the pointer reads. It already knows where every line and every station
+     is, to the pixel, and it is built before anything is drawn. The section
+     uses its own technique to lay out its own type, which is not a trick:
+     "where are the objects" is one question, and there is one surface that
+     answers it.
+
+     Placement is computed ONCE, at build, because nothing in it moves.
+     Recomputing per frame would also let a label hop between candidates as
+     a train passed under it, which is a jitter nobody could explain. */
+  var LABELS = [];
+  function layoutLabels() {
+    var occ = px.getImageData(0, 0, W, H).data;
+    var placed = [];
+    function hitsLabel(b) {
+      for (var i = 0; i < placed.length; i++) {
+        var o = placed[i];
+        if (b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y) return true;
+      }
+      return false;
+    }
+    function hitsLine(b) {
+      var sx, sy;
+      for (sy = b.y; sy < b.y + b.h; sy += 4) {
+        for (sx = b.x; sx < b.x + b.w; sx += 5) {
+          if (sx < 0 || sy < 0 || sx >= W || sy >= H) continue;
+          if (occ[((sy | 0) * W + (sx | 0)) * 4 + 3] !== 0) return true;
+        }
+      }
+      return false;
+    }
+    var order = STATIONS.slice().sort(function (a, b) {
+      var ra = (a.lines.length > 1 ? 2 : 0) + (a.term ? 1 : 0);
+      var rb = (b.lines.length > 1 ? 2 : 0) + (b.term ? 1 : 0);
+      return rb - ra;
+    });
+    order.forEach(function (st) {
+      var bold = st.lines.length > 1 || st.term;
+      ctx.font = (bold ? '600 ' : '') + '11px ' + (token('--sans') || 'sans-serif');
+      var w = ctx.measureText(st.name).width + 7, h = 15;
+      var cands = [
+        { x: st.x + 14, y: st.y - 19 }, { x: st.x - 14 - w, y: st.y - 19 },
+        { x: st.x + 14, y: st.y + 5 },  { x: st.x - 14 - w, y: st.y + 5 },
+        { x: st.x - w / 2, y: st.y - 26 }, { x: st.x - w / 2, y: st.y + 14 }
+      ];
+      for (var i = 0; i < cands.length; i++) {
+        var b = { x: cands[i].x, y: cands[i].y, w: w, h: h };
+        if (b.x < MARGIN - 30 || b.x + w > W - MARGIN + 30) continue;
+        if (b.y < MAP_Y - 22 || b.y + h > MAP_Y + MAP_H + 16) continue;
+        if (hitsLabel(b) || hitsLine(b)) continue;
+        placed.push(b);
+        LABELS.push({ st: st, x: b.x, y: b.y + h / 2, bold: bold });
+        return;
+      }
+    });
+  }
+
+  function drawLabels() {
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    for (var i = 0; i < LABELS.length; i++) {
+      var L2 = LABELS[i];
+      ctx.font = (L2.bold ? '600 ' : '') + '11px ' + (token('--sans') || 'sans-serif');
+      ctx.fillStyle = (hover.kind === 'station' && hover.id === L2.st.id) ? ALERT : INK;
+      ctx.fillText(L2.st.name, L2.x, L2.y);
+    }
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  /* ── the poster ──────────────────────────────────────────────────────
+     A title block, a measure, a key set as a column of chips, and a
+     colophon. All of it drawn. The display type is duplicated in the DOM
+     beside the canvas, because a raster is somewhere a screen reader cannot
+     go and type this size is the first thing anyone would try to read. */
+  function drawPosterType() {
+    var sans = token('--sans') || 'sans-serif';
+    var mono = token('--mono') || 'monospace';
+
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(MARGIN, MAP_Y - 26.5); ctx.lineTo(W - MARGIN, MAP_Y - 26.5);
+    ctx.moveTo(MARGIN, H - FOOT_H + 0.5); ctx.lineTo(W - MARGIN, H - FOOT_H + 0.5);
+    ctx.stroke();
+
+    ctx.fillStyle = INK;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    /* the headline is set crooked by a degree and a half, because the
+       paste-up was done by hand and nothing on a hand-made board is square */
+    ctx.font = '700 80px ' + sans;
+    ctx.letterSpacing = '-3px';
+    ctx.fillText('METRO RAPID TRANSIT', MARGIN, MARGIN + 74);
+    ctx.letterSpacing = '0px';
+
+    ctx.font = '500 13px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('SIX LINES · ' + STATIONS.length + ' STATIONS · ' +
+      Math.round(CYCLES * 60 * 2) + '× REAL TIME · ' +
+      Math.round(60 / (CYCLES * 2)) + ' MIN OF SERVICE PER SECOND',
+      MARGIN, MARGIN + 102);
+
+    ctx.textAlign = 'right';
+    ctx.font = '500 11px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('EFFECTIVE SEPTEMBER 1994', W - MARGIN, MARGIN + 88);
+    ctx.textAlign = 'left';
+
+    var ky = H - FOOT_H + 34, kx = MARGIN, i;
+    for (i = 0; i < LINES.length; i++) {
+      ctx.fillStyle = INK;
+      ctx.font = '600 12px ' + sans;
+      ctx.fillText(LINES[i].name, kx, ky + 16);
+      kx += 132;
+    }
+
+    ctx.textAlign = 'right';
+    ctx.font = '500 9.5px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('DRAWN LIVE IN HTML CANVAS · NO SVG, NO DOM, NO IMAGE', W - MARGIN, ky + 4);
+    ctx.fillText('EVERY LINE CASED · TWO CORNER RADII, 90° AND 135°', W - MARGIN, ky + 20);
+    ctx.fillText('EVERY LABEL PLACED AGAINST THE PICK SURFACE', W - MARGIN, ky + 36);
+    ctx.textAlign = 'left';
+  }
+
+  /* the key chips live on the COLOUR plate, so they drift with the lines
+     they stand for — which is how you can see the register is off */
+  function drawKeyChips() {
+    var ky = H - FOOT_H + 34, kx = MARGIN, i;
+    for (i = 0; i < LINES.length; i++) {
+      ctx.fillStyle = LINES[i].colour;
+      ctx.fillRect(kx, ky - 13, 30, 13);
+      kx += 132;
+    }
+  }
+
+  /* the only type that cannot be baked, because it counts */
+  function drawClock(t) {
+    var sans = token('--sans') || 'sans-serif';
+    var mono = token('--mono') || 'monospace';
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 18) % 18;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 46px ' + sans;
+    ctx.fillStyle = INK;
+    ctx.fillText((hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins, W - MARGIN, MARGIN + 62);
+    ctx.textAlign = 'left';
+  }
+
+  /* Everything that does not move is baked onto two plates. What is left
+     for the frame is the trains, the clock and the hover — which is also
+     the only part a printed map genuinely could not do. */
+  function bakePlates() {
+    var keep = ctx, i;
+    colX.clearRect(0, 0, W, H); blkX.clearRect(0, 0, W, H);
+
+    ctx = colX;
+    if (zonesOn) drawRiver();
+    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 13, PAPER);
+    for (i = 0; i < LINES.length; i++) linePath(ctx, LINES[i], 7, LINES[i].colour);
+    drawKeyChips();
+
+    ctx = blkX;
+    if (zonesOn) drawZones();
+    STATIONS.forEach(function (st) { drawStation(st, false); });
+    if (labelsOn) drawLabels();
+    drawPosterType();
+
+    ctx = keep;
+  }
+
+  function drawMap(t) {
+    /* the paper, then the colour plate OFF REGISTER, then the black. Two
+       points of drift is what a cheap two-pass job produced, and it is the
+       single artefact that says "printed" loudest — louder than any amount
+       of texture, because it is a mistake rather than a finish. */
+    ctx.drawImage(paperCv, 0, 0);
+    ctx.drawImage(colourCv, 0, 0);
+    ctx.drawImage(blackCv, 0, 0);
+
+    /* the hover, as a wash. Selecting a line adds no new treatment — a
+       paper-coloured veil goes over the whole sheet and the chosen route is
+       reprinted on top of it, so the network greys out and one line stays
+       inked. That is what a highlighter does to a paper map, and it costs
+       no colour the palette did not already have. */
+    if (hover.kind === 'line') {
+      ctx.fillStyle = 'rgba(' + PAPER_RGB[0] + ',' + PAPER_RGB[1] + ',' + PAPER_RGB[2] + ',0.74)';
+      ctx.fillRect(0, 0, W, H);
+      var HL = LINES[hover.id];
+      linePath(ctx, HL, 13, PAPER);
+      linePath(ctx, HL, 8, HL.colour);
+      STATIONS.forEach(function (st) { if (st.lines.indexOf(hover.id) >= 0) drawStation(st, true); });
+    } else if (hover.kind === 'station') {
+      drawStation(STATIONS[hover.id], true);
+    }
+
+    if (running) {
+      TRAINS.forEach(function (tr) {
+        var p = trainAt(tr, t);
+        var m = Math.hypot(p.dx, p.dy) || 1, ux = p.dx / m * tr.dir, uy = p.dy / m * tr.dir;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(Math.atan2(uy, ux));
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(-10, -6, 20, 12);
+        ctx.fillStyle = tr.held ? ALERT : LIVE;
+        ctx.fillRect(-8.5, -4.5, 17, 9);
+        ctx.fillStyle = PAPER;
+        ctx.fillRect(5, -2.5, 2.5, 5);
+        ctx.restore();
+      });
+    }
+
+    drawClock(t);
+  }
+
+  /* The pick surface, rebuilt at the SAME t as the map. Stations are drawn
+     after lines and larger than they look, because a 6px tick is a cruel
+     target and a station is the more specific answer — the more specific
+     object wins the pixel. */
+  function drawPick() {
+    px.clearRect(0, 0, W, H);
+    var i;
+    for (i = 0; i < LINES.length; i++) {
+      linePath(px, LINES[i], 15, 'rgba(' + (i & 255) + ',0,1,1)');
+    }
+    STATIONS.forEach(function (st) {
+      px.fillStyle = 'rgba(' + (st.id & 255) + ',' + ((st.id >> 8) & 255) + ',2,1)';
+      px.beginPath(); px.arc(st.x, st.y, 13, 0, TAU); px.fill();
+    });
+  }
+
+  /* The pick surface never changes: lines and stations do not move, and
+     the trains are deliberately NOT on it — a train is not a thing you
+     select, and putting it there would make the answer under the pointer
+     depend on what time it is. So it is drawn once, which also means the
+     "rebuilt at the same t" hazard cannot arise here: there is no t. */
+  drawPick();
+  layoutLabels();
+  bakePaper();
+  bakePlates();
+  $('n3-objects').textContent = (STATIONS.length + LINES.length + LABELS.length).toLocaleString();
+
+  var demo = WAM.clock('n3-stage', {
+    el: $('n3-world'), dur: 26000, poster: 0.35,
+    render: function (t) {
+      if (showPick) {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+        ctx.drawImage(pk, 0, 0);
+        ctx.fillStyle = '#fff';
+        ctx.font = '12px ' + (token('--mono') || 'monospace');
+        ctx.fillText('PICK SURFACE — NEVER COMPOSITED TO THE SCREEN', MARGIN, 34);
+      } else {
+        drawMap(t);
+      }
+      shell(t);
+    }
+  });
+
+  /* ── the shell, and the rule that keeps it honest ────────────────────
+     Everything below reads the SAME state the map draws — train positions,
+     the held flag, and the hovered id. Nothing here has a timer of its own.
+     A departure board counting down on its own clock is a decoration that
+     happens to sit near a map; one counting down from where the train is
+     is the same instrument twice. */
+  function shell(t) {
+    var st = selected || (hover.kind === 'station' ? STATIONS[hover.id] : null);
+    var rows = $('n3-board-rows');
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 18) % 18;
+    $('n3-board-clock').textContent = (hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins;
+
+    if (!st) {
+      $('n3-board-station').textContent = 'hover a station';
+      rows.innerHTML = '<div class="n3-row" style="opacity:.5"><span></span><span>—</span><span></span><span></span></div>';
+    } else {
+      $('n3-board-station').textContent = st.name + (st.lines.length > 1 ? ' · interchange' : '');
+      var out = [];
+      TRAINS.forEach(function (tr) {
+        if (st.lines.indexOf(tr.line.i) < 0) return;
+        var p = trainAt(tr, t);
+        /* the arrival time IS the distance remaining over the speed. There
+           is no second source for this number. */
+        var dist = Math.hypot(p.x - st.x, p.y - st.y);
+        var due = dist / SPEED;
+        out.push({ line: tr.line, due: due, held: tr.held, to: terminusOf(tr, st) });
+      });
+      out.sort(function (a, b) { return a.due - b.due; });
+      rows.innerHTML = out.slice(0, 5).map(function (r) {
+        return '<div class="n3-row">' +
+          '<i class="n3-bullet" style="background:' + r.line.colour + '"></i>' +
+          '<span>' + r.to + '</span>' +
+          '<span class="n3-due">' + (r.held ? 'held' : (r.due < 0.4 ? 'due' : Math.round(r.due * 3) + ' min')) + '</span>' +
+          '<span class="n3-plat">plat ' + (1 + (r.line.i % 4)) + '</span>' +
+          '</div>';
+      }).join('') || '<div class="n3-row" style="opacity:.5"><span></span><span>no service</span><span></span><span></span></div>';
+    }
+
+    /* the status panel: a line is delayed because one of ITS trains is
+       held, which is a fact about the map rather than a state of its own */
+    $('n3-status').innerHTML = LINES.map(function (L) {
+      var bad = TRAINS.some(function (tr) { return tr.line === L && tr.held; });
+      return '<div class="n3-line-row" data-testid="n3-status-' + L.key + '">' +
+        '<i style="background:' + L.colour + '"></i>' +
+        '<b>' + L.name + '</b>' +
+        '<span class="' + (bad ? 'n3-delay' : '') + '">' + (bad ? 'minor delays' : 'good service') + '</span>' +
+        '</div>';
+    }).join('');
+  }
+
+  /* A board never advertises a service TO the platform you are standing on.
+     The first version did, because it printed the terminus in the direction
+     of travel without asking where the reader was — so a terminus station
+     listed four trains to itself. If this train terminates here, the useful
+     answer is the other end of the line. */
+  function terminusOf(tr, here) {
+    var L = tr.line;
+    var fwd = L.stations[L.stations.length - 1].st, back = L.stations[0].st;
+    var end = tr.dir > 0 ? fwd : back;
+    if (here && end === here) end = (end === fwd) ? back : fwd;
+    return end.name;
+  }
+
+  /* One getImageData of one pixel, however many objects are on the map. */
+  cv.addEventListener('pointermove', function (e) {
+    var r = cv.getBoundingClientRect();
+    var x = Math.round((e.clientX - r.left) * (W / r.width));
+    var y = Math.round((e.clientY - r.top) * (H / r.height));
+    if (x < 0 || y < 0 || x >= W || y >= H) return;
+    var t0 = performance.now();
+    var d = px.getImageData(x, y, 1, 1).data;
+    readCosts.push(performance.now() - t0);
+    if (readCosts.length > 30) readCosts.shift();
+
+    var kind = null, id = -1;
+    if (d[3] !== 0) {
+      if (d[2] === 2) { kind = 'station'; id = d[0] | (d[1] << 8); if (id >= STATIONS.length) { kind = null; id = -1; } }
+      else if (d[2] === 1) { kind = 'line'; id = d[0]; if (id >= LINES.length) { kind = null; id = -1; } }
+    }
+    $('n3-pixel').textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
+    $('n3-decoded').textContent = kind === 'station'
+      ? STATIONS[id].name + ' — ' + STATIONS[id].lines.map(function (i) { return LINES[i].name; }).join(', ')
+      : kind === 'line' ? LINES[id].name + ' line' : 'nothing under the pointer';
+    $('n3-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
+    if (kind !== hover.kind || id !== hover.id) {
+      hover = { kind: kind, id: id };
+      if (kind === 'station') selected = STATIONS[id];
+      demo.render(demo.t);
+    }
+  });
+  cv.addEventListener('pointerleave', function () {
+    hover = { kind: null, id: -1 };
+    $('n3-pixel').textContent = '—';
+    $('n3-decoded').textContent = 'nothing under the pointer';
+    demo.render(demo.t);
+  });
+
+  $('n3-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b === $('n3-layer')) {
+      showPick = !showPick;
+      b.classList.toggle('n3-on', showPick);
+      b.textContent = showPick ? 'show the map' : 'show the pick surface';
+    } else if (b === $('n3-run')) { running = !running; b.classList.toggle('n3-on', running); }
+    else if (b === $('n3-labels')) { labelsOn = !labelsOn; b.classList.toggle('n3-on', labelsOn); }
+    else if (b === $('n3-zones')) { zonesOn = !zonesOn; b.classList.toggle('n3-on', zonesOn); }
+    demo.render(demo.t);
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §4 · READ — readback
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var W = 1240, H = 640;
+  var cv = $('r4-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
+  cv.width = W; cv.height = H;
+
+  var VOID = resolveRGB(token('--r4-void'));
+  var FRAME = self.SKIN_CSS(resolveRGB(token('--r4-frame')));
+  var RULE = self.SKIN_CSS(resolveRGB(token('--r4-rule')));
+  var INK = self.SKIN_CSS(resolveRGB(token('--r4-ink')));
+  var ANNO = self.SKIN_CSS(resolveRGB(token('--r4-anno')));
+  var ROI = self.SKIN_CSS(resolveRGB(token('--r4-roi')));
+
+  /* Two LUTs, 256 entries each. GSDF grey is perceptually linear and
+     chroma 0 — DICOM Part 14 is a real worldwide calibration, and it is why
+     a reading room is colourless on purpose rather than by omission. The
+     heat ramp is monotone in lightness too, so it carries a value scale
+     rather than needing a colour key. */
+  function lutFrom(stops) {
+    var out = new Uint8Array(256 * 3), i, u, k, f, a, b;
+    for (i = 0; i < 256; i++) {
+      u = (i / 255) * (stops.length - 1);
+      k = Math.min(stops.length - 2, u | 0); f = u - k;
+      a = stops[k]; b = stops[k + 1];
+      out[i * 3] = a[0] + (b[0] - a[0]) * f;
+      out[i * 3 + 1] = a[1] + (b[1] - a[1]) * f;
+      out[i * 3 + 2] = a[2] + (b[2] - a[2]) * f;
+    }
+    return out;
+  }
+  /* The FUSION ramp — colour as a second dimension, on its own maths and
+     its own clock. A greyscale study answers "how dense"; a functional
+     overlay answers a different question entirely, and every workstation
+     that carries both shows them fused rather than side by side, because
+     the point is where the two agree. It runs on a period deliberately
+     unrelated to the cine loop and the window sweep, so the three never
+     line up into one beat — three independent cycles read as an instrument
+     with three things going on, and three locked cycles read as one. */
+  var FUSION = {
+    jet: lutFrom([resolveRGB('oklch(0.35 0.14 265)'), resolveRGB('oklch(0.60 0.15 215)'),
+                  resolveRGB('oklch(0.78 0.16 155)'), resolveRGB('oklch(0.87 0.17 95)'),
+                  resolveRGB('oklch(0.65 0.22 28)')]),
+    ice: lutFrom([resolveRGB('oklch(0.30 0.10 300)'), resolveRGB('oklch(0.55 0.14 265)'),
+                  resolveRGB('oklch(0.78 0.11 225)'), resolveRGB('oklch(0.95 0.05 200)')]),
+    /* a spectral ramp, which is the one that carries the most colour per
+       step and the one a functional study is most often read through */
+    spectral: lutFrom([resolveRGB('oklch(0.26 0.13 292)'), resolveRGB('oklch(0.52 0.17 250)'),
+                       resolveRGB('oklch(0.72 0.16 175)'), resolveRGB('oklch(0.86 0.17 118)'),
+                       resolveRGB('oklch(0.84 0.18  62)'), resolveRGB('oklch(0.64 0.23  22)')])
+  };
+  var RAMPS = ['jet', 'ice', 'spectral'];
+
+  var LUTS = {
+    gsdf: lutFrom([[8, 8, 8], [250, 250, 250]]),
+    iron: lutFrom([resolveRGB('oklch(0.060 0.010 30)'), resolveRGB('oklch(0.280 0.130 28)'),
+                   resolveRGB('oklch(0.520 0.200 38)'), resolveRGB('oklch(0.720 0.180 62)'),
+                   resolveRGB('oklch(0.880 0.155 92)'), resolveRGB('oklch(0.985 0.012 95)')])
+  };
+
+  /* ── the source, which is a canvas and nothing else ──────────────────
+     A synthetic phantom. Nothing here is a real scan of a real person, and
+     nothing is decoded from one. It is drawn into an offscreen canvas, and
+     everything the workstation says about it is obtained by READING IT
+     BACK — not by re-evaluating the function that drew it. */
+  var SW = 520, SH = 520;
+  var src = document.createElement('canvas');
+  src.width = SW; src.height = SH;
+  var sx2 = src.getContext('2d', { willReadFrequently: true });
+  var srcImg = sx2.createImageData(SW, SH);
+
+  function drawSlice(z) {
+    var d = srcImg.data, x, y, o, u, v, r, a, val, i;
+    var r0 = rng(0x5CA4 + ((z * 97) | 0));
+    for (y = 0; y < SH; y++) {
+      for (x = 0; x < SW; x++) {
+        o = (y * SW + x) * 4;
+        u = (x / SW - 0.5) * 2; v = (y / SH - 0.5) * 2;
+        r = Math.sqrt(u * u * 1.18 + v * v);
+        val = 0;
+        if (r < 0.94) {
+          val = 0.30 + 0.10 * Math.sin(u * 9 + z * 4) * Math.cos(v * 7 - z * 3);
+          /* the wall */
+          if (r > 0.88) val = 0.86;
+          /* two structures that move through the stack */
+          a = Math.exp(-(Math.pow(u + 0.32 + 0.16 * Math.sin(z * TAU), 2) * 26 + Math.pow(v + 0.12, 2) * 30));
+          val += a * 0.52;
+          a = Math.exp(-(Math.pow(u - 0.38, 2) * 34 + Math.pow(v - 0.24 - 0.2 * Math.cos(z * TAU), 2) * 22));
+          val += a * 0.44;
+          /* a dense inclusion that only appears over part of the stack */
+          a = Math.exp(-(Math.pow(u - 0.04, 2) * 190 + Math.pow(v + 0.36, 2) * 190));
+          val += a * (0.5 + 0.5 * Math.sin(z * TAU * 2)) * 0.95;
+          val += (r0() - 0.5) * 0.05;
+        }
+        val = val < 0 ? 0 : val > 1 ? 1 : val;
+        i = (val * 255) | 0;
+        d[o] = d[o + 1] = d[o + 2] = i;
+        d[o + 3] = 255;
+      }
+    }
+    sx2.putImageData(srcImg, 0, 0);
+  }
+
+  var lut = 'gsdf', cine = true, roiOn = true, recon = false, autoWin = true;
+  var fusion = true, fusionRamp = 'spectral', fusionGain = 1, rotate = true;
+  var ww = 0.62, wl = 0.46, dragging = false, lastXY = null;
+  var readCosts = [], out = null, o32 = null;
+  var VX = 20, VY = 18, VW = 560, VH = 560;             /* the viewport */
+  var RX = VX + VW + 26, RW = W - RX - 20;
+
+  function ensureOut() {
+    if (!out || out.width !== VW) { out = ctx.createImageData(VW, VH); o32 = new Uint32Array(out.data.buffer); }
+  }
+
+  /* ROI, in source coordinates */
+  var roi = { x: 190, y: 150, w: 140, h: 110 };
+
+  var demo = WAM.clock('r4-stage', {
+    /* 17 400 rather than 20 000 — 15% faster. The cine loop, the window
+       sweep and the overlay's own cycles are all expressed as multiples of
+       t, so shortening the period speeds every one of them by the same
+       factor and none of them comes into phase with any other as a result. */
+    el: $('r4-world'), dur: 17400, poster: 0.4,
+    render: function (t) {
+      ensureOut();
+      var z = cine ? t : 0.3;
+      drawSlice(z);
+
+      /* The window BREATHES. A radiographer's hands are on these two numbers
+         constantly — widening to find an edge, narrowing to separate two
+         tissues that sit a few levels apart, sliding the centre to follow a
+         structure through the stack. A still window is a screenshot of a
+         workstation; a moving one is somebody using it. Touch the image and
+         it hands control over and stays handed over. */
+      if (autoWin) {
+        ww = 0.46 + 0.30 * Math.sin(t * TAU * 3);
+        wl = 0.46 + 0.17 * Math.sin(t * TAU * 2 + 1.1);
+      }
+
+      /* THE READBACK. Everything below comes out of this one call — the
+         display mapping, the histogram, the region statistics and the
+         reconstruction. Not one of them re-evaluates the function that
+         drew the slice. */
+      var t0 = performance.now();
+      var s = sx2.getImageData(0, 0, SW, SH).data;
+      readCosts.push(performance.now() - t0);
+      if (readCosts.length > 20) readCosts.shift();
+
+      var table = LUTS[lut];
+      var lo = wl - ww / 2, hi = wl + ww / 2;
+      var hist = new Uint32Array(64);
+      var x, y, sxi, syi, v, n, o;
+      var roiSum = 0, roiSq = 0, roiN = 0;
+
+      /* the overlay's own clock: 0.41 and 0.63 against the cine loop's 1
+         and the window's 1.3 and 0.7 — no small common multiple, so the
+         three never come into phase */
+      var ft = t * 5, fs = t * 7;
+      var fTab = FUSION[fusionRamp];
+      var fCover = 0;
+      /* the field's own rotation and the ramp's own phase, both on periods
+         that share no small multiple with the cine loop or the window */
+      var rot = t * TAU * 2, cosR = Math.cos(rot), sinR = Math.sin(rot);
+      var rampPhase = rotate ? (t * 3) % 1 : 0;
+
+      for (y = 0; y < VH; y++) {
+        syi = ((y / VH) * SH) | 0;
+        for (x = 0; x < VW; x++) {
+          sxi = ((x / VW) * SW) | 0;
+          v = s[(syi * SW + sxi) * 4] / 255;
+          hist[Math.min(63, (v * 64) | 0)]++;
+          n = (v - lo) / (hi - lo);
+          n = n < 0 ? 0 : n > 1 ? 1 : n;
+          o = y * VW + x;
+          var idx = (n * 255) | 0;
+          var rr = table[idx * 3], gg = table[idx * 3 + 1], bb = table[idx * 3 + 2];
+
+          if (fusion) {
+            /* The functional value is DERIVED FROM THE READ, not from the
+               function that drew the slice — it is uptake-shaped: high where
+               the tissue is dense and where a slow travelling field says it
+               is active. The field is the second dimension and it is why
+               this needs colour: two quantities cannot share one grey. */
+            var u2 = x / VW - 0.5, v2b = y / VH - 0.5;
+            /* Three spatial terms rather than two, one of them ROTATING —
+               a field built only from axis-aligned sines drifts, and a
+               drifting field reads as a pattern sliding behind a window
+               rather than as something happening inside the subject. The
+               rotation is what makes it turn. */
+            var ru = u2 * cosR - v2b * sinR, rv = u2 * sinR + v2b * cosR;
+            var rad = Math.sqrt(u2 * u2 + v2b * v2b);
+            var f = v
+              * (0.50 + 0.50 * Math.sin(ru * 6.1 + ft * TAU))
+              * (0.45 + 0.55 * Math.cos(rv * 5.3 - fs * TAU))
+              * (0.60 + 0.40 * Math.sin(rad * 13.0 - ft * TAU * 2));
+            f = (f - 0.14) / 0.46;
+            f = f < 0 ? 0 : f > 1 ? 1 : f;
+            f *= fusionGain;
+            if (f > 0.03) {
+              fCover++;
+              /* the ramp ROTATES under the value, which is a real control on
+                 a real workstation — a rotating colour map makes a plateau
+                 that a static one flattens into one tone show its shape as
+                 a moving band. */
+              var fv = rotate ? (f + rampPhase) % 1 : f;
+              var fi = ((fv * 255) | 0) * 3;
+              var al = 0.22 + f * 0.72;
+              rr = rr + (fTab[fi] - rr) * al;
+              gg = gg + (fTab[fi + 1] - gg) * al;
+              bb = bb + (fTab[fi + 2] - bb) * al;
+            }
+          }
+          o32[o] = (255 << 24) | (bb << 16) | (gg << 8) | rr;
+        }
+      }
+      for (y = roi.y; y < roi.y + roi.h; y++) {
+        for (x = roi.x; x < roi.x + roi.w; x++) {
+          v = s[(y * SW + x) * 4];
+          roiSum += v; roiSq += v * v; roiN++;
+        }
+      }
+
+      ctx.fillStyle = self.SKIN_CSS(VOID);
+      ctx.fillRect(0, 0, W, H);
+      ctx.putImageData(out, VX, VY);
+
+      /* viewport furniture — thin rules, nothing decorative */
+      ctx.strokeStyle = RULE; ctx.lineWidth = 1;
+      ctx.strokeRect(VX - 0.5, VY - 0.5, VW + 1, VH + 1);
+
+      if (recon) {
+        /* the mark, assembled out of pixels above threshold. No path data
+           is authored: change the slice and the target set changes. */
+        ctx.fillStyle = ANNO;
+        var step = 5, cnt = 0;
+        for (y = 0; y < SH; y += step) {
+          for (x = 0; x < SW; x += step) {
+            if (s[(y * SW + x) * 4] > 190) {
+              ctx.fillRect(VX + (x / SW) * VW, VY + (y / SH) * VH, 2, 2);
+              cnt++;
+            }
+          }
+        }
+        ctx.font = '11px ' + (token('--mono') || 'monospace');
+        ctx.fillText(cnt.toLocaleString() + ' PIXELS OVER THRESHOLD, READ BACK', VX + 10, VY + VH - 12);
+      }
+
+      if (roiOn) {
+        ctx.strokeStyle = ROI; ctx.lineWidth = 1;
+        ctx.strokeRect(VX + (roi.x / SW) * VW + 0.5, VY + (roi.y / SH) * VH + 0.5,
+                       (roi.w / SW) * VW, (roi.h / SH) * VH);
+      }
+
+      /* the acquisition sweep — one bright row travelling the viewport, the
+         way a detector reads a frame out. Two fillRects, and the cheapest
+         possible way to say "this is live". */
+      var sweepY = Math.round(((t * 3) % 1) * VH);
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      ctx.fillRect(VX, VY + Math.max(0, sweepY - 26), VW, Math.min(26, sweepY));
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fillRect(VX, VY + sweepY, VW, 2);
+
+      /* overlay annotation, the one colour allowed in */
+      ctx.fillStyle = ANNO;
+      ctx.font = '12px ' + (token('--mono') || 'monospace');
+      ctx.fillText('SYNTHETIC PHANTOM — NOT A PATIENT', VX + 10, VY + 22);
+      ctx.fillText('W ' + Math.round(ww * 1000) + '  L ' + Math.round(wl * 1000), VX + 10, VY + 40);
+
+      /* ── the right-hand column, all of it derived ────────────────── */
+      var hy = VY + 14;
+      ctx.fillStyle = INK; ctx.font = '11px ' + (token('--mono') || 'monospace');
+      ctx.fillText('HISTOGRAM — COUNTED FROM THE PIXELS, EVERY FRAME', RX, hy);
+      var hh = 150, hmax = 1;
+      for (x = 0; x < 64; x++) if (hist[x] > hmax) hmax = hist[x];
+      for (x = 0; x < 64; x++) {
+        var bw = RW / 64, bh = Math.round((hist[x] / hmax) * hh);
+        var inWin = (x / 64) >= lo && (x / 64) <= hi;
+        /* Each bar is painted in the colour that value will actually
+           receive — through the display LUT, and through the fusion ramp
+           where the overlay reaches it. The histogram stops being a chart
+           beside the image and becomes a legend for it: the bar you are
+           looking at is the grey, or the colour, it will turn into. */
+        var bi = Math.round(Math.max(0, Math.min(1, ((x / 64) - lo) / (hi - lo))) * 255) * 3;
+        if (inWin) {
+          var hr = table[bi], hg = table[bi + 1], hb = table[bi + 2];
+          if (fusion) {
+            var fw = Math.max(0, Math.min(1, ((x / 64) - 0.42) / 0.5));
+            var qi = ((fw * 255) | 0) * 3;
+            hr += (fTab[qi] - hr) * fw * 0.8;
+            hg += (fTab[qi + 1] - hg) * fw * 0.8;
+            hb += (fTab[qi + 2] - hb) * fw * 0.8;
+          }
+          ctx.fillStyle = 'rgb(' + (hr | 0) + ',' + (hg | 0) + ',' + (hb | 0) + ')';
+        } else {
+          ctx.fillStyle = RULE;
+        }
+        ctx.fillRect(RX + x * bw, hy + 12 + hh - bh, bw - 1, bh);
+      }
+      /* the window, drawn over the histogram it selects, clamped to the
+         histogram's own range — an unclamped box ran off both ends and
+         stopped reading as a selection */
+      var wLo = Math.max(0, Math.min(1, lo)), wHi = Math.max(0, Math.min(1, hi));
+      ctx.strokeStyle = ANNO; ctx.lineWidth = 1;
+      ctx.strokeRect(RX + wLo * RW + 0.5, hy + 12.5, Math.max(2, (wHi - wLo) * RW), hh);
+
+      /* the LUT it maps through */
+      var ly = hy + 12 + hh + 34;
+      ctx.fillStyle = INK;
+      ctx.fillText(lut === 'gsdf' ? 'LUT — DICOM GSDF GREY, 256 ENTRIES' : 'LUT — HEAT, 256 ENTRIES, MONOTONE IN L', RX, ly - 10);
+      for (x = 0; x < RW; x++) {
+        var li = ((x / RW) * 255) | 0;
+        ctx.fillStyle = 'rgb(' + table[li * 3] + ',' + table[li * 3 + 1] + ',' + table[li * 3 + 2] + ')';
+        ctx.fillRect(RX + x, ly, 1, 26);
+      }
+      ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly - 0.5, RW + 1, 27);
+      /* the overlay's own ramp, under the study's, so the two scales the
+         image is carrying are both legible as scales */
+      if (fusion) {
+        for (x = 0; x < RW; x++) {
+          /* the legend rotates with the map. A static swatch beside a
+             rotating overlay is a legend that lies, and a legend that lies
+             is worse than none. */
+          var fi2 = ((((x / RW + rampPhase) % 1) * 255) | 0) * 3;
+          ctx.fillStyle = 'rgb(' + fTab[fi2] + ',' + fTab[fi2 + 1] + ',' + fTab[fi2 + 2] + ')';
+          ctx.fillRect(RX + x, ly + 31, 1, 14);
+        }
+        ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly + 30.5, RW + 1, 15);
+        ctx.fillStyle = INK;
+        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase() + (rotate ? ' · ROTATING' : ''), RX, ly + 58);
+      }
+
+      /* the slice ladder — where in the stack we are */
+      /* the stack sits below whatever the LUT column actually occupies —
+         one bar or two. Hardcoding the offset put the fusion legend
+         straight through the STACK label the moment the second ramp
+         appeared. */
+      var sy2 = ly + (fusion ? 92 : 62);
+      ctx.fillStyle = INK;
+      ctx.fillText('STACK', RX, sy2 - 10);
+      for (x = 0; x < 48; x++) {
+        var at = Math.abs(x / 48 - z) < 0.02;
+        /* the ladder is tinted by what the overlay is doing at that slice,
+           so the stack shows where the activity is rather than only where
+           the reader is */
+        var act = fusion ? Math.max(0, Math.sin((x / 48) * TAU * 2 + ft * TAU)) : 0;
+        var ai = ((act * 255) | 0) * 3;
+        ctx.fillStyle = at ? ANNO
+          : (fusion && act > 0.25 ? 'rgb(' + fTab[ai] + ',' + fTab[ai + 1] + ',' + fTab[ai + 2] + ')' : RULE);
+        ctx.fillRect(RX + x * (RW / 48), sy2, RW / 48 - 2, at ? 18 : 10);
+      }
+
+      /* ── the region, read back and magnified ─────────────────────
+         A fourth thing derived from the same read. Nearest-neighbour on
+         purpose: a workstation magnifies by showing you the pixels, not by
+         inventing smoother ones between them, and the blocks are the
+         honest statement of how much data is actually there. */
+      var dy = sy2 + 58;
+      ctx.fillStyle = INK;
+      /* The region shows the STUDY, not the fusion. That is not an
+         oversight: the overlay is a display layer computed from the
+         viewport's own geometry, and magnifying it would mean magnifying a
+         thing that only exists at one scale. The label says so rather than
+         leaving the difference to be noticed. */
+      ctx.fillText('REGION — THE STUDY ALONE, MAGNIFIED', RX, dy - 10);
+      var dw = Math.min(RW, 300), dh = Math.round(dw * (roi.h / roi.w));
+      if (roiOn) {
+        for (y = 0; y < dh; y++) {
+          syi = roi.y + ((y / dh) * roi.h) | 0;
+          for (x = 0; x < dw; x++) {
+            sxi = roi.x + ((x / dw) * roi.w) | 0;
+            v = s[(syi * SW + sxi) * 4] / 255;
+            n = (v - lo) / (hi - lo);
+            n = n < 0 ? 0 : n > 1 ? 1 : n;
+            var di = (n * 255) | 0;
+            ctx.fillStyle = 'rgb(' + table[di * 3] + ',' + table[di * 3 + 1] + ',' + table[di * 3 + 2] + ')';
+            ctx.fillRect(RX + x, dy + y, 1, 1);
+          }
+        }
+        ctx.strokeStyle = ROI; ctx.strokeRect(RX - 0.5, dy - 0.5, dw + 1, dh + 1);
+      } else {
+        ctx.fillStyle = RULE;
+        ctx.fillText('REGION OFF', RX, dy + 16);
+      }
+
+      /* the profile through the region's middle row, also from the read */
+      if (roiOn) {
+        var px2 = RX + dw + 24, pw2 = RW - dw - 24, ph2 = dh;
+        ctx.fillStyle = INK;
+        ctx.fillText('PROFILE THROUGH ITS MIDDLE ROW', px2, dy - 10);
+        ctx.fillStyle = RULE;
+        ctx.fillRect(px2, dy + ph2, pw2, 1);
+        for (x = 0; x < pw2; x++) {
+          sxi = roi.x + ((x / pw2) * roi.w) | 0;
+          syi = roi.y + (roi.h >> 1);
+          v = s[(syi * SW + sxi) * 4] / 255;
+          /* the trace is painted in the colour the value maps to, so the
+             profile is readable against the image without a key */
+          var pi2 = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo))) * 255) * 3;
+          ctx.fillStyle = fusion && v > 0.5
+            ? 'rgb(' + fTab[pi2] + ',' + fTab[pi2 + 1] + ',' + fTab[pi2 + 2] + ')'
+            : ANNO;
+          ctx.fillRect(px2 + x, dy + ph2 - v * ph2, 1, 3);
+        }
+      }
+
+      var mean = roiN ? roiSum / roiN : 0;
+      var sd = roiN ? Math.sqrt(Math.max(0, roiSq / roiN - mean * mean)) : 0;
+      $('r4-slice').textContent = Math.round(z * 48) + ' of 48';
+      $('r4-wwwl').textContent = Math.round(ww * 1000) + ' / ' + Math.round(wl * 1000);
+      $('r4-roistat').textContent = roiOn ? (mean.toFixed(1) + ' ± ' + sd.toFixed(1)) : 'off';
+      $('r4-read').textContent = (SW * SH).toLocaleString();
+      $('r4-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
+      $('r4-fusion-stat').textContent = fusion
+        ? fusionRamp.toUpperCase() + ' — ' + (fCover / (VW * VH) * 100).toFixed(1) + '% of frame'
+        : 'off';
+    }
+  });
+
+  /* Drag for window and level — the two numbers every reading room argues
+     about. Horizontal is window, vertical is level, which is the convention
+     every workstation uses. */
+  cv.addEventListener('pointerdown', function (e) { dragging = true; lastXY = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerup', function (e) { dragging = false; cv.releasePointerCapture(e.pointerId); });
+  cv.addEventListener('pointermove', function (e) {
+    if (!dragging || !lastXY) return;
+    /* the first drag takes the window off its automatic sweep and leaves it
+       where the reader put it — a control that fights the hand on it is
+       worse than no control at all */
+    if (autoWin) { autoWin = false; $('r4-auto').classList.remove('r4-on'); }
+    ww = Math.max(0.06, Math.min(1.4, ww + (e.clientX - lastXY[0]) * 0.003));
+    wl = Math.max(0.05, Math.min(0.95, wl - (e.clientY - lastXY[1]) * 0.003));
+    lastXY = [e.clientX, e.clientY];
+    demo.render(demo.t);
+  });
+
+  $('r4-bar').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.lut) {
+      lut = b.dataset.lut;
+      [].forEach.call(this.querySelectorAll('[data-lut]'), function (x) { x.classList.toggle('r4-on', x === b); });
+    } else if (b === $('r4-cine')) { cine = !cine; b.classList.toggle('r4-on', cine); }
+    else if (b === $('r4-auto')) { autoWin = !autoWin; b.classList.toggle('r4-on', autoWin); }
+    else if (b === $('r4-fusion')) { fusion = !fusion; b.classList.toggle('r4-on', fusion); }
+    else if (b === $('r4-ramp')) {
+      fusionRamp = RAMPS[(RAMPS.indexOf(fusionRamp) + 1) % RAMPS.length];
+      b.textContent = 'ramp: ' + fusionRamp;
+    }
+    else if (b === $('r4-rotate')) { rotate = !rotate; b.classList.toggle('r4-on', rotate); }
+    else if (b === $('r4-roi')) { roiOn = !roiOn; b.classList.toggle('r4-on', roiOn); }
+    else if (b === $('r4-recon')) { recon = !recon; b.classList.toggle('r4-on', recon); }
+    demo.render(demo.t);
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §5 · TRANSPORT — off-thread
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  /* Rule 1 of the boot order: read the setting BEFORE touching the canvas.
+     Every other rule depends on this being first, because transfer is
+     one-way and a reduced-motion load must never take a path it cannot
+     come back from. */
+  var startReduced = reduced.matches;
+
+  /* The backing store is FIXED, not fitted to the CSS width. It is sized
+     once, before transfer, and can never be resized from here afterwards —
+     the element no longer owns its bitmap. It is also small on purpose: a
+     blitted chassis has a native size, and `image-rendering: pixelated`
+     scales it by whole pixels rather than smearing it. */
+  /* 560 x 124 is the content's own size — the first pass used 440 x 200 and
+     left the bottom 40% of both chassis empty, which is what a backing store
+     chosen before the layout looks like. A player is a wide, shallow object;
+     the classic window was 275 x 116. */
+  var W = 560, H = 340;
+  var mainCv = $('t5-main-canvas'), wkrCv = $('t5-worker-canvas'), fbCv = $('t5-fallback-canvas');
+  [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; });
+
+  var TITLE = 'UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ';
+
+  function rgbOf(name) { return self.SKIN_CSS(resolveRGB(token(name))); }
+  /* Two ink sets from one helper, because unit 2 is a different SKIN — which
+     is the whole reason skins existed: the player was one program and
+     everybody's looked different. Two identical panels would also be a
+     picture of one panel, and what this section proves is about threads, not
+     about copy-paste. */
+  function inkSet(p2) {
+    return {
+      face: rgbOf(p2 + 'face'), hi: rgbOf(p2 + 'hi'), lt: rgbOf(p2 + 'lt'),
+      sh: rgbOf(p2 + 'sh'), dk: rgbOf(p2 + 'dk'), well: rgbOf(p2 + 'well'),
+      lcd: rgbOf(p2 + 'lcd'), lcdDim: rgbOf(p2 + 'lcd-dim'), sig: rgbOf(p2 + 'sig')
+    };
+  }
+  var INK = inkSet('--t5-');
+  var INK_B = inkSet('--t5b-');
+
+  var mainCtx = mainCv.getContext('2d');
+
+  /* The sheet's two-canvas rule, and §5's exemption from it. Everywhere
+     else chrome is a second canvas painted on resize only, so its per-frame
+     cost is zero. §5 cannot do that: the worker owns exactly one
+     transferred canvas and can never be handed a second. So both units
+     paint the chassis ONCE into a buffer and composite it with a single
+     drawImage per frame — the same shape on both threads, because the two
+     players have to be identical for the comparison to mean anything. */
+  var chromeCv = document.createElement('canvas');
+  chromeCv.width = W; chromeCv.height = H;
+  var chromeT0 = performance.now();
+  var ccx = chromeCv.getContext('2d');
+  var GEOM = self.T5_CHROME(ccx, W, H, INK);
+  self.T5_CAPS(ccx, INK, GEOM);
+  var chromeMs = performance.now() - chromeT0;
+
+  /* unit 2's chassis, in its own inks, for the fallback path only — the
+     worker paints its own when there is a worker */
+  var chromeBCv = document.createElement('canvas'), GEOM_B = GEOM;
+  chromeBCv.width = W; chromeBCv.height = H;
+  function fbChrome() {
+    var bx = chromeBCv.getContext('2d');
+    GEOM_B = self.T5_CHROME(bx, W, H, INK_B);
+    self.T5_CAPS(bx, INK_B, GEOM_B);
+  }
+  var mainLive = self.T5_LIVE(mainCtx, W, H, INK, GEOM, TITLE);
+
+  /* Once §5 has stood down it stays stood down, and this flag is what
+     enforces it. Without it a LATE pong walked straight past the decision:
+     the ping timed out, the fallback was shown, and then the worker
+     answered, the canvas was transferred, and the worker painted happily
+     underneath a blank fallback canvas that was still on top of it. Every
+     readout said the worker was alive — host, parity, frame count — and the
+     panel was black. A state machine with two ways into one state and no
+     way to say which one it took. */
+  var stoodDown = false;
+  var host = 'main', worker = null, blobUrl = null;
+  var mainFrames = 0, workerFrames = 0, freeRun = false, mainRaf = 0;
+  var fbCtx = null, fbLive = null;
+  var note = $('t5-note');
+
+  function mainPaint(t) { mainCtx.drawImage(chromeCv, 0, 0); mainLive(t, mainFrames); }
+  function fbPaint(t) { if (!fbLive) return; fbCtx.drawImage(chromeBCv, 0, 0); fbLive(t, mainFrames); }
+
+  /* host is latched at load. Never a try/catch guard: that would turn a
+     structural error — getContext on a transferred element — into a
+     swallowed one. */
+  function standDown(msg, expected) {
+    if (stoodDown) return;
+    stoodDown = true;
+    host = 'main';
+    fbCv.style.display = 'block';
+    if (!fbCtx) { fbCtx = fbCv.getContext('2d'); fbChrome(); fbLive = self.T5_LIVE(fbCtx, W, H, INK_B, GEOM_B, TITLE, 'scope'); }
+    $('t5-host').textContent = 'main-thread fallback';
+    note.hidden = false;
+    note.className = expected ? 't5-note' : 't5-note t5-bad';
+    note.textContent = expected
+      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both players are drawn by the main thread, which is the correct behaviour here and not a failure.'
+      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both players are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
+    $('t5-parity').textContent = expected ? 'not transferred' : 'fallback';
+    demo.render(demo.t);
+    fbPaint(demo.t);
+  }
+
+  function hashOf(ctx) {
+    var d = ctx.getImageData(0, 0, W, H).data, h = 0x811c9dc5, i;
+    for (i = 0; i < d.length; i += 997) { h ^= d[i]; h = (h * 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+
+  var demo = WAM.clock('t5-stage', {
+    el: $('t5-world'), dur: 12000, poster: 0.42,
+    render: function (t) {
+      mainFrames++;
+      mainPaint(t);
+      if (host === 'worker') worker.postMessage({ type: 'render', t: t });
+      else fbPaint(t);
+      $('t5-main-frames').textContent = mainFrames.toLocaleString();
+      if (host !== 'worker') $('t5-worker-frames').textContent = '—';
+    }
+  });
+  /* WAM.clock's cost meter brackets render(v) with performance.now(). For a
+     proxy render that is the cost of postMessage, not the cost of drawing,
+     so demo.cost is deliberately never printed for §5. */
+
+  $('t5-chrome-ms').textContent = ms(chromeMs) + ' ms' + atFloor(chromeMs);
+
+  if (startReduced || !('transferControlToOffscreen' in wkrCv) || typeof Worker === 'undefined') {
+    standDown(startReduced
+      ? 'reduced motion is on, so the canvas was never transferred — transfer is one-way, and a reduced-motion load must not take a path it cannot come back from'
+      : 'this engine has no OffscreenCanvas transfer', startReduced);
+  } else {
+    var body =
+      'self.SKIN_BEVEL = ' + self.SKIN_BEVEL + ';\n' +
+      'self.T5_FONT = ' + JSON.stringify(self.T5_FONT) + ';\n' +
+      'self.T5_TEXT = ' + self.T5_TEXT + ';\n' +
+      'self.T5_WIDTH = ' + self.T5_WIDTH + ';\n' +
+      'self.T5_CHROME = ' + self.T5_CHROME + ';\n' +
+      'self.T5_CAPS = ' + self.T5_CAPS + ';\n' +
+      'self.T5_ROW = ' + self.T5_ROW + ';\n' +
+      'self.T5_VIS = { bars: ' + self.T5_VIS.bars + ', scope: ' + self.T5_VIS.scope + ' };\n' +
+      'self.T5_LIVE = ' + self.T5_LIVE + ';\n' +
+      '(' + self.T5_WORKER + ')();\n' +
+      '//# sourceURL=transport-worker.js';
+    blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+    worker = new Worker(blobUrl);                 /* classic, never {type:'module'} */
+    worker.onerror = function () { standDown('the worker failed to start'); };
+
+    var pinged = false;
+    /* 2.5 s, not 750 ms. The original budget was set when this sheet booted
+       one world; it now boots five, several of which write a megapixel
+       before their first frame, and a worker that answers in 900 ms is a
+       healthy worker on a busy thread rather than a dead one. */
+    var PING_MS = 2500;
+    var pingTimer = setTimeout(function () {
+      if (!pinged) standDown('the worker did not answer a ping within ' + PING_MS + ' ms');
+    }, PING_MS);
+
+    worker.onmessage = function (e) {
+      if (stoodDown) return;
+      var m = e.data;
+      if (m.type === 'pong') {
+        pinged = true; clearTimeout(pingTimer);
+        /* Ping FIRST, then transfer. Transferring into a dead worker is
+           unrecoverable; pinging first is free. */
+        var off = wkrCv.transferControlToOffscreen();
+        host = 'worker';
+        $('t5-host').textContent = 'worker · OffscreenCanvas';
+        worker.postMessage({ type: 'init', canvas: off, w: W, h: H, ink: INK_B, title: TITLE, vis: 'scope' }, [off]);
+      } else if (m.type === 'ready') {
+        URL.revokeObjectURL(blobUrl);
+        $('t5-chrome-ms').innerHTML = ms(chromeMs) + ' / ' + ms(m.chromeMs) + ' ms' + atFloor(Math.min(chromeMs, m.chromeMs));
+        worker.postMessage({ type: 'render', t: 0.42 });
+      } else if (m.type === 'rendered') {
+        workerFrames = m.n;
+        $('t5-worker-frames').textContent = workerFrames.toLocaleString();
+        if (m.t === 0.42 && $('t5-parity').textContent === 'booting…') {
+          /* Boot parity — the positive control for §5's central claim. The
+             same chassis and the same live layer, run on a scratch canvas
+             here, must hash to what the worker got. Without it, "the same
+             render, off the main thread" is asserted.
+
+             A blitter should make this free: integer rects, opaque fills,
+             no scaling, no blending, so drawImage is a copy and there is
+             nothing left for two rasterisers to disagree about. The
+             register this replaced cost 1,284 differing pixels on a healthy
+             worker for exactly the reasons a blitter does not have. */
+          var scratch = document.createElement('canvas');
+          scratch.width = W; scratch.height = H;
+          var sctx = scratch.getContext('2d', { willReadFrequently: true });
+          var sChrome = document.createElement('canvas');
+          sChrome.width = W; sChrome.height = H;
+          var scx = sChrome.getContext('2d');
+          /* Against UNIT 2's inks and UNIT 2's visualiser, because that is
+             what the worker was given. The check proves single-sourcing —
+             the same function running on both threads — not that the two
+             units look alike, and they deliberately do not. */
+          var sGeom = self.T5_CHROME(scx, W, H, INK_B);
+          self.T5_CAPS(scx, INK_B, sGeom);
+          sctx.drawImage(sChrome, 0, 0);
+          self.T5_LIVE(sctx, W, H, INK_B, sGeom, TITLE, 'scope')(0.42, m.n);
+          var mine = hashOf(sctx);
+          if (mine === m.hash) {
+            $('t5-parity').textContent = '✓ 0x' + m.hash.toString(16);
+            BOOT.settled();
+          } else {
+            standDown('boot parity failed — worker 0x' + m.hash.toString(16) + ' vs main 0x' + mine.toString(16));
+          }
+        }
+      } else if (m.type === 'frame') {
+        workerFrames = m.n;
+        $('t5-worker-frames').textContent = workerFrames.toLocaleString();
+      }
+    };
+    worker.postMessage({ type: 'ping' });
+  }
+
+  /* Free-run: the worker drives itself off the compositor, the main unit
+     off its own rAF. Mutually exclusive with the clock — otherwise two
+     clocks drive one render. */
+  function setFreeRun(on) {
+    freeRun = on;
+    $('t5-freerun').classList.toggle('t5-on', on);
+    $('t5-freerun').textContent = on ? 'stop free-run' : 'free-run both';
+    if (on) {
+      demo.pause();
+      mainFrames = 0; workerFrames = 0;
+      if (host === 'worker') worker.postMessage({ type: 'run' });
+      var t0 = performance.now();
+      (function tick(now) {
+        mainFrames++;
+        var t = ((now - t0) % 12000) / 12000;
+        mainPaint(t); fbPaint(t);
+        $('t5-main-frames').textContent = mainFrames.toLocaleString();
+        if (freeRun) mainRaf = requestAnimationFrame(tick);
+      })(performance.now());
+    } else {
+      cancelAnimationFrame(mainRaf); mainRaf = 0;
+      if (host === 'worker') worker.postMessage({ type: 'stop' });
+      if (!reduced.matches) demo.play();
+    }
+  }
+  $('t5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
+
+  $('t5-block').addEventListener('click', function () {
+    if (!freeRun) setFreeRun(true);
+    var btn = this;
+    btn.disabled = true;
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      var m0 = mainFrames, w0 = workerFrames;
+      var t0 = performance.now(), end = t0 + 800;
+      while (performance.now() < end) { /* deliberately blocking */ }
+      /* Read the MAIN counter here, at the instant the thread comes back.
+         Waiting even 160 ms lets it serve twenty frames at 120 Hz and folds
+         them into the block's own window, which understates the result by
+         about half and does it in the flattering direction.
+
+         The WORKER's counter cannot be read here, and that asymmetry is
+         real rather than a nuisance: the count arrives by postMessage, and
+         a blocked main thread is exactly a main thread that is not draining
+         its message queue. So the worker's figure is taken after a short
+         settle and the window it covers is stated as the longer one. Both
+         errors that remain point the same way — against the result. */
+      var dmBlock = mainFrames - m0;
+      setTimeout(function () {
+        var span = performance.now() - t0;
+        var dmTotal = mainFrames - m0, dw = workerFrames - w0;
+        note.hidden = false;
+        note.className = 't5-note';
+        note.textContent = host !== 'worker'
+          ? 'Both players are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
+          : 'Blocked the main thread for 800 ms. Unit 1 advanced ' + dmBlock + ' frame' +
+            (dmBlock === 1 ? '' : 's') + ' while blocked and ' + dmTotal + ' across the whole ' +
+            Math.round(span) + ' ms window — its title stopped scrolling and its clock stopped counting. ' +
+            'Unit 2 advanced ' + dw + ' over that same window' +
+            (dmTotal ? ', ' + (dw / dmTotal).toFixed(0) + '× as many' : '') +
+            '. The worker is counted over the longer window because its count arrives by postMessage, ' +
+            'and a blocked thread is precisely one that is not draining its message queue.';
+        btn.disabled = false;
+      }, 50);
+    }); });
+  });
+
+  /* Reduced motion changing at runtime. The HOST is latched at load; the
+     POSTER is not. Worker running and reduce turns on → the worker draws
+     the poster. Do not try to reclaim the canvas; it throws. */
+  reduced.addEventListener('change', function () {
+    if (reduced.matches) {
+      if (freeRun) setFreeRun(false);
+      if (host === 'worker') { worker.postMessage({ type: 'stop' }); worker.postMessage({ type: 'render', t: 0.42 }); }
+    }
+  });
+})();
+
+})();
 </script>
 
 </body>
