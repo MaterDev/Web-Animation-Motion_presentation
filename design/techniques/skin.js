@@ -136,3 +136,29 @@ self.SKIN_BEVEL = function (ctx, x, y, w, h, sunken, c) {
 };
 
 self.SKIN_CSS = function (c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; };
+
+/* ── deterministic noise ────────────────────────────────────────────────
+   Shared because three worlds want it and none of them may use
+   Math.random: every demo on this sheet is checked by rendering the same t
+   twice from two different prior frames and comparing the buffers, and one
+   unseeded value fails that check in a way that looks like a rendering bug
+   rather than a seeding one. */
+self.SKIN_HASH2 = function (x, y, seed) {
+  var h = (x * 374761393 + y * 668265263 + seed * 2246822519) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0;
+  h = (h * 1274126177) >>> 0;
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+
+/* Value noise, bilinear, smoothstep-interpolated. */
+self.SKIN_NOISE = function (x, y, freq, seed) {
+  var fx = x * freq, fy = y * freq;
+  var ix = Math.floor(fx), iy = Math.floor(fy);
+  var tx = fx - ix, ty = fy - iy;
+  var sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+  var h = self.SKIN_HASH2;
+  var a = h(ix, iy, seed), b = h(ix + 1, iy, seed);
+  var c = h(ix, iy + 1, seed), d = h(ix + 1, iy + 1, seed);
+  var top = a + (b - a) * sx, bot = c + (d - c) * sx;
+  return top + (bot - top) * sy;
+};

@@ -231,7 +231,7 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title) {
         + 0.32 * Math.sin(t * 6.2831853 * 2 + i * 0.51)
         + 0.18 * Math.sin(t * 6.2831853 * 7 + i * 1.13)
         + 0.11 * Math.sin(t * 6.2831853 * 13 + i * 0.27);
-      v *= 0.55 + 0.45 * Math.sin(t * 6.2831853 * 1.5 + 0.9);
+      v *= 0.55 + 0.45 * Math.sin(t * 6.2831853 + 0.9);
       if (v < 0.04) v = 0.04;
       if (v > 1) v = 1;
       bh = Math.round(v * (g.aH - 2));
