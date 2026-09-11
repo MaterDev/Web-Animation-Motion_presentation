@@ -308,6 +308,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .n3-btn.n3-on { color: var(--n3-paper); background: var(--n3-ink); border-color: var(--n3-ink); }
 .n3-stage { position: relative; line-height: 0; padding: 6px var(--n3-gutter); }
 .n3-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.n3-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .n3-cap {
   font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--n3-dim);
   max-width: 74ch; padding: 6px var(--n3-gutter) 4px;
@@ -606,6 +607,11 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       </div>
       <div class="n3-stage" data-testid="n3-stage">
         <canvas data-testid="n3-canvas"></canvas>
+        <!-- the poster's display type, duplicated where a screen reader can
+             reach it. Drawn type is never the only copy on this sheet. -->
+        <span class="n3-sr" data-testid="n3-poster-text">The Network. Six lines,
+          sixty-three stations, first train 05:12, last train 00:41. Drawn live in
+          HTML canvas.</span>
       </div>
       <p class="n3-cap" data-testid="n3-cap">The pick surface is the second map. Every
         line and every station is drawn on it again in a flat colour that encodes what
@@ -1875,7 +1881,17 @@ var SEC2 = (function () {
    §3 · NETWORK — hit testing
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  var W = 1240, H = 620;
+  /* THE WORLD IS A POSTER, and the map is one element inside it. A transit
+     diagram on its own is a utility; set inside a composition — a title
+     block, a measure, a colophon, a key that is designed rather than
+     appended — it is a piece of graphic design that happens to be live.
+     Everything here is drawn: the type, the rules, the chips, the map.
+
+     Poster proportions rather than screen ones: the margin is generous and
+     constant, and the map is optically centred rather than mathematically,
+     because a title block above it wants more air below than above. */
+  var W = 1240, H = 860;
+  var MARGIN = 58, TITLE_H = 132, FOOT_H = 116;
   var cv = $('n3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
@@ -1897,9 +1913,12 @@ var SEC2 = (function () {
      geographic: the grid is the whole point of the convention, and a
      network generated from random coordinates gives itself away in one
      second because real diagrams have no arbitrary angles in them. */
-  var GX = 44, GY = 22, PAD = 46;
-  function gx(x) { return PAD + (x / GX) * (W - PAD * 2); }
-  function gy(y) { return PAD + (y / GY) * (H - PAD * 2 - 40); }
+  var GX = 44, GY = 22;
+  var MAP_X = MARGIN, MAP_Y = MARGIN + TITLE_H;
+  var MAP_W = W - MARGIN * 2, MAP_H = H - MAP_Y - FOOT_H - MARGIN;
+  function gx(x) { return MAP_X + (x / GX) * MAP_W; }
+  function gy(y) { return MAP_Y + (y / GY) * MAP_H; }
+  var PAD = MARGIN;
 
   var LINES = [
     { key: 'l1', name: 'AXIOM',    pts: [[2,11],[9,11],[12,8],[22,8],[25,11],[36,11],[41,11]] },
@@ -2057,10 +2076,10 @@ var SEC2 = (function () {
     var i;
     ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
     ctx.setLineDash([5, 5]);
-    var ry = [(H - PAD * 2) * 0.30, (H - PAD * 2) * 0.44];
+    var ry = [MAP_H * 0.34, MAP_H * 0.50];
     for (i = 0; i < 2; i++) {
       ctx.beginPath();
-      ctx.ellipse(gx(21), gy(11), (W - PAD * 2) * (0.26 + i * 0.16), ry[i], 0, 0, TAU);
+      ctx.ellipse(gx(21), gy(11), MAP_W * (0.26 + i * 0.16), ry[i], 0, 0, TAU);
       ctx.stroke();
     }
     ctx.setLineDash([]);
@@ -2068,8 +2087,8 @@ var SEC2 = (function () {
     ctx.font = '10px ' + (token('--mono') || 'monospace');
     /* the label sits INSIDE its own ring, on the boundary, which is where a
        zone label goes — outside it belongs to the next zone out */
-    ctx.fillText('ZONE 1', gx(21) - 20, gy(11) - ry[0] + 14);
-    ctx.fillText('ZONE 2', gx(21) - 20, gy(11) - ry[1] + 14);
+    ctx.fillText('ZONE 1', gx(21) - 20, gy(11) - ry[0] + 15);
+    ctx.fillText('ZONE 2', gx(21) - 20, gy(11) - ry[1] + 15);
   }
 
   function drawStation(st, emph) {
@@ -2156,7 +2175,8 @@ var SEC2 = (function () {
       ];
       for (var i = 0; i < cands.length; i++) {
         var b = { x: cands[i].x, y: cands[i].y, w: w, h: h };
-        if (b.x < 4 || b.x + w > W - 4 || b.y < 2 || b.y + h > H - 44) continue;
+        if (b.x < MARGIN - 30 || b.x + w > W - MARGIN + 30) continue;
+        if (b.y < MAP_Y - 22 || b.y + h > MAP_Y + MAP_H + 16) continue;
         if (hitsLabel(b) || hitsLine(b)) continue;
         placed.push(b);
         LABELS.push({ st: st, x: b.x, y: b.y + h / 2, bold: bold });
@@ -2176,17 +2196,71 @@ var SEC2 = (function () {
     ctx.textBaseline = 'alphabetic';
   }
 
-  function drawKey() {
-    var y = H - 24, x = PAD, i;
-    ctx.font = '10px ' + (token('--mono') || 'monospace');
+  /* ── the poster ──────────────────────────────────────────────────────
+     A title block, a measure, a key set as a column of chips, and a
+     colophon. All of it drawn. The display type is duplicated in the DOM
+     beside the canvas, because a raster is somewhere a screen reader cannot
+     go and type this size is the first thing anyone would try to read. */
+  function drawPoster(t) {
+    var sans = token('--sans') || 'sans-serif';
+    var mono = token('--mono') || 'monospace';
+
+    /* the hairline measure the whole composition hangs from */
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(MARGIN, MAP_Y - 26.5); ctx.lineTo(W - MARGIN, MAP_Y - 26.5);
+    ctx.moveTo(MARGIN, H - FOOT_H + 0.5); ctx.lineTo(W - MARGIN, H - FOOT_H + 0.5);
+    ctx.stroke();
+
+    /* the headline. Tight tracking, optical size, and the counter-form of
+       the network below it is what the composition is actually about. */
+    ctx.fillStyle = INK;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 82px ' + sans;
+    ctx.letterSpacing = '-3px';
+    ctx.fillText('THE NETWORK', MARGIN, MARGIN + 72);
+    ctx.letterSpacing = '0px';
+
+    ctx.font = '500 13px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('SIX LINES · ' + STATIONS.length + ' STATIONS · FIRST TRAIN 05:12 · LAST TRAIN 00:41',
+      MARGIN, MARGIN + 100);
+
+    /* the running clock, set right, on the same baseline as the strapline */
+    var mins = Math.floor(t * 120) % 60, hrs = 6 + Math.floor(t * 2) % 18;
+    ctx.textAlign = 'right';
+    ctx.font = '700 46px ' + sans;
+    ctx.fillStyle = INK;
+    ctx.fillText((hrs < 10 ? '0' : '') + hrs + ':' + (mins < 10 ? '0' : '') + mins, W - MARGIN, MARGIN + 60);
+    ctx.font = '500 11px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('LIVE · SERVICE RUNNING', W - MARGIN, MARGIN + 84);
+    ctx.textAlign = 'left';
+
+    /* the key, as chips on a baseline grid rather than a caption */
+    var ky = H - FOOT_H + 34, kx = MARGIN, i;
     for (i = 0; i < LINES.length; i++) {
       var L = LINES[i];
-      ctx.strokeStyle = L.colour; ctx.lineWidth = 5; ctx.lineCap = 'butt';
-      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 22, y); ctx.stroke();
+      var held = TRAINS.some(function (tr) { return tr.line === L && tr.held; });
+      ctx.fillStyle = L.colour;
+      ctx.fillRect(kx, ky - 13, 30, 13);
       ctx.fillStyle = INK;
-      ctx.fillText(L.name, x + 28, y + 3.5);
-      x += 34 + ctx.measureText(L.name).width + 22;
+      ctx.font = '600 12px ' + sans;
+      ctx.fillText(L.name, kx, ky + 16);
+      ctx.font = '500 9.5px ' + mono;
+      ctx.fillStyle = held ? ALERT : DIM;
+      ctx.fillText(held ? 'MINOR DELAYS' : 'GOOD SERVICE', kx, ky + 32);
+      kx += 132;
     }
+
+    /* the colophon, set small and right — every poster has one */
+    ctx.textAlign = 'right';
+    ctx.font = '500 9.5px ' + mono;
+    ctx.fillStyle = DIM;
+    ctx.fillText('DRAWN LIVE IN HTML CANVAS · NO SVG, NO DOM, NO IMAGE', W - MARGIN, ky + 4);
+    ctx.fillText('EVERY LINE CASED · EVERY LABEL PLACED AGAINST THE PICK SURFACE', W - MARGIN, ky + 20);
+    ctx.fillText('POINTER RESOLVED FROM ONE PIXEL', W - MARGIN, ky + 36);
+    ctx.textAlign = 'left';
   }
 
   function drawMap(t) {
@@ -2237,7 +2311,7 @@ var SEC2 = (function () {
       });
     }
 
-    drawKey();
+    drawPoster(t);
   }
 
   /* The pick surface, rebuilt at the SAME t as the map. Stations are drawn
@@ -2273,7 +2347,7 @@ var SEC2 = (function () {
         ctx.drawImage(pk, 0, 0);
         ctx.fillStyle = '#fff';
         ctx.font = '12px ' + (token('--mono') || 'monospace');
-        ctx.fillText('PICK SURFACE — NEVER COMPOSITED TO THE SCREEN', PAD, 30);
+        ctx.fillText('PICK SURFACE — NEVER COMPOSITED TO THE SCREEN', MARGIN, 34);
       } else {
         drawMap(t);
       }
