@@ -65,7 +65,7 @@ for (const { from, outfile } of copies) {
 }
 
 const bundles = [
-  { entry: 'three', outfile: 'three.module.js' },
+  { entry: 'scripts/three-entry.js', outfile: 'three.module.js' },
 ];
 
 for (const { entry, outfile, expect } of bundles) {
