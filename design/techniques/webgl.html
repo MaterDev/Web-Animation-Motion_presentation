@@ -1599,7 +1599,7 @@ void main(){ vec3 n = normalize(v_n); vec3 V = normalize(cameraPosition - v_p); 
   /* u_norm: show the film's chromaticity at full contrast — an oil/water
      boundary reflects almost nothing, so the true modulation is a few percent
      of the sky; the plate says so */
-  Rrgb = mix(Rrgb, Rrgb/max(Ravg, 1e-4)*0.10, u_norm);
+  Rrgb = mix(Rrgb, pow(Rrgb/max(Ravg, 1e-4), vec3(3.0))*0.10, u_norm);
   vec3 refl = skyAt(reflect(-V, n)); vec3 col = Rrgb*refl + u_base*(1.0 - Ravg)*u_transmit;
   col = 1.0 - exp(-col*1.1); o = vec4(pow(col, vec3(1.0/2.2)), 1.0); }`;
 const DISC_VS = `precision highp float; in vec3 position; in vec3 normal; in vec2 uv; uniform mat4 projectionMatrix, modelViewMatrix, modelMatrix; uniform mat3 normalMatrix; out vec3 v_p; out vec3 v_n; out vec2 v_uv;
@@ -1698,7 +1698,7 @@ const ENTRIES = {
       return { scene: sc, radius: 3.6, view: { mode: 'sway', yaw0: 0, pitch0: 18, yawAmp: 30, pitchAmp: 20 }, apply: (p) => { this.uniforms.u_pitch.value = 0.74 + 1.26 * p; } }; } },
   oil: { no: 5, title: 'Oil on water', mech: 'single film · a slick', asset: 'geometry authored · program written out', prog: 'RawShaderMaterial · one-film transfer matrix on water · a thickness map',
     text: '<b>The puddle is the film\'s mirror.</b> A slick of oil, index about 1.4, floats on water at 1.33, a few hundred nanometres thick and thinner toward its edges. Both reflections are from a lower to a higher index, so unlike the bubble a thin edge goes bright, not black. The rings are contours of thickness again, and they drift as the slick spreads.',
-    mechp: 'One film, <b>n 1.4</b>, on water, <b>n 1.33</b>. The oil–water boundary reflects almost nothing, so the film modulates only a few percent of the sky; the plate shows that modulation at full contrast, as your eye does against a bright overcast. The slider spreads the slick — thinner everywhere, the rings widen and the centre colour walks down the spectrum.',
+    mechp: 'One film, <b>n 1.4</b>, on water, <b>n 1.33</b>. The oil–water boundary reflects almost nothing, so the film modulates only a few percent of the sky; the plate shows that modulation at three times its contrast — the exaggeration is printed here because the colour is real and the depth is not. The slider spreads the slick — thinner everywhere, the rings widen and the centre colour walks down the spectrum.',
     paramK: 'spread', paramFmt: (p) => `${Math.round(700 - 550 * p)} nm at the centre`, stack: (p) => filmStack(1.4, 700 - 550 * p, 1.33),
     diagram: 'film', control: 'area',
     build() { const sc = new THREE.Scene(); sc.background = COL.well;
