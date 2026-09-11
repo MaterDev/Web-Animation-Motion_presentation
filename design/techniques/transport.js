@@ -194,7 +194,54 @@ self.T5_CAPS = function (ctx, ink, g) {
    is exactly what a hung player looked like, and everyone in the room has
    seen one — which makes it the most legible possible demonstration of a
    thread that has stopped answering. */
-self.T5_LIVE = function (ctx, W, H, ink, g, title) {
+/* ── the visualisers ────────────────────────────────────────────────────
+   TWO DIFFERENT ONES, because two identical players is a picture of one
+   player. The unit that is proving something about threads should not also
+   be proving that both halves of the demo were copy-pasted — and a
+   visualiser is the one component of a player everybody changed, because
+   it was the one the skin format let you change.
+
+   Both read the SAME programme material, which is what keeps the
+   comparison honest: the difference between the two panels is the
+   visualiser and the palette, never the signal. */
+self.T5_VIS = {
+  /* the spectrum analyser: bars, peak caps that fall */
+  bars: function (ctx, x, y, w, h, ink, t, band) {
+    var N = 19, bw = 3, gap = 1, i, v, bh, peak;
+    for (i = 0; i < N; i++) {
+      v = band(i, N, t);
+      bh = Math.round(v * (h - 2));
+      ctx.fillStyle = v > 0.86 ? ink.sig : ink.lcd;
+      ctx.fillRect(x + 2 + i * (bw + gap), y + h - bh, bw, bh);
+      /* the cap is the slow envelope of the bar, which is what a real one
+         does — it is a peak-hold, not a decoration riding on top */
+      peak = Math.max(v, band(i, N, t - 0.02), band(i, N, t - 0.05), band(i, N, t - 0.09));
+      ctx.fillStyle = ink.lcdDim;
+      ctx.fillRect(x + 2 + i * (bw + gap), y + h - Math.round(peak * (h - 2)) - 2, bw, 1);
+    }
+  },
+  /* the oscilloscope: one trace, drawn as pixels rather than a stroked
+     path, because that is what a skin-era visualiser could afford */
+  scope: function (ctx, x, y, w, h, ink, t, band) {
+    var i, v, yy, mid = y + h / 2, prev = null;
+    for (i = 0; i < w - 4; i++) {
+      v = Math.sin(i * 0.42 + t * 6.2831853 * 2) * 0.5
+        + Math.sin(i * 0.13 + t * 6.2831853 * 3) * 0.32
+        + Math.sin(i * 0.71 + t * 6.2831853) * 0.18;
+      v *= 0.45 + 0.55 * band(i % 19, 19, t);
+      yy = Math.round(mid + v * (h / 2 - 2));
+      ctx.fillStyle = Math.abs(v) > 0.88 ? ink.sig : ink.lcd;
+      if (prev !== null && Math.abs(yy - prev) > 1) {
+        ctx.fillRect(x + 2 + i, Math.min(yy, prev), 1, Math.abs(yy - prev));
+      } else {
+        ctx.fillRect(x + 2 + i, yy, 1, 1);
+      }
+      prev = yy;
+    }
+  }
+};
+
+self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
   return function live(t, frames) {
     var i, v, bh, bw = 3, gap = 1, BARS = 19;
 
@@ -223,21 +270,18 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title) {
     /* bitrate / format, static type in the well's corner */
     self.T5_TEXT(ctx, '192 KBPS 44 KHZ STEREO', g.wX + 6, g.wY + 48, 1, ink.lcdDim);
 
-    /* the miniature analyser. A STATED MATHEMATICAL CONSTRUCTION, not a
-       recording: three detuned partials under a slow envelope. Nothing on
-       this sheet decodes or plays audio. */
-    for (i = 0; i < BARS; i++) {
-      v = 0.5
-        + 0.32 * Math.sin(t * 6.2831853 * 2 + i * 0.51)
-        + 0.18 * Math.sin(t * 6.2831853 * 7 + i * 1.13)
-        + 0.11 * Math.sin(t * 6.2831853 * 13 + i * 0.27);
-      v *= 0.55 + 0.45 * Math.sin(t * 6.2831853 + 0.9);
-      if (v < 0.04) v = 0.04;
-      if (v > 1) v = 1;
-      bh = Math.round(v * (g.aH - 2));
-      ctx.fillStyle = v > 0.86 ? ink.sig : ink.lcd;
-      ctx.fillRect(g.aX + 2 + i * (bw + gap), g.aY + g.aH - bh, bw, bh);
+    /* the visualiser — whichever one this unit was built with. A STATED
+       MATHEMATICAL CONSTRUCTION drives both: three detuned partials under a
+       slow envelope. Nothing on this sheet decodes or plays audio. */
+    function band(i, n, tt) {
+      var vv = 0.5
+        + 0.32 * Math.sin(tt * 6.2831853 * 2 + i * 0.51)
+        + 0.18 * Math.sin(tt * 6.2831853 * 7 + i * 1.13)
+        + 0.11 * Math.sin(tt * 6.2831853 * 13 + i * 0.27);
+      vv *= 0.55 + 0.45 * Math.sin(tt * 6.2831853 + 0.9);
+      return vv < 0.04 ? 0.04 : vv > 1 ? 1 : vv;
     }
+    self.T5_VIS[vis || 'bars'](ctx, g.aX, g.aY, g.aW, g.aH, ink, t, band);
 
     /* the frame counter, in the title bar, so the number that stops is on
        the chassis rather than only in the DOM readout */
@@ -345,7 +389,7 @@ self.T5_WORKER = function () {
       var g = self.T5_CHROME(cx, W, H, ink);
       self.T5_CAPS(cx, ink, g);
       var chromeMs = performance.now() - t1;
-      live = self.T5_LIVE(ctx, W, H, ink, g, m.title);
+      live = self.T5_LIVE(ctx, W, H, ink, g, m.title, m.vis);
       self.postMessage({ type: 'ready', chromeMs: chromeMs });
     } else if (m.type === 'render') {
       paint(m.t);
