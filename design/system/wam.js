@@ -133,6 +133,31 @@ window.WAM = (function () {
      CSS custom properties, @font-face and url(#…) filter refs all still
      resolve. Screenshot once and the whole transformation is one image.
      Serialising the SVG instead loses every one of those. */
+  /* cloneNode(true) copies a <canvas> element and NOT its bitmap. The
+     clone keeps width/height and comes back fully transparent — measured
+     in Chromium, Firefox and WebKit over both file:// and localhost:
+     source pixel 255,0,255,255, clone pixel 0,0,0,0, 6 of 6 runs. So a
+     canvas demo filmstripped without this would render twelve blank
+     cells and never error, which is worse than failing.
+
+     drawImage on the clone's own 2D context is the copy. Sources are
+     walked in document order in both trees, so the i-th source canvas
+     is the i-th clone canvas; a stage that IS a canvas is handled by
+     the same walk. A zero-sized backing store is skipped rather than
+     passed to drawImage, which throws on a 0-width source. */
+  function copyBitmaps(srcRoot, dstRoot) {
+    const pick = (root) =>
+      root.tagName === 'CANVAS' ? [root] : [...root.querySelectorAll('canvas')];
+    const src = pick(srcRoot), dst = pick(dstRoot);
+    for (let i = 0; i < src.length && i < dst.length; i++) {
+      const s = src[i], c = dst[i];
+      if (!s.width || !s.height) continue;
+      c.width = s.width; c.height = s.height;
+      c.getContext('2d').drawImage(s, 0, 0);
+    }
+    return src.length;
+  }
+
   function filmstrip(name, n = 12) {
     const d = demos[name]; if (!d) return console.error('no demo: ' + name);
     const stage = document.querySelector('[data-testid="' + name + '"]');
@@ -152,15 +177,17 @@ window.WAM = (function () {
       clone.removeAttribute('data-testid');
       clone.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
       clone.style.cssText += ';width:150px;height:100px;min-height:0';
+      copyBitmaps(stage, clone);
       const cap = document.createElement('div');
       cap.style.cssText = 'font:9px var(--mono);color:var(--hz-500);padding-top:4px';
       cap.textContent = 't=' + t.toFixed(2);
       cell.append(clone, cap); strip.append(cell);
     }
-    document.querySelector('.notes').before(strip);
+    const anchor = document.querySelector('.notes') || stage.closest('section') || stage;
+    anchor.before(strip);
     d.render(was); if (wasPlaying) d.play();
     return strip;
   }
 
-  return { clock, filmstrip, demos, clockRes, get reduced() { return mq.matches; } };
+  return { clock, filmstrip, copyBitmaps, demos, clockRes, get reduced() { return mq.matches; } };
 })();
