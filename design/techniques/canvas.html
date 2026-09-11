@@ -284,7 +284,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
      over bare laminate, and at that shade the tracks vanish at projection
      distance. This is the one place the world is tuned for the back of the
      room rather than for accuracy, and it is stated rather than smuggled. */
-  --b3-cu:      oklch(0.430 0.062 162);   /* track, read from the back row  */
+  --b3-cu:      oklch(0.385 0.055 162);   /* track, read from the back row  */
   --b3-sub:     oklch(0.310 0.045  92);   /* bare FR-4                      */
   --b3-pad:     oklch(0.820 0.105  88);   /* ENIG gold                      */
   --b3-silk:    oklch(0.930 0.006 165);   /* white silkscreen               */
@@ -565,7 +565,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
     <div class="b3 b3-world" data-testid="b3-world">
       <div class="b3-bar" data-testid="b3-bar">
         <button class="b3-btn" data-testid="b3-layer">show the net layer</button>
-        <button class="b3-btn b3-on" data-testid="b3-route">autoroute</button>
+        <button class="b3-btn b3-on" data-testid="b3-route">trace signals</button>
         <button class="b3-btn b3-on" data-testid="b3-silk">silkscreen</button>
         <button class="b3-btn b3-on" data-testid="b3-mask">soldermask</button>
       </div>
@@ -582,6 +582,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <div class="b3-kv">objects on the board<b data-testid="b3-objects">—</b></div>
         <div class="b3-kv">pixel read<b data-testid="b3-pixel">—</b></div>
         <div class="b3-kv">decoded<b class="b3-net" data-testid="b3-decoded">nothing under the pointer</b></div>
+        <div class="b3-kv">routes live<b class="b3-net" data-testid="b3-phase">—</b></div>
         <div class="b3-kv">read cost<b data-testid="b3-readcost">—</b></div>
       </div>
     </div>
@@ -615,6 +616,9 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <button class="r4-btn" data-lut="iron" data-testid="r4-lut-iron">heat</button>
         <button class="r4-btn r4-on" data-testid="r4-cine">cine</button>
         <button class="r4-btn r4-on" data-testid="r4-roi">region</button>
+        <button class="r4-btn r4-on" data-testid="r4-auto">auto window</button>
+        <button class="r4-btn r4-on" data-testid="r4-fusion">fusion</button>
+        <button class="r4-btn" data-testid="r4-ramp">ramp: jet</button>
         <button class="r4-btn" data-testid="r4-recon">reconstruct from readback</button>
       </div>
       <div class="r4-stage" data-testid="r4-stage">
@@ -624,11 +628,13 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         level — the two numbers every reading room argues about. They do not change
         the scan; they change which slice of its range the display spends its greys
         on, which is why the same pixels can show bone or soft tissue and never both
-        at once.</p>
+        at once. Left alone they sweep on their own, widening and sliding the way a
+        pair of hands does while reading; the first drag takes them off it.</p>
       <div class="r4-plate" data-testid="r4-readouts">
         <div class="r4-kv">slice<b data-testid="r4-slice">—</b></div>
         <div class="r4-kv">window / level<b class="r4-anno" data-testid="r4-wwwl">—</b></div>
         <div class="r4-kv">region mean ± sd<b data-testid="r4-roistat">—</b></div>
+        <div class="r4-kv">fusion overlay<b class="r4-anno" data-testid="r4-fusion-stat">—</b></div>
         <div class="r4-kv">pixels read this frame<b data-testid="r4-read">—</b></div>
         <div class="r4-kv">readback cost<b data-testid="r4-readcost">—</b></div>
       </div>
@@ -1693,7 +1699,7 @@ var SEC2 = (function () {
    §3 · BOARD — hit testing
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  var W = 1240, H = 600;
+  var W = 1240, H = 620;
   var cv = $('b3-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
@@ -1706,22 +1712,38 @@ var SEC2 = (function () {
 
   var MASK = self.SKIN_CSS(resolveRGB(token('--b3-mask')));
   var MASKHI = self.SKIN_CSS(resolveRGB(token('--b3-mask-hi')));
-  var CU = self.SKIN_CSS(resolveRGB(token('--b3-cu')));
   var SUB = self.SKIN_CSS(resolveRGB(token('--b3-sub')));
-  var PAD = self.SKIN_CSS(resolveRGB(token('--b3-pad')));
+  var PADC = resolveRGB(token('--b3-pad'));
+  var PAD = self.SKIN_CSS(PADC);
   var SILK = self.SKIN_CSS(resolveRGB(token('--b3-silk')));
-  var NET = self.SKIN_CSS(resolveRGB(token('--b3-net')));
+  var NETC = resolveRGB(token('--b3-net'));
+  var NET = self.SKIN_CSS(NETC);
   var SEL = self.SKIN_CSS(resolveRGB(token('--b3-sel')));
   var DRILL = self.SKIN_CSS(resolveRGB(token('--b3-drill')));
+  var CU = self.SKIN_CSS(resolveRGB(token('--b3-cu')));
+  var CU_LO = self.SKIN_CSS(resolveRGB('oklch(0.300 0.048 162)'));   /* trace relief */
+  var CU_HI = self.SKIN_CSS(resolveRGB('oklch(0.540 0.070 160)'));   /* trace crown  */
+  var SHADOW = 'rgba(0,0,0,0.45)';
 
-  /* ── the board, generated once and seeded ───────────────────────────
-     Components on a grid, pads on their edges, and a net joining pads in
-     Manhattan runs with 45° corners — which is how a board is actually
-     routed and why the picture reads as one. */
-  var COMPS = [], NETS = [], objects = 0;
+  /* ── the architecture ────────────────────────────────────────────────
+     The board is given one, because a net that lights up at random reads
+     as decoration and a net that lights up in sequence reads as a machine
+     doing something. The sequence is the ordinary one: a clock edge, an
+     address goes out, a strobe, and data comes back. Every net belongs to
+     one of those classes and fires inside that class's window, staggered
+     by its bit index — so a bus arrives as a bus, a ripple across sixteen
+     lines, rather than sixteen unrelated flashes. */
+  var CLASSES = [
+    { key: 'CLK',  from: 0.00, to: 0.12, colour: [255, 236, 170] },
+    { key: 'ADDR', from: 0.10, to: 0.46, colour: NETC },
+    { key: 'CTRL', from: 0.42, to: 0.56, colour: [255, 190, 120] },
+    { key: 'DATA', from: 0.52, to: 0.92, colour: [150, 235, 190] }
+  ];
+
+  var COMPS = [], NETS = [], VIAS = [], MOUNT = [], ROUTES = [];
   (function () {
     var r = rng(0xB0A2D), i, j, k;
-    var cols = 9, rows = 5, cw = W / cols, ch = H / rows;
+    var cols = 9, rows = 5, cw = W / cols, ch = (H - 40) / rows;
     for (j = 0; j < rows; j++) {
       for (i = 0; i < cols; i++) {
         if (r() < 0.22) continue;
@@ -1729,22 +1751,17 @@ var SEC2 = (function () {
         var w = wide ? cw * 0.62 : cw * 0.34;
         var h = wide ? ch * 0.30 : ch * 0.42;
         var x = i * cw + (cw - w) / 2 + (r() - 0.5) * 10;
-        var y = j * ch + (ch - h) / 2 + (r() - 0.5) * 10;
+        var y = 20 + j * ch + (ch - h) / 2 + (r() - 0.5) * 10;
         var pins = 2 + Math.floor(r() * 7);
         var c = { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), pads: [], ref: 'U' + (COMPS.length + 1) };
         for (k = 0; k < pins; k++) {
           var side = k % 2;
           var u = (k + 1) / (pins + 1);
-          c.pads.push({
-            x: Math.round(c.x + (side ? c.w + 7 : -7)),
-            y: Math.round(c.y + u * c.h),
-            r: 4
-          });
+          c.pads.push({ x: Math.round(c.x + (side ? c.w + 7 : -7)), y: Math.round(c.y + u * c.h), r: 4 });
         }
         COMPS.push(c);
       }
     }
-    /* nets: join a pad to a pad elsewhere, Manhattan with a mitre */
     var all = [];
     COMPS.forEach(function (c, ci) { c.pads.forEach(function (p, pi) { all.push({ c: ci, p: pi, x: p.x, y: p.y }); }); });
     for (i = 0; i < 150 && all.length > 2; i++) {
@@ -1752,93 +1769,255 @@ var SEC2 = (function () {
       if (a === b) continue;
       var midX = Math.round((a.x + b.x) / 2);
       var m2 = 10 * (b.y > a.y ? 1 : -1);
-      NETS.push({
-        id: NETS.length,
-        pts: [[a.x, a.y], [midX - m2, a.y], [midX, a.y + m2], [midX, b.y - m2], [midX + m2, b.y], [b.x, b.y]],
-        w: r() < 0.18 ? 5 : 3
-      });
+      var cls = i < 4 ? 0 : i < 48 ? 1 : i < 66 ? 2 : 3;
+      var pts = [[a.x, a.y], [midX - m2, a.y], [midX, a.y + m2], [midX, b.y - m2], [midX + m2, b.y], [b.x, b.y]];
+      var len = 0, q;
+      for (q = 1; q < pts.length; q++) len += Math.hypot(pts[q][0] - pts[q - 1][0], pts[q][1] - pts[q - 1][1]);
+      NETS.push({ id: NETS.length, pts: pts, len: len, w: cls === 0 ? 5 : (r() < 0.18 ? 5 : 3), cls: cls, bit: i, a: a.c, b: b.c });
+      /* a via wherever a run changes direction hard enough to need one */
+      if (r() < 0.55) VIAS.push({ x: midX, y: Math.round(a.y + m2) });
     }
-    objects = NETS.length + all.length + COMPS.length;
+    for (i = 0; i < 4; i++) MOUNT.push({ x: i % 2 ? W - 26 : 26, y: i < 2 ? 26 : H - 26 });
+
+    /* ── the routes ─────────────────────────────────────────────────
+       A path is WALKED, not chosen: from a starting package, follow a net
+       to whatever it lands on, then follow one of that package's nets
+       onward, four to seven hops deep. What comes out is a real chain
+       through the circuit — a signal that leaves one part, passes through
+       three more and ends somewhere — rather than a set of unrelated lines
+       that happen to light up together. The sheet then cycles the chains,
+       so the board is never showing the same combination twice running. */
+    var adj = {};
+    NETS.forEach(function (n) {
+      (adj[n.a] = adj[n.a] || []).push(n);
+      (adj[n.b] = adj[n.b] || []).push(n);
+    });
+    for (i = 0; i < 14; i++) {
+      var at = (r() * COMPS.length) | 0, chain = [], seen = {}, hops = 4 + ((r() * 4) | 0), h;
+      for (h = 0; h < hops; h++) {
+        var opts = (adj[at] || []).filter(function (n) { return !seen[n.id]; });
+        if (!opts.length) break;
+        var pick = opts[(r() * opts.length) | 0];
+        seen[pick.id] = 1;
+        chain.push(pick.id);
+        at = pick.a === at ? pick.b : pick.a;
+      }
+      if (chain.length >= 3) ROUTES.push(chain);
+    }
     $('b3-nets').textContent = NETS.length.toLocaleString();
-    $('b3-objects').textContent = objects.toLocaleString();
+    $('b3-objects').textContent = (NETS.length + all.length + COMPS.length + VIAS.length).toLocaleString();
   })();
 
-  var showLayer = false, routing = true, silkOn = true, maskOn = true;
+  var showLayer = false, running = true, silkOn = true, maskOn = true;
   var hoverNet = -1, readCosts = [];
 
-  function trace(c, n, progress, width, colour) {
-    var pts = n.pts, i, seg, total = pts.length - 1, upto = progress * total;
-    c.strokeStyle = colour;
-    c.lineWidth = width;
-    c.lineJoin = 'round'; c.lineCap = 'round';
+  function path(c, n, from, to) {
+    var pts = n.pts, i, total = pts.length - 1;
+    var a = from * total, b = to * total;
     c.beginPath();
-    c.moveTo(pts[0][0], pts[0][1]);
-    for (i = 1; i <= total; i++) {
-      seg = upto - (i - 1);
-      if (seg <= 0) break;
-      if (seg >= 1) c.lineTo(pts[i][0], pts[i][1]);
-      else c.lineTo(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * seg,
-                    pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * seg);
+    for (i = 0; i <= total; i++) {
+      var segA = Math.max(0, Math.min(1, a - i + 1));
+      var segB = Math.max(0, Math.min(1, b - i + 1));
+      if (i === 0) { c.moveTo(pts[0][0], pts[0][1]); continue; }
+      var p0 = pts[i - 1], p1 = pts[i];
+      if (segB <= 0) break;
+      var sx = p0[0] + (p1[0] - p0[0]) * (i === 1 ? Math.max(0, a) : Math.max(0, a - i + 1));
+      if (segA > 0 && segA < 1) c.moveTo(p0[0] + (p1[0] - p0[0]) * segA, p0[1] + (p1[1] - p0[1]) * segA);
+      c.lineTo(p0[0] + (p1[0] - p0[0]) * segB, p0[1] + (p1[1] - p0[1]) * segB);
     }
+  }
+
+  function strokeNet(c, n, from, to, width, colour) {
+    c.strokeStyle = colour; c.lineWidth = width;
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    path(c, n, from, to);
     c.stroke();
   }
 
-  /* Each net has its own phase, so the autorouter lays the board down in a
-     wave rather than all at once — which is what makes the section move,
-     and what a router actually looks like. */
-  function progressOf(n, t) {
-    if (!routing) return 1;
-    var phase = (t * 1.6 + n.id * 0.0135) % 1.6;
-    return phase < 1 ? phase : 1;
+  /* Which route is live, and how far the signal has travelled along it.
+     Two routes overlap at any moment — the one ending and the one starting
+     — so the board reads as a machine handing work on rather than a slide
+     show of paths. */
+  function liveRoutes(t) {
+    if (!running || !ROUTES.length) return [];
+    /* Each route starts one slot after the one before it and runs for 1.8
+       slots, so there are always two overlapping: one finishing while the
+       next is already on its way. The wrap is done on t rather than on u,
+       because a route that starts near the end of the cycle has to be able
+       to finish at the beginning of the next one. */
+    var slot = 1 / ROUTES.length, span = slot * 1.8, out = [], i, u;
+    for (i = 0; i < ROUTES.length; i++) {
+      u = ((t - i * slot) % 1 + 1) % 1 / span;
+      if (u <= 1) out.push({ route: ROUTES[i], u: u, i: i });
+    }
+    return out;
+  }
+
+  /* Where the signal is on one hop of a live route. Each hop fires after
+     the one before it has finished, so the glow walks the chain end to end
+     instead of lighting all of it at once. */
+  function hopPhase(u, k, n) {
+    var each = 1 / n;
+    var v = (u - k * each) / each;
+    return v < 0 ? 0 : v > 1 ? 1 : v;
+  }
+
+  /* ── dimensionality ──────────────────────────────────────────────────
+     Not a simulated material — flat tones, offset copies and one-pixel
+     edges, which is the same notation the bevels use. A trace gets a dark
+     copy beneath it and a lighter crown on top, so it reads as copper
+     standing proud of the laminate rather than a line drawn on it. */
+  function drawTraces(t) {
+    var i, n, a;
+    /* 1 · the relief: every trace, offset down and right, in shadow */
+    for (i = 0; i < NETS.length; i++) {
+      n = NETS[i];
+      ctx.save(); ctx.translate(1, 1.5);
+      strokeNet(ctx, n, 0, 1, n.w + 1, SHADOW);
+      ctx.restore();
+    }
+    /* 2 · the copper itself */
+    for (i = 0; i < NETS.length; i++) strokeNet(ctx, NETS[i], 0, 1, NETS[i].w, maskOn ? CU : PAD);
+    /* 3 · the crown — a hairline along the top of each run, at low alpha.
+       At full strength it made every trace on the board read as lit, which
+       cost the signal glow the contrast it needs: if unrouted copper
+       glows, a routed signal has nothing left to be brighter than. */
+    ctx.globalAlpha = 0.30;
+    for (i = 0; i < NETS.length; i++) {
+      ctx.save(); ctx.translate(0, -0.5);
+      strokeNet(ctx, NETS[i], 0, 1, Math.max(1, NETS[i].w - 2), CU_HI);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    /* 4 · the signal, walking its route. A wide dim halo, a body, and a
+       bright head at the leading edge — all composited with `lighter`, so
+       where two live routes cross each other the crossing blooms. That
+       bloom is the thing that makes it read as current rather than paint,
+       and it is a composite operation rather than a shadow: there is no
+       CSS that adds light to what is already on a surface. */
+    ctx.globalCompositeOperation = 'lighter';
+    var live = liveRoutes(t), L, k, hp, fade;
+    for (L = 0; L < live.length; L++) {
+      var route = live[L].route, u = live[L].u;
+      fade = u > 0.82 ? 1 - (u - 0.82) / 0.18 : 1;       /* the tail dies out */
+      for (k = 0; k < route.length; k++) {
+        n = NETS[route[k]];
+        hp = hopPhase(u, k, route.length);
+        if (hp <= 0) continue;
+        var c = CLASSES[n.cls].colour;
+        var rgb = c[0] + ',' + c[1] + ',' + c[2];
+        strokeNet(ctx, n, 0, hp, n.w + 9, 'rgba(' + rgb + ',' + (0.05 * fade).toFixed(3) + ')');
+        strokeNet(ctx, n, 0, hp, n.w + 4, 'rgba(' + rgb + ',' + (0.10 * fade).toFixed(3) + ')');
+        strokeNet(ctx, n, 0, hp, n.w, 'rgba(' + rgb + ',' + (0.42 * fade).toFixed(3) + ')');
+        if (hp < 1) {
+          strokeNet(ctx, n, Math.max(0, hp - 0.22), hp, n.w + 2, 'rgba(' + rgb + ',' + (0.45 * fade).toFixed(3) + ')');
+          strokeNet(ctx, n, Math.max(0, hp - 0.06), hp, n.w, 'rgba(255,255,255,' + (0.6 * fade).toFixed(3) + ')');
+        }
+      }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    /* 5 · the hovered net last, so a selection reads over everything */
+    if (hoverNet >= 0) strokeNet(ctx, NETS[hoverNet], 0, 1, NETS[hoverNet].w + 3, NET);
+  }
+
+  function drawPad(p) {
+    /* ENIG gold with a two-tone bevel: light on the lamp side, dark on the
+       other, and a drilled centre with a ring of wall. Two flat tones, no
+       gradient — a pad that is domed is a notation for a pad that is domed. */
+    ctx.fillStyle = SHADOW;
+    ctx.fillRect(p.x - p.r + 1, p.y - p.r + 1, p.r * 2, p.r * 2);
+    ctx.fillStyle = PAD;
+    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, 1);
+    ctx.fillRect(p.x - p.r, p.y - p.r, 1, p.r * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(p.x - p.r, p.y + p.r - 1, p.r * 2, 1);
+    ctx.fillRect(p.x + p.r - 1, p.y - p.r, 1, p.r * 2);
+    ctx.fillStyle = DRILL;
+    ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
   }
 
   function drawBoard(t) {
-    ctx.fillStyle = MASK;
+    /* the laminate, then the pour, then the mask over both */
+    ctx.fillStyle = maskOn ? MASK : SUB;
     ctx.fillRect(0, 0, W, H);
 
-    /* copper pour: a ground plane under everything, seen through the mask.
-       Drawn first, then the mask tint multiplied over it — soldermask is a
-       translucent ink, so multiply is the physically correct operator here
-       and not a stylistic preference. */
     if (maskOn) {
-      ctx.fillStyle = MASKHI;
-      ctx.fillRect(14, 14, W - 28, H - 28);
-      ctx.fillStyle = MASK;
-      ctx.fillRect(18, 18, W - 36, H - 36);
-    } else {
-      ctx.fillStyle = SUB;
-      ctx.fillRect(0, 0, W, H);
+      /* ground pour, hatched — a real pour is a filled region and the
+         hatch is how every layout tool has drawn one since they were
+         plotted on paper */
+      ctx.strokeStyle = MASKHI; ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.55;
+      var i;
+      for (i = -H; i < W; i += 9) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + H, H); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      /* the routed board edge: a bevel and a shadow inside it */
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(0, 0, W, 10); ctx.fillRect(0, H - 10, W, 10);
+      ctx.fillRect(0, 0, 10, H); ctx.fillRect(W - 10, 0, 10, H);
+      ctx.strokeStyle = CU_HI; ctx.lineWidth = 1; ctx.globalAlpha = 0.5;
+      ctx.strokeRect(10.5, 10.5, W - 21, H - 21);
+      ctx.globalAlpha = 1;
     }
 
-    var i, j, n, c;
-    /* tracks */
-    for (i = 0; i < NETS.length; i++) {
-      n = NETS[i];
-      trace(ctx, n, progressOf(n, t), n.w, n.id === hoverNet ? NET : (maskOn ? CU : PAD));
-    }
-    /* highlighted net on top, so it reads over everything */
-    if (hoverNet >= 0) {
-      trace(ctx, NETS[hoverNet], progressOf(NETS[hoverNet], t), NETS[hoverNet].w + 3, NET);
+    drawTraces(t);
+
+    /* vias: a ring of copper with a hole through it */
+    var i, v;
+    for (i = 0; i < VIAS.length; i++) {
+      v = VIAS[i];
+      ctx.fillStyle = CU_HI; ctx.fillRect(v.x - 3, v.y - 3, 6, 6);
+      ctx.fillStyle = DRILL; ctx.fillRect(v.x - 1, v.y - 1, 2, 2);
     }
 
-    /* components: silkscreen outline, reference, pads */
+    /* components: a shadow, a body that stands proud, then silkscreen */
+    var c, j;
     for (i = 0; i < COMPS.length; i++) {
       c = COMPS[i];
+      ctx.fillStyle = SHADOW;
+      ctx.fillRect(c.x + 3, c.y + 3, c.w, c.h);
+      ctx.fillStyle = 'rgb(24,26,25)';
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+      ctx.fillStyle = 'rgba(255,255,255,0.16)';
+      ctx.fillRect(c.x, c.y, c.w, 1); ctx.fillRect(c.x, c.y, 1, c.h);
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(c.x, c.y + c.h - 1, c.w, 1); ctx.fillRect(c.x + c.w - 1, c.y, 1, c.h);
+      /* pin-1 dot, the one mark every package carries */
+      ctx.fillStyle = 'rgba(255,255,255,0.30)';
+      ctx.fillRect(c.x + 4, c.y + 4, 3, 3);
       if (silkOn) {
-        ctx.strokeStyle = SILK; ctx.lineWidth = 1; ctx.globalAlpha = 0.75;
-        ctx.strokeRect(c.x + 0.5, c.y + 0.5, c.w, c.h);
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = SILK; ctx.globalAlpha = 0.6;
+        ctx.fillStyle = SILK; ctx.globalAlpha = 0.62;
         ctx.font = '9px ' + (token('--mono') || 'monospace');
-        ctx.fillText(c.ref, c.x + 3, c.y - 3);
+        ctx.fillText(c.ref, c.x + 3, c.y - 4);
         ctx.globalAlpha = 1;
       }
-      for (j = 0; j < c.pads.length; j++) {
-        var p = c.pads[j];
-        ctx.fillStyle = PAD;
-        ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
-        ctx.fillStyle = DRILL;
-        ctx.fillRect(p.x - 1, p.y - 1, 2, 2);
+      for (j = 0; j < c.pads.length; j++) drawPad(c.pads[j]);
+    }
+
+    /* mounting holes and fiducials — the furniture that says "fabricated" */
+    for (i = 0; i < MOUNT.length; i++) {
+      var m2 = MOUNT[i];
+      ctx.fillStyle = CU_HI; ctx.fillRect(m2.x - 7, m2.y - 7, 14, 14);
+      ctx.fillStyle = 'rgb(10,12,11)'; ctx.fillRect(m2.x - 4, m2.y - 4, 8, 8);
+    }
+
+    /* the bus legend, in silkscreen, so the sequence has names */
+    if (silkOn) {
+      ctx.font = '10px ' + (token('--mono') || 'monospace');
+      var lx = 22;
+      var active = {};
+      liveRoutes(t).forEach(function (x) { x.route.forEach(function (id) { active[NETS[id].cls] = 1; }); });
+      for (i = 0; i < CLASSES.length; i++) {
+        var cl = CLASSES[i];
+        ctx.fillStyle = 'rgb(' + cl.colour[0] + ',' + cl.colour[1] + ',' + cl.colour[2] + ')';
+        ctx.globalAlpha = active[i] && running ? 1 : 0.32;
+        ctx.fillRect(lx, H - 22, 8, 8);
+        ctx.fillText(cl.key, lx + 13, H - 14);
+        ctx.globalAlpha = 1;
+        lx += 78;
       }
     }
   }
@@ -1848,15 +2027,14 @@ var SEC2 = (function () {
      hit regions do not. */
   function drawPick(t) {
     px.clearRect(0, 0, W, H);
-    var i, n;
+    var i;
     for (i = 0; i < NETS.length; i++) {
-      n = NETS[i];
       /* identity IS the colour: index in red and green, object class in
-         blue, alpha opaque so the board (0,0,0,0) can never decode to net 0.
-         Stroked wider than the visible track, because a 3px target is a
+         blue, alpha opaque so the board (0,0,0,0) can never decode to net
+         0. Stroked wider than the visible track, because a 3px target is a
          cruel thing to ask a pointer to hit. */
-      trace(px, n, progressOf(n, t), n.w + 6,
-        'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',1,1)');
+      strokeNet(px, NETS[i], 0, 1, NETS[i].w + 6,
+        'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',' + (NETS[i].cls + 1) + ',1)');
     }
   }
 
@@ -1867,7 +2045,7 @@ var SEC2 = (function () {
   }
 
   var demo = WAM.clock('b3-stage', {
-    el: $('b3-world'), dur: 18000, poster: 0.55,
+    el: $('b3-world'), dur: 9000, poster: 0.55,
     render: function (t) {
       drawPick(t);
       if (showLayer) {
@@ -1880,6 +2058,11 @@ var SEC2 = (function () {
       } else {
         drawBoard(t);
       }
+      var lv = liveRoutes(t), i, hops = 0;
+      for (i = 0; i < lv.length; i++) hops += lv[i].route.length;
+      $('b3-phase').textContent = running
+        ? (lv.length ? lv.map(function (x) { return 'R' + (x.i + 1); }).join(' + ') + ' — ' + hops + ' hops' : 'settling')
+        : 'held';
     }
   });
 
@@ -1896,7 +2079,8 @@ var SEC2 = (function () {
     if (readCosts.length > 30) readCosts.shift();
     var id = decode(d);
     $('b3-pixel').textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
-    $('b3-decoded').textContent = id < 0 ? 'nothing under the pointer' : 'net ' + id + ' — ' + NETS[id].w + ' mil track';
+    $('b3-decoded').textContent = id < 0 ? 'nothing under the pointer'
+      : 'net ' + id + ' — ' + CLASSES[NETS[id].cls].key + ', ' + NETS[id].w + ' mil, ' + Math.round(NETS[id].len) + ' mil long';
     $('b3-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
     if (id !== hoverNet) { hoverNet = id; demo.render(demo.t); }
   });
@@ -1913,7 +2097,7 @@ var SEC2 = (function () {
       showLayer = !showLayer;
       b.classList.toggle('b3-on', showLayer);
       b.textContent = showLayer ? 'show the board' : 'show the net layer';
-    } else if (b === $('b3-route')) { routing = !routing; b.classList.toggle('b3-on', routing); }
+    } else if (b === $('b3-route')) { running = !running; b.classList.toggle('b3-on', running); }
     else if (b === $('b3-silk')) { silkOn = !silkOn; b.classList.toggle('b3-on', silkOn); }
     else if (b === $('b3-mask')) { maskOn = !maskOn; b.classList.toggle('b3-on', maskOn); }
     demo.render(demo.t);
@@ -1952,6 +2136,22 @@ var SEC2 = (function () {
     }
     return out;
   }
+  /* The FUSION ramp — colour as a second dimension, on its own maths and
+     its own clock. A greyscale study answers "how dense"; a functional
+     overlay answers a different question entirely, and every workstation
+     that carries both shows them fused rather than side by side, because
+     the point is where the two agree. It runs on a period deliberately
+     unrelated to the cine loop and the window sweep, so the three never
+     line up into one beat — three independent cycles read as an instrument
+     with three things going on, and three locked cycles read as one. */
+  var FUSION = {
+    jet: lutFrom([resolveRGB('oklch(0.35 0.14 265)'), resolveRGB('oklch(0.60 0.15 215)'),
+                  resolveRGB('oklch(0.78 0.16 155)'), resolveRGB('oklch(0.87 0.17 95)'),
+                  resolveRGB('oklch(0.65 0.22 28)')]),
+    ice: lutFrom([resolveRGB('oklch(0.30 0.10 300)'), resolveRGB('oklch(0.55 0.14 265)'),
+                  resolveRGB('oklch(0.78 0.11 225)'), resolveRGB('oklch(0.95 0.05 200)')])
+  };
+
   var LUTS = {
     gsdf: lutFrom([[8, 8, 8], [250, 250, 250]]),
     iron: lutFrom([resolveRGB('oklch(0.060 0.010 30)'), resolveRGB('oklch(0.280 0.130 28)'),
@@ -2002,7 +2202,8 @@ var SEC2 = (function () {
     sx2.putImageData(srcImg, 0, 0);
   }
 
-  var lut = 'gsdf', cine = true, roiOn = true, recon = false;
+  var lut = 'gsdf', cine = true, roiOn = true, recon = false, autoWin = true;
+  var fusion = true, fusionRamp = 'jet', fusionGain = 1;
   var ww = 0.62, wl = 0.46, dragging = false, lastXY = null;
   var readCosts = [], out = null, o32 = null;
   var VX = 20, VY = 18, VW = 560, VH = 560;             /* the viewport */
@@ -2022,6 +2223,17 @@ var SEC2 = (function () {
       var z = cine ? t : 0.3;
       drawSlice(z);
 
+      /* The window BREATHES. A radiographer's hands are on these two numbers
+         constantly — widening to find an edge, narrowing to separate two
+         tissues that sit a few levels apart, sliding the centre to follow a
+         structure through the stack. A still window is a screenshot of a
+         workstation; a moving one is somebody using it. Touch the image and
+         it hands control over and stays handed over. */
+      if (autoWin) {
+        ww = 0.46 + 0.30 * Math.sin(t * TAU * 1.3);
+        wl = 0.46 + 0.17 * Math.sin(t * TAU * 0.7 + 1.1);
+      }
+
       /* THE READBACK. Everything below comes out of this one call — the
          display mapping, the histogram, the region statistics and the
          reconstruction. Not one of them re-evaluates the function that
@@ -2037,6 +2249,13 @@ var SEC2 = (function () {
       var x, y, sxi, syi, v, n, o;
       var roiSum = 0, roiSq = 0, roiN = 0;
 
+      /* the overlay's own clock: 0.41 and 0.63 against the cine loop's 1
+         and the window's 1.3 and 0.7 — no small common multiple, so the
+         three never come into phase */
+      var ft = t * 0.41, fs = t * 0.63;
+      var fTab = FUSION[fusionRamp];
+      var fCover = 0;
+
       for (y = 0; y < VH; y++) {
         syi = ((y / VH) * SH) | 0;
         for (x = 0; x < VW; x++) {
@@ -2047,7 +2266,30 @@ var SEC2 = (function () {
           n = n < 0 ? 0 : n > 1 ? 1 : n;
           o = y * VW + x;
           var idx = (n * 255) | 0;
-          o32[o] = (255 << 24) | (table[idx * 3 + 2] << 16) | (table[idx * 3 + 1] << 8) | table[idx * 3];
+          var rr = table[idx * 3], gg = table[idx * 3 + 1], bb = table[idx * 3 + 2];
+
+          if (fusion) {
+            /* The functional value is DERIVED FROM THE READ, not from the
+               function that drew the slice — it is uptake-shaped: high where
+               the tissue is dense and where a slow travelling field says it
+               is active. The field is the second dimension and it is why
+               this needs colour: two quantities cannot share one grey. */
+            var u2 = x / VW - 0.5, v2b = y / VH - 0.5;
+            var f = v * (0.55 + 0.45 * Math.sin((u2 * 6.1 + ft * TAU)))
+                      * (0.5 + 0.5 * Math.cos((v2b * 5.3 - fs * TAU)));
+            f = (f - 0.24) / 0.5;
+            f = f < 0 ? 0 : f > 1 ? 1 : f;
+            f *= fusionGain;
+            if (f > 0.04) {
+              fCover++;
+              var fi = ((f * 255) | 0) * 3;
+              var al = f * 0.78;
+              rr = rr + (fTab[fi] - rr) * al;
+              gg = gg + (fTab[fi + 1] - gg) * al;
+              bb = bb + (fTab[fi + 2] - bb) * al;
+            }
+          }
+          o32[o] = (255 << 24) | (bb << 16) | (gg << 8) | rr;
         }
       }
       for (y = roi.y; y < roi.y + roi.h; y++) {
@@ -2087,6 +2329,15 @@ var SEC2 = (function () {
         ctx.strokeRect(VX + (roi.x / SW) * VW + 0.5, VY + (roi.y / SH) * VH + 0.5,
                        (roi.w / SW) * VW, (roi.h / SH) * VH);
       }
+
+      /* the acquisition sweep — one bright row travelling the viewport, the
+         way a detector reads a frame out. Two fillRects, and the cheapest
+         possible way to say "this is live". */
+      var sweepY = Math.round(((t * 3) % 1) * VH);
+      ctx.fillStyle = 'rgba(255,255,255,0.035)';
+      ctx.fillRect(VX, VY + Math.max(0, sweepY - 26), VW, Math.min(26, sweepY));
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fillRect(VX, VY + sweepY, VW, 2);
 
       /* overlay annotation, the one colour allowed in */
       ctx.fillStyle = ANNO;
@@ -2141,7 +2392,12 @@ var SEC2 = (function () {
          honest statement of how much data is actually there. */
       var dy = sy2 + 58;
       ctx.fillStyle = INK;
-      ctx.fillText('REGION — THE SAME PIXELS, MAGNIFIED', RX, dy - 10);
+      /* The region shows the STUDY, not the fusion. That is not an
+         oversight: the overlay is a display layer computed from the
+         viewport's own geometry, and magnifying it would mean magnifying a
+         thing that only exists at one scale. The label says so rather than
+         leaving the difference to be noticed. */
+      ctx.fillText('REGION — THE STUDY ALONE, MAGNIFIED', RX, dy - 10);
       var dw = Math.min(RW, 300), dh = Math.round(dw * (roi.h / roi.w));
       if (roiOn) {
         for (y = 0; y < dh; y++) {
@@ -2185,6 +2441,9 @@ var SEC2 = (function () {
       $('r4-roistat').textContent = roiOn ? (mean.toFixed(1) + ' ± ' + sd.toFixed(1)) : 'off';
       $('r4-read').textContent = (SW * SH).toLocaleString();
       $('r4-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
+      $('r4-fusion-stat').textContent = fusion
+        ? fusionRamp.toUpperCase() + ' — ' + (fCover / (VW * VH) * 100).toFixed(1) + '% of frame'
+        : 'off';
     }
   });
 
@@ -2195,6 +2454,10 @@ var SEC2 = (function () {
   cv.addEventListener('pointerup', function (e) { dragging = false; cv.releasePointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', function (e) {
     if (!dragging || !lastXY) return;
+    /* the first drag takes the window off its automatic sweep and leaves it
+       where the reader put it — a control that fights the hand on it is
+       worse than no control at all */
+    if (autoWin) { autoWin = false; $('r4-auto').classList.remove('r4-on'); }
     ww = Math.max(0.06, Math.min(1.4, ww + (e.clientX - lastXY[0]) * 0.003));
     wl = Math.max(0.05, Math.min(0.95, wl - (e.clientY - lastXY[1]) * 0.003));
     lastXY = [e.clientX, e.clientY];
@@ -2207,6 +2470,12 @@ var SEC2 = (function () {
       lut = b.dataset.lut;
       [].forEach.call(this.querySelectorAll('[data-lut]'), function (x) { x.classList.toggle('r4-on', x === b); });
     } else if (b === $('r4-cine')) { cine = !cine; b.classList.toggle('r4-on', cine); }
+    else if (b === $('r4-auto')) { autoWin = !autoWin; b.classList.toggle('r4-on', autoWin); }
+    else if (b === $('r4-fusion')) { fusion = !fusion; b.classList.toggle('r4-on', fusion); }
+    else if (b === $('r4-ramp')) {
+      fusionRamp = fusionRamp === 'jet' ? 'ice' : 'jet';
+      b.textContent = 'ramp: ' + fusionRamp;
+    }
     else if (b === $('r4-roi')) { roiOn = !roiOn; b.classList.toggle('r4-on', roiOn); }
     else if (b === $('r4-recon')) { recon = !recon; b.classList.toggle('r4-on', recon); }
     demo.render(demo.t);
