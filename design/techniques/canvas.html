@@ -47,8 +47,13 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .cv-because { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*3); }
 .cv-because b { color: var(--hz-600); font-weight: 600; }
 .cv-lede { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 8px; }
+/* Worlds run the full measure, stacked under their prose, never beside an
+   explanatory pane. The two-column version gave every world about half the
+   width, and the crowding showed first in the screens with the most
+   furniture — a banner, a rail, a control row, a well and a transport all
+   stacked into 490px. Horizontal space is the cheapest thing this sheet can
+   give a demo and it was spending it on a column. */
 .cv-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*4); }
-@media (min-width: 900px) { .cv-pair.cv-split { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); align-items: start; } }
 
 /* explanatory-graphic shell: the deck's harness, never ACETATE's */
 .cv-fig { background: var(--hz-050); border-radius: 8px; box-shadow: var(--recess); padding: 10px; }
@@ -234,10 +239,10 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
    may use it. 48px is 8 whole LED cells — DESIGN.md's floor. The chrome
    around it never animates; these digits are data and must run. */
 .ac-tc {
-  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
-  font-size: 48px; line-height: 48px;
-  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
-  color: var(--ac-src); text-shadow: 0 2px 10px oklch(0 0 0 / 0.55);
+  font-family: var(--mono); font-weight: 500;
+  font-size: 26px; line-height: 30px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+  color: var(--ac-src);
 }
 .ac-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-left: auto; }
 .ac-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ac-mute); text-transform: uppercase; }
@@ -282,83 +287,78 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .ac-edl-row.ac-on { background: color-mix(in oklch, var(--ac-evt) 24%, transparent); color: var(--ac-ink); }
 .ac-edl-head { color: var(--ac-mute); letter-spacing: 0.14em; text-transform: uppercase; font-size: 8px; padding: 0 3px 4px; }
 
-@media (max-width: 560px) { .ac { --ac-pad: 20px; } .ac-tc { font-size: 38px; line-height: 38px; } }
+@media (max-width: 560px) { .ac { --ac-pad: 20px; } .ac-tc { font-size: 20px; line-height: 24px; } }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   §5 · PANEL — industrial machine HMI
+   §5 · TRANSPORT — two classic players
 
-   A LIGHT panel with dark windows: the exact inverse of every other world
-   on this sheet, deliberately. Folded steel enamel, silkscreen, pan-head
-   fasteners, indicator lamps and an E-stop.
+   The register this replaced painted a photoreal machine panel and it looked
+   fake, which is what a simulated material does on an emissive surface. What
+   is here now is a blitter: flat colours, integer rectangles, a hand-set
+   bitmap font, and bevels that are four colours and six lines with zero
+   interpolation. Nothing below is a gradient, a shadow or a filter. The
+   entire chassis of both players is drawn.
 
-   There is deliberately almost NO CSS here, and that absence is the point.
-   No gradient, no box-shadow, no filter builds any part of this panel —
-   every surface, every light and every fastener is generated per pixel in
-   `panel-hmi.js` and painted by a canvas. On a sheet whose subject is what
-   canvas can do that the other techniques cannot, a faceplate faked with a
-   gradient stack would be the sheet arguing against itself. What is left
-   below is layout and DOM type: the measure, the stacking context that
-   lets a legend sit over a raster, and the legends themselves.
+   --t5-lcd sits at hue 125 rather than the famous display green at 145,
+   which is --tint-svg exactly. Pulled to 125 it clears by 20° and still
+   reads as the same colour class. It is also §1's analyser floor, and that
+   shared value is the one deliberate relation between the two worlds on this
+   sheet that come from the same product family. Nowhere else.
    ───────────────────────────────────────────────────────────────────────── */
-.p5 {
-  --p5-panel:    oklch(0.790 0.008  92);   /* light-grey enamel              */
-  --p5-panel-lo: oklch(0.700 0.010  92);   /* the recessed sub-panel         */
-  --p5-edge:     oklch(0.480 0.012  92);   /* folded steel edge              */
-  --p5-ink:      oklch(0.260 0.010  92);   /* silkscreen                     */
-  --p5-win:      oklch(0.150 0.008  92);   /* the display windows            */
-  --p5-run:      oklch(0.780 0.150 125);   /* RUN lamp                       */
-  --p5-warn:     oklch(0.855 0.175  92);   /* signal yellow                  */
-  --p5-stop:     oklch(0.560 0.215  27);   /* the E-stop mushroom            */
-  --p5-trace:    oklch(0.900 0.120  92);   /* in-window bargraph             */
+.t5 {
+  --t5-face:    oklch(0.400 0.006 258);   /* chassis                        */
+  --t5-hi:      oklch(0.560 0.008 258);   /* bevel HI                       */
+  --t5-lt:      oklch(0.470 0.007 258);
+  --t5-sh:      oklch(0.310 0.008 258);
+  --t5-dk:      oklch(0.245 0.008 258);
+  --t5-well:    oklch(0.115 0.010 258);   /* display well                   */
+  --t5-lcd:     oklch(0.840 0.135 125);   /* the display green              */
+  --t5-lcd-dim: oklch(0.520 0.070 125);
+  --t5-sig:     oklch(0.620 0.200  28);   /* over / clip                    */
 }
-.p5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*2); }
-@media (min-width: 780px) { .p5-rack { grid-template-columns: 1fr 1fr; } }
-.p5-unit { position: relative; }
-.p5-stage { position: relative; line-height: 0; }
-.p5-stage canvas { display: block; width: 100%; }
-.p5-fallback { position: absolute; inset: 0; display: none; }
-
-/* DOM type over the raster. Positioned from the CSS-pixel box the canvas
-   sized itself from, never from backing-store coordinates, so a change of
-   devicePixelRatio cannot desync a legend from the mark it names. */
-.p5-legend {
-  position: absolute; z-index: 2; pointer-events: none;
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--p5-ink); line-height: 1.2;
-}
-.p5-unit-name {
+.t5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*3); }
+@media (min-width: 780px) { .t5-rack { grid-template-columns: 1fr 1fr; } }
+.t5-stage { position: relative; line-height: 0; }
+.t5-stage canvas { display: block; width: 100%; image-rendering: pixelated; }
+.t5-fallback { position: absolute; inset: 0; display: none; }
+.t5-unit-name {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--hz-400); padding-bottom: 6px;
 }
-.p5-unit-name b { color: var(--hz-600); font-weight: 500; }
-
-/* Every drawn control carries a transparent DOM control at the same place:
-   the pixels are the affordance, the DOM is the control, and the
-   accessible name lives where a screen reader can reach it. */
-.p5-hit {
-  position: absolute; z-index: 3; opacity: 0; cursor: pointer;
-  border: 0; padding: 0; background: transparent; border-radius: 50%;
+.t5-unit-name b { color: var(--hz-600); font-weight: 500; }
+/* The marquee and the clock are blitted from a bitmap font, and a raster is
+   somewhere a screen reader cannot go. The same strings live here, visually
+   hidden but readable, so drawn text is never the only copy. */
+.t5-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.t5-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*3); }
+.t5-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--t5-face);
+  border: 1px solid var(--t5-dk); border-top-color: var(--t5-hi); border-left-color: var(--t5-hi);
+  border-radius: 0; padding: 6px 11px; cursor: pointer;
 }
-.p5-hit:focus-visible { opacity: 1; outline: 2px solid var(--p5-warn); outline-offset: 3px; background: transparent; }
-.p5-hit[disabled] { cursor: default; }
-
-.p5-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
-.p5-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
-.p5-kv b { display: block; font-family: var(--mono); font-size: 15px; letter-spacing: 0.02em; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
-/* One Doto element per world, stating that world's one canonical number.
-   Here it is the MAIN-THREAD frame counter, and the asymmetry is the
-   argument: this is the number that stops. The worker's stays --mono. */
-.p5-kv b.p5-dot {
-  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
-  font-size: 48px; line-height: 48px; color: var(--p5-warn);
-}
-.p5-note {
+.t5-btn.t5-on { color: var(--t5-well); background: var(--t5-lcd); border-color: var(--t5-lcd-dim); }
+.t5-btn[disabled] { opacity: 0.5; cursor: default; }
+.t5-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.t5-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.t5-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world. Here it is the MAIN-THREAD frame counter, and
+   the asymmetry is the argument: this is the number that stops. */
+/* NO DOTO INSIDE A WORLD. It was here as "one canonical number per world",
+   and it was the deck's own headline face wearing a world's colour — which
+   made each screen read as presentation chrome rather than as its own
+   self-contained thing. That is the exact failure these worlds exist to
+   avoid, arriving through the one typographic token allowed to cross them.
+   The number is still the one that stops; it is now set in the world's own
+   voice. Doto stays outside, in the harness, where it belongs. */
+.t5-kv b.t5-dot { font-size: 30px; line-height: 34px; color: var(--t5-lcd); letter-spacing: 0.04em; }
+.t5-note {
   font-family: var(--mono); font-size: 10px; line-height: 1.6; color: var(--hz-500);
-  border-left: 2px solid var(--p5-warn); padding: 7px 10px; margin-top: calc(var(--u)*2); max-width: 78ch;
+  border-left: 2px solid var(--t5-lcd); padding: 7px 10px; margin-top: calc(var(--u)*2); max-width: 78ch;
 }
-.p5-note[hidden] { display: none !important; }
-.p5-note.p5-bad { border-left-color: var(--signal); color: var(--signal); }
-@media (max-width: 560px) { .p5-kv b.p5-dot { font-size: 38px; line-height: 38px; } }
+.t5-note[hidden] { display: none !important; }
+.t5-note.t5-bad { border-left-color: var(--signal); color: var(--signal); }
+@media (max-width: 560px) { .t5-kv b.t5-dot { font-size: 24px; line-height: 28px; } }
 
 /* ─────────────────────────────────────────────────────────────────────────
    §1 · TRAILS — a full-screen visualizer
@@ -408,11 +408,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .v1-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 /* One Doto element per world, stating that world's one canonical number.
    A visualizer has exactly one: the frame it is on. */
-.v1-kv b.v1-dot {
-  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
-  font-size: 48px; line-height: 48px; color: var(--v1-a2);
-}
-@media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 38px; line-height: 38px; } }
+.v1-kv b.v1-dot { font-size: 30px; line-height: 34px; color: var(--v1-a2); letter-spacing: 0.04em; }
+@media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 24px; line-height: 28px; } }
 </style>
 </head>
 <body data-testid="technique-canvas">
@@ -511,7 +508,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       commands those are. Two tables, because there are two questions: what the
       <i>method</i> costs on a provably identical picture, and what the <i>mark</i>
       costs once you let the picture change.</p>
-    <div class="cv-pair cv-split">
+    <div class="cv-pair">
       <div>
         <div class="cv-lede">Explanatory graphic</div>
         <div class="cv-fig" data-testid="g2-stage">
@@ -570,7 +567,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       colour that <i>is</i> its identity, then read the one pixel under the cursor and
       decode it. One <code>getImageData</code> call, regardless of how many objects
       there are.</p>
-    <div class="cv-pair cv-split">
+    <div class="cv-pair">
       <div>
         <div class="cv-lede">Explanatory graphic</div>
         <div class="cv-fig" data-testid="g3-stage">
@@ -595,7 +592,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
       Canvas can, synchronously, for any region. That single capability is what makes
       the brandmark below resolve out of pixels rather than out of coordinates — and it
       is what turns a drawing surface into an input.</p>
-    <div class="cv-pair cv-split">
+    <div class="cv-pair">
       <div>
         <div class="cv-lede">Explanatory graphic</div>
         <div class="cv-fig" data-testid="g4-stage">
@@ -619,54 +616,54 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
     <p class="cv-because">It can leave the main thread, <b>because it needs no DOM.</b>
       A canvas's control can be transferred to a worker once, irreversibly, and from
       then on it is drawn by a thread your layout, your parsing and your blocked
-      <code>for</code> loop cannot touch. Two identical panels below, from one
-      source. Only the right one is drawn by a worker. Hit the E-stop and watch
-      which instrument is still alive.</p>
+      <code>for</code> loop cannot touch. Two identical players below, from one
+      source, every pixel of both of them drawn. Only the right one is drawn by a
+      worker. Block the main thread and watch which title is still scrolling.</p>
 
-    <div class="p5" data-testid="p5-world">
-      <div class="p5-rack" data-testid="p5-rack">
-        <div class="p5-unit" data-testid="p5-unit-main">
-          <div class="p5-unit-name">unit 1 · <b>main thread</b></div>
-          <div class="p5-stage" data-testid="p5-main-stage">
-            <canvas data-testid="p5-main-canvas"></canvas>
-            <span class="p5-legend" data-testid="p5-main-lg-run">run</span>
-            <span class="p5-legend" data-testid="p5-main-lg-warn">free run</span>
-            <span class="p5-legend" data-testid="p5-main-lg-stop">e-stop</span>
-            <button class="p5-hit" data-testid="p5-freerun">Free-run both panels off their own clocks</button>
-            <button class="p5-hit" data-testid="p5-estop">Block the main thread for 800 ms</button>
+    <div class="t5" data-testid="t5-world">
+      <div class="t5-rack" data-testid="t5-rack">
+        <div>
+          <div class="t5-unit-name">unit 1 · <b>main thread</b></div>
+          <div class="t5-stage" data-testid="t5-main-stage">
+            <canvas data-testid="t5-main-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-main-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
           </div>
         </div>
-        <div class="p5-unit" data-testid="p5-unit-worker">
-          <div class="p5-unit-name">unit 2 · <b data-testid="p5-host">worker</b></div>
-          <div class="p5-stage" data-testid="p5-worker-stage">
-            <canvas data-testid="p5-worker-canvas"></canvas>
-            <canvas class="p5-fallback" data-testid="p5-fallback-canvas"></canvas>
-            <span class="p5-legend" data-testid="p5-worker-lg-run">run</span>
-            <span class="p5-legend" data-testid="p5-worker-lg-warn">free run</span>
-            <span class="p5-legend" data-testid="p5-worker-lg-stop">e-stop</span>
+        <div>
+          <div class="t5-unit-name">unit 2 · <b data-testid="t5-host">worker</b></div>
+          <div class="t5-stage" data-testid="t5-worker-stage">
+            <canvas data-testid="t5-worker-canvas"></canvas>
+            <canvas class="t5-fallback" data-testid="t5-fallback-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-worker-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
           </div>
         </div>
       </div>
 
-      <div class="p5-readouts" data-testid="p5-readouts">
-        <div class="p5-kv">main-thread frames<b class="p5-dot" data-testid="p5-main-frames">0</b></div>
-        <div class="p5-kv">worker frames<b data-testid="p5-worker-frames">0</b></div>
-        <div class="p5-kv">worker parity<b data-testid="p5-parity">booting…</b></div>
-        <div class="p5-kv">chrome paint<b data-testid="p5-chrome-ms">—</b></div>
+      <div class="t5-bar" data-testid="t5-bar">
+        <button class="t5-btn" data-testid="t5-freerun">free-run both</button>
+        <button class="t5-btn" data-testid="t5-block">block the main thread 800 ms</button>
       </div>
 
-      <p class="p5-note" data-testid="p5-note" hidden></p>
-      <p class="cv-instr" data-testid="p5-instr">
-        <b>Both panels are drawn, not styled.</b> The enamel is two octaves of value
-        noise lit by a perturbed surface normal; the fasteners and the E-stop dome are
-        per-pixel Lambert plus Phong from the same light vector; the lamps bloom onto
-        the paint with <code>lighter</code>. No gradient, shadow or filter builds any
-        of it — which is the reason the demonstration works at all. If the panel were
-        CSS, blocking the main thread would stall a graph inside a chassis that went
-        on looking alive, because the chassis would be the compositor's problem and
-        not the thread's. Drawn, <b>the lamps stop blinking with the trace</b>: the
-        whole instrument stalls, which is the true picture. Every legend and every
-        figure here is DOM over the raster; the worker draws no text at all.
+      <div class="t5-readouts" data-testid="t5-readouts">
+        <div class="t5-kv">main-thread frames<b class="t5-dot" data-testid="t5-main-frames">0</b></div>
+        <div class="t5-kv">worker frames<b data-testid="t5-worker-frames">0</b></div>
+        <div class="t5-kv">worker parity<b data-testid="t5-parity">booting…</b></div>
+        <div class="t5-kv">chassis paint<b data-testid="t5-chrome-ms">—</b></div>
+      </div>
+
+      <p class="t5-note" data-testid="t5-note" hidden></p>
+      <p class="cv-instr" data-testid="t5-instr">
+        <b>Both players are drawn, and drawn the same way: a blitter.</b> Flat
+        colours, integer rectangles, a hand-set 5×6 bitmap font, and bevels that are
+        four colours and six lines with no interpolation — a bevel here is a
+        <i>notation</i> for depth, the way a contour line is, not a simulation of
+        light. The font is hand-set rather than rasterised because text rendering is
+        the least portable thing in a browser and the parity check below is
+        byte-exact; a bitmap font cannot disagree with itself, which is also why
+        skins shipped one. <b>The scrolling title is the mark that freezes</b> — a
+        stalled marquee is exactly what a hung player looked like, and everyone in
+        the room has seen one. Both strings are duplicated in the DOM, because a
+        raster is somewhere a screen reader cannot go.
       </p>
     </div>
   </section>
@@ -721,7 +718,7 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 
 <script src="../system/wam.js"></script>
 <script src="./skin.js"></script>
-<script src="./panel-hmi.js"></script>
+<script src="./transport.js"></script>
 <script>
 /* ════════════════════════════════════════════════════════════════════════
    SL-11 · canvas — one inline block, five sections.
@@ -804,7 +801,7 @@ var acProbe = document.createElement('div');
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-acProbe.className = 'ac p5 v1';
+acProbe.className = 'ac t5 v1';
 acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
 document.body.appendChild(acProbe);
 var acRoot = getComputedStyle(acProbe);
@@ -1933,7 +1930,7 @@ var SEC2 = (function () {
 })();
 
 /* ════════════════════════════════════════════════════════════════════════
-   §5 · PANEL — off-thread
+   §5 · TRANSPORT — off-thread
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
   var reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -1945,26 +1942,24 @@ var SEC2 = (function () {
 
   /* The backing store is FIXED, not fitted to the CSS width. It is sized
      once, before transfer, and can never be resized from here afterwards —
-     the element no longer owns its bitmap. The CSS width is 100% and the
-     height follows the intrinsic ratio, so the panel scales without the
-     chrome ever needing a repaint. */
-  var W = 860, H = 520;
-  var mainCv = $('p5-main-canvas'), wkrCv = $('p5-worker-canvas'), fbCv = $('p5-fallback-canvas');
+     the element no longer owns its bitmap. It is also small on purpose: a
+     blitted chassis has a native size, and `image-rendering: pixelated`
+     scales it by whole pixels rather than smearing it. */
+  /* 560 x 124 is the content's own size — the first pass used 440 x 200 and
+     left the bottom 40% of both chassis empty, which is what a backing store
+     chosen before the layout looks like. A player is a wide, shallow object;
+     the classic window was 275 x 116. */
+  var W = 560, H = 124;
+  var mainCv = $('t5-main-canvas'), wkrCv = $('t5-worker-canvas'), fbCv = $('t5-fallback-canvas');
   [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; });
 
-  /* One ink set, resolved from the --p5-* tokens here and shipped to the
-     worker in init, so neither side hardcodes a colour. */
-  function rgbOf(name) { return resolveRGB(token(name)); }
+  var TITLE = 'UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ';
+
+  function rgbOf(name) { return self.SKIN_CSS(resolveRGB(token(name))); }
   var INK = {
-    panel:   rgbOf('--p5-panel'),
-    panelLo: rgbOf('--p5-panel-lo'),
-    edge:    rgbOf('--p5-edge'),
-    ink:     rgbOf('--p5-ink'),
-    win:     rgbOf('--p5-win'),
-    run:     rgbOf('--p5-run'),
-    warn:    rgbOf('--p5-warn'),
-    stop:    rgbOf('--p5-stop'),
-    trace:   rgbOf('--p5-trace')
+    face: rgbOf('--t5-face'), hi: rgbOf('--t5-hi'), lt: rgbOf('--t5-lt'),
+    sh: rgbOf('--t5-sh'), dk: rgbOf('--t5-dk'), well: rgbOf('--t5-well'),
+    lcd: rgbOf('--t5-lcd'), lcdDim: rgbOf('--t5-lcd-dim'), sig: rgbOf('--t5-sig')
   };
 
   var mainCtx = mainCv.getContext('2d');
@@ -1973,30 +1968,25 @@ var SEC2 = (function () {
      else chrome is a second canvas painted on resize only, so its per-frame
      cost is zero. §5 cannot do that: the worker owns exactly one
      transferred canvas and can never be handed a second. So both units
-     paint chrome ONCE into a buffer and composite it with a single
+     paint the chassis ONCE into a buffer and composite it with a single
      drawImage per frame — the same shape on both threads, because the two
-     panels have to be identical for the comparison to mean anything. */
+     players have to be identical for the comparison to mean anything. */
   var chromeCv = document.createElement('canvas');
   chromeCv.width = W; chromeCv.height = H;
   var chromeT0 = performance.now();
-  var GEOM = self.PANEL_CHROME(chromeCv.getContext('2d'), W, H, INK);
+  var ccx = chromeCv.getContext('2d');
+  var GEOM = self.T5_CHROME(ccx, W, H, INK);
+  self.T5_CAPS(ccx, INK, GEOM);
   var chromeMs = performance.now() - chromeT0;
-  var mainLive = self.PANEL_LIVE(mainCtx, W, H, INK, GEOM);
+  var mainLive = self.T5_LIVE(mainCtx, W, H, INK, GEOM, TITLE);
 
   var host = 'main', worker = null, blobUrl = null;
   var mainFrames = 0, workerFrames = 0, freeRun = false, mainRaf = 0;
   var fbCtx = null, fbLive = null;
-  var note = $('p5-note');
+  var note = $('t5-note');
 
-  function mainPaint(t) {
-    mainCtx.drawImage(chromeCv, 0, 0);
-    mainLive(t, self.PANEL_BLINK(t), freeRun);
-  }
-  function fbPaint(t) {
-    if (!fbLive) return;
-    fbCtx.drawImage(chromeCv, 0, 0);
-    fbLive(t, self.PANEL_BLINK(t), freeRun);
-  }
+  function mainPaint(t) { mainCtx.drawImage(chromeCv, 0, 0); mainLive(t, mainFrames); }
+  function fbPaint(t) { if (!fbLive) return; fbCtx.drawImage(chromeCv, 0, 0); fbLive(t, mainFrames); }
 
   /* host is latched at load. Never a try/catch guard: that would turn a
      structural error — getContext on a transferred element — into a
@@ -2004,14 +1994,14 @@ var SEC2 = (function () {
   function standDown(msg, expected) {
     host = 'main';
     fbCv.style.display = 'block';
-    if (!fbCtx) { fbCtx = fbCv.getContext('2d'); fbLive = self.PANEL_LIVE(fbCtx, W, H, INK, GEOM); }
-    $('p5-host').textContent = 'main-thread fallback';
+    if (!fbCtx) { fbCtx = fbCv.getContext('2d'); fbLive = self.T5_LIVE(fbCtx, W, H, INK, GEOM, TITLE); }
+    $('t5-host').textContent = 'main-thread fallback';
     note.hidden = false;
-    note.className = expected ? 'p5-note' : 'p5-note p5-bad';
+    note.className = expected ? 't5-note' : 't5-note t5-bad';
     note.textContent = expected
-      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both units are drawn by the main thread, which is the correct behaviour here and not a failure.'
-      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both units are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
-    $('p5-parity').textContent = expected ? 'not transferred' : 'fallback';
+      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both players are drawn by the main thread, which is the correct behaviour here and not a failure.'
+      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both players are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
+    $('t5-parity').textContent = expected ? 'not transferred' : 'fallback';
     demo.render(demo.t);
     fbPaint(demo.t);
   }
@@ -2022,55 +2012,22 @@ var SEC2 = (function () {
     return h >>> 0;
   }
 
-  var demo = WAM.clock('p5-stage', {
-    el: $('p5-world'), dur: 12000, poster: 0.42,
+  var demo = WAM.clock('t5-stage', {
+    el: $('t5-world'), dur: 12000, poster: 0.42,
     render: function (t) {
-      mainPaint(t);
       mainFrames++;
+      mainPaint(t);
       if (host === 'worker') worker.postMessage({ type: 'render', t: t });
       else fbPaint(t);
-      $('p5-main-frames').textContent = mainFrames.toLocaleString();
-      if (host !== 'worker') $('p5-worker-frames').textContent = '—';
+      $('t5-main-frames').textContent = mainFrames.toLocaleString();
+      if (host !== 'worker') $('t5-worker-frames').textContent = '—';
     }
   });
   /* WAM.clock's cost meter brackets render(v) with performance.now(). For a
      proxy render that is the cost of postMessage, not the cost of drawing,
      so demo.cost is deliberately never printed for §5. */
 
-  $('p5-chrome-ms').textContent = ms(chromeMs) + ' ms' + (chromeMs > 25 ? ' ⚠' : '');
-
-  /* ── DOM over the raster ───────────────────────────────────────────────
-     Positioned from the CSS-pixel box the canvas sized itself from, never
-     from backing-store coordinates, so a change of devicePixelRatio cannot
-     desync a legend from the mark it names. */
-  function place() {
-    ['main', 'worker'].forEach(function (unit) {
-      var stage = $('p5-' + unit + '-stage');
-      var rect = stage.getBoundingClientRect();
-      if (!rect.width) return;
-      var k = rect.width / W;
-      function at(id, x, y, align) {
-        var el = $(id); if (!el) return;
-        el.style.left = (x * k) + 'px';
-        el.style.top = (y * k) + 'px';
-        el.style.transform = align === 'c' ? 'translate(-50%,0)' : '';
-      }
-      at('p5-' + unit + '-lg-run', GEOM.lamps[0].x, GEOM.lamps[0].y + GEOM.lamps[0].r + 8, 'c');
-      at('p5-' + unit + '-lg-warn', GEOM.lamps[1].x, GEOM.lamps[1].y + GEOM.lamps[1].r + 8, 'c');
-      at('p5-' + unit + '-lg-stop', GEOM.stop.x, GEOM.stop.y + GEOM.stop.r + 14, 'c');
-      if (unit !== 'main') return;
-      [['p5-freerun', GEOM.lamps[1].x, GEOM.lamps[1].y, GEOM.lamps[1].r + 4],
-       ['p5-estop', GEOM.stop.x, GEOM.stop.y, GEOM.stop.r + 8]].forEach(function (row) {
-        var el = $(row[0]);
-        el.style.width = (row[3] * 2 * k) + 'px';
-        el.style.height = (row[3] * 2 * k) + 'px';
-        el.style.left = ((row[1] - row[3]) * k) + 'px';
-        el.style.top = ((row[2] - row[3]) * k) + 'px';
-      });
-    });
-  }
-  place();
-  onResize(place);
+  $('t5-chrome-ms').textContent = ms(chromeMs) + ' ms' + atFloor(chromeMs);
 
   if (startReduced || !('transferControlToOffscreen' in wkrCv) || typeof Worker === 'undefined') {
     standDown(startReduced
@@ -2078,16 +2035,15 @@ var SEC2 = (function () {
       : 'this engine has no OffscreenCanvas transfer', startReduced);
   } else {
     var body =
-      'self.PANEL_HASH2 = ' + self.PANEL_HASH2 + ';\n' +
-      'self.PANEL_NOISE = ' + self.PANEL_NOISE + ';\n' +
-      'self.PANEL_COMPOSITE = ' + self.PANEL_COMPOSITE + ';\n' +
-      'self.PANEL_FIXTURES = ' + self.PANEL_FIXTURES + ';\n' +
-      'self.PANEL_LAMPS = ' + self.PANEL_LAMPS + ';\n' +
-      'self.PANEL_CHROME = ' + self.PANEL_CHROME + ';\n' +
-      'self.PANEL_LIVE = ' + self.PANEL_LIVE + ';\n' +
-      'self.PANEL_BLINK = ' + self.PANEL_BLINK + ';\n' +
-      '(' + self.PANEL_WORKER + ')();\n' +
-      '//# sourceURL=panel-hmi-worker.js';
+      'self.SKIN_BEVEL = ' + self.SKIN_BEVEL + ';\n' +
+      'self.T5_FONT = ' + JSON.stringify(self.T5_FONT) + ';\n' +
+      'self.T5_TEXT = ' + self.T5_TEXT + ';\n' +
+      'self.T5_WIDTH = ' + self.T5_WIDTH + ';\n' +
+      'self.T5_CHROME = ' + self.T5_CHROME + ';\n' +
+      'self.T5_CAPS = ' + self.T5_CAPS + ';\n' +
+      'self.T5_LIVE = ' + self.T5_LIVE + ';\n' +
+      '(' + self.T5_WORKER + ')();\n' +
+      '//# sourceURL=transport-worker.js';
     blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
     worker = new Worker(blobUrl);                 /* classic, never {type:'module'} */
     worker.onerror = function () { standDown('the worker failed to start'); };
@@ -2103,32 +2059,39 @@ var SEC2 = (function () {
            unrecoverable; pinging first is free. */
         var off = wkrCv.transferControlToOffscreen();
         host = 'worker';
-        $('p5-host').textContent = 'worker · OffscreenCanvas';
-        worker.postMessage({ type: 'init', canvas: off, w: W, h: H, ink: INK }, [off]);
+        $('t5-host').textContent = 'worker · OffscreenCanvas';
+        worker.postMessage({ type: 'init', canvas: off, w: W, h: H, ink: INK, title: TITLE }, [off]);
       } else if (m.type === 'ready') {
         URL.revokeObjectURL(blobUrl);
-        $('p5-chrome-ms').textContent = ms(chromeMs) + ' / ' + ms(m.chromeMs) + ' ms' +
-          (Math.max(chromeMs, m.chromeMs) > 25 ? ' ⚠' : '');
+        $('t5-chrome-ms').innerHTML = ms(chromeMs) + ' / ' + ms(m.chromeMs) + ' ms' + atFloor(Math.min(chromeMs, m.chromeMs));
         worker.postMessage({ type: 'render', t: 0.42 });
       } else if (m.type === 'rendered') {
         workerFrames = m.n;
-        $('p5-worker-frames').textContent = workerFrames.toLocaleString();
-        if (m.t === 0.42 && $('p5-parity').textContent === 'booting…') {
+        $('t5-worker-frames').textContent = workerFrames.toLocaleString();
+        if (m.t === 0.42 && $('t5-parity').textContent === 'booting…') {
           /* Boot parity — the positive control for §5's central claim. The
-             same chrome and the same live layer, run on a scratch canvas
+             same chassis and the same live layer, run on a scratch canvas
              here, must hash to what the worker got. Without it, "the same
-             render, off the main thread" is asserted. */
+             render, off the main thread" is asserted.
+
+             A blitter should make this free: integer rects, opaque fills,
+             no scaling, no blending, so drawImage is a copy and there is
+             nothing left for two rasterisers to disagree about. The
+             register this replaced cost 1,284 differing pixels on a healthy
+             worker for exactly the reasons a blitter does not have. */
           var scratch = document.createElement('canvas');
           scratch.width = W; scratch.height = H;
           var sctx = scratch.getContext('2d', { willReadFrequently: true });
           var sChrome = document.createElement('canvas');
           sChrome.width = W; sChrome.height = H;
-          var sGeom = self.PANEL_CHROME(sChrome.getContext('2d'), W, H, INK);
+          var scx = sChrome.getContext('2d');
+          var sGeom = self.T5_CHROME(scx, W, H, INK);
+          self.T5_CAPS(scx, INK, sGeom);
           sctx.drawImage(sChrome, 0, 0);
-          self.PANEL_LIVE(sctx, W, H, INK, sGeom)(0.42, self.PANEL_BLINK(0.42), false);
+          self.T5_LIVE(sctx, W, H, INK, sGeom, TITLE)(0.42, m.n);
           var mine = hashOf(sctx);
           if (mine === m.hash) {
-            $('p5-parity').textContent = '✓ 0x' + m.hash.toString(16);
+            $('t5-parity').textContent = '✓ 0x' + m.hash.toString(16);
             BOOT.settled();
           } else {
             standDown('boot parity failed — worker 0x' + m.hash.toString(16) + ' vs main 0x' + mine.toString(16));
@@ -2136,7 +2099,7 @@ var SEC2 = (function () {
         }
       } else if (m.type === 'frame') {
         workerFrames = m.n;
-        $('p5-worker-frames').textContent = workerFrames.toLocaleString();
+        $('t5-worker-frames').textContent = workerFrames.toLocaleString();
       }
     };
     worker.postMessage({ type: 'ping' });
@@ -2147,7 +2110,8 @@ var SEC2 = (function () {
      clocks drive one render. */
   function setFreeRun(on) {
     freeRun = on;
-    $('p5-freerun').textContent = on ? 'Stop free-run' : 'Free-run both panels off their own clocks';
+    $('t5-freerun').classList.toggle('t5-on', on);
+    $('t5-freerun').textContent = on ? 'stop free-run' : 'free-run both';
     if (on) {
       demo.pause();
       mainFrames = 0; workerFrames = 0;
@@ -2157,7 +2121,7 @@ var SEC2 = (function () {
         mainFrames++;
         var t = ((now - t0) % 12000) / 12000;
         mainPaint(t); fbPaint(t);
-        $('p5-main-frames').textContent = mainFrames.toLocaleString();
+        $('t5-main-frames').textContent = mainFrames.toLocaleString();
         if (freeRun) mainRaf = requestAnimationFrame(tick);
       })(performance.now());
     } else {
@@ -2166,9 +2130,9 @@ var SEC2 = (function () {
       if (!reduced.matches) demo.play();
     }
   }
-  $('p5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
+  $('t5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
 
-  $('p5-estop').addEventListener('click', function () {
+  $('t5-block').addEventListener('click', function () {
     if (!freeRun) setFreeRun(true);
     var btn = this;
     btn.disabled = true;
@@ -2183,22 +2147,22 @@ var SEC2 = (function () {
 
          The WORKER's counter cannot be read here, and that asymmetry is
          real rather than a nuisance: the count arrives by postMessage, and
-         a blocked main thread is exactly a main thread that is not
-         draining its message queue. So the worker's figure is taken after a
-         short settle and the window it covers is stated as the longer one.
-         Both errors that remain point the same way — against the result. */
+         a blocked main thread is exactly a main thread that is not draining
+         its message queue. So the worker's figure is taken after a short
+         settle and the window it covers is stated as the longer one. Both
+         errors that remain point the same way — against the result. */
       var dmBlock = mainFrames - m0;
       setTimeout(function () {
         var span = performance.now() - t0;
         var dmTotal = mainFrames - m0, dw = workerFrames - w0;
         note.hidden = false;
-        note.className = 'p5-note';
+        note.className = 't5-note';
         note.textContent = host !== 'worker'
-          ? 'Both units are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
+          ? 'Both players are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
           : 'Blocked the main thread for 800 ms. Unit 1 advanced ' + dmBlock + ' frame' +
-            (dmBlock === 1 ? '' : 's') + ' while blocked, and ' + dmTotal + ' across the whole ' +
-            Math.round(span) + ' ms window — its lamps stopped blinking with its trace, because the ' +
-            'panel is drawn rather than styled. Unit 2 advanced ' + dw + ' over that same window' +
+            (dmBlock === 1 ? '' : 's') + ' while blocked and ' + dmTotal + ' across the whole ' +
+            Math.round(span) + ' ms window — its title stopped scrolling and its clock stopped counting. ' +
+            'Unit 2 advanced ' + dw + ' over that same window' +
             (dmTotal ? ', ' + (dw / dmTotal).toFixed(0) + '× as many' : '') +
             '. The worker is counted over the longer window because its count arrives by postMessage, ' +
             'and a blocked thread is precisely one that is not draining its message queue.';
