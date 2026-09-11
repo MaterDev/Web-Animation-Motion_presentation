@@ -4,116 +4,1909 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-11 · Canvas — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-11 · canvas
+
+   Two vocabularies live on this sheet and they must not blend.
+
+   `cv-`  the sheet itself, in the deck's own near-black harness language.
+   `g1-`…`g5-`  the five explanatory graphics. Deck language, one per section.
+   `ac-`  ACETATE — the fictional lacquer transfer desk the screens run inside.
+          Warm-dark anodised faceplate, hue family 92–95, seven ground steps
+          at ΔL 0.090, texture aperiodic by construction. See the track's
+          style-direction.md; the ground ramp there is the source for these
+          values and this file is a copy of it, not the other way round.
+
+   Every class here is namespaced because components.css leaks: a bare
+   `.note`, `.plate`, `.well` or `.meter` inherits system styling silently
+   and with no console error. `.wrap`, `.crumb`, `.head` and `.notes` are
+   the sheet chrome svg.html already established and are deliberately bare.
+   ───────────────────────────────────────────────────────────────────────── */
 :root { --tint: var(--tint-canvas); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); }
-.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
-.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*4); }
+
+/* ── the sheet's own furniture ──────────────────────────────────────── */
+.cv-sec { margin: calc(var(--u)*12) 0 0; }
+.cv-sec-head { display: flex; align-items: baseline; gap: 12px; border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-bottom: calc(var(--u)*2); flex-wrap: wrap; }
+.cv-sec-n { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); }
+.cv-sec-head h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0; }
+.cv-because { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*3); }
+.cv-because b { color: var(--hz-600); font-weight: 600; }
+.cv-lede { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 8px; }
+.cv-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*4); }
+@media (min-width: 900px) { .cv-pair.cv-split { grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr); align-items: start; } }
+
+/* explanatory-graphic shell: the deck's harness, never ACETATE's */
+.cv-fig { background: var(--hz-050); border-radius: 8px; box-shadow: var(--recess); padding: 10px; }
+.cv-fig canvas { display: block; width: 100%; border-radius: 4px; }
+.cv-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.5; letter-spacing: 0.06em; color: var(--hz-400); padding: 8px 4px 2px; }
+.cv-cap b { color: var(--hz-500); font-weight: 500; }
+
+.cv-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*2); }
+.cv-readout { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; color: var(--hz-500); }
+.cv-readout b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.cv-scroll { overflow-x: auto; }
+.cv-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: calc(var(--u)*2); min-width: 460px; }
+.cv-table th, .cv-table td { text-align: left; padding: 6px 10px 6px 0; border-bottom: var(--hair) solid var(--hz-200); white-space: nowrap; }
+.cv-table th { color: var(--hz-400); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+.cv-table td { color: var(--hz-600); font-variant-numeric: tabular-nums; }
+.cv-table td.cv-num { color: var(--tint); }
+.cv-table tr.cv-best td { color: var(--ok, var(--tint)); }
+.cv-dagger { color: var(--hz-400); }
+.cv-guard { font-family: var(--mono); font-size: 10px; padding: 7px 10px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+.cv-guard.cv-ok { color: var(--ok, #7bd88f); background: color-mix(in oklch, var(--ok, #7bd88f) 12%, transparent); }
+.cv-guard.cv-bad { color: var(--signal, #e5484d); background: color-mix(in oklch, var(--signal, #e5484d) 14%, transparent); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; }
+.notes li { margin-bottom: 8px; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ACETATE · trade dress
+   ───────────────────────────────────────────────────────────────────────── */
+.ac {
+  /* Ground ramp — seven steps, ΔL 0.090 between neighbours up to --ac-rule.
+     Warm by construction: hue 92–95 throughout, chroma 0.014–0.020. The
+     separation from the harness's --hz-* is CATEGORICAL (warm vs cool), not
+     a lightness threshold; --ac-rule and --hz-400 sit ΔL 0.005 apart and are
+     told apart by hue alone, ΔEok 0.026. */
+  --ac-well:   oklch(0.115 0.016 95);
+  --ac-ground: oklch(0.205 0.020 95);
+  --ac-cap:    oklch(0.295 0.020 95);
+  --ac-grid:   oklch(0.385 0.020 95);
+  --ac-rule:   oklch(0.475 0.019 95);
+  --ac-dim:    oklch(0.640 0.016 95);
+  --ac-ink:    oklch(0.900 0.014 95);
+
+  /* Provenance set — colour means WHERE THE DATA CAME FROM, not how loud. */
+  --ac-src:    oklch(0.780 0.115  92);   /* AUDIO   — captured programme    */
+  --ac-aux:    oklch(0.720 0.090 122);   /* DERIVED — ACETATE computed it   */
+  --ac-evt:    oklch(0.660 0.085 292);   /* EVENT   — discrete, non-audio   */
+  --ac-mst:    oklch(0.940 0.030  92);   /* MASTER  — the render bus        */
+  --ac-mute:   oklch(0.460 0.010  95);   /* OFFLINE — bypassed or stale     */
+  --ac-signal: oklch(0.550 0.200  27);   /* OVER    — clip indication only  */
+
+  /* Spectrogram LUT. Six stops, interpolated continuously, monotone in L so
+     it needs no key. Indigo → magenta → amber → white, the convention in
+     spectrographic tools. Deliberately shares no cold stop with the
+     precipitation ramp on the SVG sheet: zero green, zero cyan. */
+  --ac-sg-0: oklch(0.150 0.022 300);
+  --ac-sg-1: oklch(0.320 0.095 292);
+  --ac-sg-2: oklch(0.480 0.155 338);
+  --ac-sg-3: oklch(0.680 0.145  72);
+  --ac-sg-4: oklch(0.850 0.130  92);
+  --ac-sg-5: oklch(0.970 0.018  95);
+
+  --ac-pad: 34px;
+}
+
+/* chassis ─────────────────────────────────────────────────────────────── */
+.ac-chassis {
+  position: relative; border-radius: 6px; overflow: hidden;
+  color: var(--ac-ink);
+  font-family: var(--sans);
+  box-shadow: 0 18px 40px -22px oklch(0 0 0 / 0.8), 0 0 0 1px oklch(0 0 0 / 0.5);
+}
+/* The rack light is sized in PIXELS, not in percentages of the chassis.
+   A percentage gradient is scaled by the box it paints, so five units of
+   different heights were lit differently and their banners — identical
+   markup, identical geometry — came back as five distinct images. Fixed
+   metrics make the top 240px of every unit the same panel under the same
+   lamp, which is what Requirement 4 is actually asking for. */
+.ac-panel {
+  position: relative;
+  background:
+    linear-gradient(180deg,
+      color-mix(in oklch, var(--ac-cap) 60%, var(--ac-ground)) 0 2px,
+      var(--ac-ground) 2px),
+    radial-gradient(1400px 240px at 50% -46px,
+      color-mix(in oklch, var(--ac-cap) 45%, var(--ac-ground)) 0%,
+      var(--ac-ground) 100%);
+}
+/* brushed anodising. Fractal noise stretched on X so it has no fundamental
+   and cannot beat against the stage's non-integer scale or a projector's
+   resample kernel. stitchTiles makes the 300px tile seamless; 300px is far
+   outside the moiré danger zone the 3px scan raster on the SVG sheet sits
+   inside. Starting value 0.10 — tune against the projector, never above
+   0.18, where the faceplate stops reading as metal and starts reading as
+   noise. */
+.ac-panel::before {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0.10; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.010 0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+/* rack ears — ACETATE's "this came out of a machine" mark. Two countersunk
+   screws a side, never a repeating column: a column at this size is the
+   knurl tokens.css already cut for reading as moiré. */
+.ac-ear {
+  position: absolute; top: 0; bottom: 0; width: var(--ac-pad); z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 17px 26px,
+      oklch(0 0 0 / 0.55) 0 3.2px,
+      color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ink)) 3.2px 4.4px,
+      transparent 5px),
+    radial-gradient(circle at 17px calc(100% - 26px),
+      oklch(0 0 0 / 0.55) 0 3.2px,
+      color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ink)) 3.2px 4.4px,
+      transparent 5px),
+    linear-gradient(90deg, var(--ac-cap), var(--ac-ground));
+  box-shadow: inset -1px 0 0 oklch(0 0 0 / 0.4);
+}
+.ac-ear.ac-l { left: 0; }
+.ac-ear.ac-r { right: 0; transform: scaleX(-1); }
+
+.ac-body { position: relative; z-index: 2; padding: 0 var(--ac-pad); }
+
+/* banner — identical on all five screens (Requirement 4) ─────────────── */
+.ac-banner {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 9px 0 8px; border-bottom: 1px solid oklch(0 0 0 / 0.45);
+  box-shadow: 0 1px 0 color-mix(in oklch, var(--ac-ink) 7%, transparent);
+}
+.ac-mark {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.34em;
+  color: var(--ac-ink); text-transform: uppercase;
+}
+.ac-build { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-mute); }
+.ac-prog { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-dim); margin-left: auto; }
+.ac-prog b { color: var(--ac-src); font-weight: 400; }
+
+/* section rail — five lamps, the current one lit ─────────────────────── */
+.ac-rail { display: flex; gap: 3px; padding: 7px 0; }
+.ac-rail-item {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 4px 9px; border-radius: 2px;
+  color: var(--ac-mute); background: color-mix(in oklch, var(--ac-cap) 55%, var(--ac-ground));
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 8%, transparent);
+}
+.ac-rail-item.ac-on { color: var(--ac-ground); background: var(--ac-src); box-shadow: 0 0 12px -2px var(--ac-src); }
+
+/* the working area — the only part that differs between screens ──────── */
+.ac-work { padding: 10px 0 12px; }
+.ac-well {
+  position: relative; background: var(--ac-well); overflow: hidden; border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px oklch(0 0 0 / 0.55),
+    inset 0 1px 0 1px color-mix(in oklch, var(--ac-ink) 10%, transparent),
+    inset 0 16px 30px -16px oklch(0 0 0 / 0.75);
+}
+/* display glass: one low-angle specular band, aperiodic, no blur and no
+   backdrop-filter. This is the front of a meter, never a card floating
+   over live content — that overlay glass is the one components.css cut. */
+.ac-well::after {
+  content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: linear-gradient(104deg,
+    transparent 0 36%,
+    oklch(0.98 0.020 95 / 0.028) 46%,
+    oklch(0.98 0.020 95 / 0.052) 51%,
+    oklch(0.98 0.020 95 / 0.018) 57%,
+    transparent 65%);
+}
+.ac-well canvas { display: block; width: 100%; position: relative; z-index: 2; }
+
+/* transport — the one place hardware is quoted literally ─────────────── */
+.ac-transport {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 8px 0 12px; border-top: 1px solid oklch(0 0 0 / 0.4);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 6%, transparent);
+}
+/* One Doto element per world, at head size, stating that world's one
+   canonical number. ACETATE's is the timecode; nothing else on this sheet
+   may use it. 48px is 8 whole LED cells — DESIGN.md's floor. The chrome
+   around it never animates; these digits are data and must run. */
+.ac-tc {
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 48px; line-height: 48px;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+  color: var(--ac-src); text-shadow: 0 2px 10px oklch(0 0 0 / 0.55);
+}
+.ac-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-left: auto; }
+.ac-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ac-mute); text-transform: uppercase; }
+.ac-kv b { display: block; font-size: 13px; letter-spacing: 0.02em; color: var(--ac-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 2px; }
+.ac-kv b.ac-c-src { color: var(--ac-src); }
+.ac-kv b.ac-c-aux { color: var(--ac-aux); }
+.ac-kv b.ac-c-evt { color: var(--ac-evt); }
+.ac-kv b.ac-c-mst { color: var(--ac-mst); }
+.ac-kv b.ac-c-over { color: var(--ac-signal); }
+
+/* software controls — rectangular caps, never a drawn knob ───────────── */
+.ac-caps { display: flex; gap: 5px; flex-wrap: wrap; padding-bottom: 10px; }
+.ac-cap-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ac-dim); background: linear-gradient(180deg, var(--ac-cap), color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ground)));
+  border: 1px solid oklch(0 0 0 / 0.45); border-radius: 2px; padding: 6px 10px; cursor: pointer;
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 12%, transparent);
+}
+.ac-cap-btn:hover { color: var(--ac-ink); }
+.ac-cap-btn.ac-on { color: var(--ac-ground); background: var(--ac-src); border-color: oklch(0 0 0 / 0.5); box-shadow: 0 0 14px -3px var(--ac-src); }
+.ac-cap-btn[disabled] { opacity: 0.45; cursor: default; }
+
+.ac-notice {
+  font-family: var(--mono); font-size: 10px; color: var(--ac-signal);
+  background: color-mix(in oklch, var(--ac-signal) 16%, transparent);
+  border-left: 2px solid var(--ac-signal); padding: 7px 10px; margin: 0 0 10px;
+}
+.ac-notice[hidden] { display: none !important; }
+
+/* §3's EDL pane — a real editor component, and the thing that stops §3
+   reading as a second waveform */
+.ac-edl { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
+@media (min-width: 720px) { .ac-edl { grid-template-columns: minmax(0,1fr) 186px; } }
+.ac-edl-list {
+  background: var(--ac-well); border-radius: 3px; padding: 6px; overflow: auto;
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.55);
+  font-family: var(--mono); font-size: 9px; line-height: 1.8; color: var(--ac-dim);
+  max-height: 260px;
+}
+.ac-edl-row { display: flex; justify-content: space-between; gap: 8px; padding: 0 3px; border-radius: 2px; }
+.ac-edl-row b { color: var(--ac-evt); font-weight: 400; }
+.ac-edl-row.ac-on { background: color-mix(in oklch, var(--ac-evt) 24%, transparent); color: var(--ac-ink); }
+.ac-edl-head { color: var(--ac-mute); letter-spacing: 0.14em; text-transform: uppercase; font-size: 8px; padding: 0 3px 4px; }
+
+@media (max-width: 560px) { .ac { --ac-pad: 20px; } .ac-tc { font-size: 38px; line-height: 38px; } }
 </style>
 </head>
 <body data-testid="technique-canvas">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-11">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-11" data-testid="crumb-techniques">Techniques</a></div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="crumb"]').style.display = 'none';</script>
+
   <div class="head"><span class="code">SL-11</span><h1>canvas</h1></div>
-  <p class="dek">
-    Imperative pixel drawing, CPU-bound, no DOM overhead — the count jumps from tens of
-    SVG nodes to thousands of points with no per-particle element cost.
+  <p class="dek" data-testid="dek">
+    Canvas has no scene graph. That one absence is the whole technique: it is why
+    nothing erases itself, why cost is counted in calls rather than in objects, why
+    the pointer has to be rebuilt by hand, why the surface can be read back, and why
+    it can leave the main thread. Five sections, each pairing the consequence with a
+    screen from <b>ACETATE</b> — a lacquer transfer desk that exists only here.
+  </p>
+  <p class="cv-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> Timing brackets
+    end at a named sync point — <code>getImageData(0,0,1,1)</code> — because Chrome
+    records 2D commands and rasterises them later, so a bracket with no sync point
+    measures command <i>submission</i> and not drawing. Figures at or near the clock
+    floor are marked <span class="cv-dagger">†</span>; the floor itself is printed
+    beside every table. <code>performance.now()</code> is clamped to 1 ms in Firefox
+    and WebKit, so a figure marked <span class="cv-dagger">†</span> there is a bound,
+    not a value. Renderer: <b data-testid="instrument-renderer">…</b> · clock floor
+    <b data-testid="instrument-floor">…</b> · backing store <b data-testid="instrument-dpr">…</b>
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <canvas id="c" data-testid="canvas-el"></canvas>
-  </div>
+  <!-- ═══ §1 · PERSISTENCE ════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-1">
+    <div class="cv-sec-head"><span class="cv-sec-n">§1</span><h2>Persistence</h2></div>
+    <p class="cv-because">Nothing erases itself, <b>because nothing was stored.</b>
+      A DOM node you move leaves nothing behind — the browser knows where it was.
+      Canvas keeps no record of a mark once it is drawn, so the previous frame is
+      still on the surface unless you remove it yourself. Clearing is a decision,
+      and not clearing is a technique.</p>
+    <div class="cv-pair cv-split">
+      <div>
+        <div class="cv-lede">Explanatory graphic</div>
+        <div class="cv-fig" data-testid="g1-stage">
+          <canvas data-testid="g1-canvas"></canvas>
+          <div class="cv-cap">Same <b>render(t)</b>, same stylus, twice. Left clears the
+            surface each frame and shows only <i>now</i>. Right never clears, so the
+            path accumulates into its own history. Neither stores a single point.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cv-lede">ACETATE · screen 1</div>
+        <div data-testid="acetate-1-mount"></div>
+      </div>
+    </div>
+  </section>
 
-  <div class="controls">
-    <button class="ibtn primary" id="toggle">⏸ Pause</button>
-    <span class="fps">Particles: <b id="count">0</b> · Frame time: <b id="ft">—</b></span>
-  </div>
+  <!-- ═══ §2 · BATCHING ═══════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-2">
+    <div class="cv-sec-head"><span class="cv-sec-n">§2</span><h2>Batching</h2></div>
+    <p class="cv-because">Cost is calls, <b>because there are no objects.</b>
+      There is no retained list of 50 000 things for the engine to optimise over —
+      there is only the sequence of commands you issue, and the price is set by which
+      commands those are. Two tables, because there are two questions: what the
+      <i>method</i> costs on a provably identical picture, and what the <i>mark</i>
+      costs once you let the picture change.</p>
+    <div class="cv-pair cv-split">
+      <div>
+        <div class="cv-lede">Explanatory graphic</div>
+        <div class="cv-fig" data-testid="g2-stage">
+          <canvas data-testid="g2-canvas"></canvas>
+          <div class="cv-cap">Per-frame cost of the four methods, drawn from the live
+            run beside it. Bars are to scale; the fastest is the baseline.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cv-lede">ACETATE · screen 2</div>
+        <div data-testid="acetate-2-mount"></div>
+      </div>
+    </div>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 11</h3>
-    <p>"Canvas 2D — imperative pixel drawing, CPU-bound, good for generative work; visual:
-      thread demo in Canvas 2D at a visibly higher particle count (thousands), no DOM
-      overhead."</p>
-    <p>What's running above is a real particle field (~1,800 points, drifting) as a stand-in
-      for the thread demo — proving out the escalation in particle count this slide argues
-      for. It isn't resolving into the brandmark yet; that needs the actual vector path
-      data, same open dependency as the SVG page.</p>
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-a">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table A — the same picture, four ways.</b> One mark specification for every
+          row: a 4×4 axis-aligned opaque square at integer coordinates, in one resolved
+          ink, at seeded positions. A method is admitted only if its output is
+          pixel-identical to the <code>fillRect</code> reference.
+        </caption>
+        <thead><tr><th>method</th><th>ms / frame</th><th>× fastest</th><th>pixels differing</th></tr></thead>
+        <tbody data-testid="table-a-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="cv-guard" data-testid="table-a-guard">verifying…</div>
+
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-b">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table B — and what the mark itself costs.</b> Here the pictures are
+          <i>different</i> and that is the subject: an antialiased disc of equal area
+          against the hard square, and integer against fractional coordinates.
+        </caption>
+        <thead><tr><th>mark</th><th>ms / frame</th><th>× square</th><th>area drawn</th></tr></thead>
+        <tbody data-testid="table-b-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="cv-instr" data-testid="table-notes">
+      <b>Integer snapping is deliberate and is a small lie about real drawing</b> —
+      nobody snaps a particle field to integers. Table B is where the truth of that
+      gets its own number. Floor: <b data-testid="table-floor">…</b> ·
+      marks per frame: <b data-testid="table-n">…</b> · sync point:
+      <code>getImageData(0,0,1,1)</code>, measured at
+      <b data-testid="table-synccost">…</b> on its own.
+    </p>
+  </section>
+
+  <!-- ═══ §3 · HIT TESTING ════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-3">
+    <div class="cv-sec-head"><span class="cv-sec-n">§3</span><h2>Hit testing</h2></div>
+    <p class="cv-because">The pointer is rebuilt by hand, <b>because there are no nodes.</b>
+      No element means no <code>:hover</code>, no event target, no accessibility tree.
+      The standard answer is a second surface nobody sees: draw every object again in a
+      colour that <i>is</i> its identity, then read the one pixel under the cursor and
+      decode it. One <code>getImageData</code> call, regardless of how many objects
+      there are.</p>
+    <div class="cv-pair cv-split">
+      <div>
+        <div class="cv-lede">Explanatory graphic</div>
+        <div class="cv-fig" data-testid="g3-stage">
+          <canvas data-testid="g3-canvas"></canvas>
+          <div class="cv-cap">Identity encoded into colour, and one pixel read back out
+            of it. The index travels in the red and green channels; alpha separates a
+            hit from the ground.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cv-lede">ACETATE · screen 3</div>
+        <div data-testid="acetate-3-mount"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ §4 · READBACK ═══════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-4">
+    <div class="cv-sec-head"><span class="cv-sec-n">§4</span><h2>Readback</h2></div>
+    <p class="cv-because">The surface can be read back, <b>uniquely on this spectrum.</b>
+      SVG can tell you where a node is; it cannot tell you what colour a pixel ended up.
+      Canvas can, synchronously, for any region. That single capability is what makes
+      the brandmark below resolve out of pixels rather than out of coordinates — and it
+      is what turns a drawing surface into an input.</p>
+    <div class="cv-pair cv-split">
+      <div>
+        <div class="cv-lede">Explanatory graphic</div>
+        <div class="cv-fig" data-testid="g4-stage">
+          <canvas data-testid="g4-canvas"></canvas>
+          <div class="cv-cap">The mark is rasterised to an off-screen canvas, read back
+            with <b>getImageData</b>, and every opaque pixel above threshold becomes one
+            particle's destination. <b>No path data is authored here</b> — change the
+            face and the target set changes with it.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cv-lede">ACETATE · screen 4</div>
+        <div data-testid="acetate-4-mount"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ §5 · OFF-THREAD ═════════════════════════════════════════════ -->
+  <section class="cv-sec" data-testid="section-5">
+    <div class="cv-sec-head"><span class="cv-sec-n">§5</span><h2>Off-thread</h2></div>
+    <p class="cv-because">It can leave the main thread, <b>because it needs no DOM.</b>
+      A canvas's control can be transferred to a worker once, irreversibly, and from
+      then on it is drawn by a thread your layout, your parsing and your blocked
+      <code>for</code> loop cannot touch. Block the main thread below and watch which
+      counter keeps moving.</p>
+    <div class="cv-pair cv-split">
+      <div>
+        <div class="cv-lede">Explanatory graphic</div>
+        <div class="cv-fig" data-testid="g5-stage">
+          <canvas data-testid="g5-canvas"></canvas>
+          <div class="cv-cap">Two threads, one timeline. The main thread's frames stop
+            for the length of the block; the worker's are driven by the compositor and
+            do not.</div>
+        </div>
+      </div>
+      <div>
+        <div class="cv-lede">ACETATE · screen 5</div>
+        <div data-testid="acetate-5-mount"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the instrument, and its floor.</b> Every printed figure carries the
+        method that produced it. Where the instrument cannot resolve a value the sheet
+        prints a bound, never a zero.</li>
+      <li><b>A timing bracket needs a sync point.</b> Chrome defers 2D rasterisation.
+        The first version of §2 measured command submission and reported that 2 300×
+        the drawn area was free. With the sync point it costs 2.2×, and that correction
+        is why §2 has two tables instead of one confident number.</li>
+      <li><b>A control must vary the thing the instrument might be missing.</b> A
+        mark-count control passes happily on a blind clock; only an area sweep catches
+        it.</li>
+      <li><b>Headless and headed can agree and both be wrong.</b> They did, here. The
+        agreement made a GPU explanation feel like a resolution.</li>
+      <li><b>If the finding inverts, the sheet says so.</b> Batching 50 000 marks into
+        one path is <i>slower</i> than issuing 50 000 calls, which is the opposite of
+        the folklore. It is stated on output proven pixel-identical, because that is
+        where a counter-intuitive claim has to stand.</li>
+    </ol>
+    <h3 style="margin-top:22px">How the chrome was checked</h3>
+    <p>The five ACETATE screens are generated from one template, so their chrome is
+      one object rather than five copies somebody has to keep in step. Verified by
+      cloning each chassis into a single fixed, integer-aligned slot — comparing them
+      where they live measures where each landed on the device-pixel grid, not whether
+      the chrome is the same — and screenshotting three regions of each:</p>
+    <ul style="padding-left:1.1em">
+      <li><b>Banner: 0 of 18 696 pixels differ, across all five.</b></li>
+      <li>Section rail: two of the four pairs byte-identical; the other two differ on
+        about 1 300 pixels by at most 57 levels. Identical markup, so this is
+        sub-device-pixel placement — the five units are different heights and land on
+        the grid differently.</li>
+      <li>Transport: differs, and mostly by design. Suppressing the faceplate grain
+        drops the difference from 58 000 pixels to 20 000 and the worst channel delta
+        from 24 to 14, which says most of it is the machined finish: the grain is one
+        continuous 300 px texture anchored at the top of the unit, so a taller unit
+        shows a different part of it at the foot. That is what a real faceplate does.</li>
+    </ul>
+    <p>The same run is the evidence for the rule above it. Nothing outside the working
+      area moves; the timecode digits, the readouts and the traces are data and do.</p>
+
+    <h3 style="margin-top:22px">Fiction, and what is not fiction</h3>
+    <p><b>ACETATE is invented.</b> No artist, label or release named on this sheet
+      exists; the programme material is a stated mathematical construction, not a
+      recording, and nothing here decodes or plays audio. The measurements are real.</p>
   </div>
 </div>
 
+<script src="../system/wam.js"></script>
+<script src="./acetate-bounce.js"></script>
 <script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-const countEl = document.getElementById('count');
-const ftEl = document.getElementById('ft');
-const toggleBtn = document.getElementById('toggle');
+/* ════════════════════════════════════════════════════════════════════════
+   SL-11 · canvas — one inline block, five sections.
 
-let running = true;
-let dpr = Math.min(2, window.devicePixelRatio || 1);
-let W, H, particles = [];
-const N = 1800;
+   Everything visible is a pure render(t) registered with WAM.clock, so the
+   scrub, the autoplay, the reduced-motion poster and the QC filmstrip are
+   four callers of one function. The exception is named and guarded: §5's
+   worker free-run computes its own t, which is the whole point of §5 and is
+   checked by frame counters rather than by idempotency.
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+'use strict';
 
-function resize() {
-  const r = canvas.getBoundingClientRect();
-  W = canvas.width = r.width * dpr;
-  H = canvas.height = r.height * dpr;
-}
-function seed() {
-  particles = Array.from({ length: N }, () => ({
-    x: Math.random() * W, y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.4 * dpr, vy: (Math.random() - 0.5) * 0.4 * dpr,
-    r: (0.8 + Math.random() * 1.6) * dpr,
-  }));
-  countEl.textContent = N;
-}
-resize(); seed();
-window.addEventListener('resize', () => { resize(); });
+var $ = function (id) { return document.querySelector('[data-testid="' + id + '"]'); };
+var TAU = Math.PI * 2;
+var DPR = Math.min(2, window.devicePixelRatio || 1);
+var root = getComputedStyle(document.documentElement);
 
-const tintRGB = getComputedStyle(document.documentElement).getPropertyValue('--tint');
-let last = performance.now();
-function frame(now) {
-  const dt = now - last; last = now;
-  if (running) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = tintRGB || '#7dd3fc';
-    for (const p of particles) {
-      p.x += p.vx; p.y += p.vy;
-      if (p.x < 0 || p.x > W) p.vx *= -1;
-      if (p.y < 0 || p.y > H) p.vy *= -1;
-      ctx.globalAlpha = 0.55;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ftEl.textContent = dt.toFixed(2) + 'ms';
+/* ── instruments ──────────────────────────────────────────────────────── */
+
+/* The named sync point. Chrome records 2D commands and rasterises them
+   later, so a bracket that ends without one measures how fast commands were
+   SUBMITTED. getImageData forces every queued command to resolve. Called
+   alone it costs ~0 ms — measured below and printed — so whatever it adds
+   to a bracket is work that had simply not happened yet when the clock
+   stopped. */
+function sync(ctx) { ctx.getImageData(0, 0, 1, 1); }
+
+/* performance.now() is not the same clock in every engine: roughly 100 µs in
+   Chromium, clamped to 1 ms in Firefox and WebKit as an anti-fingerprinting
+   measure. Bounded by wall time rather than iteration count, because under a
+   1 ms clamp "sample 40 000 times" is forty seconds of blocked main thread. */
+var CLOCK_FLOOR = (function () {
+  var min = Infinity, deadline = performance.now() + 4, a, b;
+  while (performance.now() < deadline) {
+    a = performance.now(); b = performance.now();
+    if (b > a && b - a < min) min = b - a;
   }
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
+  return min === Infinity ? 1 : min;
+})();
 
-toggleBtn.addEventListener('click', () => {
-  running = !running;
-  toggleBtn.textContent = running ? '⏸ Pause' : '▶ Resume';
+function median(a) {
+  var s = a.slice().sort(function (x, y) { return x - y; });
+  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+}
+/* A figure within five floors of the clock's resolution is a bound, not a
+   value, and gets said so rather than printed as though it were measured. */
+function atFloor(ms) { return ms < CLOCK_FLOOR * 5 ? '<span class="cv-dagger">†</span>' : ''; }
+function ms(v) { return v < 10 ? v.toFixed(2) : v.toFixed(1); }
+
+/* xorshift32. Math.random() cannot be used anywhere a picture has to be
+   reproduced: Table A's whole claim is that four methods drew the SAME
+   marks, and that is only checkable if the coordinates repeat exactly. */
+function rng(seed) {
+  var s = seed >>> 0 || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+/* One ink, resolved from the token, parsed once. Every method draws in this
+   array — including putImageData, which is where a hardcoded triple would
+   otherwise sit and silently stop tracking the token. */
+function resolveRGB(cssColour) {
+  var c = document.createElement('canvas'); c.width = c.height = 1;
+  var x = c.getContext('2d');
+  x.fillStyle = cssColour; x.fillRect(0, 0, 1, 1);
+  var d = x.getImageData(0, 0, 1, 1).data;
+  return [d[0], d[1], d[2]];
+}
+/* ACETATE's custom properties are declared on `.ac`, not on :root, so a
+   plain getComputedStyle(documentElement) lookup returns '' for every one
+   of them — and every call site here had a hex fallback, so the sheet drew
+   in plausible wrong colours and said nothing. §4's LUT had no fallback and
+   rendered black, which is the only reason this was caught. A miss is now
+   recorded and reported on the instrument plate rather than absorbed. */
+var acProbe = document.createElement('div');
+acProbe.className = 'ac';
+acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
+document.body.appendChild(acProbe);
+var acRoot = getComputedStyle(acProbe);
+var TOKEN_MISSES = [];
+function token(name) {
+  var v = root.getPropertyValue(name).trim() || acRoot.getPropertyValue(name).trim();
+  if (!v) TOKEN_MISSES.push(name);
+  return v;
+}
+
+/* Every stage sizes its backing store to the device pixel ratio and
+   re-renders at the CURRENT t on resize — never at 0, which would make a
+   window drag look like a seek. */
+function fit(cv, cssH) {
+  var w = cv.parentNode.clientWidth || cv.clientWidth || 600;
+  cv.style.height = cssH + 'px';
+  cv.width = Math.max(1, Math.round(w * DPR));
+  cv.height = Math.max(1, Math.round(cssH * DPR));
+  return { w: cv.width, h: cv.height };
+}
+var _resizers = [];
+function onResize(fn) { _resizers.push(fn); }
+var _rt = 0;
+window.addEventListener('resize', function () {
+  clearTimeout(_rt);
+  _rt = setTimeout(function () { _resizers.forEach(function (f) { f(); }); }, 120);
 });
+
+/* §2's measurement takes the main thread for about a second, and §5's
+   worker boot is gated on a 750 ms ping. Running the measurement first
+   starves the pong and §5 falls back to the main thread on a machine where
+   the worker was perfectly healthy — measured, headed Chromium. So the
+   measurement waits for §5 to settle, with its own deadline in case §5
+   never reports at all. */
+var BOOT = (function () {
+  var done = false, q = [];
+  function fire() { if (done) return; done = true; q.forEach(function (f) { setTimeout(f, 60); }); q = []; }
+  setTimeout(fire, 4000);
+  return { when: function (f) { if (done) setTimeout(f, 60); else q.push(f); }, settled: fire };
+})();
+
+/* ── instrument plate ─────────────────────────────────────────────────── */
+(function () {
+  var probe = document.createElement('canvas').getContext('webgl');
+  var name = 'unavailable';
+  if (probe) {
+    var ext = probe.getExtension('WEBGL_debug_renderer_info');
+    name = ext ? probe.getParameter(ext.UNMASKED_RENDERER_WEBGL) : (probe.getParameter(probe.RENDERER) || 'unnamed');
+  }
+  $('instrument-renderer').textContent = name;
+  $('instrument-floor').textContent = CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms';
+  $('instrument-dpr').textContent = DPR + '× device pixels';
+})();
+
+/* Run last: every token the sheet asked for has been asked for by then. */
+function reportTokenMisses() {
+  if (!TOKEN_MISSES.length) return;
+  var p2 = $('instrument-plate');
+  var uniq = TOKEN_MISSES.filter(function (v, i, a) { return a.indexOf(v) === i; });
+  p2.insertAdjacentHTML('beforeend',
+    ' <b style="color:var(--signal)">' + uniq.length + ' token(s) did not resolve: ' + uniq.join(', ') +
+    ' — every colour drawn from them is a fallback, not the design system.</b>');
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ACETATE chassis
+
+   Built from ONE template, five times. Hand-writing five copies would make
+   Requirement 4's "identical chrome" a thing someone has to maintain by
+   care; generating it makes the identity structural. Only `work` differs.
+   ════════════════════════════════════════════════════════════════════════ */
+var SCREENS = ['overview', 'correlation', 'timeline', 'spectrogram', 'bounce'];
+var BUILD = '2.4.1 · b3907';
+
+function chassis(n, opts) {
+  var mount = $('acetate-' + n + '-mount');
+  var id = 'acetate-' + n;
+  var rail = SCREENS.map(function (s, i) {
+    return '<span class="ac-rail-item' + (i === n - 1 ? ' ac-on' : '') + '" data-testid="' + id + '-rail-' + s + '">' + s + '</span>';
+  }).join('');
+  var meta = opts.meta.map(function (m, i) {
+    return '<div class="ac-kv" data-testid="' + id + '-kv-' + i + '">' + m.k +
+           '<b class="ac-c-' + (m.c || 'src') + '" data-testid="' + id + '-kv-' + i + '-v">' + m.v + '</b></div>';
+  }).join('');
+  mount.innerHTML =
+    '<div class="ac"><div class="ac-chassis ac-panel" data-testid="' + id + '">' +
+      '<div class="ac-ear ac-l"></div><div class="ac-ear ac-r"></div>' +
+      '<div class="ac-body">' +
+        '<div class="ac-banner" data-testid="' + id + '-banner">' +
+          '<span class="ac-mark">Acetate</span>' +
+          '<span class="ac-build">v' + BUILD + '</span>' +
+          '<span class="ac-prog">programme <b>UNTITLED / A-SIDE</b> · 24 bit 96 k</span>' +
+        '</div>' +
+        '<div class="ac-rail" data-testid="' + id + '-rail">' + rail + '</div>' +
+        '<div class="ac-notice" data-testid="' + id + '-notice" hidden></div>' +
+        (opts.caps || '') +
+        '<div class="ac-work" data-testid="' + id + '-work">' + opts.work + '</div>' +
+        '<div class="ac-transport" data-testid="' + id + '-transport">' +
+          '<span class="ac-tc" data-testid="' + id + '-tc">00:00:00.00</span>' +
+          '<div class="ac-meta">' + meta + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div></div>';
+  return {
+    root: mount.firstChild,
+    stage: $(id),
+    work: $(id + '-work'),
+    tc: $(id + '-tc'),
+    notice: $(id + '-notice'),
+    kv: function (i) { return $(id + '-kv-' + i + '-v'); }
+  };
+}
+
+/* 11 running glyphs, hh:mm:ss.ff at 25 fps — a mastering transport's one
+   canonical number, and the only Doto on this sheet. */
+function timecode(t, dur) {
+  var total = t * (dur / 1000), h = (total / 3600) | 0, m = ((total / 60) | 0) % 60;
+  var s = (total | 0) % 60, f = ((total % 1) * 25) | 0;
+  var p = function (v, n) { return ('000' + v).slice(-(n || 2)); };
+  return p(h) + ':' + p(m) + ':' + p(s) + '.' + p(f);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §1 · PERSISTENCE
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var TINT = token('--tint-canvas') || '#e2c23a';
+  var GRID = token('--hz-300') || '#333';
+  var DIM  = token('--hz-500') || '#888';
+
+  /* ── graphic: cleared vs not cleared ─────────────────────────────────
+     The right pane redraws the whole path from 0 to t every frame rather
+     than accumulating across frames. That keeps render(t) pure — the QC
+     check calls t=0.42 from two directions and demands identical output,
+     which a genuinely accumulating surface could never pass. What the
+     audience sees is the same thing either way: on a real canvas you get
+     this picture by NOT calling clearRect. */
+  var g = $('g1-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
+  function gsize() { var s = fit(g, 210); gw = s.w; gh = s.h; }
+  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
+
+  function stylus(u) {           /* one deterministic path, u in [0,1] */
+    return {
+      x: 0.06 + u * 0.88,
+      y: 0.5 + 0.30 * Math.sin(u * TAU * 1.5) * Math.cos(u * TAU * 0.5) + 0.06 * Math.sin(u * TAU * 9)
+    };
+  }
+  function pane(x0, w, label, persist, t) {
+    gx.save();
+    gx.beginPath(); gx.rect(x0, 0, w, gh); gx.clip();
+    gx.strokeStyle = GRID; gx.lineWidth = 1 * DPR;
+    gx.strokeRect(x0 + 0.5, 0.5, w - 1, gh - 1);
+    gx.fillStyle = DIM; gx.font = (9 * DPR) + 'px ' + (token('--mono') || 'monospace');
+    gx.fillText(label, x0 + 9 * DPR, 15 * DPR);
+
+    gx.strokeStyle = TINT; gx.lineWidth = 1.6 * DPR; gx.lineJoin = 'round';
+    var from = persist ? 0 : Math.max(0, t - 0.035), i, n = 220, u, p;
+    gx.beginPath();
+    for (i = 0; i <= n; i++) {
+      u = from + (t - from) * (i / n);
+      p = stylus(u);
+      if (i === 0) gx.moveTo(x0 + p.x * w, p.y * gh); else gx.lineTo(x0 + p.x * w, p.y * gh);
+    }
+    gx.stroke();
+    p = stylus(t);
+    gx.fillStyle = TINT;
+    gx.beginPath(); gx.arc(x0 + p.x * w, p.y * gh, 2.6 * DPR, 0, TAU); gx.fill();
+    gx.restore();
+  }
+  var gdemo = WAM.clock('g1-stage', {
+    el: $('g1-stage'), dur: 9000, poster: 0.72,
+    render: function (t) {
+      gx.clearRect(0, 0, gw, gh);
+      var gap = 10 * DPR, w = (gw - gap) / 2;
+      pane(0, w, 'clearRect() each frame', false, t);
+      pane(w + gap, w, 'no clearRect', true, t);
+    }
+  });
+
+  /* ── ACETATE 1 · OVERVIEW ────────────────────────────────────────── */
+  var c = chassis(1, {
+    work: '<div class="ac-well" data-testid="acetate-1-well"><canvas data-testid="acetate-1-canvas"></canvas></div>',
+    meta: [
+      { k: 'source', v: 'AUDIO', c: 'src' },
+      { k: 'length', v: '00:03:41', c: 'mst' },
+      { k: 'peak', v: '−0.3 dBFS', c: 'src' }
+    ]
+  });
+  var a = $('acetate-1-canvas'), ax = a.getContext('2d'), aw = 0, ah = 0;
+  function asize() { var s = fit(a, 190); aw = s.w; ah = s.h; }
+  asize(); onResize(function () { asize(); ademo.render(ademo.t); });
+
+  var SRC = resolveRGB(token('--ac-src') || '#eab308');
+  var GRD = resolveRGB(token('--ac-grid') || '#555');
+  var MUTE = resolveRGB(token('--ac-mute') || '#666');
+  function rgb(c, alpha) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (alpha === undefined ? 1 : alpha) + ')'; }
+
+  /* Programme material: a stated construction, not a recording. Three
+     partials, a slow amplitude envelope, and a deterministic dither term.
+     Nothing here decodes or plays audio. */
+  var ENV = new Float32Array(1400);
+  (function () {
+    var r = rng(0x51ACE7), i, u;
+    for (i = 0; i < ENV.length; i++) {
+      u = i / ENV.length;
+      ENV[i] = Math.min(1,
+        (0.30 + 0.70 * Math.pow(Math.sin(u * Math.PI), 0.55)) *
+        (0.55 + 0.30 * Math.sin(u * TAU * 11) + 0.15 * Math.sin(u * TAU * 37)) *
+        (0.86 + 0.14 * r()));
+    }
+  })();
+
+  var ademo = WAM.clock('acetate-1-stage', {
+    el: $('acetate-1'), dur: 12000, poster: 0.78,
+    render: function (t) {
+      ax.clearRect(0, 0, aw, ah);
+      var mid = ah / 2, i, x, v, cut = Math.floor(ENV.length * t);
+
+      /* graticule — a division that must project: ΔL 0.270 off the well */
+      ax.strokeStyle = rgb(GRD, 0.55); ax.lineWidth = 1;
+      for (i = 1; i < 8; i++) {
+        x = Math.round((i / 8) * aw) + 0.5;
+        ax.beginPath(); ax.moveTo(x, 0); ax.lineTo(x, ah); ax.stroke();
+      }
+      ax.strokeStyle = rgb(GRD, 0.85);
+      ax.beginPath(); ax.moveTo(0, Math.round(mid) + 0.5); ax.lineTo(aw, Math.round(mid) + 0.5); ax.stroke();
+
+      /* the envelope, drawn from 0 to t and left standing. One mark
+         identifiable at a tenth of this size — Requirement 18. */
+      ax.fillStyle = rgb(SRC, 0.92);
+      for (i = 0; i < cut; i++) {
+        x = (i / ENV.length) * aw;
+        v = ENV[i] * (mid - 6 * DPR);
+        ax.fillRect(x, mid - v, Math.max(1, aw / ENV.length), v * 2);
+      }
+      /* the stylus: where the transfer has reached */
+      ax.fillStyle = rgb([255, 255, 255], 0.9);
+      ax.fillRect(Math.min(aw - 2, (cut / ENV.length) * aw), 0, 2, ah);
+      /* ground still to be cut */
+      ax.fillStyle = rgb(MUTE, 0.18);
+      ax.fillRect((cut / ENV.length) * aw, mid - 1, aw - (cut / ENV.length) * aw, 2);
+
+      c.tc.textContent = timecode(t, 12000);
+      c.kv(2).textContent = (-0.3 - 12 * (1 - ENV[Math.max(0, cut - 1)] || 0)).toFixed(1) + ' dBFS';
+    }
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §2 · BATCHING
+   ════════════════════════════════════════════════════════════════════════ */
+var SEC2 = (function () {
+  var N = 50000, MW = 900, MH = 600, REPS = 7;
+  var INK = resolveRGB(token('--tint-canvas') || '#e2c23a');
+
+  /* One mark specification for the whole of Table A: a 4×4 axis-aligned
+     opaque square at integer coordinates in one resolved ink. Seeded, so
+     every method draws marks in the same places and "the same picture" is
+     a checkable statement rather than an assertion. */
+  var XS = new Int32Array(N), YS = new Int32Array(N);
+  (function () {
+    var r = rng(0xC0FFEE), i;
+    for (i = 0; i < N; i++) {
+      XS[i] = (r() * (MW - 4)) | 0;
+      YS[i] = (r() * (MH - 4)) | 0;
+    }
+  })();
+
+  var mc = document.createElement('canvas');
+  mc.width = MW; mc.height = MH;
+  var mx = mc.getContext('2d', { willReadFrequently: true });
+  var FILL = 'rgb(' + INK[0] + ',' + INK[1] + ',' + INK[2] + ')';
+
+  var sprite = document.createElement('canvas');
+  sprite.width = sprite.height = 4;
+  (function () { var s = sprite.getContext('2d'); s.fillStyle = FILL; s.fillRect(0, 0, 4, 4); })();
+
+  var buf = mx.createImageData(MW, MH);
+  var b32 = new Uint32Array(buf.data.buffer);
+  /* little-endian ABGR. Built from the SAME resolved ink as every other
+     method — a hardcoded triple here is how one path silently stops
+     tracking the token. */
+  var PACK = (255 << 24) | (INK[2] << 16) | (INK[1] << 8) | INK[0];
+
+  var METHODS = [
+    { key: 'fillrect', label: 'fillRect per call', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i], YS[i], 4, 4);
+      } },
+    { key: 'batched', label: 'rect batched into one path', draw: function () {
+        mx.fillStyle = FILL; mx.beginPath();
+        for (var i = 0; i < N; i++) mx.rect(XS[i], YS[i], 4, 4);
+        mx.fill();
+      } },
+    { key: 'sprite', label: 'drawImage sprite', draw: function () {
+        for (var i = 0; i < N; i++) mx.drawImage(sprite, XS[i], YS[i]);
+      } },
+    { key: 'imagedata', label: 'putImageData, composed once', draw: function () {
+        var i, x, y, o;
+        for (i = 0; i < N; i++) {
+          x = XS[i]; y = YS[i]; o = y * MW + x;
+          b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+          o += MW; b32[o] = PACK; b32[o + 1] = PACK; b32[o + 2] = PACK; b32[o + 3] = PACK;
+        }
+        mx.putImageData(buf, 0, 0);
+      } }
+  ];
+  function clearFor(m) {
+    mx.clearRect(0, 0, MW, MH);
+    if (m.key === 'imagedata') b32.fill(0);
+  }
+  function timeOne(m) {
+    clearFor(m);
+    var t0 = performance.now();
+    m.draw();
+    sync(mx);
+    return performance.now() - t0;
+  }
+
+  /* Table B changes the mark on purpose, so the pictures differ and the
+     difference IS the finding. r = √(16/π) gives a disc of the same area as
+     the 4×4 square — the coverage axis held while the edge treatment and
+     the coordinate alignment vary. */
+  var R = Math.sqrt(16 / Math.PI);
+  var MARKS = [
+    { label: 'square 4×4, integer coords', cov: '16 px, hard edge', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i], YS[i], 4, 4);
+      } },
+    { label: 'square 4×4, fractional coords', cov: '16 px + antialiased edge', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) mx.fillRect(XS[i] + 0.37, YS[i] + 0.61, 4, 4);
+      } },
+    { label: 'disc of equal area, integer coords', cov: '16 px, antialiased', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) { mx.beginPath(); mx.arc(XS[i] + 2, YS[i] + 2, R, 0, TAU); mx.fill(); }
+      } },
+    { label: 'disc of equal area, fractional coords', cov: '16 px, antialiased', draw: function () {
+        mx.fillStyle = FILL;
+        for (var i = 0; i < N; i++) { mx.beginPath(); mx.arc(XS[i] + 2.37, YS[i] + 2.61, R, 0, TAU); mx.fill(); }
+      } }
+  ];
+
+  var RESULT = { a: [], b: [], syncCost: 0, ran: false };
+
+  function measure() {
+    var i, j, s, reps, ref = null;
+
+    /* what the sync point costs on its own, so the reader can see it is
+       not what the brackets are measuring */
+    reps = [];
+    for (j = 0; j < 20; j++) { s = performance.now(); sync(mx); reps.push(performance.now() - s); }
+    RESULT.syncCost = median(reps);
+
+    for (i = 0; i < METHODS.length; i++) {
+      timeOne(METHODS[i]);                                  /* warm */
+      reps = [];
+      for (j = 0; j < REPS; j++) reps.push(timeOne(METHODS[i]));
+      /* the picture this method actually produced, captured AFTER timing so
+         the getImageData cost never lands inside a bracket */
+      clearFor(METHODS[i]); METHODS[i].draw();
+      var px = mx.getImageData(0, 0, MW, MH).data;
+      var diff = 0;
+      if (ref === null) ref = px;
+      else { for (var k = 0; k < px.length; k += 4) if (px[k] !== ref[k] || px[k + 1] !== ref[k + 1] || px[k + 2] !== ref[k + 2] || px[k + 3] !== ref[k + 3]) diff++; }
+      RESULT.a.push({ label: METHODS[i].label, ms: median(reps), diff: diff });
+    }
+
+    for (i = 0; i < MARKS.length; i++) {
+      mx.clearRect(0, 0, MW, MH); MARKS[i].draw(); sync(mx);   /* warm */
+      reps = [];
+      for (j = 0; j < REPS; j++) {
+        mx.clearRect(0, 0, MW, MH);
+        s = performance.now(); MARKS[i].draw(); sync(mx); reps.push(performance.now() - s);
+      }
+      RESULT.b.push({ label: MARKS[i].label, cov: MARKS[i].cov, ms: median(reps) });
+    }
+    RESULT.ran = true;
+    paint();
+  }
+
+  function paint() {
+    var a = RESULT.a, b = RESULT.b, i, fastest = Infinity, slowest = 0, rows = '';
+    for (i = 0; i < a.length; i++) { if (a[i].ms < fastest) fastest = a[i].ms; if (a[i].ms > slowest) slowest = a[i].ms; }
+    for (i = 0; i < a.length; i++) {
+      rows += '<tr' + (a[i].ms === fastest ? ' class="cv-best"' : '') + '>' +
+        '<td>' + a[i].label + '</td>' +
+        '<td class="cv-num">' + ms(a[i].ms) + atFloor(a[i].ms) + '</td>' +
+        '<td>' + (a[i].ms / fastest).toFixed(1) + '×</td>' +
+        '<td>' + (i === 0 ? 'reference' : a[i].diff.toLocaleString()) + '</td></tr>';
+    }
+    $('table-a-body').innerHTML = rows;
+
+    var bad = a.filter(function (r, i2) { return i2 > 0 && r.diff > 0; });
+    var guard = $('table-a-guard');
+    var total = (MW * MH).toLocaleString();
+    if (bad.length) {
+      guard.className = 'cv-guard cv-bad';
+      guard.innerHTML = '✗ output NOT identical — ' + bad.map(function (r) { return r.label + ': ' + r.diff.toLocaleString(); }).join(', ') +
+        ' of ' + total + ' pixels differ. The spread above is contaminated and the sheet says so.';
+    } else {
+      guard.className = 'cv-guard cv-ok';
+      guard.innerHTML = '✓ identical output verified — 0 of ' + total + ' pixels differ across all four methods. ' +
+        'Spread fastest to slowest: <b>' + (slowest / fastest).toFixed(1) + '×</b>.';
+    }
+
+    rows = '';
+    var base = b.length ? b[0].ms : 1;
+    for (i = 0; i < b.length; i++) {
+      rows += '<tr><td>' + b[i].label + '</td><td class="cv-num">' + ms(b[i].ms) + atFloor(b[i].ms) +
+        '</td><td>' + (b[i].ms / base).toFixed(2) + '×</td><td>' + b[i].cov + '</td></tr>';
+    }
+    $('table-b-body').innerHTML = rows;
+
+    $('table-floor').textContent = CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms';
+    $('table-n').textContent = N.toLocaleString() + ' per frame, ' + MW + '×' + MH;
+    $('table-synccost').innerHTML = RESULT.syncCost < CLOCK_FLOOR
+      ? 'below the clock floor — under ' + (CLOCK_FLOOR < 1 ? (CLOCK_FLOOR * 1000).toFixed(0) + ' µs' : CLOCK_FLOOR.toFixed(2) + ' ms')
+      : ms(RESULT.syncCost) + ' ms' + atFloor(RESULT.syncCost);
+  }
+
+  return { measure: measure, RESULT: RESULT, N: N, METHODS: METHODS, INK: INK };
+})();
+
+(function () {
+  /* ── ACETATE 2 · CORRELATION — a goniometer ──────────────────────────
+     A goniometer plots left against right as a rotated scatter of sample
+     pairs, which means its entire content IS N marks. So drawing it three
+     ways is the instrument doing its own job rather than a benchmark
+     bolted onto a picture — and the points are redrawn every frame, where
+     a static overview would be drawn once. */
+  var LIVE_N = 50000;
+  var BL = new Float32Array(LIVE_N), BR = new Float32Array(LIVE_N);
+  (function () {
+    var r = rng(0x9E3779B9), i, u, w, corr;
+    for (i = 0; i < LIVE_N; i++) {
+      u = i / LIVE_N;
+      w = Math.sin(u * TAU * 97) * 0.6 + Math.sin(u * TAU * 311) * 0.3 + (r() - 0.5) * 0.5;
+      corr = 0.62 + 0.3 * Math.sin(u * TAU * 3);
+      BL[i] = w;
+      BR[i] = w * corr + (r() - 0.5) * (1 - corr) * 1.6;
+    }
+  })();
+
+  var c = chassis(2, {
+    caps: '<div class="ac-caps" data-testid="acetate-2-caps">' +
+      ['fillrect', 'batched', 'sprite', 'imagedata'].map(function (k, i) {
+        return '<button class="ac-cap-btn' + (i === 0 ? ' ac-on' : '') + '" data-m="' + k + '" data-testid="acetate-2-method-' + k + '">' +
+          ['fillRect', 'batched path', 'drawImage', 'putImageData'][i] + '</button>';
+      }).join('') + '</div>',
+    work: '<div class="ac-well" data-testid="acetate-2-well"><canvas data-testid="acetate-2-canvas"></canvas></div>',
+    meta: [
+      { k: 'points / frame', v: LIVE_N.toLocaleString(), c: 'aux' },
+      { k: 'draw + sync', v: '—', c: 'aux' },
+      { k: 'correlation', v: '—', c: 'src' }
+    ]
+  });
+
+  var a = $('acetate-2-canvas'), aw = 0, ah = 0;
+  var ax = a.getContext('2d', { willReadFrequently: true });
+  var lbuf = null, l32 = null;
+  function asize() {
+    var s = fit(a, 300); aw = s.w; ah = s.h;
+    lbuf = ax.createImageData(aw, ah); l32 = new Uint32Array(lbuf.data.buffer);
+  }
+  asize(); onResize(function () { asize(); demo.render(demo.t); });
+
+  var AUX = resolveRGB(token('--ac-aux') || '#6ec07a');
+  var GRD = resolveRGB(token('--ac-grid') || '#555');
+  var PACK = (200 << 24) | (AUX[2] << 16) | (AUX[1] << 8) | AUX[0];
+  var FILL = 'rgba(' + AUX[0] + ',' + AUX[1] + ',' + AUX[2] + ',0.78)';
+  var spr = document.createElement('canvas'); spr.width = spr.height = 2;
+  (function () { var s = spr.getContext('2d'); s.fillStyle = FILL; s.fillRect(0, 0, 2, 2); })();
+
+  var method = 'fillrect', liveCost = [], lastCost = 0;
+
+  function scatter(t) {
+    var cx = aw / 2, cy = ah / 2, k = Math.min(aw, ah) * 0.30;
+    /* phase-shifted deliberately: a plain sin(t·2π) returns the same gain at
+       t = 0, 0.5 and 1, which are exactly the three values the QC sweep
+       samples — the field would have been checked three times in the same
+       state and reported as covered. */
+    var g = 0.55 + 0.42 * Math.sin(t * TAU * 1.5 + 0.9), i, l, r, x, y, o;
+    if (method === 'imagedata') l32.fill(0);
+    else if (method === 'batched') { ax.fillStyle = FILL; ax.beginPath(); }
+    else ax.fillStyle = FILL;
+
+    for (i = 0; i < LIVE_N; i++) {
+      l = BL[i] * g; r = BR[i] * g;
+      x = (cx + (l - r) * k) | 0;
+      y = (cy - (l + r) * k * 0.72) | 0;
+      if (x < 0 || y < 0 || x >= aw - 1 || y >= ah - 1) continue;
+      if (method === 'fillrect') ax.fillRect(x, y, 2, 2);
+      else if (method === 'batched') ax.rect(x, y, 2, 2);
+      else if (method === 'sprite') ax.drawImage(spr, x, y);
+      else { o = y * aw + x; l32[o] = PACK; l32[o + 1] = PACK; o += aw; l32[o] = PACK; l32[o + 1] = PACK; }
+    }
+    if (method === 'batched') ax.fill();
+    else if (method === 'imagedata') ax.putImageData(lbuf, 0, 0);
+  }
+
+  function graticule() {
+    var cx = aw / 2, cy = ah / 2, k = Math.min(aw, ah) * 0.30, i;
+    ax.strokeStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',0.6)';
+    ax.lineWidth = 1;
+    for (i = 1; i <= 3; i++) { ax.beginPath(); ax.arc(cx, cy, k * i * 0.62, 0, TAU); ax.stroke(); }
+    ax.beginPath(); ax.moveTo(cx, cy - k * 1.9); ax.lineTo(cx, cy + k * 1.9);
+    ax.moveTo(cx - k * 1.9, cy); ax.lineTo(cx + k * 1.9, cy); ax.stroke();
+    ax.save(); ax.translate(cx, cy); ax.rotate(-Math.PI / 4);
+    ax.strokeStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',0.95)';
+    ax.beginPath(); ax.moveTo(0, -k * 1.5); ax.lineTo(0, k * 1.5); ax.stroke();
+    ax.restore();
+    ax.fillStyle = 'rgba(' + GRD[0] + ',' + GRD[1] + ',' + GRD[2] + ',1)';
+    ax.font = (9 * DPR) + 'px ' + (token('--mono') || 'monospace');
+    ax.fillText('L', cx - k * 1.55, cy - k * 1.3);
+    ax.fillText('R', cx + k * 1.42, cy - k * 1.3);
+    ax.fillText('+1', cx + 6 * DPR, cy - k * 1.75);
+    ax.fillText('−1', cx + 6 * DPR, cy + k * 1.85);
+  }
+
+  var demo = WAM.clock('acetate-2-stage', {
+    el: $('acetate-2'), dur: 9000, poster: 0.25,
+    render: function (t) {
+      ax.clearRect(0, 0, aw, ah);
+      graticule();
+      /* The live cost is bracketed the same way the tables are: the clock
+         stops at the sync point, never before it. */
+      var t0 = performance.now();
+      scatter(t);
+      sync(ax);
+      var dt = performance.now() - t0;
+      liveCost.push(dt); if (liveCost.length > 20) liveCost.shift();
+      lastCost = median(liveCost);
+
+      c.tc.textContent = timecode(t, 9000);
+      c.kv(1).innerHTML = ms(lastCost) + ' ms' + atFloor(lastCost);
+      c.kv(2).textContent = (0.62 + 0.3 * Math.sin(t * TAU * 3)).toFixed(2);
+    }
+  });
+
+  $('acetate-2-caps').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-m]'); if (!b) return;
+    method = b.dataset.m;
+    liveCost = [];
+    [].forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('ac-on', x === b); });
+    demo.render(demo.t);
+  });
+
+  /* ── graphic: the four methods to scale ──────────────────────────── */
+  var g = $('g2-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
+  function gsize() { var s = fit(g, 210); gw = s.w; gh = s.h; }
+  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
+
+  var TINT = token('--tint-canvas') || '#e2c23a';
+  var HZ4 = token('--hz-400') || '#666';
+  var HZ5 = token('--hz-500') || '#999';
+  var HZ6 = token('--hz-600') || '#ccc';
+
+  /* The graphic is 400 px of stage, not a table: the full method names are
+     right there in Table A and would have to be clipped to fit here. */
+  var SHORT = {
+    'fillRect per call': 'fillRect ×50k',
+    'rect batched into one path': 'one batched path',
+    'drawImage sprite': 'drawImage ×50k',
+    'putImageData, composed once': 'putImageData ×1'
+  };
+
+  var gdemo = WAM.clock('g2-stage', {
+    el: $('g2-stage'), dur: 6000, poster: 1,
+    render: function (t) {
+      gx.clearRect(0, 0, gw, gh);
+      var rows = SEC2.RESULT.a, mono = (10 * DPR) + 'px ' + (token('--mono') || 'monospace');
+      gx.font = mono;
+      if (!rows.length) {
+        gx.fillStyle = HZ5;
+        gx.fillText('measuring — ' + SEC2.N.toLocaleString() + ' marks × 4 methods × 7 reps…', 12 * DPR, gh / 2);
+        return;
+      }
+      var max = 0, i;
+      for (i = 0; i < rows.length; i++) max = Math.max(max, rows[i].ms);
+      var pad = 196 * DPR, top = 18 * DPR, bh = (gh - top - 14 * DPR) / rows.length;
+      /* reveal is the only motion, and it is over by t = 0.35 */
+      var reveal = Math.min(1, t / 0.35);
+      for (i = 0; i < rows.length; i++) {
+        var y = top + i * bh, w = (rows[i].ms / max) * (gw - pad - 58 * DPR) * reveal;
+        gx.fillStyle = HZ5; gx.textAlign = 'right';
+        gx.fillText(SHORT[rows[i].label] || rows[i].label, pad - 10 * DPR, y + bh * 0.62);
+        gx.textAlign = 'left';
+        gx.fillStyle = rows[i].ms === Math.min.apply(null, rows.map(function (r) { return r.ms; })) ? TINT : HZ4;
+        gx.fillRect(pad, y + bh * 0.22, Math.max(1, w), bh * 0.5);
+        gx.fillStyle = HZ6;
+        gx.fillText(ms(rows[i].ms) + ' ms', pad + w + 8 * DPR, y + bh * 0.62);
+      }
+      gx.fillStyle = HZ4; gx.textAlign = 'left';
+      gx.fillText('ms / frame · ' + SEC2.N.toLocaleString() + ' marks · median of 7 · sync point closed', 12 * DPR, 12 * DPR);
+    }
+  });
+
+  /* Measured after first paint so the sheet is on screen before the main
+     thread is taken for a second, and never inside a rAF callback. */
+  BOOT.when(function () { SEC2.measure(); gdemo.render(gdemo.t); reportTokenMisses(); });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §3 · HIT TESTING
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var MARKERS = 2400;
+  var EVT = resolveRGB(token('--ac-evt') || '#8b7fd6');
+  var INK = resolveRGB(token('--ac-ink') || '#eee');
+  var GRD = resolveRGB(token('--ac-grid') || '#555');
+  var MUTE = resolveRGB(token('--ac-mute') || '#666');
+  function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+
+  /* Marker positions are seeded, so the identity a pixel decodes to is the
+     same on every load and can be read off a screenshot. */
+  var MK = [];
+  (function () {
+    var r = rng(0x5EED17), i;
+    for (i = 0; i < MARKERS; i++) {
+      MK.push({ u: r(), lane: (r() * 4) | 0, len: 0.0012 + r() * 0.004, kind: (r() * 3) | 0 });
+    }
+    MK.sort(function (a, b) { return a.u - b.u; });
+  })();
+  var KINDS = ['CUT', 'FADE', 'MARK'];
+
+  var edlRows = MK.slice(0, 400).map(function (m, i) {
+    return '<div class="ac-edl-row" data-testid="acetate-3-edl-' + i + '"><span>' +
+      ('0000' + i).slice(-4) + '</span><b>' + KINDS[m.kind] + '</b><span>' +
+      timecode(m.u, 210000).slice(3, 11) + '</span></div>';
+  }).join('');
+
+  var c = chassis(3, {
+    caps: '<div class="ac-caps" data-testid="acetate-3-caps">' +
+      '<button class="ac-cap-btn" data-testid="acetate-3-pick-toggle">show pick buffer</button></div>',
+    work: '<div class="ac-edl">' +
+        '<div class="ac-well" data-testid="acetate-3-well"><canvas data-testid="acetate-3-canvas"></canvas></div>' +
+        '<div class="ac-edl-list" data-testid="acetate-3-edl"><div class="ac-edl-head">edit decision list</div>' + edlRows + '</div>' +
+      '</div>',
+    meta: [
+      { k: 'events', v: MARKERS.toLocaleString(), c: 'evt' },
+      { k: 'pixel read', v: '—', c: 'evt' },
+      { k: 'decoded id', v: 'none', c: 'ink' }
+    ]
+  });
+
+  var a = $('acetate-3-canvas'), ax = a.getContext('2d'), aw = 0, ah = 0;
+  /* The pick buffer: a second surface, the same size, that no user sees.
+     willReadFrequently because reading one pixel per pointermove is exactly
+     the access pattern that hint exists for. */
+  var pk = document.createElement('canvas');
+  var px = pk.getContext('2d', { willReadFrequently: true });
+  function asize() {
+    var s = fit(a, 260); aw = s.w; ah = s.h;
+    pk.width = aw; pk.height = ah;
+  }
+  asize(); onResize(function () { asize(); demo.render(demo.t); });
+
+  var showPick = false, hoverId = -1, hoverPx = null;
+  var laneY = function (l) { return 44 * DPR + l * ((ah - 66 * DPR) / 4); };
+  var laneH = function () { return ((ah - 66 * DPR) / 4) * 0.58; };
+
+  function drawMarkers(ctx, identity, t) {
+    var i, m, x, w, y, h = laneH(), lit;
+    for (i = 0; i < MARKERS; i++) {
+      m = MK[i];
+      x = (m.u * aw) | 0;
+      w = Math.max(2, (m.len * aw) | 0);
+      y = laneY(m.lane) | 0;
+      if (identity) {
+        /* identity IS the colour: index in red and green, kind in blue,
+           alpha opaque so the ground (0,0,0,0) can never decode to id 0. */
+        ctx.fillStyle = 'rgba(' + (i & 255) + ',' + ((i >> 8) & 255) + ',' + (m.kind + 1) + ',1)';
+        ctx.fillRect(x, y, w, h);
+      } else {
+        lit = (i === hoverId);
+        ctx.fillStyle = lit ? rgba(INK, 1) : rgba(EVT, m.u < t ? 0.92 : 0.34);
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+  }
+
+  function decode(d) {
+    if (d[3] === 0) return -1;
+    var id = d[0] | (d[1] << 8);
+    return (id >= 0 && id < MARKERS && d[2] > 0) ? id : -1;
+  }
+
+  var demo = WAM.clock('acetate-3-stage', {
+    el: $('acetate-3'), dur: 15000, poster: 0.6,
+    render: function (t) {
+      /* The pick buffer is rebuilt at the same t as the display, always.
+         A stale pick buffer is the classic defect here: the picture moves
+         and the hit regions do not. */
+      px.clearRect(0, 0, aw, ah);
+      drawMarkers(px, true, t);
+
+      ax.clearRect(0, 0, aw, ah);
+      if (showPick) {
+        ax.drawImage(pk, 0, 0);
+        ax.fillStyle = rgba(INK, 0.85);
+        ax.font = (10 * DPR) + 'px ' + (token('--mono') || 'monospace');
+        ax.fillText('PICK BUFFER — never composited to screen', 10 * DPR, 18 * DPR);
+      } else {
+        var i, x;
+        ax.strokeStyle = rgba(GRD, 0.7); ax.lineWidth = 1;
+        for (i = 0; i <= 20; i++) {
+          x = Math.round((i / 20) * aw) + 0.5;
+          ax.beginPath(); ax.moveTo(x, 20 * DPR); ax.lineTo(x, i % 5 === 0 ? 34 * DPR : 28 * DPR); ax.stroke();
+        }
+        ax.fillStyle = rgba(MUTE, 1);
+        ax.font = (8.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
+        for (i = 0; i <= 4; i++) ax.fillText(timecode(i / 4, 210000).slice(0, 8), (i / 4) * (aw - 56 * DPR) + 4 * DPR, 15 * DPR);
+        drawMarkers(ax, false, t);
+        ax.fillStyle = rgba(INK, 0.9);
+        ax.fillRect((t * aw) | 0, 18 * DPR, 1.5 * DPR, ah - 24 * DPR);
+      }
+      c.tc.textContent = timecode(t, 210000);
+    }
+  });
+
+  /* One getImageData of one pixel, however many objects there are. That
+     invariance is the finding — it does not get slower with MARKERS. */
+  a.addEventListener('pointermove', function (e) {
+    var r = a.getBoundingClientRect();
+    var x = Math.round((e.clientX - r.left) * (aw / r.width));
+    var y = Math.round((e.clientY - r.top) * (ah / r.height));
+    if (x < 0 || y < 0 || x >= aw || y >= ah) return;
+    var d = px.getImageData(x, y, 1, 1).data;
+    var id = decode(d);
+    hoverPx = [x, y, d[0], d[1], d[2], d[3]];
+    c.kv(1).textContent = '(' + x + ',' + y + ') rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3];
+    c.kv(2).textContent = id < 0 ? 'none' : '#' + ('0000' + id).slice(-4) + ' ' + KINDS[MK[id].kind];
+    if (id !== hoverId) {
+      hoverId = id;
+      var prev = $('acetate-3-edl').querySelector('.ac-on');
+      if (prev) prev.classList.remove('ac-on');
+      var row = id >= 0 && id < 400 ? $('acetate-3-edl-' + id) : null;
+      if (row) { row.classList.add('ac-on'); row.scrollIntoView({ block: 'nearest' }); }
+      demo.render(demo.t);
+    }
+  });
+  a.addEventListener('pointerleave', function () {
+    hoverId = -1; c.kv(1).textContent = '—'; c.kv(2).textContent = 'none';
+    demo.render(demo.t);
+  });
+  $('acetate-3-pick-toggle').addEventListener('click', function () {
+    showPick = !showPick;
+    this.classList.toggle('ac-on', showPick);
+    this.textContent = showPick ? 'show display' : 'show pick buffer';
+    demo.render(demo.t);
+  });
+
+  /* ── graphic: identity encoded as colour ─────────────────────────── */
+  var g = $('g3-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
+  var gp = document.createElement('canvas'), gpx = gp.getContext('2d', { willReadFrequently: true });
+  function gsize() { var s = fit(g, 220); gw = s.w; gh = s.h; gp.width = gw; gp.height = gh; }
+  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
+
+  var TINT = token('--tint-canvas') || '#e2c23a';
+  var HZ3 = token('--hz-300') || '#333';
+  var HZ4 = token('--hz-400') || '#666';
+  var HZ6 = token('--hz-600') || '#ccc';
+  var SHAPES = [];
+  (function () {
+    var r = rng(0xB105), i;
+    for (i = 0; i < 9; i++) SHAPES.push({ x: 0.08 + r() * 0.34, y: 0.18 + r() * 0.6, rr: 0.05 + r() * 0.05, id: 1024 + i * 37 });
+  })();
+
+  var gdemo = WAM.clock('g3-stage', {
+    el: $('g3-stage'), dur: 8000, poster: 0.42,
+    render: function (t) {
+      var half = gw / 2, mono = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace'), i, s;
+      gx.clearRect(0, 0, gw, gh);
+      gpx.clearRect(0, 0, gw, gh);
+
+      /* right half: the identity surface, drawn first so the left can be
+         its visual twin rather than a separate drawing */
+      for (i = 0; i < SHAPES.length; i++) {
+        s = SHAPES[i];
+        gpx.fillStyle = 'rgba(' + (s.id & 255) + ',' + ((s.id >> 8) & 255) + ',1,1)';
+        gpx.beginPath(); gpx.arc(half + s.x * half + 8 * DPR, s.y * gh, s.rr * gh, 0, TAU); gpx.fill();
+      }
+      gx.drawImage(gp, 0, 0);
+
+      for (i = 0; i < SHAPES.length; i++) {
+        s = SHAPES[i];
+        gx.fillStyle = TINT;
+        gx.globalAlpha = 0.85;
+        gx.beginPath(); gx.arc(s.x * half + 8 * DPR, s.y * gh, s.rr * gh, 0, TAU); gx.fill();
+        gx.globalAlpha = 1;
+      }
+
+      gx.strokeStyle = HZ3; gx.lineWidth = 1;
+      gx.beginPath(); gx.moveTo(half + 0.5, 0); gx.lineTo(half + 0.5, gh); gx.stroke();
+      gx.fillStyle = HZ4; gx.font = mono;
+      gx.fillText('what the user sees', 10 * DPR, 14 * DPR);
+      gx.fillText('what the pointer sees', half + 10 * DPR, 14 * DPR);
+
+      /* the probe: one moving point, and the one pixel it reads */
+      var u = t, cx = 0.08 + u * 0.84, cyv = 0.5 + 0.34 * Math.sin(u * TAU * 1.6);
+      var sx = Math.round(cx * half), sy = Math.round(cyv * gh);
+      var d = gpx.getImageData(half + sx, sy, 1, 1).data;
+      var id = d[3] ? (d[0] | (d[1] << 8)) : -1;
+
+      [[sx, 'left'], [half + sx, 'right']].forEach(function (pair) {
+        gx.strokeStyle = HZ6; gx.lineWidth = 1 * DPR;
+        gx.beginPath(); gx.arc(pair[0], sy, 5 * DPR, 0, TAU); gx.stroke();
+        gx.beginPath(); gx.moveTo(pair[0] - 10 * DPR, sy); gx.lineTo(pair[0] - 6 * DPR, sy);
+        gx.moveTo(pair[0] + 6 * DPR, sy); gx.lineTo(pair[0] + 10 * DPR, sy); gx.stroke();
+      });
+
+      gx.fillStyle = HZ6;
+      gx.fillText('getImageData(' + sx + ',' + sy + ',1,1) → rgba ' + d[0] + ',' + d[1] + ',' + d[2] + ',' + d[3] +
+        '   →   ' + (id < 0 ? 'no hit' : 'id ' + id), 10 * DPR, gh - 8 * DPR);
+    }
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §4 · READBACK
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  /* ── the LUT, built from the six token stops ─────────────────────────
+     Interpolated continuously, because a radar thresholds and a
+     spectrogram does not — and monotone in L, so it needs no key. */
+  var STOPS = ['--ac-sg-0', '--ac-sg-1', '--ac-sg-2', '--ac-sg-3', '--ac-sg-4', '--ac-sg-5'].map(function (n) {
+    return resolveRGB(token(n));
+  });
+  var LUT = new Uint8Array(256 * 3);
+  (function () {
+    var i, u, s, f, a, b;
+    for (i = 0; i < 256; i++) {
+      u = (i / 255) * (STOPS.length - 1);
+      s = Math.min(STOPS.length - 2, u | 0); f = u - s;
+      a = STOPS[s]; b = STOPS[s + 1];
+      LUT[i * 3] = a[0] + (b[0] - a[0]) * f;
+      LUT[i * 3 + 1] = a[1] + (b[1] - a[1]) * f;
+      LUT[i * 3 + 2] = a[2] + (b[2] - a[2]) * f;
+    }
+  })();
+
+  /* ── the source surface, drawn once ──────────────────────────────────
+     This is a canvas, and the spectrogram beside it is built by READING
+     IT BACK — not by re-evaluating the function that drew it. Changing the
+     region below changes which pixels are read, and the output follows. */
+  var SW = 1024, SH = 256;
+  var sc = document.createElement('canvas'); sc.width = SW; sc.height = SH;
+  var sx2 = sc.getContext('2d', { willReadFrequently: true });
+  (function () {
+    var r = rng(0x5EC7A0), img = sx2.createImageData(SW, SH), d = img.data;
+    var x, y, u, v, e, o;
+    for (x = 0; x < SW; x++) {
+      u = x / SW;
+      for (y = 0; y < SH; y++) {
+        v = 1 - y / SH;                       /* frequency, low at the foot */
+        e = Math.exp(-v * 3.1) * (0.55 + 0.45 * Math.sin(u * TAU * 5 + v * 9));
+        e += 0.42 * Math.exp(-Math.pow((v - 0.18) / 0.045, 2)) * (0.6 + 0.4 * Math.sin(u * TAU * 31));
+        e += 0.30 * Math.exp(-Math.pow((v - 0.37) / 0.03, 2)) * (0.5 + 0.5 * Math.sin(u * TAU * 17 + 1.2));
+        e += 0.22 * Math.exp(-Math.pow((v - 0.56) / 0.025, 2)) * Math.max(0, Math.sin(u * TAU * 3));
+        e *= 0.55 + 0.45 * Math.pow(Math.sin(u * Math.PI), 0.4);
+        e += (r() - 0.5) * 0.05;
+        e = Math.max(0, Math.min(1, e));
+        o = (y * SW + x) * 4;
+        d[o] = d[o + 1] = d[o + 2] = (e * 255) | 0;
+        d[o + 3] = 255;
+      }
+    }
+    sx2.putImageData(img, 0, 0);
+  })();
+
+  var REGIONS = [
+    { key: 'a', label: 'reel A · 0–340', x: 0 },
+    { key: 'b', label: 'reel B · 340–680', x: 340 },
+    { key: 'c', label: 'reel C · 680–1024', x: 680 }
+  ];
+  var region = 0;
+
+  var c = chassis(4, {
+    caps: '<div class="ac-caps" data-testid="acetate-4-caps">' +
+      REGIONS.map(function (r, i) {
+        return '<button class="ac-cap-btn' + (i === 0 ? ' ac-on' : '') + '" data-r="' + i + '" data-testid="acetate-4-region-' + r.key + '">' + r.label + '</button>';
+      }).join('') + '</div>',
+    work: '<div class="ac-well" data-testid="acetate-4-well"><canvas data-testid="acetate-4-canvas"></canvas></div>',
+    meta: [
+      { k: 'source', v: 'getImageData', c: 'aux' },
+      { k: 'region read', v: '—', c: 'aux' },
+      { k: 'peak bin', v: '—', c: 'src' }
+    ]
+  });
+
+  var a = $('acetate-4-canvas'), ax = a.getContext('2d'), aw = 0, ah = 0;
+  var out = null, o32 = null;
+  function asize() {
+    var s = fit(a, 250); aw = s.w; ah = s.h;
+    out = ax.createImageData(aw, ah); o32 = new Uint32Array(out.data.buffer);
+  }
+  asize(); onResize(function () { asize(); demo.render(demo.t); });
+
+  var COLS = 340;
+  var demo = WAM.clock('acetate-4-stage', {
+    el: $('acetate-4'), dur: 14000, poster: 0.5,
+    render: function (t) {
+      var r = REGIONS[region];
+      var scroll = Math.round(t * 40);
+      var x0 = Math.min(SW - COLS, r.x + scroll);
+      /* THE readback. Everything drawn below came out of this call. */
+      var src = sx2.getImageData(x0, 0, COLS, SH).data;
+
+      var x, y, sxi, syi, o, val, peak = 0, peakY = 0;
+      for (y = 0; y < ah; y++) {
+        syi = ((y / ah) * SH) | 0;
+        for (x = 0; x < aw; x++) {
+          sxi = ((x / aw) * COLS) | 0;
+          val = src[(syi * COLS + sxi) * 4];
+          o = y * aw + x;
+          o32[o] = (255 << 24) | (LUT[val * 3 + 2] << 16) | (LUT[val * 3 + 1] << 8) | LUT[val * 3];
+          if (val > peak) { peak = val; peakY = y; }
+        }
+      }
+      ax.putImageData(out, 0, 0);
+
+      c.tc.textContent = timecode(t, 14000);
+      c.kv(1).textContent = 'x ' + x0 + '–' + (x0 + COLS) + ' of ' + SW;
+      c.kv(2).textContent = (((1 - peakY / ah) * 22050) | 0).toLocaleString() + ' Hz';
+    }
+  });
+  $('acetate-4-caps').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-r]'); if (!b) return;
+    region = Number(b.dataset.r);
+    [].forEach.call(this.querySelectorAll('button'), function (x) { x.classList.toggle('ac-on', x === b); });
+    demo.render(demo.t);
+  });
+
+  /* ── graphic: the brandmark, resolved out of pixels ──────────────────
+     No path data is authored. The mark is rasterised to an off-screen
+     canvas, read back, and every pixel above threshold becomes one
+     particle's destination. Change the face and the target set changes. */
+  var g = $('g4-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
+  var mk = document.createElement('canvas'), mkx = mk.getContext('2d', { willReadFrequently: true });
+  var TARGETS = null, START = null;
+  var TINT = token('--tint-canvas') || '#e2c23a';
+  var HZ4 = token('--hz-400') || '#666';
+
+  function buildTargets() {
+    mk.width = Math.max(160, Math.round(gw));
+    mk.height = Math.max(80, Math.round(gh));
+    mkx.clearRect(0, 0, mk.width, mk.height);
+    mkx.fillStyle = '#fff';
+    mkx.textAlign = 'center'; mkx.textBaseline = 'middle';
+    var size = Math.min(mk.width * 0.32, mk.height * 0.64);
+    mkx.font = '900 ' + size + 'px ' + (token('--sans') || 'sans-serif');
+    mkx.fillText('WAM', mk.width / 2, mk.height * 0.46);
+    mkx.font = '500 ' + (size * 0.20) + 'px ' + (token('--mono') || 'monospace');
+    mkx.fillText('2 0 2 6', mk.width / 2, mk.height * 0.78);
+
+    var d = mkx.getImageData(0, 0, mk.width, mk.height).data;
+    var pts = [], x, y, i, r = rng(0x4A17);
+    for (y = 0; y < mk.height; y += 2) {
+      for (x = 0; x < mk.width; x += 2) {
+        if (d[(y * mk.width + x) * 4 + 3] > 128) pts.push(x, y);
+      }
+    }
+    TARGETS = new Float32Array(pts);
+    START = new Float32Array(pts.length);
+    for (i = 0; i < pts.length; i += 2) {
+      START[i] = r() * gw;
+      START[i + 1] = r() * gh;
+    }
+  }
+  function gsize() { var s = fit(g, 230); gw = s.w; gh = s.h; buildTargets(); }
+  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
+
+  function ease(u) { return u < 0 ? 0 : u > 1 ? 1 : 1 - Math.pow(1 - u, 3); }
+
+  var gdemo = WAM.clock('g4-stage', {
+    el: $('g4-stage'), dur: 7000, poster: 0.82,
+    render: function (t) {
+      gx.clearRect(0, 0, gw, gh);
+      /* out and back, so both ends of the demo are a complete composition
+         rather than a blank surface */
+      var u = ease(t < 0.62 ? t / 0.62 : 1 - (t - 0.62) / 0.38);
+      var i, n = TARGETS.length, px2, py, lag;
+      gx.fillStyle = TINT;
+      for (i = 0; i < n; i += 2) {
+        lag = ease(Math.min(1, u * 1.35 - (i / n) * 0.35));
+        px2 = START[i] + (TARGETS[i] - START[i]) * lag;
+        py = START[i + 1] + (TARGETS[i + 1] - START[i + 1]) * lag;
+        gx.globalAlpha = 0.35 + 0.6 * lag;
+        gx.fillRect(px2, py, 1.6 * DPR, 1.6 * DPR);
+      }
+      gx.globalAlpha = 1;
+      gx.fillStyle = HZ4;
+      gx.font = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
+      gx.fillText((TARGETS.length / 2).toLocaleString() + ' destinations, all read back from a canvas', 10 * DPR, gh - 8 * DPR);
+    }
+  });
+})();
+
+/* ════════════════════════════════════════════════════════════════════════
+   §5 · OFF-THREAD
+   ════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  /* Rule 1 of the boot order: read the setting BEFORE touching the canvas.
+     Every other rule depends on this being first, because transfer is
+     one-way and a reduced-motion load must never take that path. */
+  var startReduced = reduced.matches;
+
+  var c = chassis(5, {
+    caps: '<div class="ac-caps" data-testid="acetate-5-caps">' +
+      '<button class="ac-cap-btn" data-testid="acetate-5-freerun">free-run both</button>' +
+      '<button class="ac-cap-btn" data-testid="acetate-5-block">block main thread 800 ms</button>' +
+      '</div>',
+    work:
+      '<div class="ac-edl" style="grid-template-columns:1fr 1fr">' +
+        '<div><div class="ac-well" data-testid="acetate-5-main-well" style="height:210px">' +
+          '<canvas data-testid="acetate-5-main-canvas"></canvas></div></div>' +
+        '<div><div class="ac-well" data-testid="acetate-5-worker-well" style="height:210px">' +
+          '<canvas data-testid="acetate-5-worker-canvas"></canvas>' +
+          '<canvas data-testid="acetate-5-fallback-canvas" style="position:absolute;inset:0;z-index:3;display:none"></canvas>' +
+        '</div></div>' +
+      '</div>',
+    meta: [
+      { k: 'main frames', v: '0', c: 'src' },
+      { k: 'worker frames', v: '0', c: 'mst' },
+      { k: 'worker parity', v: 'booting…', c: 'mute' }
+    ]
+  });
+
+  /* label the two strips without animating any chrome */
+  c.work.querySelector('[data-testid="acetate-5-main-well"]').insertAdjacentHTML('beforebegin',
+    '<div class="ac-kv" style="padding-bottom:4px">main thread</div>');
+  c.work.querySelector('[data-testid="acetate-5-worker-well"]').insertAdjacentHTML('beforebegin',
+    '<div class="ac-kv" style="padding-bottom:4px">worker <span data-testid="acetate-5-host">—</span></div>');
+
+  var mainCv = $('acetate-5-main-canvas');
+  var wkrCv = $('acetate-5-worker-canvas');
+  var fbCv = $('acetate-5-fallback-canvas');
+
+  /* The backing stores are fixed, not fitted to CSS width, because they
+     are sized once BEFORE transfer and can never be resized from here
+     afterwards — the element no longer owns its bitmap. */
+  var W = 420, H = 210 * 2;
+  [mainCv, wkrCv, fbCv].forEach(function (cv) { cv.width = W; cv.height = H; cv.style.width = '100%'; cv.style.height = '210px'; });
+
+  /* One ink set, resolved from the ACETATE tokens here and shipped to the
+     worker in init, so neither side hardcodes a colour. The two that read
+     as translucent arrive PRE-BLENDED against the ground: alpha compositing
+     is one of the two things the main thread's rasteriser and the worker's
+     disagree about, and the parity check below is byte-exact. */
+  function mix(a, b, f) {
+    return [Math.round(a[0] + (b[0] - a[0]) * f),
+            Math.round(a[1] + (b[1] - a[1]) * f),
+            Math.round(a[2] + (b[2] - a[2]) * f)];
+  }
+  function css(c) { return 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')'; }
+  var GROUND = resolveRGB(token('--ac-well') || '#141210');
+  var INK = {
+    ground:   css(GROUND),
+    slot:     css(mix(GROUND, [255, 255, 255], 0.045)),
+    bar:      css(resolveRGB(token('--ac-mst') || '#eee')),
+    cap:      css(resolveRGB(token('--ac-src') || '#eab308')),
+    over:     css(resolveRGB(token('--ac-signal') || '#d65442')),
+    overline: css(mix(GROUND, resolveRGB(token('--ac-signal') || '#d65442'), 0.55))
+  };
+
+  var mainCtx = mainCv.getContext('2d');
+  var mainRender = self.ACETATE_BOUNCE_RENDER(mainCtx, W, H, INK);
+
+  /* host is latched at load. Never a try/catch guard: that would turn a
+     structural error — getContext on a transferred element — into a
+     swallowed one. */
+  var host = 'main', worker = null, blobUrl = null;
+  var mainFrames = 0, workerFrames = 0, freeRun = false, mainRaf = 0;
+
+  function fail(msg, expected) {
+    host = 'main';
+    fbCv.style.display = 'block';
+    if (!fbCtx) fbCtx = fbCv.getContext('2d');
+    if (!fbRender) fbRender = self.ACETATE_BOUNCE_RENDER(fbCtx, W, H, INK);
+    $('acetate-5-host').textContent = '— main-thread fallback';
+    c.notice.hidden = false;
+    c.notice.textContent = expected
+      ? 'OFF-THREAD STOOD DOWN — ' + msg + '. Both strips are drawn by the main thread, which is the correct behaviour here and not a failure.'
+      : 'OFF-THREAD UNAVAILABLE — ' + msg + '. Both strips are now drawn by the main thread, so §5 demonstrates nothing and says so rather than looking like it worked.';
+    c.kv(2).textContent = expected ? 'not transferred' : 'fallback';
+    demo.render(demo.t);
+    BOOT.settled();
+  }
+  var fbCtx = null, fbRender = null;
+
+  function hashOf(ctx) {
+    var d = ctx.getImageData(0, 0, W, H).data, h = 0x811c9dc5, i;
+    for (i = 0; i < d.length; i += 997) { h ^= d[i]; h = (h * 0x01000193) >>> 0; }
+    return h >>> 0;
+  }
+
+  var demo = WAM.clock('acetate-5-stage', {
+    el: $('acetate-5'), dur: 12000, poster: 0.42,
+    render: function (t) {
+      mainRender(t);
+      mainFrames++;
+      if (host === 'worker') worker.postMessage({ type: 'render', t: t });
+      else if (fbRender) fbRender(t);
+      c.tc.textContent = timecode(t, 12000);
+      c.kv(0).textContent = mainFrames.toLocaleString();
+      if (host !== 'worker') c.kv(1).textContent = '—';
+    }
+  });
+  /* WAM.clock's cost meter brackets render(v) with performance.now(). For a
+     proxy render that is the cost of postMessage, not the cost of drawing,
+     so demo.cost is deliberately never printed for §5. */
+
+  if (startReduced || !('transferControlToOffscreen' in wkrCv) || typeof Worker === 'undefined') {
+    fail(startReduced ? 'reduced motion is on, so the canvas was never transferred — transfer is one-way, and a reduced-motion load must not take a path it cannot come back from'
+                      : 'this engine has no OffscreenCanvas transfer', startReduced);
+  } else {
+    var body =
+      'self.ACETATE_BOUNCE_RENDER = ' + self.ACETATE_BOUNCE_RENDER + ';\n' +
+      '(' + self.ACETATE_BOUNCE_WORKER + ')();\n' +
+      '//# sourceURL=acetate-bounce-worker.js';
+    blobUrl = URL.createObjectURL(new Blob([body], { type: 'text/javascript' }));
+    worker = new Worker(blobUrl);                 /* classic, never {type:'module'} */
+    worker.onerror = function () { fail('the worker failed to start'); };
+
+    var pinged = false;
+    var pingTimer = setTimeout(function () { if (!pinged) fail('the worker did not answer a ping within 750 ms'); }, 750);
+
+    worker.onmessage = function (e) {
+      var m = e.data;
+      if (m.type === 'pong') {
+        pinged = true; clearTimeout(pingTimer);
+        /* Rule 3: ping FIRST, then transfer. Transferring into a dead
+           worker is unrecoverable; pinging first is free. */
+        var off = wkrCv.transferControlToOffscreen();
+        host = 'worker';
+        $('acetate-5-host').textContent = '— OffscreenCanvas, transferred';
+        worker.postMessage({ type: 'init', canvas: off, w: W, h: H, ink: INK }, [off]);
+      } else if (m.type === 'ready') {
+        URL.revokeObjectURL(blobUrl);
+        worker.postMessage({ type: 'render', t: 0.42 });
+      } else if (m.type === 'rendered') {
+        workerFrames = m.n;
+        c.kv(1).textContent = workerFrames.toLocaleString();
+        if (m.t === 0.42 && c.kv(2).textContent === 'booting…') {
+          /* Boot parity — the positive control for §5's central claim.
+             The same render function, run on a scratch canvas here, must
+             hash to what the worker got. Without this, "the same render,
+             off the main thread" is asserted. */
+          var scratch = document.createElement('canvas');
+          scratch.width = W; scratch.height = H;
+          var sctx = scratch.getContext('2d', { willReadFrequently: true });
+          self.ACETATE_BOUNCE_RENDER(sctx, W, H, INK)(0.42);
+          var mine = hashOf(sctx);
+          if (mine === m.hash) {
+            c.kv(2).textContent = '✓ 0x' + m.hash.toString(16);
+            c.kv(2).className = 'ac-c-mst';
+            BOOT.settled();
+          } else {
+            fail('boot parity failed — worker 0x' + m.hash.toString(16) + ' vs main 0x' + mine.toString(16));
+          }
+        }
+      } else if (m.type === 'frame') {
+        workerFrames = m.n;
+        c.kv(1).textContent = workerFrames.toLocaleString();
+      }
+    };
+    worker.postMessage({ type: 'ping' });
+  }
+
+  /* Free-run: the worker drives itself off the compositor, and the main
+     strip drives itself off rAF. The two modes are mutually exclusive —
+     otherwise two clocks drive one render. */
+  function setFreeRun(on) {
+    freeRun = on;
+    $('acetate-5-freerun').classList.toggle('ac-on', on);
+    $('acetate-5-freerun').textContent = on ? 'stop free-run' : 'free-run both';
+    if (on) {
+      demo.pause();
+      mainFrames = 0; workerFrames = 0;
+      if (host === 'worker') worker.postMessage({ type: 'run' });
+      var t0 = performance.now();
+      (function tick(now) {
+        mainFrames++;
+        mainRender(((now - t0) % 12000) / 12000);
+        if (fbRender) fbRender(((now - t0) % 12000) / 12000);
+        c.kv(0).textContent = mainFrames.toLocaleString();
+        c.tc.textContent = timecode(((now - t0) % 12000) / 12000, 12000);
+        if (freeRun) mainRaf = requestAnimationFrame(tick);
+      })(performance.now());
+    } else {
+      cancelAnimationFrame(mainRaf); mainRaf = 0;
+      if (host === 'worker') worker.postMessage({ type: 'stop' });
+      if (!reduced.matches) demo.play();
+    }
+  }
+  $('acetate-5-freerun').addEventListener('click', function () { setFreeRun(!freeRun); });
+
+  $('acetate-5-block').addEventListener('click', function () {
+    if (!freeRun) setFreeRun(true);
+    var btn = this;
+    btn.disabled = true; btn.textContent = 'blocking…';
+    /* Let the label paint before the thread stops answering. */
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      var m0 = mainFrames, w0 = workerFrames;
+      var t0 = performance.now(), end = t0 + 800;
+      while (performance.now() < end) { /* deliberately blocking */ }
+      /* Read the MAIN counter here, at the instant the thread comes back.
+         Waiting even 160 ms lets it serve twenty frames at 120 Hz and folds
+         them into the block's own window, which understates the result by
+         about half and does it in the flattering direction.
+
+         The WORKER's counter cannot be read here, and that asymmetry is
+         real rather than a nuisance: the count arrives by postMessage, and
+         a blocked main thread is exactly a main thread that is not draining
+         its message queue. So the worker's figure is taken after a short
+         settle and the window it covers is stated as the longer one. Both
+         errors that remain point the same way — against the result. */
+      var dmBlock = mainFrames - m0;
+      var SETTLE = 50;
+      setTimeout(function () {
+        var span = performance.now() - t0;
+        var dmTotal = mainFrames - m0, dw = workerFrames - w0;
+        c.notice.hidden = false;
+        c.notice.textContent = host !== 'worker'
+          ? 'Both strips are on the main thread, so there is nothing to see here — which is the honest outcome, not a failure of the demo.'
+          : 'Blocked the main thread for 800 ms. It advanced ' + dmBlock + ' frame' +
+            (dmBlock === 1 ? '' : 's') + ' while blocked, and ' + dmTotal + ' across the whole ' +
+            Math.round(span) + ' ms window. The worker advanced ' + dw + ' over that same window — ' +
+            (dmTotal ? (dw / dmTotal).toFixed(0) + '× as many' : 'while the main thread served none') +
+            '. The worker is counted over the longer window because its count arrives by postMessage, ' +
+            'and a blocked thread is precisely one that is not draining its message queue.';
+        btn.disabled = false; btn.textContent = 'block main thread 800 ms';
+      }, SETTLE);
+    }); });
+  });
+
+  /* Reduced motion changing at runtime. The HOST is latched at load; the
+     POSTER is not. Worker running and reduce turns on → the worker draws
+     the poster. Do not try to reclaim the canvas; it throws. */
+  reduced.addEventListener('change', function () {
+    if (reduced.matches) {
+      if (freeRun) setFreeRun(false);
+      if (host === 'worker') { worker.postMessage({ type: 'stop' }); worker.postMessage({ type: 'render', t: 0.42 }); }
+    }
+  });
+
+  /* ── graphic: two threads, one timeline ──────────────────────────── */
+  var g = $('g5-canvas'), gx = g.getContext('2d'), gw = 0, gh = 0;
+  function gsize() { var s = fit(g, 200); gw = s.w; gh = s.h; }
+  gsize(); onResize(function () { gsize(); gdemo.render(gdemo.t); });
+
+  var TINT = token('--tint-canvas') || '#e2c23a';
+  var HZ3 = token('--hz-300') || '#333';
+  var HZ4 = token('--hz-400') || '#666';
+  var HZ6 = token('--hz-600') || '#ccc';
+  var SIG = token('--signal') || '#e5484d';
+
+  var gdemo = WAM.clock('g5-stage', {
+    el: $('g5-stage'), dur: 8000, poster: 0.62,
+    render: function (t) {
+      gx.clearRect(0, 0, gw, gh);
+      var mono = (9.5 * DPR) + 'px ' + (token('--mono') || 'monospace');
+      var left = 92 * DPR, w = gw - left - 14 * DPR;
+      var lanes = [{ y: gh * 0.34, label: 'main', blocked: true }, { y: gh * 0.68, label: 'worker', blocked: false }];
+      var blockFrom = 0.38, blockTo = 0.66, i, k, x;
+
+      gx.font = mono; gx.textBaseline = 'middle';
+      lanes.forEach(function (ln) {
+        gx.fillStyle = HZ4; gx.textAlign = 'right';
+        gx.fillText(ln.label, left - 12 * DPR, ln.y);
+        gx.strokeStyle = HZ3; gx.lineWidth = 1;
+        gx.beginPath(); gx.moveTo(left, Math.round(ln.y) + 0.5); gx.lineTo(left + w, Math.round(ln.y) + 0.5); gx.stroke();
+
+        /* one tick per frame, 40 across the lane */
+        for (i = 0; i < 40; i++) {
+          k = i / 40;
+          if (k > t) break;
+          if (ln.blocked && k > blockFrom && k < blockTo) continue;
+          x = left + k * w;
+          gx.fillStyle = ln.blocked ? HZ6 : TINT;
+          gx.fillRect(x, ln.y - 7 * DPR, 2 * DPR, 14 * DPR);
+        }
+      });
+
+      /* the block itself */
+      if (t > blockFrom) {
+        var x0 = left + blockFrom * w, x1 = left + Math.min(t, blockTo) * w;
+        gx.fillStyle = SIG; gx.globalAlpha = 0.16;
+        gx.fillRect(x0, lanes[0].y - 18 * DPR, x1 - x0, 36 * DPR);
+        gx.globalAlpha = 1;
+        gx.strokeStyle = SIG; gx.lineWidth = 1 * DPR;
+        gx.strokeRect(x0, lanes[0].y - 18 * DPR, x1 - x0, 36 * DPR);
+        gx.fillStyle = SIG; gx.textAlign = 'left';
+        gx.fillText('main thread blocked', x0 + 6 * DPR, lanes[0].y - 26 * DPR);
+      }
+      gx.fillStyle = HZ4; gx.textAlign = 'left';
+      gx.fillText('one tick = one frame', left, gh - 12 * DPR);
+    }
+  });
+})();
+
+})();
 </script>
 
 </body>
