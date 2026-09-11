@@ -620,7 +620,8 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
         <button class="r4-btn r4-on" data-testid="r4-roi">region</button>
         <button class="r4-btn r4-on" data-testid="r4-auto">auto window</button>
         <button class="r4-btn r4-on" data-testid="r4-fusion">fusion</button>
-        <button class="r4-btn" data-testid="r4-ramp">ramp: jet</button>
+        <button class="r4-btn" data-testid="r4-ramp">ramp: spectral</button>
+        <button class="r4-btn r4-on" data-testid="r4-rotate">rotate the map</button>
         <button class="r4-btn" data-testid="r4-recon">reconstruct from readback</button>
       </div>
       <div class="r4-stage" data-testid="r4-stage">
@@ -2276,8 +2277,14 @@ var SEC2 = (function () {
                   resolveRGB('oklch(0.78 0.16 155)'), resolveRGB('oklch(0.87 0.17 95)'),
                   resolveRGB('oklch(0.65 0.22 28)')]),
     ice: lutFrom([resolveRGB('oklch(0.30 0.10 300)'), resolveRGB('oklch(0.55 0.14 265)'),
-                  resolveRGB('oklch(0.78 0.11 225)'), resolveRGB('oklch(0.95 0.05 200)')])
+                  resolveRGB('oklch(0.78 0.11 225)'), resolveRGB('oklch(0.95 0.05 200)')]),
+    /* a spectral ramp, which is the one that carries the most colour per
+       step and the one a functional study is most often read through */
+    spectral: lutFrom([resolveRGB('oklch(0.26 0.13 292)'), resolveRGB('oklch(0.52 0.17 250)'),
+                       resolveRGB('oklch(0.72 0.16 175)'), resolveRGB('oklch(0.86 0.17 118)'),
+                       resolveRGB('oklch(0.84 0.18  62)'), resolveRGB('oklch(0.64 0.23  22)')])
   };
+  var RAMPS = ['jet', 'ice', 'spectral'];
 
   var LUTS = {
     gsdf: lutFrom([[8, 8, 8], [250, 250, 250]]),
@@ -2330,7 +2337,7 @@ var SEC2 = (function () {
   }
 
   var lut = 'gsdf', cine = true, roiOn = true, recon = false, autoWin = true;
-  var fusion = true, fusionRamp = 'jet', fusionGain = 1;
+  var fusion = true, fusionRamp = 'spectral', fusionGain = 1, rotate = true;
   var ww = 0.62, wl = 0.46, dragging = false, lastXY = null;
   var readCosts = [], out = null, o32 = null;
   var VX = 20, VY = 18, VW = 560, VH = 560;             /* the viewport */
@@ -2344,7 +2351,11 @@ var SEC2 = (function () {
   var roi = { x: 190, y: 150, w: 140, h: 110 };
 
   var demo = WAM.clock('r4-stage', {
-    el: $('r4-world'), dur: 20000, poster: 0.4,
+    /* 17 400 rather than 20 000 — 15% faster. The cine loop, the window
+       sweep and the overlay's own cycles are all expressed as multiples of
+       t, so shortening the period speeds every one of them by the same
+       factor and none of them comes into phase with any other as a result. */
+    el: $('r4-world'), dur: 17400, poster: 0.4,
     render: function (t) {
       ensureOut();
       var z = cine ? t : 0.3;
@@ -2382,6 +2393,10 @@ var SEC2 = (function () {
       var ft = t * 0.41, fs = t * 0.63;
       var fTab = FUSION[fusionRamp];
       var fCover = 0;
+      /* the field's own rotation and the ramp's own phase, both on periods
+         that share no small multiple with the cine loop or the window */
+      var rot = t * TAU * 0.29, cosR = Math.cos(rot), sinR = Math.sin(rot);
+      var rampPhase = rotate ? (t * 0.83) % 1 : 0;
 
       for (y = 0; y < VH; y++) {
         syi = ((y / VH) * SH) | 0;
@@ -2402,15 +2417,29 @@ var SEC2 = (function () {
                is active. The field is the second dimension and it is why
                this needs colour: two quantities cannot share one grey. */
             var u2 = x / VW - 0.5, v2b = y / VH - 0.5;
-            var f = v * (0.55 + 0.45 * Math.sin((u2 * 6.1 + ft * TAU)))
-                      * (0.5 + 0.5 * Math.cos((v2b * 5.3 - fs * TAU)));
-            f = (f - 0.18) / 0.52;
+            /* Three spatial terms rather than two, one of them ROTATING —
+               a field built only from axis-aligned sines drifts, and a
+               drifting field reads as a pattern sliding behind a window
+               rather than as something happening inside the subject. The
+               rotation is what makes it turn. */
+            var ru = u2 * cosR - v2b * sinR, rv = u2 * sinR + v2b * cosR;
+            var rad = Math.sqrt(u2 * u2 + v2b * v2b);
+            var f = v
+              * (0.50 + 0.50 * Math.sin(ru * 6.1 + ft * TAU))
+              * (0.45 + 0.55 * Math.cos(rv * 5.3 - fs * TAU))
+              * (0.60 + 0.40 * Math.sin(rad * 13.0 - ft * TAU * 1.7));
+            f = (f - 0.14) / 0.46;
             f = f < 0 ? 0 : f > 1 ? 1 : f;
             f *= fusionGain;
             if (f > 0.03) {
               fCover++;
-              var fi = ((f * 255) | 0) * 3;
-              var al = 0.24 + f * 0.70;
+              /* the ramp ROTATES under the value, which is a real control on
+                 a real workstation — a rotating colour map makes a plateau
+                 that a static one flattens into one tone show its shape as
+                 a moving band. */
+              var fv = rotate ? (f + rampPhase) % 1 : f;
+              var fi = ((fv * 255) | 0) * 3;
+              var al = 0.22 + f * 0.72;
               rr = rr + (fTab[fi] - rr) * al;
               gg = gg + (fTab[fi + 1] - gg) * al;
               bb = bb + (fTab[fi + 2] - bb) * al;
@@ -2523,17 +2552,24 @@ var SEC2 = (function () {
          image is carrying are both legible as scales */
       if (fusion) {
         for (x = 0; x < RW; x++) {
-          var fi2 = (((x / RW) * 255) | 0) * 3;
+          /* the legend rotates with the map. A static swatch beside a
+             rotating overlay is a legend that lies, and a legend that lies
+             is worse than none. */
+          var fi2 = ((((x / RW + rampPhase) % 1) * 255) | 0) * 3;
           ctx.fillStyle = 'rgb(' + fTab[fi2] + ',' + fTab[fi2 + 1] + ',' + fTab[fi2 + 2] + ')';
           ctx.fillRect(RX + x, ly + 31, 1, 14);
         }
         ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly + 30.5, RW + 1, 15);
         ctx.fillStyle = INK;
-        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase(), RX, ly + 58);
+        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase() + (rotate ? ' · ROTATING' : ''), RX, ly + 58);
       }
 
       /* the slice ladder — where in the stack we are */
-      var sy2 = ly + 62;
+      /* the stack sits below whatever the LUT column actually occupies —
+         one bar or two. Hardcoding the offset put the fusion legend
+         straight through the STACK label the moment the second ramp
+         appeared. */
+      var sy2 = ly + (fusion ? 92 : 62);
       ctx.fillStyle = INK;
       ctx.fillText('STACK', RX, sy2 - 10);
       for (x = 0; x < 48; x++) {
@@ -2641,9 +2677,10 @@ var SEC2 = (function () {
     else if (b === $('r4-auto')) { autoWin = !autoWin; b.classList.toggle('r4-on', autoWin); }
     else if (b === $('r4-fusion')) { fusion = !fusion; b.classList.toggle('r4-on', fusion); }
     else if (b === $('r4-ramp')) {
-      fusionRamp = fusionRamp === 'jet' ? 'ice' : 'jet';
+      fusionRamp = RAMPS[(RAMPS.indexOf(fusionRamp) + 1) % RAMPS.length];
       b.textContent = 'ramp: ' + fusionRamp;
     }
+    else if (b === $('r4-rotate')) { rotate = !rotate; b.classList.toggle('r4-on', rotate); }
     else if (b === $('r4-roi')) { roiOn = !roiOn; b.classList.toggle('r4-on', roiOn); }
     else if (b === $('r4-recon')) { recon = !recon; b.classList.toggle('r4-on', recon); }
     demo.render(demo.t);
