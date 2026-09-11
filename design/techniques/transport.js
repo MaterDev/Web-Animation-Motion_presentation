@@ -134,11 +134,41 @@ self.T5_CHROME = function (ctx, W, H, ink) {
   ctx.fillRect(aX, aY, aW, aH);
   self.SKIN_BEVEL(ctx, aX - 2, aY - 2, aW + 4, aH + 4, true, EDGE);
 
+  /* ── the equalizer window ──────────────────────────────────────────
+     A second window, docked under the first, the way every player of the
+     era stacked them. Ten bands and a preamp, and the sliders move — a
+     graphic equalizer whose faders never move is a picture of one. */
+  var eqY = bY + bH + 12, eqH = 74;
+  self.SKIN_BEVEL(ctx, 0, eqY, W, eqH, false, B);
+  var eqWX = 10, eqWY = eqY + 8, eqWW = 132, eqWH = eqH - 16;
+  ctx.fillStyle = ink.well;
+  ctx.fillRect(eqWX, eqWY, eqWW, eqWH);
+  self.SKIN_BEVEL(ctx, eqWX - 2, eqWY - 2, eqWW + 4, eqWH + 4, true, EDGE);
+
+  var fX = eqWX + eqWW + 14, fW = 12, fGap = 6, fY = eqY + 8, fH = eqH - 16;
+  for (i = 0; i < 11; i++) {
+    ctx.fillStyle = ink.dk;
+    ctx.fillRect(fX + i * (fW + fGap) + fW / 2 - 1, fY, 2, fH);
+  }
+
+  /* ── the playlist window ───────────────────────────────────────────
+     The third window. A list that scrolls and a row that is current: two
+     more things moving, and both of them things a player really had. */
+  var plY = eqY + eqH + 12, plH = H - plY - 8;
+  self.SKIN_BEVEL(ctx, 0, plY, W, plH, false, B);
+  var plWX = 10, plWY = plY + 8, plWW = W - 20, plWH = plH - 16;
+  ctx.fillStyle = ink.well;
+  ctx.fillRect(plWX, plWY, plWW, plWH);
+  self.SKIN_BEVEL(ctx, plWX - 2, plWY - 2, plWW + 4, plWH + 4, true, EDGE);
+
   return {
     tbY: tbY, tbH: tbH,
     wX: wX, wY: wY, wW: wW, wH: wH,
     bX: bX, bY: bY, bW: bW, bH: bH,
-    aX: aX, aY: aY, aW: aW, aH: aH
+    aX: aX, aY: aY, aW: aW, aH: aH,
+    eqWX: eqWX, eqWY: eqWY, eqWW: eqWW, eqWH: eqWH,
+    fX: fX, fY: fY, fW: fW, fH: fH, fGap: fGap,
+    plWX: plWX, plWY: plWY, plWW: plWW, plWH: plWH
   };
 };
 
@@ -212,7 +242,76 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title) {
     /* the frame counter, in the title bar, so the number that stops is on
        the chassis rather than only in the DOM readout */
     self.T5_TEXT(ctx, String(frames), W - 14 - self.T5_WIDTH(String(frames), 1), g.tbY + 4, 1, ink.hi);
+
+    /* ── the equalizer ───────────────────────────────────────────────
+       Eleven faders that drift, and a curve drawn from where they are.
+       The curve is the payoff: it is computed from the fader positions
+       every frame rather than stored, so the two are never out of step. */
+    var BANDS = 11, gains = [];
+    for (i = 0; i < BANDS; i++) {
+      v = 0.5 + 0.34 * Math.sin(t * 6.2831853 * 0.7 + i * 0.62)
+              + 0.14 * Math.sin(t * 6.2831853 * 1.9 + i * 1.7);
+      if (v < 0.05) v = 0.05;
+      if (v > 0.95) v = 0.95;
+      gains.push(v);
+      var cy = Math.round(g.fY + (1 - v) * (g.fH - 10));
+      /* the cap */
+      ctx.fillStyle = i === 0 ? ink.sig : ink.lcd;
+      ctx.fillRect(g.fX + i * (g.fW + g.fGap), cy, g.fW, 4);
+      ctx.fillStyle = ink.sh;
+      ctx.fillRect(g.fX + i * (g.fW + g.fGap), cy + 4, g.fW, 2);
+    }
+
+    /* the response curve, in the eq's own little well */
+    ctx.fillStyle = ink.well;
+    ctx.fillRect(g.eqWX, g.eqWY, g.eqWW, g.eqWH);
+    ctx.fillStyle = ink.sh;
+    ctx.fillRect(g.eqWX, Math.round(g.eqWY + g.eqWH / 2), g.eqWW, 1);
+    var px2 = 0, py2 = 0;
+    for (i = 0; i < g.eqWW; i++) {
+      var u = (i / (g.eqWW - 1)) * (BANDS - 1);
+      var a = gains[u | 0], b = gains[Math.min(BANDS - 1, (u | 0) + 1)];
+      var f = u - (u | 0);
+      var yy = Math.round(g.eqWY + (1 - (a + (b - a) * f)) * (g.eqWH - 4) + 2);
+      ctx.fillStyle = ink.lcd;
+      ctx.fillRect(g.eqWX + i, yy, 1, 2);
+      if (i > 0 && Math.abs(yy - py2) > 2) {
+        ctx.fillRect(g.eqWX + i, Math.min(yy, py2), 1, Math.abs(yy - py2));
+      }
+      py2 = yy; px2 = i;
+    }
+
+    /* ── the playlist ────────────────────────────────────────────────
+       Twelve rows of a much longer list, scrolling, with one row current.
+       The numbers on the right are real: each row's length is derived
+       from its index, so the list is a list rather than a texture. */
+    var ROWS = 12, rowH = Math.floor(g.plWH / ROWS);
+    var top = Math.floor(t * 48) % 48;
+    var cur = (Math.floor(t * 6) % ROWS);
+    for (i = 0; i < ROWS; i++) {
+      var idx = (top + i) % 48;
+      var isCur = i === cur;
+      if (isCur) {
+        ctx.fillStyle = ink.lcdDim;
+        ctx.fillRect(g.plWX + 1, g.plWY + i * rowH, g.plWW - 2, rowH);
+      }
+      var n = (idx + 1);
+      var lbl = (n < 10 ? '0' : '') + n + '. ' + self.T5_ROW(idx);
+      self.T5_TEXT(ctx, lbl, g.plWX + 5, g.plWY + i * rowH + 2, 1, isCur ? ink.well : ink.lcd);
+      var secs = 121 + ((idx * 37) % 190);
+      var dur = Math.floor(secs / 60) + ':' + ((secs % 60) < 10 ? '0' : '') + (secs % 60);
+      self.T5_TEXT(ctx, dur, g.plWX + g.plWW - 5 - self.T5_WIDTH(dur, 1), g.plWY + i * rowH + 2, 1, isCur ? ink.well : ink.lcdDim);
+    }
   };
+};
+
+/* Track titles, generated from the index so the list is deterministic and
+   the same on both threads. All fictional — nothing on this sheet names a
+   real artist, label or release. */
+self.T5_ROW = function (i) {
+  var A = ['TRANSFER', 'LACQUER', 'REFERENCE', 'MASTER', 'ACETATE', 'DUB', 'TEST', 'SAFETY'];
+  var B = ['TAKE', 'PASS', 'CUT', 'ROLL', 'SIDE', 'PLATE'];
+  return A[i % A.length] + ' ' + B[(i * 3) % B.length] + ' ' + (((i * 7) % 24) + 1);
 };
 
 /* ── the worker ─────────────────────────────────────────────────────────
