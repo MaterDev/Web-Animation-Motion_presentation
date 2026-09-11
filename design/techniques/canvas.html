@@ -14,13 +14,14 @@
 
    Two vocabularies live on this sheet and they must not blend.
 
-   `cv-`  the sheet itself, in the deck's own near-black harness language.
-   `g1-`…`g5-`  the five explanatory graphics. Deck language, one per section.
-   `ac-`  ACETATE — the fictional lacquer transfer desk the screens run inside.
-          Warm-dark anodised faceplate, hue family 92–95, seven ground steps
-          at ΔL 0.090, texture aperiodic by construction. See the track's
-          style-direction.md; the ground ramp there is the source for these
-          values and this file is a copy of it, not the other way round.
+   `cv-`  the sheet itself, in the deck's own near-black harness language —
+          the page frame around the worlds, and never anything inside one.
+   `v1- h2- b3- r4- t5-`  the five worlds, one per section. Each carries its
+          own palette, its own chrome and its own subject: a visualizer, a
+          prepress console, a board editor, a radiology workstation and a
+          pair of media players. They share a process — an index-limited
+          palette with a stated dither — and deliberately nothing else.
+          See the track's style-direction-v3.md.
 
    Every class here is namespaced because components.css leaks: a bare
    `.note`, `.plate`, `.well` or `.meter` inherits system styling silently
@@ -84,215 +85,6 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: c
 .notes ol { padding-left: 1.1em; }
 .notes li { margin-bottom: 8px; }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   ACETATE · trade dress
-   ───────────────────────────────────────────────────────────────────────── */
-.ac {
-  /* Ground ramp — seven steps, ΔL 0.090 between neighbours up to --ac-rule.
-     Warm by construction: hue 92–95 throughout, chroma 0.014–0.020. The
-     separation from the harness's --hz-* is CATEGORICAL (warm vs cool), not
-     a lightness threshold; --ac-rule and --hz-400 sit ΔL 0.005 apart and are
-     told apart by hue alone, ΔEok 0.026. */
-  --ac-well:   oklch(0.115 0.016 95);
-  --ac-ground: oklch(0.205 0.020 95);
-  --ac-cap:    oklch(0.295 0.020 95);
-  --ac-grid:   oklch(0.385 0.020 95);
-  --ac-rule:   oklch(0.475 0.019 95);
-  --ac-dim:    oklch(0.640 0.016 95);
-  --ac-ink:    oklch(0.900 0.014 95);
-
-  /* Provenance set — colour means WHERE THE DATA CAME FROM, not how loud. */
-  --ac-src:    oklch(0.780 0.115  92);   /* AUDIO   — captured programme    */
-  --ac-aux:    oklch(0.720 0.090 122);   /* DERIVED — ACETATE computed it   */
-  --ac-evt:    oklch(0.660 0.085 292);   /* EVENT   — discrete, non-audio   */
-  --ac-mst:    oklch(0.940 0.030  92);   /* MASTER  — the render bus        */
-  --ac-mute:   oklch(0.460 0.010  95);   /* OFFLINE — bypassed or stale     */
-  --ac-signal: oklch(0.550 0.200  27);   /* OVER    — clip indication only  */
-
-  /* Spectrogram LUT. Six stops, interpolated continuously, monotone in L so
-     it needs no key. Indigo → magenta → amber → white, the convention in
-     spectrographic tools. Deliberately shares no cold stop with the
-     precipitation ramp on the SVG sheet: zero green, zero cyan. */
-  --ac-sg-0: oklch(0.150 0.022 300);
-  --ac-sg-1: oklch(0.320 0.095 292);
-  --ac-sg-2: oklch(0.480 0.155 338);
-  --ac-sg-3: oklch(0.680 0.145  72);
-  --ac-sg-4: oklch(0.850 0.130  92);
-  --ac-sg-5: oklch(0.970 0.018  95);
-
-  --ac-pad: 34px;      /* the rack ears — no content ever inside them */
-  --ac-gutter: 20px;   /* and breathing room between the ear and the content */
-}
-
-/* chassis ─────────────────────────────────────────────────────────────── */
-.ac-chassis {
-  position: relative; border-radius: 6px; overflow: hidden;
-  color: var(--ac-ink);
-  font-family: var(--sans);
-  box-shadow: 0 18px 40px -22px oklch(0 0 0 / 0.8), 0 0 0 1px oklch(0 0 0 / 0.5);
-}
-/* The rack light is sized in PIXELS, not in percentages of the chassis.
-   A percentage gradient is scaled by the box it paints, so five units of
-   different heights were lit differently and their banners — identical
-   markup, identical geometry — came back as five distinct images. Fixed
-   metrics make the top 240px of every unit the same panel under the same
-   lamp, which is what Requirement 4 is actually asking for. */
-.ac-panel {
-  position: relative;
-  background:
-    linear-gradient(180deg,
-      color-mix(in oklch, var(--ac-cap) 60%, var(--ac-ground)) 0 2px,
-      var(--ac-ground) 2px),
-    radial-gradient(1400px 240px at 50% -46px,
-      color-mix(in oklch, var(--ac-cap) 45%, var(--ac-ground)) 0%,
-      var(--ac-ground) 100%);
-}
-/* brushed anodising. Fractal noise stretched on X so it has no fundamental
-   and cannot beat against the stage's non-integer scale or a projector's
-   resample kernel. stitchTiles makes the 300px tile seamless; 300px is far
-   outside the moiré danger zone the 3px scan raster on the SVG sheet sits
-   inside. Starting value 0.10 — tune against the projector, never above
-   0.18, where the faceplate stops reading as metal and starts reading as
-   noise. */
-.ac-panel::before {
-  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  opacity: 0.10; mix-blend-mode: screen;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.010 0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23g)'/%3E%3C/svg%3E");
-}
-/* rack ears — ACETATE's "this came out of a machine" mark. Two countersunk
-   screws a side, never a repeating column: a column at this size is the
-   knurl tokens.css already cut for reading as moiré. */
-.ac-ear {
-  position: absolute; top: 0; bottom: 0; width: var(--ac-pad); z-index: 4;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 17px 26px,
-      oklch(0 0 0 / 0.55) 0 3.2px,
-      color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ink)) 3.2px 4.4px,
-      transparent 5px),
-    radial-gradient(circle at 17px calc(100% - 26px),
-      oklch(0 0 0 / 0.55) 0 3.2px,
-      color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ink)) 3.2px 4.4px,
-      transparent 5px),
-    linear-gradient(90deg, var(--ac-cap), var(--ac-ground));
-  box-shadow: inset -1px 0 0 oklch(0 0 0 / 0.4);
-}
-.ac-ear.ac-l { left: 0; }
-.ac-ear.ac-r { right: 0; transform: scaleX(-1); }
-
-/* The ears are 34px wide and the body used to be padded by exactly that, so
-   every control and every line of type started at the millimetre the ear
-   ended and the banner's last words were clipped by the right ear. Content
-   needs a gutter INSIDE the chassis, not just clearance from it. */
-.ac-body { position: relative; z-index: 2; padding: 0 calc(var(--ac-pad) + var(--ac-gutter)); }
-
-/* banner — identical on all five screens (Requirement 4) ─────────────── */
-.ac-banner {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  padding: 9px 0 8px; border-bottom: 1px solid oklch(0 0 0 / 0.45);
-  box-shadow: 0 1px 0 color-mix(in oklch, var(--ac-ink) 7%, transparent);
-}
-.ac-mark {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.34em;
-  color: var(--ac-ink); text-transform: uppercase;
-}
-.ac-build { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-mute); }
-.ac-prog { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ac-dim); margin-left: auto; min-width: 0; }
-.ac-prog b { color: var(--ac-src); font-weight: 400; }
-
-/* section rail — five lamps, the current one lit ─────────────────────── */
-.ac-rail { display: flex; gap: 3px; padding: 7px 0; }
-.ac-rail-item {
-  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em;
-  text-transform: uppercase; padding: 4px 9px; border-radius: 2px;
-  color: var(--ac-mute); background: color-mix(in oklch, var(--ac-cap) 55%, var(--ac-ground));
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 8%, transparent);
-}
-.ac-rail-item.ac-on { color: var(--ac-ground); background: var(--ac-src); box-shadow: 0 0 12px -2px var(--ac-src); }
-
-/* the working area — the only part that differs between screens ──────── */
-.ac-work { padding: 10px 0 12px; }
-.ac-well {
-  position: relative; background: var(--ac-well); overflow: hidden; border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 1px oklch(0 0 0 / 0.55),
-    inset 0 1px 0 1px color-mix(in oklch, var(--ac-ink) 10%, transparent),
-    inset 0 16px 30px -16px oklch(0 0 0 / 0.75);
-}
-/* display glass: one low-angle specular band, aperiodic, no blur and no
-   backdrop-filter. This is the front of a meter, never a card floating
-   over live content — that overlay glass is the one components.css cut. */
-.ac-well::after {
-  content: ''; position: absolute; inset: 0; z-index: 6; pointer-events: none;
-  background: linear-gradient(104deg,
-    transparent 0 36%,
-    oklch(0.98 0.020 95 / 0.028) 46%,
-    oklch(0.98 0.020 95 / 0.052) 51%,
-    oklch(0.98 0.020 95 / 0.018) 57%,
-    transparent 65%);
-}
-.ac-well canvas { display: block; width: 100%; position: relative; z-index: 2; }
-
-/* transport — the one place hardware is quoted literally ─────────────── */
-.ac-transport {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  padding: 8px 0 12px; border-top: 1px solid oklch(0 0 0 / 0.4);
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 6%, transparent);
-}
-/* One Doto element per world, at head size, stating that world's one
-   canonical number. ACETATE's is the timecode; nothing else on this sheet
-   may use it. 48px is 8 whole LED cells — DESIGN.md's floor. The chrome
-   around it never animates; these digits are data and must run. */
-.ac-tc {
-  font-family: var(--mono); font-weight: 500;
-  font-size: 26px; line-height: 30px;
-  font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
-  color: var(--ac-src);
-}
-.ac-meta { display: flex; gap: 18px; flex-wrap: wrap; margin-left: auto; }
-.ac-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--ac-mute); text-transform: uppercase; }
-.ac-kv b { display: block; font-size: 13px; letter-spacing: 0.02em; color: var(--ac-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 2px; }
-.ac-kv b.ac-c-src { color: var(--ac-src); }
-.ac-kv b.ac-c-aux { color: var(--ac-aux); }
-.ac-kv b.ac-c-evt { color: var(--ac-evt); }
-.ac-kv b.ac-c-mst { color: var(--ac-mst); }
-.ac-kv b.ac-c-over { color: var(--ac-signal); }
-
-/* software controls — rectangular caps, never a drawn knob ───────────── */
-.ac-caps { display: flex; gap: 5px; flex-wrap: wrap; padding-bottom: 10px; }
-.ac-cap-btn {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ac-dim); background: linear-gradient(180deg, var(--ac-cap), color-mix(in oklch, var(--ac-cap) 70%, var(--ac-ground)));
-  border: 1px solid oklch(0 0 0 / 0.45); border-radius: 2px; padding: 6px 10px; cursor: pointer;
-  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--ac-ink) 12%, transparent);
-}
-.ac-cap-btn:hover { color: var(--ac-ink); }
-.ac-cap-btn.ac-on { color: var(--ac-ground); background: var(--ac-src); border-color: oklch(0 0 0 / 0.5); box-shadow: 0 0 14px -3px var(--ac-src); }
-.ac-cap-btn[disabled] { opacity: 0.45; cursor: default; }
-
-.ac-notice {
-  font-family: var(--mono); font-size: 10px; color: var(--ac-signal);
-  background: color-mix(in oklch, var(--ac-signal) 16%, transparent);
-  border-left: 2px solid var(--ac-signal); padding: 7px 10px; margin: 0 0 10px;
-}
-.ac-notice[hidden] { display: none !important; }
-
-/* §3's EDL pane — a real editor component, and the thing that stops §3
-   reading as a second waveform */
-.ac-edl { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
-@media (min-width: 720px) { .ac-edl { grid-template-columns: minmax(0,1fr) 186px; } }
-.ac-edl-list {
-  background: var(--ac-well); border-radius: 3px; padding: 6px; overflow: auto;
-  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.55);
-  font-family: var(--mono); font-size: 9px; line-height: 1.8; color: var(--ac-dim);
-  max-height: 260px;
-}
-.ac-edl-row { display: flex; justify-content: space-between; gap: 8px; padding: 0 3px; border-radius: 2px; }
-.ac-edl-row b { color: var(--ac-evt); font-weight: 400; }
-.ac-edl-row.ac-on { background: color-mix(in oklch, var(--ac-evt) 24%, transparent); color: var(--ac-ink); }
-.ac-edl-head { color: var(--ac-mute); letter-spacing: 0.14em; text-transform: uppercase; font-size: 8px; padding: 0 3px 4px; }
-
-@media (max-width: 560px) { .ac { --ac-pad: 20px; --ac-gutter: 12px; } .ac-tc { font-size: 20px; line-height: 24px; } }
 
 /* ─────────────────────────────────────────────────────────────────────────
    §5 · TRANSPORT — two classic players
@@ -1034,24 +826,25 @@ function resolveRGB(cssColour) {
   var d = x.getImageData(0, 0, 1, 1).data;
   return [d[0], d[1], d[2]];
 }
-/* ACETATE's custom properties are declared on `.ac`, not on :root, so a
+/* Each world declares its palette on its own class, not on :root, so a
    plain getComputedStyle(documentElement) lookup returns '' for every one
-   of them — and every call site here had a hex fallback, so the sheet drew
-   in plausible wrong colours and said nothing. §4's LUT had no fallback and
-   rendered black, which is the only reason this was caught. A miss is now
-   recorded and reported on the instrument plate rather than absorbed. */
-var acProbe = document.createElement('div');
+   of them — and every call site had a hex fallback, so the sheet drew in
+   plausible wrong colours and said nothing about it. One world's LUT had no
+   fallback, rendered black, and that is the only reason this was ever
+   caught. A miss is now recorded and reported on the instrument plate
+   rather than absorbed. Add a class below when a world is added. */
+var worldProbe = document.createElement('div');
 /* Carries EVERY world scope at once. Each world declares its palette on its
    own class rather than on :root, so one probe has to wear all of them or a
    lookup silently returns '' and the sheet draws a fallback colour while
    claiming to draw the token. Add a class here when a world is added. */
-acProbe.className = 't5 v1 h2 b3 r4';
-acProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
-document.body.appendChild(acProbe);
-var acRoot = getComputedStyle(acProbe);
+worldProbe.className = 'v1 h2 b3 r4 t5';
+worldProbe.style.cssText = 'position:absolute;width:0;height:0;visibility:hidden;pointer-events:none';
+document.body.appendChild(worldProbe);
+var worldRoot = getComputedStyle(worldProbe);
 var TOKEN_MISSES = [];
 function token(name) {
-  var v = root.getPropertyValue(name).trim() || acRoot.getPropertyValue(name).trim();
+  var v = root.getPropertyValue(name).trim() || worldRoot.getPropertyValue(name).trim();
   if (!v) TOKEN_MISSES.push(name);
   return v;
 }
@@ -1110,63 +903,6 @@ function reportTokenMisses() {
     ' — every colour drawn from them is a fallback, not the design system.</b>');
 }
 
-/* ════════════════════════════════════════════════════════════════════════
-   ACETATE chassis
-
-   Built from ONE template, five times. Hand-writing five copies would make
-   Requirement 4's "identical chrome" a thing someone has to maintain by
-   care; generating it makes the identity structural. Only `work` differs.
-   ════════════════════════════════════════════════════════════════════════ */
-var SCREENS = ['overview', 'correlation', 'timeline', 'spectrogram', 'bounce'];
-var BUILD = '2.4.1 · b3907';
-
-function chassis(n, opts) {
-  var mount = $('acetate-' + n + '-mount');
-  var id = 'acetate-' + n;
-  var rail = SCREENS.map(function (s, i) {
-    return '<span class="ac-rail-item' + (i === n - 1 ? ' ac-on' : '') + '" data-testid="' + id + '-rail-' + s + '">' + s + '</span>';
-  }).join('');
-  var meta = opts.meta.map(function (m, i) {
-    return '<div class="ac-kv" data-testid="' + id + '-kv-' + i + '">' + m.k +
-           '<b class="ac-c-' + (m.c || 'src') + '" data-testid="' + id + '-kv-' + i + '-v">' + m.v + '</b></div>';
-  }).join('');
-  mount.innerHTML =
-    '<div class="ac"><div class="ac-chassis ac-panel" data-testid="' + id + '">' +
-      '<div class="ac-ear ac-l"></div><div class="ac-ear ac-r"></div>' +
-      '<div class="ac-body">' +
-        '<div class="ac-banner" data-testid="' + id + '-banner">' +
-          '<span class="ac-mark">Acetate</span>' +
-          '<span class="ac-build">v' + BUILD + '</span>' +
-          '<span class="ac-prog">programme <b>UNTITLED / A-SIDE</b> · 24 bit 96 k</span>' +
-        '</div>' +
-        '<div class="ac-rail" data-testid="' + id + '-rail">' + rail + '</div>' +
-        '<div class="ac-notice" data-testid="' + id + '-notice" hidden></div>' +
-        (opts.caps || '') +
-        '<div class="ac-work" data-testid="' + id + '-work">' + opts.work + '</div>' +
-        '<div class="ac-transport" data-testid="' + id + '-transport">' +
-          '<span class="ac-tc" data-testid="' + id + '-tc">00:00:00.00</span>' +
-          '<div class="ac-meta">' + meta + '</div>' +
-        '</div>' +
-      '</div>' +
-    '</div></div>';
-  return {
-    root: mount.firstChild,
-    stage: $(id),
-    work: $(id + '-work'),
-    tc: $(id + '-tc'),
-    notice: $(id + '-notice'),
-    kv: function (i) { return $(id + '-kv-' + i + '-v'); }
-  };
-}
-
-/* 11 running glyphs, hh:mm:ss.ff at 25 fps — a mastering transport's one
-   canonical number, and the only Doto on this sheet. */
-function timecode(t, dur) {
-  var total = t * (dur / 1000), h = (total / 3600) | 0, m = ((total / 60) | 0) % 60;
-  var s = (total | 0) % 60, f = ((total % 1) * 25) | 0;
-  var p = function (v, n) { return ('000' + v).slice(-(n || 2)); };
-  return p(h) + ':' + p(m) + ':' + p(s) + '.' + p(f);
-}
 
 /* ════════════════════════════════════════════════════════════════════════
    §1 · TRAILS — persistence
