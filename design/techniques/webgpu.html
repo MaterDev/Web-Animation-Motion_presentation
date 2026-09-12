@@ -4,150 +4,483 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-14 · WebGPU — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-14 · webgpu
+
+   `gp-`  the sheet: the frame around the cards, in the deck's own harness
+          language — section labels, prose, captions, the instrument strip.
+   Every card is a fragment of a different fictional product and carries its
+   own identity under its own prefix. Nothing about a card's chrome is
+   shared with its neighbours except the caption below it, which names the
+   mechanism. All motion on this page is WebGPU; the DOM holds the words.
+   ───────────────────────────────────────────────────────────────────────── */
 :root { --tint: var(--tint-webgpu); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); display: grid; place-items: center; }
-.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fallback { text-align: center; padding: 0 calc(var(--u)*4); position: relative; z-index: 2; }
-.fallback .led { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 14px; background: var(--signal); box-shadow: 0 0 10px color-mix(in oklch, var(--signal) 60%, transparent); }
-.fallback h4 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-700); margin-bottom: 8px; }
-.fallback p { font-size: 12px; color: var(--hz-500); max-width: 46ch; margin: 0 auto; }
-.status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); z-index: 2; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*3); }
+p.dek b { color: var(--hz-600); font-weight: 600; }
+.gp-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; max-width: 80ch; }
+.gp-instr b { color: var(--hz-500); font-weight: 500; }
+.gp-instr code { color: var(--hz-500); }
+.gp-sec { margin: calc(var(--u)*10) 0 0; }
+.gp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); margin-bottom: 6px; }
+.gp-sec h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0 0 10px; }
+.gp-sec > p { color: var(--hz-500); font-size: 13.5px; max-width: 74ch; margin: 0 0 calc(var(--u)*3); }
+.gp-sec > p b { color: var(--hz-600); font-weight: 600; }
+.gp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*3); }
+@media (min-width: 860px) { .gp-grid { grid-template-columns: 1fr 1fr; } .gp-grid .gp-wide { grid-column: 1 / -1; } }
+.gp-card { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.gp-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.55; letter-spacing: 0.04em; color: var(--hz-400); padding: 10px 2px 0; max-width: 70ch; }
+.gp-cap b { color: var(--hz-500); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp-cap i { font-style: normal; color: var(--tint); }
+.gp-strip { display: flex; gap: 10px 26px; flex-wrap: wrap; align-items: baseline; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); margin-top: 8px; }
+.gp-strip b { color: var(--hz-600); font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.gp-strip b.gp-zero { color: var(--tint); }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; } .notes li { margin-bottom: 8px; }
+.gp-stage { position: relative; overflow: hidden; touch-action: none; }
+.gp-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gp-status { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; pointer-events: none; }
+.gp-status[hidden] { display: none !important; }
+
+/* ─── §1 · the frame inspector ─────────────────────────────────────────── */
+.ck { --ck-bg: oklch(0.14 0.008 260); --ck-ink: oklch(0.92 0.004 260); --ck-dim: oklch(0.60 0.006 260); --ck-rule: oklch(0.28 0.008 260); --ck-acc: var(--tint);
+  background: var(--ck-bg); color: var(--ck-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .ck { grid-template-columns: minmax(0, 1fr) 300px; } }
+.ck .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.10 0.008 260); }
+.ck-panel { padding: 14px 16px; border-left: var(--hair) solid var(--ck-rule); display: flex; flex-direction: column; gap: 10px; font-family: var(--mono); }
+.ck-k { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ck-dim); }
+.ck-pass { display: grid; grid-template-columns: 22px 92px minmax(0, 1fr) 64px; gap: 8px; align-items: center; font-size: 10px; }
+.ck-pass input { accent-color: var(--ck-acc); margin: 0; }
+.ck-pass label { color: var(--ck-ink); letter-spacing: 0.04em; }
+.ck-bar { height: 8px; background: var(--ck-rule); position: relative; }
+.ck-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ck-acc); width: 0; }
+.ck-ms { text-align: right; color: var(--ck-ink); font-variant-numeric: tabular-nums; }
+.ck-total { border-top: var(--hair) solid var(--ck-rule); padding-top: 8px; font-size: 10px; color: var(--ck-dim); display: flex; justify-content: space-between; }
+.ck-total b { color: var(--ck-ink); font-weight: 500; }
+.ck-note { font-size: 9px; line-height: 1.5; color: var(--ck-dim); }
+
+/* ─── §2 · four particle interfaces ────────────────────────────────────── */
+.at { --at-bg: oklch(0.93 0.025 80); --at-ink: oklch(0.28 0.04 60); --at-dim: oklch(0.52 0.04 60); --at-acc: oklch(0.55 0.13 40); background: var(--at-bg); color: var(--at-ink); }
+.at .gp-stage { aspect-ratio: 16 / 10; }
+.at-ui { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px; }
+.at-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.32em; text-transform: uppercase; }
+.at-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; margin-left: 10px; color: var(--at-dim); font-size: 11px; }
+.at-field { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: color-mix(in oklch, var(--at-bg) 70%, white); border: var(--hair) solid var(--at-dim); padding: 10px 14px; }
+.at-field input { flex: 1; border: 0; background: transparent; font-family: var(--sans); font-size: 15px; color: var(--at-ink); outline: none; min-width: 0; }
+.at-field input::placeholder { color: var(--at-dim); }
+.at-field button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-bg); background: var(--at-acc); border: 0; padding: 8px 12px; cursor: pointer; }
+.at-hint { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--at-dim); }
+.nc { --nc-bg: oklch(0.16 0.03 75); --nc-card: oklch(0.22 0.04 75); --nc-ink: oklch(0.95 0.02 85); --nc-dim: oklch(0.66 0.05 80); --nc-gold: oklch(0.82 0.16 85); background: var(--nc-bg); color: var(--nc-ink); display: grid; place-items: center; padding: 18px; }
+.nc-phone { width: min(100%, 300px); aspect-ratio: 9 / 16; border-radius: 28px; border: 2px solid oklch(0.32 0.02 75); background: var(--nc-bg); position: relative; overflow: hidden; }
+.nc-phone .gp-stage { position: absolute; inset: 0; }
+.nc-ui { position: absolute; inset: 0; pointer-events: none; padding: 26px 18px; display: flex; flex-direction: column; gap: 12px; }
+.nc-top { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); display: flex; justify-content: space-between; }
+.nc-hive { font-family: var(--sans); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; color: var(--nc-gold); }
+.nc-card { margin-top: 28px; background: var(--nc-card); border-radius: 14px; padding: 14px 16px; }
+.nc-card small { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.nc-bal { font-family: var(--sans); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.nc-sub { font-family: var(--sans); font-size: 11px; color: var(--nc-dim); }
+.nc-row { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 12px; color: var(--nc-dim); padding: 6px 4px; border-bottom: 1px solid oklch(0.26 0.03 75); } .nc-row b { color: var(--nc-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.nc-list { margin-top: 6px; } .nc-list small { font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.nc-tx { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 11.5px; padding: 5px 4px; } .nc-tx b { font-weight: 500; font-variant-numeric: tabular-nums; } .nc-tx .nc-in { color: var(--nc-gold); }
+.nc-pull { margin-top: auto; text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.um { --um-bg: oklch(0.13 0.03 262); --um-ink: oklch(0.94 0.01 90); --um-dim: oklch(0.58 0.02 262); --um-warm: oklch(0.90 0.11 85); background: var(--um-bg); color: var(--um-ink); }
+.um .gp-stage { aspect-ratio: 16 / 10; cursor: pointer; }
+.um-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
+.um-brand { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; }
+.um-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--um-dim); margin-left: 10px; font-size: 11px; }
+.um-room { font-family: var(--sans); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.um-state { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--um-dim); margin-top: 4px; }
+.um-state b { color: var(--um-warm); font-weight: 500; }
+.fn { --fn-bg: oklch(0.97 0.01 100); --fn-ink: oklch(0.22 0.03 130); --fn-dim: oklch(0.50 0.03 130); background: var(--fn-bg); color: var(--fn-ink); }
+.fn .gp-stage { aspect-ratio: 21 / 9; }
+.fn-ui { position: absolute; inset: 0; pointer-events: none; padding: 18px 22px; display: flex; flex-direction: column; justify-content: flex-end; }
+.fn-nav { position: absolute; top: 16px; left: 22px; right: 22px; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fn-dim); pointer-events: none; }
+.fn-nav b { color: var(--fn-ink); font-weight: 600; }
+.fn-h { font-family: var(--sans); font-size: clamp(22px, 3.4vw, 40px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.02; max-width: 12ch; margin: 0 0 8px; text-transform: none; }
+.fn-p { font-family: var(--sans); font-size: 12.5px; color: var(--fn-dim); max-width: 40ch; margin: 0; }
+
+/* ─── §3 · neighbours ──────────────────────────────────────────────────── */
+.gr { --gr-bg: oklch(0.96 0.02 95); --gr-ink: oklch(0.25 0.02 60); --gr-dim: oklch(0.52 0.03 60); --gr-frame: oklch(0.88 0.03 95); background: var(--gr-bg); color: var(--gr-ink); }
+.gr .gp-stage { aspect-ratio: 16 / 10; cursor: crosshair; }
+.gr-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 10px 12px; border-bottom: var(--hair) solid var(--gr-frame); }
+.gr-brand { font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; margin-right: auto; }
+.gr-brand span { font-weight: 500; letter-spacing: 0; color: var(--gr-dim); margin-left: 8px; font-size: 11px; }
+.gr-el { font-family: var(--sans); font-size: 11px; font-weight: 600; border: 0; border-radius: 999px; padding: 5px 10px; cursor: pointer; color: var(--gr-ink); background: var(--gr-frame); display: inline-flex; align-items: center; gap: 6px; }
+.gr-el i { width: 10px; height: 10px; border-radius: 50%; background: var(--sw); }
+.gr-el.gr-on { outline: 2px solid var(--gr-ink); outline-offset: -2px; }
+.gr-count { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gr-dim); margin-left: 6px; }
+.rf { --rf-bg: oklch(0.20 0.05 215); --rf-ink: oklch(0.96 0.02 80); --rf-dim: oklch(0.70 0.05 200); --rf-coral: oklch(0.72 0.17 30); background: var(--rf-bg); color: var(--rf-ink); display: grid; place-items: center; padding: 18px; }
+.rf-card { width: min(100%, 380px); aspect-ratio: 1.586; border-radius: 12px; overflow: hidden; position: relative; cursor: crosshair; }
+.rf-card .gp-stage { position: absolute; inset: 0; }
+.rf-ui { position: absolute; inset: 0; pointer-events: none; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; }
+.rf-name { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
+.rf-name span { display: block; font-weight: 400; letter-spacing: 0.04em; text-transform: none; color: var(--rf-dim); font-size: 10px; margin-top: 2px; }
+.rf-member { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+.rf-member b { display: block; font-family: var(--sans); font-size: 14px; letter-spacing: 0; text-transform: none; font-weight: 600; margin-top: 3px; }
+.tn { --tn-bg: oklch(0.975 0.004 90); --tn-ink: oklch(0.18 0.01 30); --tn-dim: oklch(0.55 0.01 30); --tn-red: oklch(0.52 0.20 25); background: var(--tn-bg); color: var(--tn-ink); }
+.tn .gp-stage { aspect-ratio: 16 / 10; cursor: crosshair; }
+.tn-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.tn-brand { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+.tn-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tn-dim); margin-left: 10px; font-size: 11px; }
+.tn-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.tn-title { font-family: var(--sans); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.tn-title span { display: block; font-size: 11px; font-weight: 400; color: var(--tn-dim); letter-spacing: 0.04em; margin-top: 6px; }
+.tn-price { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--tn-red); }
+.tn-swatches { display: flex; gap: 6px; }
+.tn-sw { width: 18px; height: 18px; border-radius: 50%; border: var(--hair) solid var(--tn-dim); cursor: pointer; pointer-events: auto; padding: 0; }
+.tn-title b { font-weight: inherit; }
+.tn-sw.tn-on { outline: 2px solid var(--tn-ink); outline-offset: 2px; }
+
+/* ─── §4 · populations ─────────────────────────────────────────────────── */
+.mu { --mu-paper: oklch(0.965 0.005 90); --mu-ink: oklch(0.22 0.01 288); --mu-dim: oklch(0.50 0.012 288); --mu-rule: oklch(0.82 0.008 90); --mu-topo: oklch(0.78 0.12 170); --mu-metr: oklch(0.70 0.14 348); --mu-pred: oklch(0.62 0.19 28);
+  background: var(--mu-paper); color: var(--mu-ink); padding: 14px 16px; }
+.mu-head { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.mu-head span { font-family: var(--mono); font-weight: 400; letter-spacing: 0.1em; color: var(--mu-dim); font-size: 9px; }
+.mu-title { font-family: var(--sans); font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; margin: 8px 0 10px; line-height: 1.35; text-transform: none; }
+.mu .gp-stage { aspect-ratio: 2 / 1; background: oklch(0.09 0.014 288); }
+.mu-panels { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; }
+.mu-panel { padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; }
+.mu-panel + .mu-panel { border-left: var(--hair) solid var(--mu-dim); }
+.mu-panel-k { font-family: var(--sans); font-size: 12px; font-weight: 700; color: oklch(0.95 0.005 90); align-self: flex-start; background: oklch(0.18 0.02 288 / 0.72); padding: 4px 8px; border-radius: 3px; }
+.mu-panel-k i { font-style: normal; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; margin-left: 8px; font-weight: 500; }
+.mu-panel-k.mu-m i { color: var(--mu-metr); } .mu-panel-k.mu-t i { color: var(--mu-topo); }
+.mu-panel-r { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: oklch(0.80 0.006 90); align-self: flex-start; background: oklch(0.18 0.02 288 / 0.72); padding: 4px 8px; border-radius: 3px; }
+.mu-panel-r b { color: oklch(0.96 0.005 90); font-weight: 500; }
+.mu-cue { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mu-pred); pointer-events: none; opacity: 0; }
+.mu-cue.mu-on { opacity: 1; }
+.mu-foot { display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center; margin-top: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--mu-dim); }
+.mu-foot button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mu-ink); background: transparent; border: var(--hair) solid var(--mu-rule); padding: 5px 9px; cursor: pointer; }
+.mu-foot button.mu-stoop { color: var(--mu-pred); border-color: var(--mu-pred); }
+.mu-foot b { color: var(--mu-ink); font-weight: 500; }
+.cc { --cc-bg: oklch(0.96 0.006 220); --cc-ink: oklch(0.24 0.02 240); --cc-dim: oklch(0.52 0.02 240); --cc-line: oklch(0.72 0.02 240); --cc-hot: oklch(0.60 0.20 30); background: var(--cc-bg); color: var(--cc-ink); }
+.cc .gp-stage { aspect-ratio: 2 / 1; cursor: grab; }
+.cc-ui { position: absolute; inset: 0; pointer-events: none; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }
+.cc-brand { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cc-dim); display: flex; justify-content: space-between; }
+.cc-brand b { color: var(--cc-ink); font-weight: 600; }
+.cc-score { display: flex; gap: 18px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cc-dim); }
+.cc-score b { display: block; font-family: var(--sans); font-size: 18px; font-weight: 700; color: var(--cc-ink); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.cc-score b.cc-bad { color: var(--cc-hot); }
+
+/* ─── §5 · procedural ──────────────────────────────────────────────────── */
+.tw { --tw-bg: oklch(0.15 0.01 250); --tw-ink: oklch(0.94 0.006 90); --tw-dim: oklch(0.62 0.01 250); --tw-rule: oklch(0.28 0.01 250); --tw-acc: oklch(0.80 0.12 180); background: var(--tw-bg); color: var(--tw-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .tw { grid-template-columns: minmax(0, 1fr) 260px; } }
+.tw .gp-stage { aspect-ratio: 16 / 10; background: oklch(0.12 0.01 250); }
+.tw-panel { padding: 14px 16px; border-left: var(--hair) solid var(--tw-rule); display: flex; flex-direction: column; gap: 12px; }
+.tw-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
+.tw-brand span { display: block; font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tw-dim); font-size: 11px; margin-top: 2px; }
+.tw-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.tw-name span { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); font-weight: 400; margin-top: 4px; }
+.tw-btn { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-bg); background: var(--tw-acc); border: 0; padding: 10px 12px; cursor: pointer; }
+.tw-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); display: flex; justify-content: space-between; }
+.tw-k b { color: var(--tw-ink); font-weight: 500; }
+.tw-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--tw-rule); outline: none; margin: 6px 0 2px; }
+.tw-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--tw-acc); cursor: pointer; border: 0; }
+.tw-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--tw-dim); border-top: var(--hair) solid var(--tw-rule); padding-top: 8px; }
+.tw-stats b { color: var(--tw-ink); font-weight: 500; }
+
+/* ─── §6 · inference ───────────────────────────────────────────────────── */
+.sm { --sm-bg: oklch(0.97 0.03 85); --sm-ink: oklch(0.24 0.06 280); --sm-dim: oklch(0.55 0.05 280); --sm-acc: oklch(0.65 0.20 350); --sm-ok: oklch(0.70 0.17 150); background: var(--sm-bg); color: var(--sm-ink); padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+@media (min-width: 720px) { .sm { grid-template-columns: minmax(0, 1fr) 260px; } }
+.sm-brand { font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sm-acc); }
+.sm-q { font-family: var(--sans); font-size: clamp(30px, 4.5vw, 44px); font-weight: 800; letter-spacing: -0.03em; margin: 8px 0 10px; font-variant-numeric: tabular-nums; }
+.sm-q i { font-style: normal; color: var(--sm-dim); }
+.sm-boxes { display: flex; gap: 12px; }
+.sm-box { width: 112px; height: 112px; border-radius: 14px; border: 2px dashed var(--sm-dim); position: relative; overflow: hidden; cursor: crosshair; background: white; }
+.sm-box .gp-stage { position: absolute; inset: 0; }
+.sm-box.sm-read { border-style: solid; border-color: var(--sm-ok); }
+.sm-guess { position: absolute; right: 6px; bottom: 4px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--sm-dim); pointer-events: none; }
+.sm-guess b { font-family: var(--sans); font-size: 14px; color: var(--sm-ink); font-weight: 800; }
+.sm-side { display: flex; flex-direction: column; gap: 10px; }
+.sm-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sm-dim); }
+.sm-score { font-family: var(--sans); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.sm-score span { font-size: 12px; font-weight: 500; color: var(--sm-dim); margin-left: 6px; }
+.sm-btn { font-family: var(--sans); font-size: 12px; font-weight: 700; color: white; background: var(--sm-acc); border: 0; border-radius: 999px; padding: 9px 14px; cursor: pointer; }
+.sm-btn.sm-ghost { background: transparent; color: var(--sm-ink); border: 2px solid var(--sm-ink); }
+.sm-verdict { font-family: var(--sans); font-size: 13px; font-weight: 700; min-height: 1.4em; }
+.sm-verdict.sm-yes { color: var(--sm-ok); }
+.sm-model { font-family: var(--mono); font-size: 8.5px; line-height: 1.6; color: var(--sm-dim); border-top: var(--hair) solid oklch(0.85 0.03 85); padding-top: 8px; }
+.sm-model b { color: var(--sm-ink); font-weight: 500; }
+@media (max-width: 560px) { .ck-panel, .tw-panel { border-left: 0; } }
 </style>
 </head>
 <body data-testid="technique-webgpu">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14" data-testid="crumb-techniques">Techniques</a></div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="crumb"]').style.display = 'none';</script>
+
   <div class="head"><span class="code">SL-14</span><h1>webgpu</h1></div>
-  <p class="dek">
-    Compute shaders. Simulation moves onto the GPU — the particle count WebGL can't
-    sustain, and the payoff of the whole callback chain.
+  <p class="dek" data-testid="dek">
+    The GPU stops being a place you send pictures to and becomes a place things
+    <b>happen</b>. Compute passes read and write storage buffers that never come back;
+    a hundred thousand grains can be an interface, a grid of cells can be a toy, a
+    flock can be an experiment, a world can be grown rather than drawn, and a model
+    can run where the pen is. Six things WebGPU is for, each shown as a fragment of
+    a product that could ship — because a technique on a coloured square teaches
+    nothing about where you would reach for it.
+  </p>
+  <p class="gp-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> The GPU
+    writes its own clock at the start and end of each pass (<code>timestamp-query</code>),
+    so cards print passes, not frames. A counter on the device queue records every
+    byte the CPU sends per frame. Adapter <b data-testid="instrument-adapter">…</b> ·
+    <code>timestamp-query</code> <b data-testid="instrument-ts">…</b> · state uploaded this
+    frame <b data-testid="instrument-bytes">…</b> · uniforms <b data-testid="instrument-uni">…</b>
+    · backing store <b data-testid="instrument-dpr">…</b>
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <canvas id="c" data-testid="canvas-el" hidden></canvas>
-    <div class="fallback" id="fallback">
-      <div class="led"></div>
-      <h4>Detecting WebGPU…</h4>
-      <p>Feature-detected on load, not device-sniffed — per SCOPE.md's degradation-ladder
-        rule. This machine's result will show in a moment.</p>
+  <!-- ═══ §1 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-1">
+    <div class="gp-label">Pipeline</div>
+    <h2>what a frame costs on the GPU</h2>
+    <p>A frame here is a list of <b>passes</b>. Each compute pass runs one program across
+      a grid of workgroups; the render pass draws. Validation happens once, when the
+      pipeline is created, so a pass costs what its work costs and nothing else — and
+      because the GPU timestamps the start and end of every pass, the cost is a
+      measurement rather than a guess. Switch passes off and watch the bars: the
+      scene loses the pass's effect and the frame loses exactly its time.</p>
+    <div class="ck" data-testid="ck-card">
+      <div class="gp-stage" data-testid="ck-stage"><canvas data-testid="ck-canvas"></canvas><span class="gp-status" data-testid="ck-status">requesting a device…</span></div>
+      <div class="ck-panel">
+        <div class="ck-k">frame · four passes · 200 000 particles</div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="0" data-testid="ck-p0"><label>flow field</label><div class="ck-bar"><i data-testid="ck-bar-0"></i></div><span class="ck-ms" data-testid="ck-ms-0">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="1" data-testid="ck-p1"><label>integrate</label><div class="ck-bar"><i data-testid="ck-bar-1"></i></div><span class="ck-ms" data-testid="ck-ms-1">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="2" data-testid="ck-p2"><label>density · atomics</label><div class="ck-bar"><i data-testid="ck-bar-2"></i></div><span class="ck-ms" data-testid="ck-ms-2">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked disabled data-pass="3" data-testid="ck-p3"><label>render</label><div class="ck-bar"><i data-testid="ck-bar-3"></i></div><span class="ck-ms" data-testid="ck-ms-3">—</span></div>
+        <div class="ck-total"><span>GPU time, this frame</span><b data-testid="ck-total">—</b></div>
+        <div class="ck-total"><span>bytes uploaded</span><b data-testid="ck-bytes">—</b></div>
+        <div class="ck-note" data-testid="ck-note">Compute passes cost per workgroup; the render pass per pixel. Neither costs a byte of transfer once the state is up.</div>
+      </div>
     </div>
-    <span class="status" id="status"></span>
-  </div>
+    <div class="gp-cap"><b>inspector</b> · a curl-noise flow, an integrate step, a density histogram by atomic add, one instanced draw · the medians of the last eight readings, each pass between two GPU timestamps</div>
+  </section>
 
-  <div class="controls">
-    <span class="fps" style="font-family:var(--mono);font-size:10px;color:var(--hz-500)">
-      <code>navigator.gpu</code>: <b id="supportLabel" style="color:var(--tint)">checking…</b>
-    </span>
-  </div>
+  <!-- ═══ §2 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-2">
+    <div class="gp-label">Storage buffers · compute</div>
+    <h2>particles as interface</h2>
+    <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. It
+      is more useful as an <b>interface</b>: when a hundred thousand grains live in a
+      storage buffer and a compute pass moves every one of them each frame, text can be
+      made of sand, a refresh can be a swarm, a switch can pour, a hero can part around
+      the hand — and the CPU sends nothing per frame but the pointer. Four fragments
+      of four products.</p>
+    <div class="gp-grid">
+      <div class="gp-card">
+        <div class="at" data-testid="at-card">
+          <div class="gp-stage" data-testid="at-stage"><canvas data-testid="at-canvas"></canvas>
+            <div class="at-ui"><div class="at-brand">Atlas<span>flights · stays · the whole coast</span></div>
+              <div><div class="at-field"><input data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false"><button data-testid="at-go">search</button></div><div class="at-hint" style="margin-top:8px">type a city · the sand follows</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Atlas · travel search</b> · 160 000 grains gather to the letterforms of whatever is typed; a keystroke uploads a new target set once, the frames upload nothing · <i>compute pass · storage buffer · instanced quads</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="nc" data-testid="nc-card">
+          <div class="nc-phone"><div class="gp-stage" data-testid="nc-stage"><canvas data-testid="nc-canvas"></canvas>
+            <div class="nc-ui"><div class="nc-top"><span>9:41</span><span>hive · 3 accounts</span></div><div class="nc-hive">Nectar</div>
+              <div class="nc-card"><small>Everyday</small><div class="nc-bal" data-testid="nc-bal">£2,418.60</div><div class="nc-sub" data-testid="nc-sub">updated just now</div></div>
+              <div class="nc-row"><span>Savings</span><b>£12,040.00</b></div><div class="nc-row"><span>Joint</span><b>£1,196.25</b></div>
+              <div class="nc-list"><small>Today</small><div class="nc-tx"><span>Ottolenghi</span><b>−£38.40</b></div><div class="nc-tx"><span>TfL travel</span><b>−£6.70</b></div><div class="nc-tx"><span>Salary · Hive Ltd</span><b class="nc-in">+£3,120.00</b></div></div>
+              <div class="nc-pull" data-testid="nc-pull">pull down to refresh</div></div>
+          </div></div>
+        </div>
+        <div class="gp-cap"><b>Nectar · banking</b> · pull-to-refresh as a swarm: the bees leave the balance, forage, and settle back with the new figure · <i>the same kernel, targets that change with the gesture</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="um" data-testid="um-card">
+          <div class="gp-stage" data-testid="um-stage"><canvas data-testid="um-canvas"></canvas>
+            <div class="um-ui"><div class="um-brand">Umbra<span>home · lighting</span></div>
+              <div><div class="um-room">Living room</div><div class="um-state">scene <b data-testid="um-state">off</b> · tap anywhere</div></div></div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Umbra · smart home</b> · a switch that pours: eighty thousand motes drain from one basin into the other, and the room brightens as they land · <i>gravity in the kernel, a target that flips</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="fn" data-testid="fn-card">
+          <div class="gp-stage" data-testid="fn-stage"><canvas data-testid="fn-canvas"></canvas>
+            <div class="fn-nav"><b>Field Notes</b><span>Journal · Shop · Trails</span></div>
+            <div class="fn-ui"><h3 class="fn-h">Walk into the season.</h3><p class="fn-p">Issue 14 — the meadows in September, and the people who keep them.</p></div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Field Notes · editorial</b> · a hero of three hundred thousand pollen grains in a slow wind that part around the pointer and drift back · <i>no targets, only wind, jitter and a hand</i></div>
+      </div>
+    </div>
+    <div class="gp-strip" data-testid="loop-strip"><span>grains on this section</span><b data-testid="loop-count">—</b><span>state uploaded per frame</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
+  </section>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 14</h3>
-    <p>"WebGPU: The New Layer — compute shaders enable particle/fluid sims and on-device ML
-      at a scale WebGL can't reach; visual: thread demo in WebGPU at a particle count the
-      WebGL version couldn't sustain (hundreds of thousands to millions) — the payoff of
-      the whole callback chain."</p>
-    <p>What's built so far is the honest floor: real feature detection and a clean
-      fallback card, which is itself half of slide 15's argument (the degradation ladder).
-      If this machine supports WebGPU, a clear-colour device init runs so the pipeline is
-      proven end to end. The actual compute-shader particle sim is the next step — not
-      built yet.</p>
+  <!-- ═══ §3 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-3">
+    <div class="gp-label">Neighbour state</div>
+    <h2>things that depend on the cell next door</h2>
+    <p>Some pictures cannot be computed one pixel at a time, because each cell's next
+      value depends on its neighbours' current ones — sand falling, chemicals reacting,
+      ink flowing. In WebGL that is a texture ping-pong at whatever resolution one
+      quad can afford. In a compute pass it is the natural shape of the work: every cell
+      reads its neighbourhood from one buffer and writes the next state to another,
+      thousands of cells per workgroup, as many steps a frame as you like. <b>The
+      difference between a texture and a toy.</b></p>
+    <div class="gp-grid">
+      <div class="gp-card">
+        <div class="gr" data-testid="gr-card">
+          <div class="gr-bar"><span class="gr-brand">Grains<span>a science app for 8-year-olds</span></span>
+            <button class="gr-el gr-on" data-m="1" data-testid="gr-sand" style="--sw:#d9a75b"><i></i>sand</button>
+            <button class="gr-el" data-m="2" data-testid="gr-water" style="--sw:#4a8fd6"><i></i>water</button>
+            <button class="gr-el" data-m="3" data-testid="gr-oil" style="--sw:#6b4a2a"><i></i>oil</button>
+            <button class="gr-el" data-m="4" data-testid="gr-fire" style="--sw:#e0532b"><i></i>fire</button>
+            <button class="gr-el" data-m="5" data-testid="gr-wall" style="--sw:#555"><i></i>wall</button>
+            <button class="gr-el" data-m="0" data-testid="gr-erase" style="--sw:#fff"><i></i>erase</button>
+            <span class="gr-count" data-testid="gr-count">—</span>
+          </div>
+          <div class="gp-stage" data-testid="gr-stage"><canvas data-testid="gr-canvas"></canvas></div>
+        </div>
+        <div class="gp-cap"><b>Grains · learning</b> · a falling-sand world: sand piles, water finds its level, oil floats on it, fire burns the oil and boils the water — paint with a finger · <i>cellular automaton, two passes a step, several steps a frame</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="rf" data-testid="rf-card">
+          <div class="rf-card"><div class="gp-stage" data-testid="rf-stage"><canvas data-testid="rf-canvas"></canvas>
+            <div class="rf-ui"><div class="rf-name">Coral Reef Alliance<span>member since 2024</span></div><div class="rf-member">Member<b>Ines Okafor</b></div></div>
+          </div></div>
+        </div>
+        <div class="gp-cap"><b>Coral Reef Alliance · membership</b> · the card's face is a reaction-diffusion coral that keeps growing; touch it and it grows around the touch · <i>Gray–Scott, ping-pong buffers, twelve steps a frame</i></div>
+      </div>
+      <div class="gp-card gp-wide">
+        <div class="tn" data-testid="tn-card">
+          <div class="gp-stage" data-testid="tn-stage"><canvas data-testid="tn-canvas"></canvas>
+            <div class="tn-ui"><div class="tn-brand">Tinta<span>fountain pen ink · small batch</span></div>
+              <div class="tn-row"><div class="tn-title" data-testid="tn-title"><b data-testid="tn-name">Nº 07 — Oxblood</b><span data-testid="tn-note">30 ml · iron-gall · shading, sheen</span></div>
+                <div><div class="tn-swatches" data-testid="tn-swatches"><button class="tn-sw tn-on" data-c="0" data-testid="tn-sw-oxblood" aria-label="Oxblood" style="background:oklch(0.42 0.19 25)"></button><button class="tn-sw" data-c="1" data-testid="tn-sw-ultramarine" aria-label="Ultramarine" style="background:oklch(0.35 0.14 260)"></button><button class="tn-sw" data-c="2" data-testid="tn-sw-verdigris" aria-label="Verdigris" style="background:oklch(0.40 0.12 160)"></button><button class="tn-sw" data-c="3" data-testid="tn-sw-sepia" aria-label="Sepia" style="background:oklch(0.22 0.02 60)"></button></div><div class="tn-price" style="margin-top:8px">£14 · move your hand through the ink</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Tinta · e-commerce</b> · the product page is the product: a fluid solve on a paper-white grid, ink injected where the pointer goes, the swatch changes the ink · <i>advect · diverge · 24 pressure iterations · project, on the GPU</i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ §4 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-4">
+    <div class="gp-label">Atomics · sorting · indirect draw</div>
+    <h2>populations big enough to be the content</h2>
+    <p>Past a few thousand agents, the hard part is not moving them — it is letting them
+      find each other. A scatter write (<b>this bird counts itself into that cell</b>)
+      needs atomics; sorting by cell needs a writable buffer; both are things a fragment
+      shader cannot do. With them, a quarter of a million agents can each consult their
+      neighbours every frame, and a simulation becomes something a researcher, an
+      architect or a game can put a question to.</p>
+    <div class="gp-grid">
+      <div class="gp-card gp-wide">
+        <div class="mu" data-testid="mu-card">
+          <div class="mu-head">Collective Behaviour · online edition<span>Fig. 3 · interactive · doi invented</span></div>
+          <div class="mu-title">Topological interaction preserves flock cohesion under predation: a rank-based rule (b) against a metric one (a), 262 144 birds per panel</div>
+          <div class="gp-stage" data-testid="mu-stage"><canvas data-testid="mu-canvas"></canvas>
+            <div class="mu-panels" aria-hidden="true">
+              <div class="mu-panel"><span class="mu-panel-k mu-m">a<i>metric · r = <span data-testid="mu-r-label">—</span></i></span><span class="mu-panel-r">fragments <b data-testid="mu-frag-a">—</b> · mean neighbours <b data-testid="mu-k-a">—</b></span></div>
+              <div class="mu-panel"><span class="mu-panel-k mu-t">b<i>topological · k = 7</i></span><span class="mu-panel-r">fragments <b data-testid="mu-frag-b">—</b> · mean neighbours <b data-testid="mu-k-b">—</b></span></div>
+            </div>
+            <span class="mu-cue" data-testid="mu-cue">stoop</span>
+            <span class="gp-status" data-testid="mu-status" style="color:oklch(0.8 0.006 90)">requesting a device…</span>
+          </div>
+          <div class="mu-foot"><button class="mu-stoop" data-testid="mu-stoop-now">stoop now</button><button data-testid="mu-reset">reset</button><span>passes · bin <b data-testid="mu-p-bin">—</b> · sort <b data-testid="mu-p-sort">—</b> · query <b data-testid="mu-p-query">—</b> · render <b data-testid="mu-p-render">—</b></span><span>readback, on cue · <b data-testid="mu-t-rb">—</b></span></div>
+        </div>
+        <div class="gp-cap"><b>Collective Behaviour · research figure</b> · Ballerini's finding made visible: on the metric rule the stoop shatters the flock, on the rank rule it holds · fragments counted from one readback three seconds after contact, and the readback's cost printed with it · <i>count · scan · scatter · k-NN in registers · one draw</i></div>
+      </div>
+      <div class="gp-card gp-wide">
+        <div class="cc" data-testid="cc-card">
+          <div class="gp-stage" data-testid="cc-stage"><canvas data-testid="cc-canvas"></canvas>
+            <div class="cc-ui"><div class="cc-brand"><span><b>Kingsway</b> · concourse study · option C</span><span>drag the kiosks · watch the crush</span></div>
+              <div class="cc-score"><span>people in the hall<b data-testid="cc-n">—</b></span><span>mean time to platform<b data-testid="cc-time">—</b></span><span>worst crowding<b data-testid="cc-crush">—</b></span></div></div>
+            <span class="gp-status" data-testid="cc-status" style="color:var(--cc-dim)">requesting a device…</span>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Kingsway · architecture</b> · thirty thousand passengers cross a concourse from entrances to platforms; move the kiosks and the crush moves — a design tool that plays like a game · <i>a distance field relaxed on the GPU each frame, a density grid by atomics, separation from its gradient</i></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ §5 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-5">
+    <div class="gp-label">Procedural generation</div>
+    <h2>a world grown, not drawn</h2>
+    <p>A downloaded map is a picture; a generated one is a process, and a process can be
+      re-run with one number changed. A compute pass writes a million heights from
+      noise, another routes water downhill across them, another carves where the water
+      runs — and the result is a place with rivers that reach the sea and coasts that
+      make sense, in a few dozen milliseconds, for every seed a player will ever press.</p>
+    <div class="tw" data-testid="tw-card">
+      <div class="gp-stage" data-testid="tw-stage"><canvas data-testid="tw-canvas"></canvas><span class="gp-status" data-testid="tw-status" style="color:var(--tw-dim)">requesting a device…</span></div>
+      <div class="tw-panel">
+        <div class="tw-brand">Tessera<span>a strategy game · new world</span></div>
+        <div class="tw-name" data-testid="tw-name">—<span data-testid="tw-seed">seed —</span></div>
+        <button class="tw-btn" data-testid="tw-generate">generate another world</button>
+        <div><div class="tw-k"><span>sea level</span><b data-testid="tw-sea-v">0.42</b></div><input class="tw-range" type="range" min="0.2" max="0.65" step="0.01" value="0.42" data-testid="tw-sea"></div>
+        <div><div class="tw-k"><span>erosion</span><b data-testid="tw-ero-v">24 passes</b></div><input class="tw-range" type="range" min="0" max="64" step="1" value="24" data-testid="tw-ero"></div>
+        <div class="tw-stats" data-testid="tw-stats">1024 × 1024 heights · noise <b data-testid="tw-t-noise">—</b> · flow <b data-testid="tw-t-flow">—</b> · carve <b data-testid="tw-t-carve">—</b> · shade <b data-testid="tw-t-shade">—</b></div>
+      </div>
+    </div>
+    <div class="gp-cap"><b>Tessera · games</b> · the new-world screen: fBm terrain, flow accumulation by repeated downhill routing, stream-power carving, hillshade and biomes by height and wetness · <i>four compute passes and a render pass, all on the GPU, every press of the button</i></div>
+  </section>
+
+  <!-- ═══ §6 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-6">
+    <div class="gp-label">On-device inference</div>
+    <h2>a model where the pen is</h2>
+    <p>A neural network is matrix multiplies, and a compute pass is a good place for those.
+      This model was trained in this repository — two layers, a hundred thousand weights,
+      ninety-odd percent on the standard test set — and it runs on the GPU in front of
+      you every time the pen lifts. <b>No upload, no round trip, no API bill</b>: a
+      category of feature that did not exist client-side, and the one a room of
+      designers has not considered.</p>
+    <div class="sm" data-testid="sm-card">
+      <div>
+        <div class="sm-brand">Sum! · level 3</div>
+        <div class="sm-q"><span data-testid="sm-a">7</span> + <span data-testid="sm-b">5</span> = <i>?</i></div>
+        <div class="sm-boxes">
+          <div class="sm-box" data-testid="sm-box-0"><div class="gp-stage"><canvas data-testid="sm-canvas-0"></canvas></div><span class="sm-guess">reads <b data-testid="sm-g-0">·</b></span></div>
+          <div class="sm-box" data-testid="sm-box-1"><div class="gp-stage"><canvas data-testid="sm-canvas-1"></canvas></div><span class="sm-guess">reads <b data-testid="sm-g-1">·</b></span></div>
+        </div>
+        <div class="sm-verdict" data-testid="sm-verdict"></div>
+      </div>
+      <div class="sm-side">
+        <div class="sm-k">score</div><div class="sm-score" data-testid="sm-score">0<span>of 0</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sm-btn" data-testid="sm-check">check</button><button class="sm-btn sm-ghost" data-testid="sm-clear">clear</button><button class="sm-btn sm-ghost" data-testid="sm-next">next</button></div>
+        <div class="sm-model" data-testid="sm-model">model 784 → 128 → 10 · trained here on MNIST · test accuracy <b data-testid="sm-acc">—</b> · inference <b data-testid="sm-ms">—</b> per digit on the GPU · weights <b data-testid="sm-kb">—</b></div>
+      </div>
+    </div>
+    <div class="gp-cap"><b>Sum! · learning</b> · a kids' maths game that reads handwriting: each box is downsampled to 28 × 28, a two-layer network in WGSL scores it, and the answer is checked — all on the device · <i>two matmul passes, weights in a storage buffer, one 40-byte readback per lift</i></div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
+      <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
+      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, a digit — it prints what the asking cost.</li>
+      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, Umbra, Field Notes, Grains, the Coral Reef Alliance's card, Tinta, the paper and its authors, Kingsway, Tessera and Sum! do not exist. The physics, the rule after Ballerini et al. 2008, the model's accuracy and every measurement are real.</li>
+    </ol>
   </div>
 </div>
 
-<script type="module">
-const canvas = document.getElementById('c');
-const fallback = document.getElementById('fallback');
-const status = document.getElementById('status');
-const supportLabel = document.getElementById('supportLabel');
-
-async function init() {
-  if (!('gpu' in navigator)) {
-    supportLabel.textContent = 'unsupported';
-    fallback.querySelector('h4').textContent = 'WebGPU not available';
-    fallback.querySelector('p').textContent =
-      'navigator.gpu is undefined on this browser/machine. This is the fallback rung of the ladder — a static poster would render here in the real deck.';
-    return;
-  }
-  try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) throw new Error('no adapter');
-    const device = await adapter.requestDevice();
-    const ctx = canvas.getContext('webgpu');
-    const format = navigator.gpu.getPreferredCanvasFormat();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const frame = canvas.closest('.canvas-frame');
-    const resize = () => {
-      const r = frame.getBoundingClientRect();
-      canvas.width = r.width * dpr;
-      canvas.height = r.height * dpr;
-    };
-    resize();
-    ctx.configure({ device, format, alphaMode: 'opaque' });
-
-    /* Regex-matching numbers out of getComputedStyle(probe).color
-       was wrong: current Chrome preserves oklch() through
-       getComputedStyle rather than normalising it to rgb(), so
-       that extracted [0.70, 0.26, 320] — the raw OKLCH values —
-       and divided THEM by 255 as if they were sRGB bytes. Canvas
-       2D genuinely parses oklch() (verified in canvas.html); paint
-       1px and read the real bytes back instead of parsing a string. */
-    function resolveToRGB(cssColor) {
-      const c = document.createElement('canvas');
-      c.width = c.height = 1;
-      const cctx = c.getContext('2d');
-      cctx.fillStyle = cssColor;
-      cctx.fillRect(0, 0, 1, 1);
-      return [...cctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
-    }
-    const tint = getComputedStyle(document.documentElement).getPropertyValue('--tint').trim();
-    const rgb = resolveToRGB(tint || 'oklch(0.70 0.26 320)');
-
-    function draw() {
-      const encoder = device.createCommandEncoder();
-      const pass = encoder.beginRenderPass({
-        colorAttachments: [{
-          view: ctx.getCurrentTexture().createView(),
-          clearValue: { r: rgb[0] / 255 * 0.35, g: rgb[1] / 255 * 0.35, b: rgb[2] / 255 * 0.35, a: 1 },
-          loadOp: 'clear', storeOp: 'store',
-        }],
-      });
-      pass.end();
-      device.queue.submit([encoder.finish()]);
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    canvas.hidden = false;
-    fallback.remove();
-    supportLabel.textContent = 'supported — device initialised';
-    status.textContent = `Adapter: ${adapter.info?.vendor || 'unknown vendor'} · clear-colour pipeline only`;
-  } catch (err) {
-    supportLabel.textContent = 'supported, init failed';
-    fallback.querySelector('h4').textContent = 'WebGPU present but device init failed';
-    fallback.querySelector('p').textContent = String(err.message || err);
-  }
-}
-init();
-</script>
-
+<script src="../system/wam.js"></script>
+<script src="../assets/models/mnist-mlp.js"></script>
+<script type="module" src="./webgpu/sheet.js"></script>
 </body>
 </html>
