@@ -109,13 +109,39 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .nc-tx-new { animation: nc-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes nc-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .nc-pull { text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.mk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-@media (min-width: 720px) { .mk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-.mk { background: var(--hz-100); border: var(--hair) solid var(--hz-300); }
-.mk .gp-stage { aspect-ratio: 1.75; }
-.mk-txt { padding: 8px 10px 9px; font-family: var(--sans); font-size: 11px; }
-.mk-txt b { display: block; font-weight: 700; letter-spacing: -0.01em; color: var(--hz-600); }
-.mk-txt span { display: block; font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); margin-top: 3px; }
+.wl { --wl-bg: oklch(0.13 0.008 260); --wl-ink: oklch(0.95 0.005 260); --wl-dim: oklch(0.62 0.01 260); background: var(--wl-bg); color: var(--wl-ink); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; }
+@media (min-width: 860px) { .wl { grid-template-columns: 360px minmax(0, 1fr); align-items: center; } }
+.wl-phone { width: min(100%, 340px); aspect-ratio: 9 / 19; border-radius: 40px; border: 2px solid oklch(0.3 0.01 260); background: oklch(0.09 0.006 260); position: relative; overflow: hidden; display: flex; flex-direction: column; margin: 0 auto; }
+.wl-top { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 22px 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-dim); }
+.wl-top b { font-family: var(--sans); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--wl-ink); text-transform: none; }
+.wl-stack { position: relative; flex: 1; margin: 6px 14px 18px; overflow: hidden; }
+.wl-cardface { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 1.6; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform 0.62s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s; box-shadow: 0 -6px 18px oklch(0 0 0 / 0.45); will-change: transform; }
+.wl-cardface .gp-stage { position: absolute; inset: 0; }
+.wl-cardface.wl-on { box-shadow: 0 18px 40px oklch(0 0 0 / 0.6); }
+.wl-face { position: absolute; inset: 0; pointer-events: none; padding: 12px 14px; display: flex; flex-direction: column; justify-content: flex-end; }
+.wl-who { font-family: var(--sans); color: var(--wl-face-ink, white); }
+.wl-who b { display: block; font-size: 13px; font-weight: 700; letter-spacing: -0.01em; }
+.wl-who span { display: block; font-size: 9.5px; opacity: 0.75; margin-top: 2px; }
+.wl-co { position: absolute; right: 14px; bottom: 12px; font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--wl-face-ink, white); opacity: 0.7; }
+.wl-nfc { position: absolute; right: 14px; top: 12px; width: 18px; height: 18px; }
+.wl-nfc i { position: absolute; right: 0; bottom: 0; border: 1.5px solid var(--wl-face-ink, white); border-color: var(--wl-face-ink, white) transparent transparent var(--wl-face-ink, white); border-radius: 50%; opacity: 0.6; transform: rotate(45deg); }
+.wl-nfc i:nth-child(1) { width: 6px; height: 6px; } .wl-nfc i:nth-child(2) { width: 11px; height: 11px; } .wl-nfc i:nth-child(3) { width: 16px; height: 16px; }
+.wl-walmart, .wl-amazon, .wl-apple { --wl-face-ink: white; }
+.wl-unitedhealth, .wl-berkshire, .wl-cvs, .wl-exxon, .wl-alphabet { --wl-face-ink: oklch(0.2 0.01 260); }
+.wl-detail { position: absolute; left: 0; right: 0; padding: 4px 6px; animation: wl-in 0.5s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.wl-detail[hidden] { display: none; }
+@keyframes wl-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.wl-d-name { font-family: var(--sans); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.wl-d-title { font-family: var(--sans); font-size: 11px; color: var(--wl-dim); margin-bottom: 10px; }
+.wl-d-rows div { display: flex; justify-content: space-between; gap: 10px; font-family: var(--sans); font-size: 11px; padding: 7px 0; border-top: var(--hair) solid oklch(0.25 0.01 260); }
+.wl-d-rows span { color: var(--wl-dim); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; } .wl-d-rows b { font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-d-btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.wl-d-btns button { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-bg); background: var(--wl-ink); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.wl-d-btns .wl-ghost { background: transparent; color: var(--wl-ink); border: var(--hair) solid oklch(0.4 0.01 260); }
+.wl-side { display: flex; flex-direction: column; gap: 10px; max-width: 46ch; }
+.wl-k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); }
+.wl-side p { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: oklch(0.85 0.006 260); margin: 0; }
+.wl-note { font-size: 11px !important; color: var(--wl-dim) !important; } .wl-note code { font-family: var(--mono); font-size: 10px; color: var(--wl-ink); }
 
 /* ─── §3 · fluids ──────────────────────────────────────────────────────── */
 .tn { --tn-bg: oklch(0.975 0.004 90); --tn-ink: oklch(0.18 0.01 30); --tn-dim: oklch(0.55 0.01 30); --tn-red: oklch(0.52 0.20 25); background: var(--tn-bg); color: var(--tn-ink); }
@@ -300,8 +326,8 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       storage buffer and a compute pass moves every one of them each frame, text can be
       made of sand, a refresh can be a swarm, a switch can pour, a hero can part around
       the hand — and the CPU sends nothing per frame but the pointer. And when the
-      motion is the brand rather than the data, a fragment program twelve lines long is
-      the whole business card.</p>
+      motion is the brand rather than the data, the card itself can be the program:
+      a wallet of eight business cards, each carrying its company's real mark, alive.</p>
     <div class="gp-grid">
       <div class="gp-card">
         <div class="at" data-testid="at-card">
@@ -329,19 +355,41 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
         <div class="gp-cap"><b>Nectar · banking</b> · the balance is not printed, it is thirty-six thousand bees holding the digits; a transaction lands and the figure swings to the new number on an under-damped spring, the bees re-form every tick, the budget ring fills, the colour turns · pull down and they forage · <i>one kernel, targets rebuilt as the number moves</i></div>
       </div>
       <div class="gp-card gp-wide">
-        <div class="mk-grid" data-testid="mk-grid">
-          <div class="mk" data-testid="mk-walmart"><div class="gp-stage" data-testid="mk-walmart-stage"><canvas data-testid="mk-walmart-canvas"></canvas></div><div class="mk-txt"><b>Walmart</b><span>Retail · Bentonville</span></div></div>
-          <div class="mk" data-testid="mk-amazon"><div class="gp-stage" data-testid="mk-amazon-stage"><canvas data-testid="mk-amazon-canvas"></canvas></div><div class="mk-txt"><b>Amazon</b><span>Commerce · cloud · Seattle</span></div></div>
-          <div class="mk" data-testid="mk-apple"><div class="gp-stage" data-testid="mk-apple-stage"><canvas data-testid="mk-apple-canvas"></canvas></div><div class="mk-txt"><b>Apple</b><span>Devices · Cupertino</span></div></div>
-          <div class="mk" data-testid="mk-unitedhealth"><div class="gp-stage" data-testid="mk-unitedhealth-stage"><canvas data-testid="mk-unitedhealth-canvas"></canvas></div><div class="mk-txt"><b>UnitedHealth Group</b><span>Health · Minnetonka</span></div></div>
-          <div class="mk" data-testid="mk-berkshire"><div class="gp-stage" data-testid="mk-berkshire-stage"><canvas data-testid="mk-berkshire-canvas"></canvas></div><div class="mk-txt"><b>Berkshire Hathaway</b><span>Holding · Omaha</span></div></div>
-          <div class="mk" data-testid="mk-cvs"><div class="gp-stage" data-testid="mk-cvs-stage"><canvas data-testid="mk-cvs-canvas"></canvas></div><div class="mk-txt"><b>CVS Health</b><span>Pharmacy · Woonsocket</span></div></div>
-          <div class="mk" data-testid="mk-exxon"><div class="gp-stage" data-testid="mk-exxon-stage"><canvas data-testid="mk-exxon-canvas"></canvas></div><div class="mk-txt"><b>ExxonMobil</b><span>Energy · Spring, Texas</span></div></div>
-          <div class="mk" data-testid="mk-alphabet"><div class="gp-stage" data-testid="mk-alphabet-stage"><canvas data-testid="mk-alphabet-canvas"></canvas></div><div class="mk-txt"><b>Alphabet</b><span>Search · Mountain View</span></div></div>
+        <div class="wl" data-testid="wl-card">
+          <div class="wl-phone" data-testid="wl-phone">
+            <div class="wl-top"><span>9:41</span><b>Wallet</b><span data-testid="wl-count">8 cards</span></div>
+            <div class="wl-stack" data-testid="wl-stack">
+            <div class="wl-cardface wl-walmart" data-testid="wl-walmart" role="button" tabindex="0" aria-label="Walmart card"><div class="gp-stage" data-testid="wl-walmart-stage"><canvas data-testid="wl-walmart-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Dana Whitfield</b><span>VP, Store Experience</span></div><div class="wl-co">Walmart</div></div></div>
+            <div class="wl-cardface wl-amazon" data-testid="wl-amazon" role="button" tabindex="0" aria-label="Amazon card"><div class="gp-stage" data-testid="wl-amazon-stage"><canvas data-testid="wl-amazon-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Raj Menon</b><span>Principal Motion Designer</span></div><div class="wl-co">Amazon</div></div></div>
+            <div class="wl-cardface wl-apple" data-testid="wl-apple" role="button" tabindex="0" aria-label="Apple card"><div class="gp-stage" data-testid="wl-apple-stage"><canvas data-testid="wl-apple-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Ines Marlow</b><span>Design Lead, Interaction</span></div><div class="wl-co">Apple</div></div></div>
+            <div class="wl-cardface wl-unitedhealth" data-testid="wl-unitedhealth" role="button" tabindex="0" aria-label="UnitedHealth Group card"><div class="gp-stage" data-testid="wl-unitedhealth-stage"><canvas data-testid="wl-unitedhealth-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Dr Amara Cole</b><span>Chief Digital Officer</span></div><div class="wl-co">UnitedHealth Group</div></div></div>
+            <div class="wl-cardface wl-berkshire" data-testid="wl-berkshire" role="button" tabindex="0" aria-label="Berkshire Hathaway card"><div class="gp-stage" data-testid="wl-berkshire-stage"><canvas data-testid="wl-berkshire-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Thomas Reade</b><span>Investment Associate</span></div><div class="wl-co">Berkshire Hathaway</div></div></div>
+            <div class="wl-cardface wl-cvs" data-testid="wl-cvs" role="button" tabindex="0" aria-label="CVS Health card"><div class="gp-stage" data-testid="wl-cvs-stage"><canvas data-testid="wl-cvs-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Marisol Vega</b><span>Director, Pharmacy Innovation</span></div><div class="wl-co">CVS Health</div></div></div>
+            <div class="wl-cardface wl-exxon" data-testid="wl-exxon" role="button" tabindex="0" aria-label="ExxonMobil card"><div class="gp-stage" data-testid="wl-exxon-stage"><canvas data-testid="wl-exxon-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Owen Hartley</b><span>Brand &amp; Motion</span></div><div class="wl-co">ExxonMobil</div></div></div>
+            <div class="wl-cardface wl-alphabet" data-testid="wl-alphabet" role="button" tabindex="0" aria-label="Alphabet card"><div class="gp-stage" data-testid="wl-alphabet-stage"><canvas data-testid="wl-alphabet-canvas"></canvas></div>
+              <div class="wl-face"><div class="wl-nfc" aria-hidden="true"><i></i><i></i><i></i></div><div class="wl-who"><b>Kenji Sato</b><span>Creative Technologist</span></div><div class="wl-co">Alphabet</div></div></div>
+              <div class="wl-detail" data-testid="wl-detail" hidden>
+                <div class="wl-d-name" data-testid="wl-d-name">—</div><div class="wl-d-title" data-testid="wl-d-title">—</div>
+                <div class="wl-d-rows"><div><span>email</span><b data-testid="wl-d-mail">—</b></div><div><span>phone</span><b data-testid="wl-d-tel">—</b></div><div><span>web</span><b data-testid="wl-d-site">—</b></div></div>
+                <div class="wl-d-btns"><button data-testid="wl-add">add to contacts</button><button data-testid="wl-share">share</button><button class="wl-ghost" data-testid="wl-close">done</button></div>
+              </div>
+            </div>
+          </div>
+          <div class="wl-side">
+            <div class="wl-k">Wallet · digital business cards</div>
+            <p>Eight cards from the eight largest companies on the Fortune list, each carrying the company's own mark. Tap one and it rises out of the stack; the mark comes alive on the open card — rebuilt from its pixels as particles, or shaded as liquid metal, pressed into the stock, sent through a ripple, seen through oil. The stock has grain, and a holographic sheen that follows the hand the way a real card catches light when the phone tilts.</p>
+            <p class="wl-note">The people are invented. The marks are the companies' own, fetched from Wikimedia Commons; see <code>design/assets/marks/LICENCES.md</code>. Left alone, the wallet opens a card every few seconds.</p>
+          </div>
         </div>
-        <div class="gp-cap"><b>Marks · eight motion business cards</b> · the eight largest companies on the Fortune list, each as a palette and one piece of motion craft written as a fragment program — a sunrise down the aisle, parcels on a belt, brushed metal and a light sweep, a pulse, a price line that only climbs, a heart at resting rate, oil under a lamp, four colours sorting themselves · no logos, no type, and the hand is in every one · <i>eight fragment passes, one uniform each</i></div>
+        <div class="gp-cap"><b>Wallet · brand</b> · a digital business card that could sit in Apple Wallet if wallets allowed motion: one canvas per face, the mark as a texture and as particle targets, five surface programs and one particle kernel between them · <i>eight faces, each one or two passes, nothing uploaded per frame but the tilt</i></div>
       </div>
-    </div>
     <div class="gp-strip" data-testid="loop-strip"><span>grains on this section</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
   </section>
 
