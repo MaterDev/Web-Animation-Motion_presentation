@@ -30,7 +30,7 @@ fn smax(a: f32, b: f32, k: f32) -> f32 { return -smin(-a, -b, k); }
 var<private> trap: f32;
 fn kifs(p0: vec3f) -> f32 { /* a Menger sponge, each level twisted a little more; the morph turns the twist */
   var p = rotY(p0, 0.4) / 6.5; var d = sdBox(p, vec3f(1.0)); var s = 1.0; trap = 1e9;
-  for (var i = 0; i < 5; i++) { let q = rotY(rotX(p * s, r.morph * 0.12 * f32(i)), r.morph * 0.09 * f32(i)); let a = q - 2.0 * floor(q / 2.0) - 1.0; s *= 3.0; let rr = abs(1.0 - 3.0 * abs(a)); trap = min(trap, length(a) * (0.9 - 0.12 * f32(i)));
+  for (var i = 0; i < 4; i++) { let q = rotY(rotX(p * s, r.morph * 0.05 * f32(i)), r.morph * 0.04 * f32(i)); let a = q - 2.0 * floor(q / 2.0) - 1.0; s *= 3.0; let rr = abs(1.0 - 3.0 * abs(a)); trap = min(trap, length(a) * (0.9 - 0.12 * f32(i)));
     let da = max(rr.x, rr.y); let db = max(rr.y, rr.z); let dc = max(rr.z, rr.x); let c = (min(da, min(db, dc)) - 1.0) / s; d = max(d, c); }
   return d * 6.5; }
 fn sdTorus(p: vec3f, t: vec2f) -> f32 { let q = vec2f(length(p.xz) - t.x, p.y); return length(q) - t.y; }
@@ -40,10 +40,11 @@ fn shoe(q0: vec3f) -> vec2f {
   let q = q0 - vec3f(0.05, 0.56, 0.0);
   let wide = 0.80 + 0.20 * smoothstep(-0.9, 0.2, q.x);
   let qs = vec3f(q.x, q.y, q.z / wide);
-  let sole = sdBox(qs - vec3f(0.0, 0.09, 0.0), vec3f(0.92, 0.05, 0.30)) - 0.07;
+  let sole = sdBox(qs - vec3f(0.0, 0.10, 0.0), vec3f(0.92, 0.06, 0.30)) - 0.08;
+  let midsole = sdBox(qs - vec3f(0.05, 0.19, 0.0), vec3f(0.86, 0.02, 0.30)) - 0.05;
   let toe = sdEll(qs - vec3f(-0.60, 0.27, 0.0), vec3f(0.42, 0.17, 0.28));
   let vamp = sdEll(qs - vec3f(-0.08, 0.32, 0.0), vec3f(0.52, 0.24, 0.31));
-  let heel = sdEll(qs - vec3f(0.55, 0.40, 0.0), vec3f(0.42, 0.33, 0.29));
+  let heel = sdEll(qs - vec3f(0.56, 0.42, 0.0), vec3f(0.40, 0.36, 0.29));
   var up = smin(smin(toe, vamp, 0.14), heel, 0.14);
   let hole = sdSeg(qs, vec3f(0.46, 0.46, 0.0), vec3f(0.46, 1.4, 0.0), 0.21); up = smax(up, -hole, 0.03);
   var collar = sdTorus(qs - vec3f(0.46, 0.70, 0.0), vec2f(0.22, 0.05));
@@ -52,7 +53,9 @@ fn shoe(q0: vec3f) -> vec2f {
   var laces = 1e9; for (var i = 0; i < 4; i++) { let x = -0.34 + f32(i) * 0.14; let y = 0.50 + f32(i) * 0.035 + 0.24 * sqrt(max(0.0, 1.0 - pow((x + 0.08) / 0.52, 2.0))) * 0.98 - 0.18; laces = min(laces, sdSeg(qs, vec3f(x, y, -0.12), vec3f(x + 0.03, y, 0.12), 0.016)); }
   let band = abs(qs.y - 0.30 - 0.07 * sin(qs.x * 2.6 + 0.4)) - 0.04;
   var m = 4.0; var d = body; if (band < 0.0 && abs(qs.z) > 0.17 && qs.x > -0.66 && qs.x < 0.70) { m = 5.0; }
+  if (qs.x < -0.72 && qs.y < 0.36) { m = 5.0; } /* toe cap */
   if (laces < d) { d = laces; m = 3.0; }
+  if (midsole < d) { d = midsole; m = 5.0; }
   if (sole < d) { d = sole; m = 3.0; }
   return vec2f(d * min(wide, 1.0), m); }
 fn map(p: vec3f) -> vec2f {
@@ -116,7 +119,7 @@ export function opticsCard() {
     s = { ctx, ru, pipe, g, tm }; status.hidden = true; lastTouch = performance.now();
   }, frame(t, dt, now) {
     if (!s) return; const dev = this.__dev, T = now / 1000;
-    const rc = stage.getBoundingClientRect(), bw = Math.round(rc.width * Math.min(DPR, 1.5) * 0.55), bh = Math.round(rc.height * Math.min(DPR, 1.5) * 0.55);
+    const rc = stage.getBoundingClientRect(), bw = Math.round(rc.width * Math.min(DPR, 1.5) * 0.7), bh = Math.round(rc.height * Math.min(DPR, 1.5) * 0.7);
     if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
     /* choreography: while untouched the camera drifts through three moves on an
        eight-second beat, and every beat the chamber folds a little further */
