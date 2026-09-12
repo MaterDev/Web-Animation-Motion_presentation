@@ -73,78 +73,86 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .ck-total b { color: var(--ck-ink); font-weight: 500; }
 .ck-note { font-size: 9px; line-height: 1.5; color: var(--ck-dim); }
 
-/* ─── §2 · four particle interfaces ────────────────────────────────────── */
+/* ─── §2 · particles as interface ──────────────────────────────────────── */
 .at { --at-bg: oklch(0.93 0.025 80); --at-ink: oklch(0.28 0.04 60); --at-dim: oklch(0.52 0.04 60); --at-acc: oklch(0.55 0.13 40); background: var(--at-bg); color: var(--at-ink); }
-.at .gp-stage { aspect-ratio: 16 / 10; }
+.at .gp-stage { aspect-ratio: 16 / 12; }
 .at-ui { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px; }
 .at-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.32em; text-transform: uppercase; }
 .at-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; margin-left: 10px; color: var(--at-dim); font-size: 11px; }
 .at-field { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: color-mix(in oklch, var(--at-bg) 70%, white); border: var(--hair) solid var(--at-dim); padding: 10px 14px; }
 .at-field input { flex: 1; border: 0; background: transparent; font-family: var(--sans); font-size: 15px; color: var(--at-ink); outline: none; min-width: 0; }
 .at-field input::placeholder { color: var(--at-dim); }
-.at-field button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-bg); background: var(--at-acc); border: 0; padding: 8px 12px; cursor: pointer; }
+.at-field button { pointer-events: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-bg); background: var(--at-acc); border: 0; padding: 8px 12px; cursor: pointer; }
 .at-hint { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--at-dim); }
-.nc { --nc-bg: oklch(0.16 0.03 75); --nc-card: oklch(0.22 0.04 75); --nc-ink: oklch(0.95 0.02 85); --nc-dim: oklch(0.66 0.05 80); --nc-gold: oklch(0.82 0.16 85); background: var(--nc-bg); color: var(--nc-ink); display: grid; place-items: center; padding: 18px; }
+.at-months, .at-from, .at-route, .at-results { position: absolute; left: 18px; right: 18px; opacity: 0; transition: opacity 0.6s; }
+.at-months { top: 63%; display: grid; grid-template-columns: repeat(12, 1fr); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.08em; color: var(--at-dim); text-align: center; }
+.at-month b { display: block; color: var(--at-ink); font-weight: 500; font-size: 8px; margin-top: 2px; }
+.at-from { top: 13%; font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.at-route { top: 56%; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 0 7%; color: var(--at-ink); }
+.at-results { top: 12%; display: flex; flex-direction: column; gap: 4px; width: 46%; }
+.at-results div { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; background: color-mix(in oklch, var(--at-bg) 40%, white); padding: 6px 10px; font-family: var(--sans); font-size: 11px; }
+.at-results b { font-weight: 600; } .at-results span { grid-column: 1; color: var(--at-dim); font-size: 10px; } .at-results i { grid-row: 1 / 3; align-self: center; font-style: normal; font-weight: 700; color: var(--at-acc); font-size: 14px; }
+.at[data-phase="chart"] .at-months, .at[data-phase="chart"] .at-from, .at[data-phase="route"] .at-route, .at[data-phase="route"] .at-results { opacity: 1; }
+.nc { --nc-bg: oklch(0.16 0.03 75); --nc-card: oklch(0.22 0.04 75); --nc-ink: oklch(0.95 0.02 85); --nc-dim: oklch(0.66 0.05 80); --nc-gold: oklch(0.82 0.16 85); --nc-cool: oklch(0.75 0.10 220); background: var(--nc-bg); color: var(--nc-ink); display: grid; place-items: center; padding: 18px; }
 .nc-phone { width: min(100%, 300px); aspect-ratio: 9 / 16; border-radius: 28px; border: 2px solid oklch(0.32 0.02 75); background: var(--nc-bg); position: relative; overflow: hidden; }
 .nc-phone .gp-stage { position: absolute; inset: 0; }
-.nc-ui { position: absolute; inset: 0; pointer-events: none; padding: 26px 18px; display: flex; flex-direction: column; gap: 12px; }
+.nc-ui { position: absolute; inset: 0; pointer-events: none; padding: 26px 18px; display: flex; flex-direction: column; gap: 8px; }
 .nc-top { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); display: flex; justify-content: space-between; }
 .nc-hive { font-family: var(--sans); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; color: var(--nc-gold); }
-.nc-card { margin-top: 28px; background: var(--nc-card); border-radius: 14px; padding: 14px 16px; }
-.nc-card small { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.nc-bal { font-family: var(--sans); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
-.nc-sub { font-family: var(--sans); font-size: 11px; color: var(--nc-dim); }
-.nc-row { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 12px; color: var(--nc-dim); padding: 6px 4px; border-bottom: 1px solid oklch(0.26 0.03 75); } .nc-row b { color: var(--nc-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
-.nc-list { margin-top: 6px; } .nc-list small { font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.nc-tx { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 11.5px; padding: 5px 4px; } .nc-tx b { font-weight: 500; font-variant-numeric: tabular-nums; } .nc-tx .nc-in { color: var(--nc-gold); }
-.nc-pull { margin-top: auto; text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.um { --um-bg: oklch(0.13 0.03 262); --um-ink: oklch(0.94 0.01 90); --um-dim: oklch(0.58 0.02 262); --um-warm: oklch(0.90 0.11 85); background: var(--um-bg); color: var(--um-ink); }
-.um .gp-stage { aspect-ratio: 16 / 10; cursor: pointer; }
-.um-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
-.um-brand { font-family: var(--sans); font-size: 12px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; }
-.um-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--um-dim); margin-left: 10px; font-size: 11px; }
-.um-room { font-family: var(--sans); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
-.um-state { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--um-dim); margin-top: 4px; }
-.um-state b { color: var(--um-warm); font-weight: 500; }
-.fn { --fn-bg: oklch(0.97 0.01 100); --fn-ink: oklch(0.22 0.03 130); --fn-dim: oklch(0.50 0.03 130); background: var(--fn-bg); color: var(--fn-ink); }
-.fn .gp-stage { aspect-ratio: 21 / 9; }
-.fn-ui { position: absolute; inset: 0; pointer-events: none; padding: 18px 22px; display: flex; flex-direction: column; justify-content: flex-end; }
-.fn-nav { position: absolute; top: 16px; left: 22px; right: 22px; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fn-dim); pointer-events: none; }
-.fn-nav b { color: var(--fn-ink); font-weight: 600; }
-.fn-h { font-family: var(--sans); font-size: clamp(22px, 3.4vw, 40px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.02; max-width: 12ch; margin: 0 0 8px; text-transform: none; }
-.fn-p { font-family: var(--sans); font-size: 12.5px; color: var(--fn-dim); max-width: 40ch; margin: 0; }
+.nc-hero { margin-top: 52%; text-align: center; }
+.nc-hero small { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.nc-bal { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--nc-dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.nc-sub { font-family: var(--sans); font-size: 11px; color: var(--nc-ink); margin-top: 2px; }
+.nc-ring { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--nc-gold); margin-top: 2px; }
+.nc-list { margin-top: auto; } .nc-list small { font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.nc-tx { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 11.5px; padding: 5px 4px; border-bottom: 1px solid oklch(0.24 0.03 75); } .nc-tx b { font-weight: 500; font-variant-numeric: tabular-nums; } .nc-tx .nc-in { color: var(--nc-gold); }
+.nc-tx-new { animation: nc-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes nc-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.nc-pull { text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
+.mk-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 720px) { .mk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.mk { background: var(--hz-100); border: var(--hair) solid var(--hz-300); }
+.mk .gp-stage { aspect-ratio: 1.75; }
+.mk-txt { padding: 8px 10px 9px; font-family: var(--sans); font-size: 11px; }
+.mk-txt b { display: block; font-weight: 700; letter-spacing: -0.01em; color: var(--hz-600); }
+.mk-txt span { display: block; font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); margin-top: 3px; }
 
-/* ─── §3 · neighbours ──────────────────────────────────────────────────── */
-.gr { --gr-bg: oklch(0.96 0.02 95); --gr-ink: oklch(0.25 0.02 60); --gr-dim: oklch(0.52 0.03 60); --gr-frame: oklch(0.88 0.03 95); background: var(--gr-bg); color: var(--gr-ink); }
-.gr .gp-stage { aspect-ratio: 16 / 10; cursor: crosshair; }
-.gr-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 10px 12px; border-bottom: var(--hair) solid var(--gr-frame); }
-.gr-brand { font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; margin-right: auto; }
-.gr-brand span { font-weight: 500; letter-spacing: 0; color: var(--gr-dim); margin-left: 8px; font-size: 11px; }
-.gr-el { font-family: var(--sans); font-size: 11px; font-weight: 600; border: 0; border-radius: 999px; padding: 5px 10px; cursor: pointer; color: var(--gr-ink); background: var(--gr-frame); display: inline-flex; align-items: center; gap: 6px; }
-.gr-el i { width: 10px; height: 10px; border-radius: 50%; background: var(--sw); }
-.gr-el.gr-on { outline: 2px solid var(--gr-ink); outline-offset: -2px; }
-.gr-count { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gr-dim); margin-left: 6px; }
-.rf { --rf-bg: oklch(0.20 0.05 215); --rf-ink: oklch(0.96 0.02 80); --rf-dim: oklch(0.70 0.05 200); --rf-coral: oklch(0.72 0.17 30); background: var(--rf-bg); color: var(--rf-ink); display: grid; place-items: center; padding: 18px; }
-.rf-card { width: min(100%, 380px); aspect-ratio: 1.586; border-radius: 12px; overflow: hidden; position: relative; cursor: crosshair; }
-.rf-card .gp-stage { position: absolute; inset: 0; }
-.rf-ui { position: absolute; inset: 0; pointer-events: none; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; }
-.rf-name { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; }
-.rf-name span { display: block; font-weight: 400; letter-spacing: 0.04em; text-transform: none; color: var(--rf-dim); font-size: 10px; margin-top: 2px; }
-.rf-member { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; }
-.rf-member b { display: block; font-family: var(--sans); font-size: 14px; letter-spacing: 0; text-transform: none; font-weight: 600; margin-top: 3px; }
+/* ─── §3 · fluids ──────────────────────────────────────────────────────── */
 .tn { --tn-bg: oklch(0.975 0.004 90); --tn-ink: oklch(0.18 0.01 30); --tn-dim: oklch(0.55 0.01 30); --tn-red: oklch(0.52 0.20 25); background: var(--tn-bg); color: var(--tn-ink); }
-.tn .gp-stage { aspect-ratio: 16 / 10; cursor: crosshair; }
+.tn .gp-stage { aspect-ratio: 16 / 8; cursor: crosshair; }
 .tn-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between; }
 .tn-brand { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
 .tn-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tn-dim); margin-left: 10px; font-size: 11px; }
 .tn-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
 .tn-title { font-family: var(--sans); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+.tn-title b { font-weight: inherit; }
 .tn-title span { display: block; font-size: 11px; font-weight: 400; color: var(--tn-dim); letter-spacing: 0.04em; margin-top: 6px; }
-.tn-price { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; color: var(--tn-red); }
+.tn-price { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--tn-red); }
 .tn-swatches { display: flex; gap: 6px; }
 .tn-sw { width: 18px; height: 18px; border-radius: 50%; border: var(--hair) solid var(--tn-dim); cursor: pointer; pointer-events: auto; padding: 0; }
-.tn-title b { font-weight: inherit; }
 .tn-sw.tn-on { outline: 2px solid var(--tn-ink); outline-offset: 2px; }
+.fm { --fm-bg: oklch(0.14 0.01 60); --fm-ink: oklch(0.95 0.01 80); --fm-dim: oklch(0.62 0.02 70); background: var(--fm-bg); color: var(--fm-ink); }
+.fm .gp-stage { aspect-ratio: 4 / 5; background: oklch(0.10 0.01 60); }
+.fm-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
+.fm-brand { font-family: var(--sans); font-size: 13px; font-weight: 300; letter-spacing: 0.5em; text-transform: uppercase; }
+.fm-brand span { display: block; font-weight: 400; letter-spacing: 0.1em; color: var(--fm-dim); font-size: 9px; margin-top: 4px; font-family: var(--mono); }
+.fm-note-name { font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 8px; }
+.fm-notes { display: flex; gap: 6px; }
+.fm-note { pointer-events: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fm-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(1 0 0 / 0.2); padding: 6px 10px; cursor: pointer; }
+.fm-note.fm-on { background: var(--fm-ink); color: var(--fm-bg); }
+.fm-stat { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; color: var(--fm-dim); margin-top: 10px; }
+.pr { --pr-bg: oklch(0.95 0.01 80); --pr-ink: oklch(0.22 0.02 60); --pr-dim: oklch(0.52 0.02 60); background: var(--pr-bg); color: var(--pr-ink); }
+.pr .gp-stage { aspect-ratio: 4 / 5; cursor: ew-resize; }
+.pr-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
+.pr-brand { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
+.pr-brand span { display: block; font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--pr-dim); font-size: 11px; margin-top: 2px; }
+.pr-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.pr-price { font-family: var(--mono); font-size: 11px; color: var(--pr-dim); margin: 2px 0 8px; }
+.pr-fls { display: flex; gap: 6px; flex-wrap: wrap; }
+.pr-fl { pointer-events: auto; font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--pr-ink); background: white; border: var(--hair) solid oklch(0.8 0.01 80); border-radius: 999px; padding: 5px 10px 5px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.pr-fl::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.pr-fl.pr-on { outline: 2px solid var(--pr-ink); outline-offset: -2px; }
+.pr-stat { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; color: var(--pr-dim); margin-top: 10px; }
 
 /* ─── §4 · populations ─────────────────────────────────────────────────── */
 .mu { --mu-paper: oklch(0.965 0.005 90); --mu-ink: oklch(0.22 0.01 288); --mu-dim: oklch(0.50 0.012 288); --mu-rule: oklch(0.82 0.008 90); --mu-topo: oklch(0.78 0.12 170); --mu-metr: oklch(0.70 0.14 348); --mu-pred: oklch(0.62 0.19 28);
@@ -167,24 +175,14 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .mu-foot button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mu-ink); background: transparent; border: var(--hair) solid var(--mu-rule); padding: 5px 9px; cursor: pointer; }
 .mu-foot button.mu-stoop { color: var(--mu-pred); border-color: var(--mu-pred); }
 .mu-foot b { color: var(--mu-ink); font-weight: 500; }
-.cc { --cc-bg: oklch(0.96 0.006 220); --cc-ink: oklch(0.24 0.02 240); --cc-dim: oklch(0.52 0.02 240); --cc-line: oklch(0.72 0.02 240); --cc-hot: oklch(0.60 0.20 30); background: var(--cc-bg); color: var(--cc-ink); }
-.cc .gp-stage { aspect-ratio: 2 / 1; cursor: grab; }
-.cc-ui { position: absolute; inset: 0; pointer-events: none; padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }
-.cc-brand { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--cc-dim); display: flex; justify-content: space-between; }
-.cc-brand b { color: var(--cc-ink); font-weight: 600; }
-.cc-score { display: flex; gap: 18px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cc-dim); }
-.cc-score b { display: block; font-family: var(--sans); font-size: 18px; font-weight: 700; color: var(--cc-ink); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
-.cc-score b.cc-bad { color: var(--cc-hot); }
 
 /* ─── §5 · procedural ──────────────────────────────────────────────────── */
 .tw { --tw-bg: oklch(0.15 0.01 250); --tw-ink: oklch(0.94 0.006 90); --tw-dim: oklch(0.62 0.01 250); --tw-rule: oklch(0.28 0.01 250); --tw-acc: oklch(0.80 0.12 180); background: var(--tw-bg); color: var(--tw-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 860px) { .tw { grid-template-columns: minmax(0, 1fr) 260px; } }
-.tw .gp-stage { aspect-ratio: 16 / 10; background: oklch(0.12 0.01 250); }
+@media (min-width: 860px) { .tw { grid-template-columns: minmax(0, 1fr) 240px; } }
+.tw .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.12 0.01 250); cursor: default; }
 .tw-panel { padding: 14px 16px; border-left: var(--hair) solid var(--tw-rule); display: flex; flex-direction: column; gap: 12px; }
 .tw-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
 .tw-brand span { display: block; font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tw-dim); font-size: 11px; margin-top: 2px; }
-.tw-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.tw-name span { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); font-weight: 400; margin-top: 4px; }
 .tw-btn { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-bg); background: var(--tw-acc); border: 0; padding: 10px 12px; cursor: pointer; }
 .tw-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); display: flex; justify-content: space-between; }
 .tw-k b { color: var(--tw-ink); font-weight: 500; }
@@ -192,30 +190,53 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .tw-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--tw-acc); cursor: pointer; border: 0; }
 .tw-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--tw-dim); border-top: var(--hair) solid var(--tw-rule); padding-top: 8px; }
 .tw-stats b { color: var(--tw-ink); font-weight: 500; }
+.tw-note { font-family: var(--sans); font-size: 11px; color: var(--tw-dim); }
+.tw-hud { position: absolute; top: 12px; left: 14px; right: 14px; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: oklch(0.96 0.005 90 / 0.85); pointer-events: none; text-shadow: 0 1px 8px oklch(0 0 0 / 0.5); }
+.tw-hud span span { margin-left: 10px; opacity: 0.7; }
+.tw-pins { position: absolute; inset: 0; pointer-events: none; }
+.tw-pin { position: absolute; transform: translate(-50%, -50%); background: transparent; border: 0; padding: 0; cursor: pointer; pointer-events: auto; display: flex; align-items: center; gap: 7px; color: oklch(0.97 0.005 90); font-family: var(--sans); font-size: 11.5px; font-weight: 600; opacity: 0; transition: opacity 0.6s; }
+.tw-pin.tw-pin-on { opacity: 1; }
+.tw-pin i { width: 10px; height: 10px; border-radius: 50%; background: var(--tw-acc); box-shadow: 0 0 0 4px oklch(0.80 0.12 180 / 0.25), 0 0 18px oklch(0.80 0.12 180 / 0.6); animation: tw-pulse 2.4s ease-in-out infinite; }
+@keyframes tw-pulse { 50% { box-shadow: 0 0 0 9px oklch(0.80 0.12 180 / 0.12), 0 0 18px oklch(0.80 0.12 180 / 0.6); } }
+.tw-pin span { text-shadow: 0 1px 6px oklch(0 0 0 / 0.7); background: oklch(0.12 0.01 250 / 0.55); padding: 3px 8px; border-radius: 3px; }
+.tw-pin:hover span { background: oklch(0.12 0.01 250 / 0.85); }
+.tw-over { position: absolute; left: 14px; bottom: 14px; width: min(300px, calc(100% - 28px)); background: oklch(0.12 0.012 250 / 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: var(--hair) solid oklch(0.96 0.005 90 / 0.18); padding: 14px 16px; color: var(--tw-ink); animation: tw-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 1.6s; }
+.tw-over[hidden] { display: none; }
+@keyframes tw-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.tw-over-k { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tw-acc); }
+.tw-over-name { font-family: var(--sans); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
+.tw-over-kind { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); margin-top: 2px; }
+.tw-over-clim { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: oklch(0.85 0.006 90); margin-top: 8px; }
+.tw-over-text { font-family: var(--sans); font-size: 12px; line-height: 1.5; color: oklch(0.90 0.006 90); margin: 8px 0 10px; }
+.tw-over-species { display: flex; gap: 6px; flex-wrap: wrap; }
+.tw-over-species span { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; border: var(--hair) solid oklch(0.96 0.005 90 / 0.3); padding: 3px 7px; border-radius: 999px; }
+.tw-over-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+.tw-over-btns button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tw-ink); background: transparent; border: var(--hair) solid oklch(0.96 0.005 90 / 0.35); padding: 6px 9px; cursor: pointer; }
+.tw-over-btns button:hover { border-color: var(--tw-acc); color: var(--tw-acc); }
 
-/* ─── §6 · inference ───────────────────────────────────────────────────── */
-.sm { --sm-bg: oklch(0.97 0.03 85); --sm-ink: oklch(0.24 0.06 280); --sm-dim: oklch(0.55 0.05 280); --sm-acc: oklch(0.65 0.20 350); --sm-ok: oklch(0.70 0.17 150); background: var(--sm-bg); color: var(--sm-ink); padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
-@media (min-width: 720px) { .sm { grid-template-columns: minmax(0, 1fr) 260px; } }
-.sm-brand { font-family: var(--sans); font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sm-acc); }
-.sm-q { font-family: var(--sans); font-size: clamp(30px, 4.5vw, 44px); font-weight: 800; letter-spacing: -0.03em; margin: 8px 0 10px; font-variant-numeric: tabular-nums; }
-.sm-q i { font-style: normal; color: var(--sm-dim); }
-.sm-boxes { display: flex; gap: 12px; }
-.sm-box { width: 112px; height: 112px; border-radius: 14px; border: 2px dashed var(--sm-dim); position: relative; overflow: hidden; cursor: crosshair; background: white; }
-.sm-box .gp-stage { position: absolute; inset: 0; }
-.sm-box.sm-read { border-style: solid; border-color: var(--sm-ok); }
-.sm-guess { position: absolute; right: 6px; bottom: 4px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; color: var(--sm-dim); pointer-events: none; }
-.sm-guess b { font-family: var(--sans); font-size: 14px; color: var(--sm-ink); font-weight: 800; }
-.sm-side { display: flex; flex-direction: column; gap: 10px; }
-.sm-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sm-dim); }
-.sm-score { font-family: var(--sans); font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
-.sm-score span { font-size: 12px; font-weight: 500; color: var(--sm-dim); margin-left: 6px; }
-.sm-btn { font-family: var(--sans); font-size: 12px; font-weight: 700; color: white; background: var(--sm-acc); border: 0; border-radius: 999px; padding: 9px 14px; cursor: pointer; }
-.sm-btn.sm-ghost { background: transparent; color: var(--sm-ink); border: 2px solid var(--sm-ink); }
-.sm-verdict { font-family: var(--sans); font-size: 13px; font-weight: 700; min-height: 1.4em; }
-.sm-verdict.sm-yes { color: var(--sm-ok); }
-.sm-model { font-family: var(--mono); font-size: 8.5px; line-height: 1.6; color: var(--sm-dim); border-top: var(--hair) solid oklch(0.85 0.03 85); padding-top: 8px; }
-.sm-model b { color: var(--sm-ink); font-weight: 500; }
-@media (max-width: 560px) { .ck-panel, .tw-panel { border-left: 0; } }
+/* ─── §6 · optics ──────────────────────────────────────────────────────── */
+.hc { --hc-bg: oklch(0.11 0.01 60); --hc-ink: oklch(0.95 0.01 80); --hc-dim: oklch(0.60 0.02 70); --hc-rule: oklch(0.24 0.015 60); --hc-acc: oklch(0.82 0.15 80); background: var(--hc-bg); color: var(--hc-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .hc { grid-template-columns: minmax(0, 1fr) 250px; } }
+.hc .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.08 0.01 60); cursor: grab; }
+.hc-brand { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: baseline; pointer-events: none; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.9 0.01 80 / 0.8); }
+.hc-brand b { font-family: var(--sans); font-size: 14px; font-weight: 800; letter-spacing: 0.34em; color: var(--hc-ink); }
+.hc-hint { position: absolute; left: 16px; bottom: 12px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.9 0.01 80 / 0.55); pointer-events: none; }
+.hc-panel { padding: 16px; border-left: var(--hair) solid var(--hc-rule); display: flex; flex-direction: column; gap: 10px; }
+.hc-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hc-dim); }
+.hc-name { font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.hc-name span { display: block; font-size: 12px; font-weight: 500; letter-spacing: 0; color: var(--hc-dim); margin-top: 4px; }
+.hc-price { font-family: var(--sans); font-size: 16px; font-weight: 700; }
+.hc-price span { font-size: 10px; font-weight: 400; color: var(--hc-dim); margin-left: 8px; }
+.hc-ways { display: flex; gap: 8px; }
+.hc-way { width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); outline: 2px solid transparent; outline-offset: 3px; }
+.hc-way.hc-on { outline-color: var(--hc-ink); }
+.hc-sizes { display: flex; gap: 5px; flex-wrap: wrap; }
+.hc-size { font-family: var(--mono); font-size: 10px; color: var(--hc-ink); background: transparent; border: var(--hair) solid var(--hc-rule); width: 30px; height: 28px; cursor: pointer; }
+.hc-size.hc-on { border-color: var(--hc-acc); color: var(--hc-acc); }
+.hc-cta { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hc-bg); background: var(--hc-acc); border: 0; padding: 11px 12px; cursor: pointer; margin-top: 4px; }
+.hc-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--hc-dim); border-top: var(--hair) solid var(--hc-rule); padding-top: 8px; margin-top: auto; }
+.hc-stats b { color: var(--hc-ink); font-weight: 500; }
+@media (max-width: 560px) { .ck-panel, .tw-panel, .hc-panel { border-left: 0; } }
 </style>
 </head>
 <body data-testid="technique-webgpu">
@@ -228,11 +249,11 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
   <p class="dek" data-testid="dek">
     The GPU stops being a place you send pictures to and becomes a place things
     <b>happen</b>. Compute passes read and write storage buffers that never come back;
-    a hundred thousand grains can be an interface, a grid of cells can be a toy, a
-    flock can be an experiment, a world can be grown rather than drawn, and a model
-    can run where the pen is. Six things WebGPU is for, each shown as a fragment of
-    a product that could ship — because a technique on a coloured square teaches
-    nothing about where you would reach for it.
+    a hundred thousand grains can be an interface, ink and smoke and a drink can be
+    solved rather than faked, a flock can be an experiment, a world can be grown and
+    flown over, and a product shot can be lit without a product. Six things WebGPU is
+    for, each shown as a fragment of a product that could ship — because a technique
+    on a coloured square teaches nothing about where you would reach for it.
   </p>
   <p class="gp-instr" data-testid="instrument-plate">
     <b>Every number on this sheet is measured on this machine, now.</b> The GPU
@@ -273,104 +294,103 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
   <!-- ═══ §2 ══════════════════════════════════════════════════════════ -->
   <section class="gp-sec" data-testid="section-2">
     <div class="gp-label">Storage buffers · compute</div>
-    <h2>particles as interface</h2>
+    <h2>particles and pixels as interface</h2>
     <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. It
       is more useful as an <b>interface</b>: when a hundred thousand grains live in a
       storage buffer and a compute pass moves every one of them each frame, text can be
       made of sand, a refresh can be a swarm, a switch can pour, a hero can part around
-      the hand — and the CPU sends nothing per frame but the pointer. Four fragments
-      of four products.</p>
+      the hand — and the CPU sends nothing per frame but the pointer. And when the
+      motion is the brand rather than the data, a fragment program twelve lines long is
+      the whole business card.</p>
     <div class="gp-grid">
       <div class="gp-card">
         <div class="at" data-testid="at-card">
           <div class="gp-stage" data-testid="at-stage"><canvas data-testid="at-canvas"></canvas>
             <div class="at-ui"><div class="at-brand">Atlas<span>flights · stays · the whole coast</span></div>
-              <div><div class="at-field"><input data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false"><button data-testid="at-go">search</button></div><div class="at-hint" style="margin-top:8px">type a city · the sand follows</div></div>
+              <div class="at-months" data-testid="at-months"><span class="at-month">J<b>—</b></span><span class="at-month">F<b>—</b></span><span class="at-month">M<b>—</b></span><span class="at-month">A<b>—</b></span><span class="at-month">M<b>—</b></span><span class="at-month">J<b>—</b></span><span class="at-month">J<b>—</b></span><span class="at-month">A<b>—</b></span><span class="at-month">S<b>—</b></span><span class="at-month">O<b>—</b></span><span class="at-month">N<b>—</b></span><span class="at-month">D<b>—</b></span></div>
+              <div class="at-from" data-testid="at-from">—</div>
+              <div class="at-route" data-testid="at-route"><span>LON</span><span data-testid="at-r-city">Lisbon</span></div>
+              <div class="at-results" data-testid="at-results"><div><b>07:15 → 10:05</b><span>direct · 2h 50</span><i>£84</i></div><div><b>13:40 → 16:35</b><span>direct · 2h 55</span><i>£96</i></div><div><b>18:20 → 21:10</b><span>direct · 2h 50</span><i>£71</i></div></div>
+              <div><div class="at-field"><input data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false"><button data-testid="at-go">search</button></div><div class="at-hint" data-testid="at-hint" style="margin-top:8px">type a city · the sand spells it, charts it, dates it, flies it</div></div>
             </div>
           </div>
         </div>
-        <div class="gp-cap"><b>Atlas · travel search</b> · 160 000 grains gather to the letterforms of whatever is typed; a keystroke uploads a new target set once, the frames upload nothing · <i>compute pass · storage buffer · instanced quads</i></div>
+        <div class="gp-cap"><b>Atlas · travel search</b> · one buffer of 160 000 grains is the whole interface: it spells the city, becomes the price chart, becomes the dates, becomes the route — each state is a new target set uploaded once; the frames upload nothing · <i>compute pass · storage buffer · instanced quads</i></div>
       </div>
       <div class="gp-card">
         <div class="nc" data-testid="nc-card">
           <div class="nc-phone"><div class="gp-stage" data-testid="nc-stage"><canvas data-testid="nc-canvas"></canvas>
             <div class="nc-ui"><div class="nc-top"><span>9:41</span><span>hive · 3 accounts</span></div><div class="nc-hive">Nectar</div>
-              <div class="nc-card"><small>Everyday</small><div class="nc-bal" data-testid="nc-bal">£2,418.60</div><div class="nc-sub" data-testid="nc-sub">updated just now</div></div>
-              <div class="nc-row"><span>Savings</span><b>£12,040.00</b></div><div class="nc-row"><span>Joint</span><b>£1,196.25</b></div>
-              <div class="nc-list"><small>Today</small><div class="nc-tx"><span>Ottolenghi</span><b>−£38.40</b></div><div class="nc-tx"><span>TfL travel</span><b>−£6.70</b></div><div class="nc-tx"><span>Salary · Hive Ltd</span><b class="nc-in">+£3,120.00</b></div></div>
+              <div class="nc-hero"><small>Everyday</small><div class="nc-bal" data-testid="nc-bal">£2,418.60</div><div class="nc-sub" data-testid="nc-sub">updated just now</div><div class="nc-ring" data-testid="nc-ring">42% of budget</div></div>
+              <div class="nc-list"><small>Today</small><div data-testid="nc-tx-list"><div class="nc-tx"><span>Ottolenghi</span><b>−£38.40</b></div><div class="nc-tx"><span>TfL travel</span><b>−£6.70</b></div><div class="nc-tx"><span>Salary · Hive Ltd</span><b class="nc-in">+£3,120.00</b></div></div></div>
               <div class="nc-pull" data-testid="nc-pull">pull down to refresh</div></div>
           </div></div>
         </div>
-        <div class="gp-cap"><b>Nectar · banking</b> · pull-to-refresh as a swarm: the bees leave the balance, forage, and settle back with the new figure · <i>the same kernel, targets that change with the gesture</i></div>
+        <div class="gp-cap"><b>Nectar · banking</b> · the balance is not printed, it is thirty-six thousand bees holding the digits; a transaction lands and the figure swings to the new number on an under-damped spring, the bees re-form every tick, the budget ring fills, the colour turns · pull down and they forage · <i>one kernel, targets rebuilt as the number moves</i></div>
       </div>
-      <div class="gp-card">
-        <div class="um" data-testid="um-card">
-          <div class="gp-stage" data-testid="um-stage"><canvas data-testid="um-canvas"></canvas>
-            <div class="um-ui"><div class="um-brand">Umbra<span>home · lighting</span></div>
-              <div><div class="um-room">Living room</div><div class="um-state">scene <b data-testid="um-state">off</b> · tap anywhere</div></div></div>
-          </div>
+      <div class="gp-card gp-wide">
+        <div class="mk-grid" data-testid="mk-grid">
+          <div class="mk" data-testid="mk-walmart"><div class="gp-stage" data-testid="mk-walmart-stage"><canvas data-testid="mk-walmart-canvas"></canvas></div><div class="mk-txt"><b>Walmart</b><span>Retail · Bentonville</span></div></div>
+          <div class="mk" data-testid="mk-amazon"><div class="gp-stage" data-testid="mk-amazon-stage"><canvas data-testid="mk-amazon-canvas"></canvas></div><div class="mk-txt"><b>Amazon</b><span>Commerce · cloud · Seattle</span></div></div>
+          <div class="mk" data-testid="mk-apple"><div class="gp-stage" data-testid="mk-apple-stage"><canvas data-testid="mk-apple-canvas"></canvas></div><div class="mk-txt"><b>Apple</b><span>Devices · Cupertino</span></div></div>
+          <div class="mk" data-testid="mk-unitedhealth"><div class="gp-stage" data-testid="mk-unitedhealth-stage"><canvas data-testid="mk-unitedhealth-canvas"></canvas></div><div class="mk-txt"><b>UnitedHealth Group</b><span>Health · Minnetonka</span></div></div>
+          <div class="mk" data-testid="mk-berkshire"><div class="gp-stage" data-testid="mk-berkshire-stage"><canvas data-testid="mk-berkshire-canvas"></canvas></div><div class="mk-txt"><b>Berkshire Hathaway</b><span>Holding · Omaha</span></div></div>
+          <div class="mk" data-testid="mk-cvs"><div class="gp-stage" data-testid="mk-cvs-stage"><canvas data-testid="mk-cvs-canvas"></canvas></div><div class="mk-txt"><b>CVS Health</b><span>Pharmacy · Woonsocket</span></div></div>
+          <div class="mk" data-testid="mk-exxon"><div class="gp-stage" data-testid="mk-exxon-stage"><canvas data-testid="mk-exxon-canvas"></canvas></div><div class="mk-txt"><b>ExxonMobil</b><span>Energy · Spring, Texas</span></div></div>
+          <div class="mk" data-testid="mk-alphabet"><div class="gp-stage" data-testid="mk-alphabet-stage"><canvas data-testid="mk-alphabet-canvas"></canvas></div><div class="mk-txt"><b>Alphabet</b><span>Search · Mountain View</span></div></div>
         </div>
-        <div class="gp-cap"><b>Umbra · smart home</b> · a switch that pours: eighty thousand motes drain from one basin into the other, and the room brightens as they land · <i>gravity in the kernel, a target that flips</i></div>
-      </div>
-      <div class="gp-card">
-        <div class="fn" data-testid="fn-card">
-          <div class="gp-stage" data-testid="fn-stage"><canvas data-testid="fn-canvas"></canvas>
-            <div class="fn-nav"><b>Field Notes</b><span>Journal · Shop · Trails</span></div>
-            <div class="fn-ui"><h3 class="fn-h">Walk into the season.</h3><p class="fn-p">Issue 14 — the meadows in September, and the people who keep them.</p></div>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Field Notes · editorial</b> · a hero of three hundred thousand pollen grains in a slow wind that part around the pointer and drift back · <i>no targets, only wind, jitter and a hand</i></div>
+        <div class="gp-cap"><b>Marks · eight motion business cards</b> · the eight largest companies on the Fortune list, each as a palette and one piece of motion craft written as a fragment program — a sunrise down the aisle, parcels on a belt, brushed metal and a light sweep, a pulse, a price line that only climbs, a heart at resting rate, oil under a lamp, four colours sorting themselves · no logos, no type, and the hand is in every one · <i>eight fragment passes, one uniform each</i></div>
       </div>
     </div>
-    <div class="gp-strip" data-testid="loop-strip"><span>grains on this section</span><b data-testid="loop-count">—</b><span>state uploaded per frame</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
+    <div class="gp-strip" data-testid="loop-strip"><span>grains on this section</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
   </section>
 
   <!-- ═══ §3 ══════════════════════════════════════════════════════════ -->
   <section class="gp-sec" data-testid="section-3">
-    <div class="gp-label">Neighbour state</div>
-    <h2>things that depend on the cell next door</h2>
-    <p>Some pictures cannot be computed one pixel at a time, because each cell's next
-      value depends on its neighbours' current ones — sand falling, chemicals reacting,
-      ink flowing. In WebGL that is a texture ping-pong at whatever resolution one
-      quad can afford. In a compute pass it is the natural shape of the work: every cell
-      reads its neighbourhood from one buffer and writes the next state to another,
-      thousands of cells per workgroup, as many steps a frame as you like. <b>The
-      difference between a texture and a toy.</b></p>
+    <div class="gp-label">Fluids · 2-D grids · 3-D volumes · particles</div>
+    <h2>things that pour, drift and write</h2>
+    <p>A fluid is the one effect a designer asks for and a front-end team says no to.
+      In WebGL it is a texture ping-pong at whatever resolution a quad can afford. In
+      compute it is the natural shape of the work — a grid or a particle set in a
+      storage buffer, a few passes a frame, as many as the frame can pay for — and
+      that makes three kinds of fluid practical on a page: <b>a stable solve on paper,
+      a volume you can walk light through, and particles that behave like a drink.</b></p>
     <div class="gp-grid">
-      <div class="gp-card">
-        <div class="gr" data-testid="gr-card">
-          <div class="gr-bar"><span class="gr-brand">Grains<span>a science app for 8-year-olds</span></span>
-            <button class="gr-el gr-on" data-m="1" data-testid="gr-sand" style="--sw:#d9a75b"><i></i>sand</button>
-            <button class="gr-el" data-m="2" data-testid="gr-water" style="--sw:#4a8fd6"><i></i>water</button>
-            <button class="gr-el" data-m="3" data-testid="gr-oil" style="--sw:#6b4a2a"><i></i>oil</button>
-            <button class="gr-el" data-m="4" data-testid="gr-fire" style="--sw:#e0532b"><i></i>fire</button>
-            <button class="gr-el" data-m="5" data-testid="gr-wall" style="--sw:#555"><i></i>wall</button>
-            <button class="gr-el" data-m="0" data-testid="gr-erase" style="--sw:#fff"><i></i>erase</button>
-            <span class="gr-count" data-testid="gr-count">—</span>
-          </div>
-          <div class="gp-stage" data-testid="gr-stage"><canvas data-testid="gr-canvas"></canvas></div>
-        </div>
-        <div class="gp-cap"><b>Grains · learning</b> · a falling-sand world: sand piles, water finds its level, oil floats on it, fire burns the oil and boils the water — paint with a finger · <i>cellular automaton, two passes a step, several steps a frame</i></div>
-      </div>
-      <div class="gp-card">
-        <div class="rf" data-testid="rf-card">
-          <div class="rf-card"><div class="gp-stage" data-testid="rf-stage"><canvas data-testid="rf-canvas"></canvas>
-            <div class="rf-ui"><div class="rf-name">Coral Reef Alliance<span>member since 2024</span></div><div class="rf-member">Member<b>Ines Okafor</b></div></div>
-          </div></div>
-        </div>
-        <div class="gp-cap"><b>Coral Reef Alliance · membership</b> · the card's face is a reaction-diffusion coral that keeps growing; touch it and it grows around the touch · <i>Gray–Scott, ping-pong buffers, twelve steps a frame</i></div>
-      </div>
       <div class="gp-card gp-wide">
         <div class="tn" data-testid="tn-card">
           <div class="gp-stage" data-testid="tn-stage"><canvas data-testid="tn-canvas"></canvas>
             <div class="tn-ui"><div class="tn-brand">Tinta<span>fountain pen ink · small batch</span></div>
               <div class="tn-row"><div class="tn-title" data-testid="tn-title"><b data-testid="tn-name">Nº 07 — Oxblood</b><span data-testid="tn-note">30 ml · iron-gall · shading, sheen</span></div>
-                <div><div class="tn-swatches" data-testid="tn-swatches"><button class="tn-sw tn-on" data-c="0" data-testid="tn-sw-oxblood" aria-label="Oxblood" style="background:oklch(0.42 0.19 25)"></button><button class="tn-sw" data-c="1" data-testid="tn-sw-ultramarine" aria-label="Ultramarine" style="background:oklch(0.35 0.14 260)"></button><button class="tn-sw" data-c="2" data-testid="tn-sw-verdigris" aria-label="Verdigris" style="background:oklch(0.40 0.12 160)"></button><button class="tn-sw" data-c="3" data-testid="tn-sw-sepia" aria-label="Sepia" style="background:oklch(0.22 0.02 60)"></button></div><div class="tn-price" style="margin-top:8px">£14 · move your hand through the ink</div></div>
+                <div><div class="tn-swatches" data-testid="tn-swatches"><button class="tn-sw tn-on" data-c="0" data-testid="tn-sw-oxblood" aria-label="Oxblood" style="background:oklch(0.42 0.19 25)"></button><button class="tn-sw" data-c="1" data-testid="tn-sw-ultramarine" aria-label="Ultramarine" style="background:oklch(0.35 0.14 260)"></button><button class="tn-sw" data-c="2" data-testid="tn-sw-verdigris" aria-label="Verdigris" style="background:oklch(0.40 0.12 160)"></button><button class="tn-sw" data-c="3" data-testid="tn-sw-sepia" aria-label="Sepia" style="background:oklch(0.22 0.02 60)"></button></div><div class="tn-price" style="margin-top:8px">£14 · the ink writes its name · move your hand through it</div></div>
               </div>
             </div>
           </div>
         </div>
-        <div class="gp-cap"><b>Tinta · e-commerce</b> · the product page is the product: a fluid solve on a paper-white grid, ink injected where the pointer goes, the swatch changes the ink · <i>advect · diverge · 24 pressure iterations · project, on the GPU</i></div>
+        <div class="gp-cap"><b>Tinta · e-commerce</b> · the product demonstrates itself: a pen path through the ink's own name is injected into a stable fluid solve on paper, the letters bleed and feather the way this ink would, and the hand smears them · solve <i data-testid="tn-t-solve">—</i> per frame · <i>advect · diverge · 24 pressure iterations · project</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="fm" data-testid="fm-card">
+          <div class="gp-stage" data-testid="fm-stage"><canvas data-testid="fm-canvas"></canvas><span class="gp-status" data-testid="fm-status">requesting a device…</span>
+            <div class="fm-ui"><div class="fm-brand">Fume<span>eau de parfum · Nº 3</span></div>
+              <div><div class="fm-note-name" data-testid="fm-note-name">Top · bergamot, pink pepper</div>
+                <div class="fm-notes" data-testid="fm-notes"><button class="fm-note fm-on" data-testid="fm-note-top">top</button><button class="fm-note" data-testid="fm-note-heart">heart</button><button class="fm-note" data-testid="fm-note-base">base</button></div>
+                <div class="fm-stat" data-testid="fm-t">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Fume · fragrance</b> · the bottle exhales a note every six seconds; the plume is a 64 × 96 × 64 fluid solved on the GPU and ray-marched with a short walk toward the light for self-shadow · the hand pushes it · <i>3-D advect · diverge · 14 Jacobi · project · one march</i></div>
+      </div>
+      <div class="gp-card">
+        <div class="pr" data-testid="pr-card">
+          <div class="gp-stage" data-testid="pr-stage"><canvas data-testid="pr-canvas"></canvas><span class="gp-status" data-testid="pr-status">requesting a device…</span>
+            <div class="pr-ui"><div class="pr-brand">Pour<span>the drinks menu</span></div>
+              <div><div class="pr-name" data-testid="pr-name">Yuzu &amp; sea salt</div><div class="pr-price" data-testid="pr-price">£3.20</div>
+                <div class="pr-fls" data-testid="pr-fls"><button class="pr-fl pr-on" data-testid="pr-fl-yuzu" style="--c:oklch(0.9 0.15 95)">yuzu</button><button class="pr-fl" data-testid="pr-fl-hibiscus" style="--c:oklch(0.55 0.2 15)">hibiscus</button><button class="pr-fl" data-testid="pr-fl-matcha" style="--c:oklch(0.68 0.12 130)">matcha</button><button class="pr-fl" data-testid="pr-fl-cold-brew" style="--c:oklch(0.3 0.05 60)">cold brew</button></div>
+                <div class="pr-stat"><span data-testid="pr-n">—</span> particles · <span data-testid="pr-t">—</span> · move to tilt</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="gp-cap"><b>Pour · hospitality</b> · a menu where the drink is the picture: five thousand SPH particles in a glass that tilts toward the hand, splatted to a density field and shaded as a surface with refraction and a rim · the flavour is a colour and a viscosity · <i>density · force · integrate, twice a frame · atomics splat · one surface pass</i></div>
       </div>
     </div>
   </section>
@@ -383,8 +403,8 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       find each other. A scatter write (<b>this bird counts itself into that cell</b>)
       needs atomics; sorting by cell needs a writable buffer; both are things a fragment
       shader cannot do. With them, a quarter of a million agents can each consult their
-      neighbours every frame, and a simulation becomes something a researcher, an
-      architect or a game can put a question to.</p>
+      neighbours every frame, and a simulation becomes something a researcher or a
+      game can put a question to.</p>
     <div class="gp-grid">
       <div class="gp-card gp-wide">
         <div class="mu" data-testid="mu-card">
@@ -402,16 +422,6 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
         </div>
         <div class="gp-cap"><b>Collective Behaviour · research figure</b> · Ballerini's finding made visible: on the metric rule the stoop shatters the flock, on the rank rule it holds · fragments counted from one readback three seconds after contact, and the readback's cost printed with it · <i>count · scan · scatter · k-NN in registers · one draw</i></div>
       </div>
-      <div class="gp-card gp-wide">
-        <div class="cc" data-testid="cc-card">
-          <div class="gp-stage" data-testid="cc-stage"><canvas data-testid="cc-canvas"></canvas>
-            <div class="cc-ui"><div class="cc-brand"><span><b>Kingsway</b> · concourse study · option C</span><span>drag the kiosks · watch the crush</span></div>
-              <div class="cc-score"><span>people in the hall<b data-testid="cc-n">—</b></span><span>mean time to platform<b data-testid="cc-time">—</b></span><span>worst crowding<b data-testid="cc-crush">—</b></span></div></div>
-            <span class="gp-status" data-testid="cc-status" style="color:var(--cc-dim)">requesting a device…</span>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Kingsway · architecture</b> · thirty thousand passengers cross a concourse from entrances to platforms; move the kiosks and the crush moves — a design tool that plays like a game · <i>a distance field relaxed on the GPU each frame, a density grid by atomics, separation from its gradient</i></div>
-      </div>
     </div>
   </section>
 
@@ -420,51 +430,70 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
     <div class="gp-label">Procedural generation</div>
     <h2>a world grown, not drawn</h2>
     <p>A downloaded map is a picture; a generated one is a process, and a process can be
-      re-run with one number changed. A compute pass writes a million heights from
-      noise, another routes water downhill across them, another carves where the water
-      runs — and the result is a place with rivers that reach the sea and coasts that
-      make sense, in a few dozen milliseconds, for every seed a player will ever press.</p>
+      re-run with one number changed. Compute passes write the heights from noise, route
+      water downhill across them and carve where it runs; a ray march then draws the
+      result with real light — and because the whole world is in a buffer, going
+      somewhere is a camera move rather than a page load. <b>Five places, one world, and
+      the site is the map.</b></p>
     <div class="tw" data-testid="tw-card">
-      <div class="gp-stage" data-testid="tw-stage"><canvas data-testid="tw-canvas"></canvas><span class="gp-status" data-testid="tw-status" style="color:var(--tw-dim)">requesting a device…</span></div>
+      <div class="gp-stage" data-testid="tw-stage"><canvas data-testid="tw-canvas"></canvas><span class="gp-status" data-testid="tw-status" style="color:var(--tw-dim)">requesting a device…</span>
+        <div class="tw-pins" data-testid="tw-pins">
+          <button class="tw-pin" data-testid="tw-pin-ashmere"><i></i><span>Ashmere Sound</span></button>
+          <button class="tw-pin" data-testid="tw-pin-corvane"><i></i><span>Corvane Steps</span></button>
+          <button class="tw-pin" data-testid="tw-pin-sellith"><i></i><span>Sellith Shelf</span></button>
+          <button class="tw-pin" data-testid="tw-pin-vell"><i></i><span>Vell Caldera</span></button>
+          <button class="tw-pin" data-testid="tw-pin-yarrow"><i></i><span>Yarrowfell</span></button>
+        </div>
+        <div class="tw-over" data-testid="tw-over" hidden>
+          <div class="tw-over-k"><span data-testid="tw-over-n">1 / 5</span><span>field guide</span></div>
+          <div class="tw-over-name" data-testid="tw-over-name">—</div>
+          <div class="tw-over-kind" data-testid="tw-over-kind">—</div>
+          <div class="tw-over-clim" data-testid="tw-over-clim">—</div>
+          <p class="tw-over-text" data-testid="tw-over-text">—</p>
+          <div class="tw-over-species" data-testid="tw-over-species"></div>
+          <div class="tw-over-btns"><button data-testid="tw-back">← back to the map</button><button data-testid="tw-next">next place →</button></div>
+        </div>
+        <div class="tw-hud" data-testid="tw-hud"><span>Tessera</span><span data-testid="tw-name">—<span data-testid="tw-seed">seed —</span></span></div>
+      </div>
       <div class="tw-panel">
-        <div class="tw-brand">Tessera<span>a strategy game · new world</span></div>
-        <div class="tw-name" data-testid="tw-name">—<span data-testid="tw-seed">seed —</span></div>
-        <button class="tw-btn" data-testid="tw-generate">generate another world</button>
+        <div class="tw-brand">Tessera<span>a world instead of a website · click a place to travel there</span></div>
+        <button class="tw-btn" data-testid="tw-generate">grow another world</button>
         <div><div class="tw-k"><span>sea level</span><b data-testid="tw-sea-v">0.42</b></div><input class="tw-range" type="range" min="0.2" max="0.65" step="0.01" value="0.42" data-testid="tw-sea"></div>
         <div><div class="tw-k"><span>erosion</span><b data-testid="tw-ero-v">24 passes</b></div><input class="tw-range" type="range" min="0" max="64" step="1" value="24" data-testid="tw-ero"></div>
-        <div class="tw-stats" data-testid="tw-stats">1024 × 1024 heights · noise <b data-testid="tw-t-noise">—</b> · flow <b data-testid="tw-t-flow">—</b> · carve <b data-testid="tw-t-carve">—</b> · shade <b data-testid="tw-t-shade">—</b></div>
+        <div class="tw-stats" data-testid="tw-stats">1024 × 640 heights · on grow: noise <b data-testid="tw-t-noise">—</b> · flow <b data-testid="tw-t-flow">—</b> · carve <b data-testid="tw-t-carve">—</b><br>every frame: march <b data-testid="tw-t-march">—</b></div>
+        <div class="tw-note">Five places in one grown world. Left alone, it tours them.</div>
       </div>
     </div>
-    <div class="gp-cap"><b>Tessera · games</b> · the new-world screen: fBm terrain, flow accumulation by repeated downhill routing, stream-power carving, hillshade and biomes by height and wetness · <i>four compute passes and a render pass, all on the GPU, every press of the button</i></div>
+    <div class="gp-cap"><b>Tessera · a site as a world</b> · biome-blended noise, flow routing and stream-power carving grow the heights; every frame is a ray march through them — sun, soft shadows, water, height fog, per-place air. A click is a flight, not a page load · <i>three compute passes on grow, one march pass per frame, five floats read back</i></div>
   </section>
 
   <!-- ═══ §6 ══════════════════════════════════════════════════════════ -->
   <section class="gp-sec" data-testid="section-6">
-    <div class="gp-label">On-device inference</div>
-    <h2>a model where the pen is</h2>
-    <p>A neural network is matrix multiplies, and a compute pass is a good place for those.
-      This model was trained in this repository — two layers, a hundred thousand weights,
-      ninety-odd percent on the standard test set — and it runs on the GPU in front of
-      you every time the pen lifts. <b>No upload, no round trip, no API bill</b>: a
-      category of feature that did not exist client-side, and the one a room of
-      designers has not considered.</p>
-    <div class="sm" data-testid="sm-card">
-      <div>
-        <div class="sm-brand">Sum! · level 3</div>
-        <div class="sm-q"><span data-testid="sm-a">7</span> + <span data-testid="sm-b">5</span> = <i>?</i></div>
-        <div class="sm-boxes">
-          <div class="sm-box" data-testid="sm-box-0"><div class="gp-stage"><canvas data-testid="sm-canvas-0"></canvas></div><span class="sm-guess">reads <b data-testid="sm-g-0">·</b></span></div>
-          <div class="sm-box" data-testid="sm-box-1"><div class="gp-stage"><canvas data-testid="sm-canvas-1"></canvas></div><span class="sm-guess">reads <b data-testid="sm-g-1">·</b></span></div>
-        </div>
-        <div class="sm-verdict" data-testid="sm-verdict"></div>
+    <div class="gp-label">Ray marching · signed distance · fractals</div>
+    <h2>a product shot with no product</h2>
+    <p>Nothing here is a mesh. The chamber is a fractal folded nine times, the plinth a
+      cylinder, the shoe a dozen distance functions — and every pixel is a ray walked
+      through that description with soft shadows, occlusion, a reflection bounce and a
+      rim light. It is the photography a campaign would fly a crew for, <b>generated on
+      the visitor's GPU with the colourway they chose</b>, and it never repeats a frame.</p>
+    <div class="hc" data-testid="hc-card">
+      <div class="gp-stage" data-testid="hc-stage"><canvas data-testid="hc-canvas"></canvas><span class="gp-status" data-testid="hc-status">requesting a device…</span>
+        <div class="hc-brand"><b>Halcyon</b><span>drop 07 · 14 Sept · 09:00 BST</span></div>
+        <div class="hc-hint" data-testid="hc-hint">drag to orbit · it films itself when you let go</div>
       </div>
-      <div class="sm-side">
-        <div class="sm-k">score</div><div class="sm-score" data-testid="sm-score">0<span>of 0</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sm-btn" data-testid="sm-check">check</button><button class="sm-btn sm-ghost" data-testid="sm-clear">clear</button><button class="sm-btn sm-ghost" data-testid="sm-next">next</button></div>
-        <div class="sm-model" data-testid="sm-model">model 784 → 128 → 10 · trained here on MNIST · test accuracy <b data-testid="sm-acc">—</b> · inference <b data-testid="sm-ms">—</b> per digit on the GPU · weights <b data-testid="sm-kb">—</b></div>
+      <div class="hc-panel">
+        <div class="hc-k">Kestrel 07 · limited</div>
+        <div class="hc-name">Kestrel 07 <span data-testid="hc-way-name">Obsidian / Brass</span></div>
+        <div class="hc-price">£165 <span>free returns · 30 days</span></div>
+        <div class="hc-k">colourway</div>
+        <div class="hc-ways" data-testid="hc-ways"><button class="hc-way hc-on" data-testid="hc-way-obsidian" aria-label="Obsidian / Brass" style="--a:#111;--b:#f2b840"></button><button class="hc-way" data-testid="hc-way-reef" aria-label="Reef / Coral" style="--a:#10575c;--b:#ff5c4d"></button><button class="hc-way" data-testid="hc-way-glacier" aria-label="Glacier / Ice" style="--a:#ebeff3;--b:#4d8cff"></button></div>
+        <div class="hc-k">size · UK</div>
+        <div class="hc-sizes" data-testid="hc-sizes"><button class="hc-size" data-testid="hc-size-6">6</button><button class="hc-size" data-testid="hc-size-7">7</button><button class="hc-size" data-testid="hc-size-8">8</button><button class="hc-size hc-on" data-testid="hc-size-9">9</button><button class="hc-size" data-testid="hc-size-10">10</button><button class="hc-size" data-testid="hc-size-11">11</button><button class="hc-size" data-testid="hc-size-12">12</button></div>
+        <button class="hc-cta" data-testid="hc-cta">notify me · UK 9</button>
+        <div class="hc-stats" data-testid="hc-stats">one pass · march <b data-testid="hc-t-march">—</b></div>
       </div>
     </div>
-    <div class="gp-cap"><b>Sum! · learning</b> · a kids' maths game that reads handwriting: each box is downsampled to 28 × 28, a two-layer network in WGSL scores it, and the answer is checked — all on the device · <i>two matmul passes, weights in a storage buffer, one 40-byte readback per lift</i></div>
+    <div class="gp-cap"><b>Halcyon · campaign</b> · a drop page whose hero is a live diorama: kaleidoscopic IFS chamber, SDF shoe and plinth, key + rim light, soft shadow, five-tap occlusion, one reflection bounce; the colourway retints the fractal's orbit-trap palette · <i>one fragment pass, no geometry, no textures</i></div>
   </section>
 
   <div class="notes" data-testid="notes">
@@ -472,15 +501,14 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
     <ol>
       <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
       <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
-      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, a digit — it prints what the asking cost.</li>
+      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
       <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument.</li>
-      <li><b>Every product is invented.</b> Atlas, Nectar, Umbra, Field Notes, Grains, the Coral Reef Alliance's card, Tinta, the paper and its authors, Kingsway, Tessera and Sum! do not exist. The physics, the rule after Ballerini et al. 2008, the model's accuracy and every measurement are real.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, Tinta, Fume, Pour, the paper and its authors, Tessera and Halcyon do not exist. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
     </ol>
   </div>
 </div>
 
 <script src="../system/wam.js"></script>
-<script src="../assets/models/mnist-mlp.js"></script>
 <script type="module" src="./webgpu/sheet.js"></script>
 </body>
 </html>
