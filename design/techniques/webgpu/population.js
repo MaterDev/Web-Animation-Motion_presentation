@@ -73,7 +73,7 @@ fn putInset(j: u32, q: vec2f) { atomicStore(&stats[1028u + j * 2u], bitcast<u32>
   if (u.mode == 1u) { for (var j = 0u; j < u.k; j++) { if (kd[j] < 1e8) { sumV += kv[j]; sumP += kp[j]; nb++; } } }
   var acc = vec2f(0.0);
   if (nb > 0u) { let fn_ = f32(nb); acc += (normalize(sumV / fn_ + 1e-6) * u.speed - v) * u.align + (sumP / fn_ - p) * u.cohere * 4.0; }
-  acc += sep * u.separate * 0.18 + (u.world * 0.5 - p) * 0.3 + u.wander * u.wind * 0.3;
+  let cp = u.world * 0.5 - p; acc += sep * u.separate * 0.18 + cp * 0.3 + vec2f(-cp.y, cp.x) * 0.16 + u.wander * u.wind * 0.3; /* the roost pulls, and turns: the flock circles rather than hitting walls */
   if (u.predOn > 0.5) { let d = p - u.pred; let dd = length(d); if (dd < u.predR) { acc += d / (dd + 1e-4) * u.predF * (1.0 - dd / u.predR); } }
   let m = 0.06; if (p.x < m) { acc.x += (m - p.x) * 40.0; } if (p.x > u.world.x - m) { acc.x -= (p.x - u.world.x + m) * 40.0; } if (p.y < m) { acc.y += (m - p.y) * 40.0; } if (p.y > u.world.y - m) { acc.y -= (p.y - u.world.y + m) * 40.0; }
   let al = length(acc); if (al > u.maxForce) { acc = acc / al * u.maxForce; }
