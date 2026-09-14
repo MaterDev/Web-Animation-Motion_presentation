@@ -114,12 +114,22 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .wl-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
 .wl-duo { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--wl-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.20 0.006 260); border: var(--hair) solid oklch(0.32 0.01 260); box-sizing: border-box; }
 .wl-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: var(--wl-ground); overflow: hidden; }
-.wl-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0.17 0.006 260); }
-.wl-status { position: absolute; top: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--wl-dim); } .wl-status-l { left: 24px; } .wl-status-r { right: 24px; }
+/* the Home Screen behind the app: a wallpaper, the status corners, the vertical Dynamic Island, the side Dock */
+.wl-wall { position: absolute; inset: 0; background: radial-gradient(120% 90% at 8% 100%, oklch(0.72 0.16 300) 0%, transparent 55%), radial-gradient(90% 80% at 96% 8%, oklch(0.78 0.14 60) 0%, transparent 52%), radial-gradient(80% 70% at 55% 55%, oklch(0.55 0.15 260) 0%, transparent 60%), linear-gradient(160deg, oklch(0.32 0.08 280), oklch(0.16 0.04 260)); }
+.wl-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0 0 0 / 0.18); mix-blend-mode: multiply; }
+.wl-status { position: absolute; top: 12px; font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.02em; color: oklch(1 0 0 / 0.9); } .wl-status-l { left: 36px; } .wl-status-r { right: 30px; }
+.wl-island { position: absolute; left: 8px; top: 34px; width: 16px; height: 96px; border-radius: 999px; background: oklch(0.05 0.005 260); } .wl-island i { position: absolute; left: 4px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: oklch(0.15 0.01 260); }
+.wl-dock { position: absolute; left: 12px; top: 56%; transform: translateY(-50%); width: 44px; padding: 8px 0; border-radius: 22px; background: oklch(1 0 0 / 0.16); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.wl-dock i { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(145deg, color-mix(in oklch, var(--c) 100%, white 25%), var(--c)); box-shadow: 0 1px 2px oklch(0 0 0 / 0.3); } .wl-dock .wl-dock-on { outline: 2px solid oklch(1 0 0 / 0.6); outline-offset: 2px; }
+/* the app: two windows of one app, translucent over the wallpaper, each with its bar */
+.wl-win { position: absolute; border-radius: 18px; background: oklch(0.13 0.01 260 / 0.78); backdrop-filter: blur(24px) saturate(1.2); -webkit-backdrop-filter: blur(24px) saturate(1.2); border: var(--hair) solid oklch(1 0 0 / 0.14); box-shadow: 0 18px 50px oklch(0 0 0 / 0.35); }
+.wl-win-l { left: 70px; top: 30px; width: 360px; height: 594px; } .wl-win-r { left: 462px; top: 30px; width: 416px; height: 594px; }
+.wl-winbar { display: flex; align-items: baseline; gap: 8px; padding: 12px 16px 8px; font-family: var(--sans); font-size: 12px; color: oklch(0.95 0.005 260); } .wl-winbar b { font-weight: 700; } .wl-winbar span { color: var(--wl-dim); font-size: 11px; } .wl-winbar i { margin-left: auto; font-style: normal; color: var(--wl-dim); }
+.wl-cmd { margin: 2px 12px 0; height: 30px; border-radius: 10px; background: oklch(1 0 0 / 0.08); display: flex; align-items: center; gap: 8px; padding: 0 10px; font-family: var(--sans); font-size: 11px; color: var(--wl-dim); } .wl-cmd span { font-size: 13px; }
 .wl-cardface { position: absolute; left: 0; top: 0; width: 340px; height: 214px; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 -4px 14px oklch(0 0 0 / 0.5); will-change: transform; transform-origin: center; }
 .wl-cardface .gp-stage { position: absolute; inset: 0; }
 .wl-cardface.wl-on { box-shadow: 0 14px 34px oklch(0 0 0 / 0.55); cursor: default; }
-.wl-detail { position: absolute; left: 477px; top: 350px; width: 340px; height: 220px; }
+.wl-detail { position: absolute; left: 474px; top: 340px; width: 330px; height: 220px; }
 .wl-detail > * { transition: opacity 0.18s cubic-bezier(0.32, 0.72, 0, 1), transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
 .wl-detail.wl-d-out > * { opacity: 0; transform: translateY(8px); transition-timing-function: cubic-bezier(0.55, 0, 1, 0.45); transition-duration: 0.11s; }
 .wl-detail.wl-d-in > * { animation: wl-write 0.18s cubic-bezier(0.32, 0.72, 0, 1) both; }
@@ -132,7 +142,8 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .wl-d-btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .wl-d-btns button { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-bg); background: var(--wl-ink); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
 /* the rail: three 44 px targets at the outboard edge of the right leaf */
-.wl-rail { position: absolute; left: 833px; top: 121px; width: 44px; display: flex; flex-direction: column; gap: 24px; }
+.wl-rail { position: absolute; left: 826px; top: 96px; width: 40px; display: flex; flex-direction: column; gap: 18px; }
+.wl-rail button { width: 40px; height: 40px; }
 .wl-rail button { width: 44px; height: 44px; font-family: var(--mono); font-size: 12px; color: var(--wl-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(0.3 0.01 260); border-radius: 12px; cursor: pointer; padding: 0; }
 .wl-rail .wl-auto-on { background: var(--wl-ink); color: var(--wl-bg); }
 .wl-side { display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
@@ -390,8 +401,13 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
         <div class="wl" data-testid="wl-card">
           <div class="wl-fit" data-testid="wl-fit"><div class="wl-duo" data-testid="wl-phone">
             <div class="wl-display" data-testid="wl-stack">
+              <div class="wl-wall" aria-hidden="true"></div>
               <div class="wl-crease" aria-hidden="true"></div>
-              <div class="wl-status wl-status-l" aria-hidden="true">9:41</div><div class="wl-status wl-status-r" aria-hidden="true">5G ▮▮▮</div>
+              <div class="wl-status wl-status-l" aria-hidden="true">9:41 · Mon 14 Sep</div><div class="wl-status wl-status-r" aria-hidden="true">5G ▮▮▮ 100%</div>
+              <div class="wl-island" aria-hidden="true"><i></i></div>
+              <div class="wl-dock" aria-hidden="true"><i style="--c:oklch(0.62 0.2 30)"></i><i style="--c:oklch(0.7 0.16 150)"></i><i style="--c:oklch(0.62 0.18 260)"></i><i style="--c:oklch(0.8 0.15 85)"></i><i class="wl-dock-on" style="--c:oklch(0.35 0.02 260)"></i></div>
+              <div class="wl-win wl-win-l" data-testid="wl-win-stack"><div class="wl-winbar"><b>Wallet</b><span>Cards · 8</span><i>⋯</i></div><div class="wl-cmd"><span>⌕</span>Search cards, passes, tickets</div></div>
+              <div class="wl-win wl-win-r" data-testid="wl-win-card"><div class="wl-winbar"><b>Wallet</b><span>Card</span><i>⋯</i></div></div>
               <div class="wl-cardface wl-orrery" data-testid="wl-orrery" role="button" tabindex="0" aria-label="ORRERY card"><div class="gp-stage" data-testid="wl-orrery-stage"><canvas data-testid="wl-orrery-canvas"></canvas></div>
                 <div class="wl-face"><div class="wl-word" data-testid="wl-orrery-word">ORRERY</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
                   <div class="wl-pan" data-testid="wl-orrery-pan">•••• •••• •••• 4821</div><div class="wl-exp">GOOD THRU 09/29</div><div class="wl-name">A. M. Castellane</div>
@@ -433,8 +449,8 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
             </div>
           </div></div>
           <div class="wl-side">
-            <div class="wl-k">Wallet · on the iPhone Duo, open</div>
-            <p>Eight invented issuers, one wallet, drawn on the Duo's inner display at one CSS pixel per point: the stack on the left leaf, one card always live on the right with its details and a side rail, because iOS 27 puts controls on the edges and nothing rests on the crease. Tap a card in the stack and the two exchange — opposite arcs across the fold, 640 ms, the touched card in front — which is the one event a single screen cannot stage. The printed block is identical on every card and never moves; above it each card runs one process: Orrery's brass rings under a sweeping key light; Rosette's blood cells drifting in depth; Syringa's quatrefoil pumping violet dye at sixty beats a minute; Vesper Line's night train seen only as the light it leaves; Vitrine's glass stopper throwing a caustic; Mullion's louvred wall turning in a wave; Halation's thirty thousand points settling into volumes; Busbar's grid where charge hops one link per tick.</p>
+            <div class="wl-k">Wallet · one app, two windows, on the iPhone Duo</div>
+            <p>Eight invented issuers, one wallet, drawn on the Duo's inner display at one CSS pixel per point as one app in two windows over the Home Screen — the vertical Dynamic Island and the Dock on the edges, the way iOS 27 lays the device out — the stack in the left window, one card always live in the right with its details and a side rail; nothing rests on the crease. Tap a card in the stack and the two exchange — opposite arcs across the fold, 640 ms, the touched card in front — which is the one event a single screen cannot stage. The printed block is identical on every card and never moves; above it each card runs one process: Orrery's brass rings under a sweeping key light; Rosette's blood cells drifting in depth; Syringa's quatrefoil pumping violet dye at sixty beats a minute; Vesper Line's night train seen only as the light it leaves; Vitrine's glass stopper throwing a caustic; Mullion's louvred wall turning in a wave; Halation's thirty thousand points settling into volumes; Busbar's grid where charge hops one link per tick.</p>
             <p class="wl-note">Every company, person, mark and scheme is invented; the marks are drawn in code. The device geometry is Apple's published 164.6 × 117.8 mm open, 1878 × 2670 inner panel — see conductor/tracks/004-webgpu-sl-14/wallet-duo.md for what is verified and what is constructed. In the stack each card is a still; its process runs on the right leaf. Left on auto, the wallet exchanges every fourteen seconds; the rail steps by hand.</p>
           </div>
         </div>
