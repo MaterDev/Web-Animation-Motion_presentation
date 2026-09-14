@@ -2,6 +2,7 @@ import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { deckApi } from './scripts/deck-api.js';
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
@@ -28,8 +29,14 @@ export default defineConfig({
     // of Vite serving allow list" until the project root itself was
     // added here; confirmed live in a browser, not assumed from docs.
     fs: { allow: [projectRoot] },
+    // The phone runs the remote control, so the dev server has to be
+    // reachable from the LAN rather than only from localhost.
+    host: true,
   },
   plugins: [
+    // Presenter-only, dev-only: remote control and notes storage. It
+    // is `apply: 'serve'`, so the static build is untouched.
+    deckApi(),
     sveltekit({
       compilerOptions: {
         // Force runes mode project-wide, except for libraries.

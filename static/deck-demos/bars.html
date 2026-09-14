@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>bars</title>
+<style>
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+  .b{position:absolute;inset:18%;display:flex;align-items:flex-end;gap:6%}
+  .b i{flex:1;border-radius:1px;background:var(--t,#8899aa);height:30%;
+       animation:rise 1.9s cubic-bezier(.2,0,0,1) infinite alternate}
+  @keyframes rise{from{height:16%;opacity:.45}to{height:96%;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.b i{animation:none;height:56%}}
+</style>
+<div class="b" id="b"></div>
+<script>
+/* FILLER DEMO — plain HTML and CSS, no drawing surface at all.
+   Here to prove a slide's container holds ordinary markup as readily
+   as it holds a canvas, since most of the deck's techniques are not
+   canvas techniques. */
+(function () {
+  var tint = new URLSearchParams(location.search).get('tint') || '#8899aa';
+  document.documentElement.style.setProperty('--t', tint);
+  var b = document.getElementById('b'), s = '';
+  for (var i = 0; i < 7; i++) s += '<i style="animation-delay:' + (i * -0.22) + 's"></i>';
+  b.innerHTML = s;
+  parent.postMessage({ deck: 'ready' }, '*');
+})();
+</script>
