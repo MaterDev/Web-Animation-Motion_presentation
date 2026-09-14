@@ -7,8 +7,9 @@ import { fluidCards } from './fluids.js';
 import { populationCards } from './population.js';
 import { proceduralCard } from './procedural.js';
 import { opticsCard } from './optics.js';
+import { duoCard } from './duo.js';
 
-const cards = [clockCard(), ...loopCards(), ...walletCards(), ...fluidCards(), ...populationCards(), proceduralCard(), opticsCard()];
+const cards = [clockCard(), ...loopCards(), ...walletCards(), ...fluidCards(), ...populationCards(), proceduralCard(), opticsCard(), duoCard()];
 const fmtB = (n) => n === 0 ? '0 B' : n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB';
 (async () => {
   let dev;
