@@ -109,15 +109,36 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .nc-tx-new { animation: nc-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes nc-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .nc-pull { text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.wl { --wl-bg: oklch(0.13 0.008 260); --wl-ink: oklch(0.95 0.005 260); --wl-dim: oklch(0.62 0.01 260); background: var(--wl-bg); color: var(--wl-ink); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; }
-@media (min-width: 860px) { .wl { grid-template-columns: 360px minmax(0, 1fr); align-items: center; } }
-.wl-phone { width: min(100%, 340px); aspect-ratio: 9 / 19; border-radius: 40px; border: 2px solid oklch(0.3 0.01 260); background: oklch(0.09 0.006 260); position: relative; overflow: hidden; display: flex; flex-direction: column; margin: 0 auto; }
-.wl-top { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 22px 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-dim); }
-.wl-top b { font-family: var(--sans); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--wl-ink); text-transform: none; }
-.wl-stack { position: relative; flex: 1; margin: 6px 14px 18px; overflow: hidden; }
-.wl-cardface { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 1.586; border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.9s cubic-bezier(0.22, 0.9, 0.18, 1), box-shadow 0.6s; box-shadow: 0 -6px 18px oklch(0 0 0 / 0.45); will-change: transform; }
+.wl { --wl-bg: oklch(0.13 0.008 260); --wl-ink: oklch(0.95 0.005 260); --wl-dim: oklch(0.62 0.01 260); --wl-ground: oklch(0.09 0.006 260); background: var(--wl-bg); color: var(--wl-ink); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; }
+/* the frame at 1 CSS px = 1 iOS point; below 928 px of room it scales as a whole, never re-laid */
+.wl-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
+.wl-duo { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--wl-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.20 0.006 260); border: var(--hair) solid oklch(0.32 0.01 260); box-sizing: border-box; }
+.wl-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: var(--wl-ground); overflow: hidden; }
+.wl-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0.17 0.006 260); }
+.wl-status { position: absolute; top: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--wl-dim); } .wl-status-l { left: 24px; } .wl-status-r { right: 24px; }
+.wl-cardface { position: absolute; left: 0; top: 0; width: 340px; height: 214px; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 -4px 14px oklch(0 0 0 / 0.5); will-change: transform; transform-origin: center; }
 .wl-cardface .gp-stage { position: absolute; inset: 0; }
-.wl-cardface.wl-on { box-shadow: 0 18px 40px oklch(0 0 0 / 0.6); }
+.wl-cardface.wl-on { box-shadow: 0 14px 34px oklch(0 0 0 / 0.55); cursor: default; }
+.wl-detail { position: absolute; left: 477px; top: 350px; width: 340px; height: 220px; }
+.wl-detail > * { transition: opacity 0.18s cubic-bezier(0.32, 0.72, 0, 1), transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
+.wl-detail.wl-d-out > * { opacity: 0; transform: translateY(8px); transition-timing-function: cubic-bezier(0.55, 0, 1, 0.45); transition-duration: 0.11s; }
+.wl-detail.wl-d-in > * { animation: wl-write 0.18s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.wl-detail > :nth-child(2) { animation-delay: 0.04s; } .wl-detail > :nth-child(3) { animation-delay: 0.08s; } .wl-detail > :nth-child(4) { animation-delay: 0.12s; }
+@keyframes wl-write { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.wl-d-name { font-family: var(--sans); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+.wl-d-title { font-family: var(--sans); font-size: 11px; color: var(--wl-dim); margin-bottom: 10px; }
+.wl-d-rows div { display: flex; justify-content: space-between; gap: 10px; font-family: var(--sans); font-size: 11px; padding: 7px 0; border-top: var(--hair) solid oklch(0.22 0.01 260); }
+.wl-d-rows span { color: var(--wl-dim); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; } .wl-d-rows b { font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-d-btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.wl-d-btns button { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-bg); background: var(--wl-ink); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+/* the rail: three 44 px targets at the outboard edge of the right leaf */
+.wl-rail { position: absolute; left: 833px; top: 121px; width: 44px; display: flex; flex-direction: column; gap: 24px; }
+.wl-rail button { width: 44px; height: 44px; font-family: var(--mono); font-size: 12px; color: var(--wl-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(0.3 0.01 260); border-radius: 12px; cursor: pointer; padding: 0; }
+.wl-rail .wl-auto-on { background: var(--wl-ink); color: var(--wl-bg); }
+.wl-side { display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
+.wl-k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); }
+.wl-side p { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: oklch(0.85 0.006 260); margin: 0; }
+.wl-note { font-size: 11px !important; color: var(--wl-dim) !important; } .wl-note code { font-family: var(--mono); font-size: 10px; color: var(--wl-ink); }
 /* the printed block: identical structure on all eight, flat, never lit, never moving. Positions are fractions of the face. */
 .wl-face { position: absolute; inset: 0; pointer-events: none; color: var(--wl-face-ink, white); }
 .wl-word { position: absolute; left: 7%; top: 9%; font-family: var(--wl-face-font, var(--mono)); font-size: 12px; letter-spacing: var(--wl-face-track, 0.22em); text-transform: var(--wl-face-case, uppercase); font-weight: var(--wl-face-weight, 500); line-height: 1; }
@@ -137,23 +158,6 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .wl-mullion { --wl-face-font: var(--sans); --wl-face-track: 0.02em; --wl-face-case: none; --wl-face-weight: 500; } .wl-mullion .wl-word { font-size: 14px; }
 .wl-halation { --wl-face-track: -0.01em; --wl-face-case: none; } .wl-halation .wl-word { font-size: 13px; }
 .wl-busbar { --wl-face-track: 0.18em; } .wl-orrery { --wl-face-track: 0.22em; }
-.wl-detail { position: absolute; left: 0; right: 0; padding: 4px 6px; animation: wl-in 0.7s 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-.wl-detail[hidden] { display: none; }
-@keyframes wl-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.wl-d-name { font-family: var(--sans); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
-.wl-d-title { font-family: var(--sans); font-size: 11px; color: var(--wl-dim); margin-bottom: 10px; }
-.wl-d-rows div { display: flex; justify-content: space-between; gap: 10px; font-family: var(--sans); font-size: 11px; padding: 7px 0; border-top: var(--hair) solid oklch(0.25 0.01 260); }
-.wl-d-rows span { color: var(--wl-dim); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; } .wl-d-rows b { font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wl-d-btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-.wl-d-btns button { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-bg); background: var(--wl-ink); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
-.wl-d-btns .wl-ghost { background: transparent; color: var(--wl-ink); border: var(--hair) solid oklch(0.4 0.01 260); }
-.wl-bar { display: flex; justify-content: center; gap: 8px; padding: 0 14px 16px; }
-.wl-bar button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(0.35 0.01 260); border-radius: 999px; padding: 8px 14px; cursor: pointer; min-width: 44px; }
-.wl-bar .wl-auto-on { background: var(--wl-ink); color: var(--wl-bg); }
-.wl-side { display: flex; flex-direction: column; gap: 10px; max-width: 46ch; }
-.wl-k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); }
-.wl-side p { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: oklch(0.85 0.006 260); margin: 0; }
-.wl-note { font-size: 11px !important; color: var(--wl-dim) !important; } .wl-note code { font-family: var(--mono); font-size: 10px; color: var(--wl-ink); }
 
 /* ─── §3 · fluids ──────────────────────────────────────────────────────── */
 .tn { --tn-bg: oklch(0.975 0.004 90); --tn-ink: oklch(0.18 0.01 30); --tn-dim: oklch(0.55 0.01 30); --tn-red: oklch(0.52 0.20 25); background: var(--tn-bg); color: var(--tn-ink); }
@@ -384,53 +388,54 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       </div>
       <div class="gp-card gp-wide">
         <div class="wl" data-testid="wl-card">
-          <div class="wl-phone" data-testid="wl-phone">
-            <div class="wl-top"><span>9:41</span><b>Wallet</b><span data-testid="wl-count">8 cards</span></div>
-            <div class="wl-stack" data-testid="wl-stack">
-            <div class="wl-cardface wl-orrery" data-testid="wl-orrery" role="button" tabindex="0" aria-label="ORRERY card"><div class="gp-stage" data-testid="wl-orrery-stage"><canvas data-testid="wl-orrery-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-orrery-word">ORRERY</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-orrery-pan">•••• •••• •••• 4821</div><div class="wl-exp">GOOD THRU 09/29</div><div class="wl-name">A. M. Castellane</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-rosette" data-testid="wl-rosette" role="button" tabindex="0" aria-label="ROSETTE DIAGNOSTICS card"><div class="gp-stage" data-testid="wl-rosette-stage"><canvas data-testid="wl-rosette-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-rosette-word">ROSETTE DIAGNOSTICS</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-rosette-pan">•••• •••• •••• 1174</div><div class="wl-exp">GOOD THRU 03/28</div><div class="wl-name">Dr Ines Marlow</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-vesper" data-testid="wl-vesper" role="button" tabindex="0" aria-label="VESPER LINE card"><div class="gp-stage" data-testid="wl-vesper-stage"><canvas data-testid="wl-vesper-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-vesper-word">VESPER LINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-vesper-pan">•••• •••• •••• 9038</div><div class="wl-exp">GOOD THRU 11/27</div><div class="wl-name">Tomas Reade</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-syringa" data-testid="wl-syringa" role="button" tabindex="0" aria-label="SYRINGA card"><div class="gp-stage" data-testid="wl-syringa-stage"><canvas data-testid="wl-syringa-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-syringa-word">SYRINGA</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-syringa-pan">•••• •••• •••• 5501</div><div class="wl-exp">GOOD THRU 06/30</div><div class="wl-name">Marisol Vega</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-halation" data-testid="wl-halation" role="button" tabindex="0" aria-label="halation card"><div class="gp-stage" data-testid="wl-halation-stage"><canvas data-testid="wl-halation-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-halation-word">halation</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-halation-pan">•••• •••• •••• 2260</div><div class="wl-exp">GOOD THRU 01/29</div><div class="wl-name">Kenji Sato</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-vitrine" data-testid="wl-vitrine" role="button" tabindex="0" aria-label="VITRINE card"><div class="gp-stage" data-testid="wl-vitrine-stage"><canvas data-testid="wl-vitrine-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-vitrine-word">VITRINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-vitrine-pan">•••• •••• •••• 7713</div><div class="wl-exp">GOOD THRU 08/28</div><div class="wl-name">Dana Whitfield</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-busbar" data-testid="wl-busbar" role="button" tabindex="0" aria-label="BUSBAR card"><div class="gp-stage" data-testid="wl-busbar-stage"><canvas data-testid="wl-busbar-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-busbar-word">BUSBAR</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-busbar-pan">•••• •••• •••• 3395</div><div class="wl-exp">GOOD THRU 12/29</div><div class="wl-name">Owen Hartley</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-            <div class="wl-cardface wl-mullion" data-testid="wl-mullion" role="button" tabindex="0" aria-label="mullion card"><div class="gp-stage" data-testid="wl-mullion-stage"><canvas data-testid="wl-mullion-canvas"></canvas></div>
-              <div class="wl-face"><div class="wl-word" data-testid="wl-mullion-word">mullion</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                <div class="wl-pan" data-testid="wl-mullion-pan">•••• •••• •••• 6642</div><div class="wl-exp">GOOD THRU 04/28</div><div class="wl-name">Amara Cole</div>
-                <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-detail" data-testid="wl-detail" hidden>
+          <div class="wl-fit" data-testid="wl-fit"><div class="wl-duo" data-testid="wl-phone">
+            <div class="wl-display" data-testid="wl-stack">
+              <div class="wl-crease" aria-hidden="true"></div>
+              <div class="wl-status wl-status-l" aria-hidden="true">9:41</div><div class="wl-status wl-status-r" aria-hidden="true">5G ▮▮▮</div>
+              <div class="wl-cardface wl-orrery" data-testid="wl-orrery" role="button" tabindex="0" aria-label="ORRERY card"><div class="gp-stage" data-testid="wl-orrery-stage"><canvas data-testid="wl-orrery-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-orrery-word">ORRERY</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-orrery-pan">•••• •••• •••• 4821</div><div class="wl-exp">GOOD THRU 09/29</div><div class="wl-name">A. M. Castellane</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-rosette" data-testid="wl-rosette" role="button" tabindex="0" aria-label="ROSETTE DIAGNOSTICS card"><div class="gp-stage" data-testid="wl-rosette-stage"><canvas data-testid="wl-rosette-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-rosette-word">ROSETTE DIAGNOSTICS</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-rosette-pan">•••• •••• •••• 1174</div><div class="wl-exp">GOOD THRU 03/28</div><div class="wl-name">Dr Ines Marlow</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-vesper" data-testid="wl-vesper" role="button" tabindex="0" aria-label="VESPER LINE card"><div class="gp-stage" data-testid="wl-vesper-stage"><canvas data-testid="wl-vesper-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-vesper-word">VESPER LINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-vesper-pan">•••• •••• •••• 9038</div><div class="wl-exp">GOOD THRU 11/27</div><div class="wl-name">Tomas Reade</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-syringa" data-testid="wl-syringa" role="button" tabindex="0" aria-label="SYRINGA card"><div class="gp-stage" data-testid="wl-syringa-stage"><canvas data-testid="wl-syringa-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-syringa-word">SYRINGA</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-syringa-pan">•••• •••• •••• 5501</div><div class="wl-exp">GOOD THRU 06/30</div><div class="wl-name">Marisol Vega</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-halation" data-testid="wl-halation" role="button" tabindex="0" aria-label="halation card"><div class="gp-stage" data-testid="wl-halation-stage"><canvas data-testid="wl-halation-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-halation-word">halation</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-halation-pan">•••• •••• •••• 2260</div><div class="wl-exp">GOOD THRU 01/29</div><div class="wl-name">Kenji Sato</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-vitrine" data-testid="wl-vitrine" role="button" tabindex="0" aria-label="VITRINE card"><div class="gp-stage" data-testid="wl-vitrine-stage"><canvas data-testid="wl-vitrine-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-vitrine-word">VITRINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-vitrine-pan">•••• •••• •••• 7713</div><div class="wl-exp">GOOD THRU 08/28</div><div class="wl-name">Dana Whitfield</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-busbar" data-testid="wl-busbar" role="button" tabindex="0" aria-label="BUSBAR card"><div class="gp-stage" data-testid="wl-busbar-stage"><canvas data-testid="wl-busbar-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-busbar-word">BUSBAR</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-busbar-pan">•••• •••• •••• 3395</div><div class="wl-exp">GOOD THRU 12/29</div><div class="wl-name">Owen Hartley</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-cardface wl-mullion" data-testid="wl-mullion" role="button" tabindex="0" aria-label="mullion card"><div class="gp-stage" data-testid="wl-mullion-stage"><canvas data-testid="wl-mullion-canvas"></canvas></div>
+                <div class="wl-face"><div class="wl-word" data-testid="wl-mullion-word">mullion</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                  <div class="wl-pan" data-testid="wl-mullion-pan">•••• •••• •••• 6642</div><div class="wl-exp">GOOD THRU 04/28</div><div class="wl-name">Amara Cole</div>
+                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+              <div class="wl-detail" data-testid="wl-detail">
                 <div class="wl-d-name" data-testid="wl-d-name">—</div><div class="wl-d-title" data-testid="wl-d-title">—</div>
                 <div class="wl-d-rows"><div><span>issuer</span><b data-testid="wl-d-mail">—</b></div><div><span>card</span><b data-testid="wl-d-tel">—</b></div><div><span>scheme</span><b data-testid="wl-d-site">SPECIE · contactless</b></div></div>
-                <div class="wl-d-btns"><button data-testid="wl-add">set as default</button><button data-testid="wl-share">card details</button><button class="wl-ghost" data-testid="wl-close">done</button></div>
+                <div class="wl-d-btns"><button data-testid="wl-add">set as default</button><button data-testid="wl-share">card details</button></div>
               </div>
+              <div class="wl-rail" data-testid="wl-bar"><button data-testid="wl-prev" aria-label="previous card">▲</button><button class="wl-auto wl-auto-on" data-testid="wl-auto" aria-label="auto">⏸</button><button data-testid="wl-next" aria-label="next card">▼</button></div>
             </div>
-            <div class="wl-bar" data-testid="wl-bar"><button data-testid="wl-prev" aria-label="previous card">←</button><button class="wl-auto wl-auto-on" data-testid="wl-auto">auto · on</button><button data-testid="wl-next" aria-label="next card">→</button></div>
-          </div>
+          </div></div>
           <div class="wl-side">
-            <div class="wl-k">Wallet · digital business cards</div>
-            <p>Eight invented issuers, one wallet. The printed block is identical on every card — chip, contactless, number, name, expiry, the SPECIE scheme mark — and never moves. Above it, each card runs one process: Orrery's brass rings under a sweeping key light; Rosette's blood cells drifting in depth; Syringa's quatrefoil pumping violet dye at sixty beats a minute; Vesper Line's night train seen only as the light it leaves along a ridge; Vitrine's glass stopper throwing a dispersed caustic onto the stock; Mullion's louvred wall turning in a wave; Halation's thirty thousand points settling into volumes; Busbar's grid where charge hops one link per tick.</p>
-            <p class="wl-note">Every company, person, mark and scheme is invented; the marks are drawn in code. In the stack each card is a still; its process starts when it opens. Left on auto, the wallet holds each card for fourteen seconds; the arrows step by hand.</p>
+            <div class="wl-k">Wallet · on the iPhone Duo, open</div>
+            <p>Eight invented issuers, one wallet, drawn on the Duo's inner display at one CSS pixel per point: the stack on the left leaf, one card always live on the right with its details and a side rail, because iOS 27 puts controls on the edges and nothing rests on the crease. Tap a card in the stack and the two exchange — opposite arcs across the fold, 640 ms, the touched card in front — which is the one event a single screen cannot stage. The printed block is identical on every card and never moves; above it each card runs one process: Orrery's brass rings under a sweeping key light; Rosette's blood cells drifting in depth; Syringa's quatrefoil pumping violet dye at sixty beats a minute; Vesper Line's night train seen only as the light it leaves; Vitrine's glass stopper throwing a caustic; Mullion's louvred wall turning in a wave; Halation's thirty thousand points settling into volumes; Busbar's grid where charge hops one link per tick.</p>
+            <p class="wl-note">Every company, person, mark and scheme is invented; the marks are drawn in code. The device geometry is Apple's published 164.6 × 117.8 mm open, 1878 × 2670 inner panel — see conductor/tracks/004-webgpu-sl-14/wallet-duo.md for what is verified and what is constructed. In the stack each card is a still; its process runs on the right leaf. Left on auto, the wallet exchanges every fourteen seconds; the rail steps by hand.</p>
           </div>
         </div>
         <div class="gp-cap"><b>Wallet · brand</b> · payment cards for eight invented issuers, ID-1 proportion, one printed block; direction after the art director's brief (conductor/tracks/004-webgpu-sl-14/wallet-concepts-v2.md) · eight mechanisms: a sphere-traced solid, depth-tested sphere impostors, a stable fluid, a heightfield with a persistence trail, ray-marched glass with dispersion, lit instanced slats, 30k compute particles, a compute pass over a graph · <i>every mark drawn from a predicate, its signed distance computed once</i></div>
@@ -606,7 +611,7 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       </div>
       <div class="du-panel">
         <div class="du-k">iPhone Duo · model</div>
-        <div class="du-name">Two panes, one hinge</div>
+        <div class="du-name">One panel, folded</div>
         <div><div class="du-k" style="display:flex;justify-content:space-between"><span>hinge</span><b data-testid="du-fold-v">0°</b></div><input class="du-range" type="range" min="0" max="180" step="1" value="0" data-testid="du-fold" aria-label="hinge angle"></div>
         <button class="du-btn" data-testid="du-auto">let it run</button>
         <div class="du-specs" data-testid="du-specs"></div>
@@ -623,7 +628,7 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
       <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
       <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument.</li>
-      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Tinta, Fume, Pour, the paper and its authors, Tessera and Halcyon do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified or estimated on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Tinta, Fume, Pour, the paper and its authors, Tessera and Halcyon do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
     </ol>
   </div>
 </div>
