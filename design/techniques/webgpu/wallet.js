@@ -298,9 +298,9 @@ struct R { res: vec2f, time: f32, tick: f32, cyan: vec4f, amber: vec4f };
 @group(0) @binding(2) var<storage, read> links: array<vec2u>;
 @group(0) @binding(3) var<storage, read> tickOf: array<u32>;
 struct VO { @builtin(position) p: vec4f, @location(0) c: vec4f, @location(1) q: vec2f, @location(2) kind: f32 };
-@vertex fn vs(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO { let asp = r.res.x / r.res.y; let CC = array<vec2f, 4>(vec2f(-1.0, -1.0), vec2f(1.0, -1.0), vec2f(-1.0, 1.0), vec2f(1.0, 1.0)); let corner = CC[min(vi, 3u)]; var o: VO;
+@vertex fn vs(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO { let asp = r.res.x / r.res.y; let IX = array<u32, 6>(0u, 1u, 2u, 2u, 1u, 3u); let cv = IX[min(vi, 5u)]; let CC = array<vec2f, 4>(vec2f(-1.0, -1.0), vec2f(1.0, -1.0), vec2f(-1.0, 1.0), vec2f(1.0, 1.0)); let corner = CC[cv]; var o: VO;
   let frac = fract(r.tick); let cur = floor(r.tick);
-  if (ii < ${BL}u) { let l = links[ii]; let a = nodes[l.x].xy; let b = nodes[l.y].xy; let end = f32((vi >> 1u) & 1u); let side = f32(vi & 1u) * 2.0 - 1.0; let P = mix(a, b, end);
+  if (ii < ${BL}u) { let l = links[ii]; let a = nodes[l.x].xy; let b = nodes[l.y].xy; let end = f32((cv >> 1u) & 1u); let side = f32(cv & 1u) * 2.0 - 1.0; let P = mix(a, b, end);
     let dv = (b - a) * vec2f(asp, 1.0); let n = normalize(vec2f(-dv.y, dv.x) + 1e-5); let th = 2.6 / r.res.y; let pos = vec2f((P.x - 0.5) * asp + n.x * side * th, 0.5 - P.y + n.y * side * th);
     o.p = vec4f(pos.x / asp * 2.0, pos.y * 2.0, 0.0, 1.0); o.q = vec2f(side, 0.0);
     /* a link lights amber for 400 ms as charge crosses it, then cools to cyan */
@@ -380,13 +380,13 @@ export function walletCards() {
           const A = mk(SY_ADVECT, [[vel[0], vel[1], dye[0], dye[1]], [vel[1], vel[0], dye[1], dye[0]]], true), D = mk(SY_DIV, [[vel[1], div, pres[0]], [vel[0], div, pres[0]]]), J = mk(SY_JAC, [[div, pres[0], pres[1]], [div, pres[1], pres[0]]]), P = mk(SY_PROJ, [[pres[0], vel[1]], [pres[0], vel[0]]]);
           const pd = render(SY_DRAW); s.sy = { u, A, D, J, P, pd, gd: [faceBind(pd, [{ binding: 4, resource: { buffer: dye[1] } }]), faceBind(pd, [{ binding: 4, resource: { buffer: dye[0] } }])], cur: 0 }; }
         else if (c.id === 'halation') { const sets = haloSets(HN), setsB = storage(sets.byteLength), pos = storage(HN * 16), vel = storage(HN * 16), u = uniform(48), pr = uniform(48); dev.queue.writeBuffer(setsB, 0, sets); dev.queue.writeBuffer(pos, 0, sets.subarray(0, HN * 4));
-          const pk = compute(HA_K), pd = render(HA_D, { blend: 'add' }), pb = render(HA_BG); s.ha = { u, pr, pk, pd, pb, gk: bind(pk, [u, pos, vel, setsB]), gd: bind(pd, [pr, pos]), gb: faceBind(pb) }; }
+          const pk = compute(HA_K), pd = render(HA_D, { blend: 'add', topology: 'triangle-strip' }), pb = render(HA_BG); s.ha = { u, pr, pk, pd, pb, gk: bind(pk, [u, pos, vel, setsB]), gd: bind(pd, [pr, pos]), gb: faceBind(pb) }; }
         else if (c.id === 'vitrine') { const pf = render(VITRINE); s.face = { pf, gf: faceBind(pf) }; }
         else if (c.id === 'busbar') { const g = busGraph(); const nb = new Float32Array(BN * 4); g.nodes.forEach((p, i) => { nb[i * 4] = p[0]; nb[i * 4 + 1] = p[1]; }); const lb = new Uint32Array(BL * 2); g.links.forEach((l, i) => { lb[i * 2] = l[0]; lb[i * 2 + 1] = l[1]; });
           const nodes = storage(nb.byteLength), links = storage(lb.byteLength), tickB = storage(BN * 4), u = uniform(16), pr = uniform(48); dev.queue.writeBuffer(nodes, 0, nb); dev.queue.writeBuffer(links, 0, lb);
-          const pk = compute(BB_K), pd = render(BB_D), pb = render(BB_BG); s.bb = { u, pr, pk, pd, pb, tickB, gk: bind(pk, [u, links, tickB]), gd: bind(pd, [pr, nodes, links, tickB]), gb: faceBind(pb), lastTick: -1, seed: 0 };
+          const pk = compute(BB_K), pd = render(BB_D, { topology: 'triangle-list' }), pb = render(BB_BG); s.bb = { u, pr, pk, pd, pb, tickB, gk: bind(pk, [u, links, tickB]), gd: bind(pd, [pr, nodes, links, tickB]), gb: faceBind(pb), lastTick: -1, seed: 0 };
           s.bb.reset = () => { const t0 = new Uint32Array(BN).fill(0xffffffff); t0[s.bb.seed] = 0; dev.queue.writeBuffer(tickB, 0, t0); s.bb.lastTick = 0; }; s.bb.reset(); }
-        else if (c.id === 'mullion') { const pr = uniform(64), pd = render(MU_D), pb = render(MU_BG); s.mu = { pr, pd, pb, gd: bind(pd, [pr]), gb: faceBind(pb) }; }
+        else if (c.id === 'mullion') { const pr = uniform(64), pd = render(MU_D, { topology: 'triangle-strip' }), pb = render(MU_BG); s.mu = { pr, pd, pb, gd: bind(pd, [pr]), gb: faceBind(pb) }; }
         s.ready = true; }).catch((e) => console.error('wallet', c.id, e));
     }, frame(t, dt, now) {
       if (!s) return; const resized = s.fit(); const dev = this.__dev, op = isOpen() ? 1 : 0, since = (now - openedAt) / 1000, T = op ? since : posterT[c.id]; const sc = c.scale || 1, mb = [MB[0] + MB[2] * (1 - sc) / 2, MB[1] + MB[3] * (1 - sc) / 2, MB[2] * sc, MB[3] * sc];
@@ -424,7 +424,7 @@ export function walletCards() {
       } else if (c.id === 'busbar') { /* twenty-eight ticks at half a second; the front returns to its seed */ const bb = s.bb, tl = T % 14, tick = Math.floor(tl / 0.5);
         if (tick < bb.lastTick) bb.reset(); for (let k = bb.lastTick + 1; k <= tick; k++) { dev.queue.writeBuffer(bb.u, 0, new Uint32Array([BL, k, 0, 0])); for (let rep = 0; rep < 2; rep++) { const cp = enc.beginComputePass(); cp.setPipeline(bb.pk); cp.setBindGroup(0, bb.gk); cp.dispatchWorkgroups(1); cp.end(); } bb.lastTick = k; }
         dev.queue.writeBuffer(bb.pr, 0, new Float32Array([canvas.width, canvas.height, T, tl / 0.5, 0.55, 0.78, 0.86, 1, 1.0, 0.70, 0.18, 1])); writeR(0);
-        const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bb.pb); rp.setBindGroup(0, bb.gb); rp.draw(3); rp.setPipeline(bb.pd); rp.setBindGroup(0, bb.gd); rp.draw(4, BL + BN); markPass(rp); rp.end();
+        const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bb.pb); rp.setBindGroup(0, bb.gb); rp.draw(3); rp.setPipeline(bb.pd); rp.setBindGroup(0, bb.gd); rp.draw(6, BL + BN); markPass(rp); rp.end();
       } else if (c.id === 'mullion') { /* a travelling wave with a 3.5 s period; the hand sets its phase */ const mu = s.mu, phase = (on ? drag[0] * 6 : 0) + (T % 14) / 3.5 * TAU;
         dev.queue.writeBuffer(mu.pr, 0, new Float32Array([canvas.width, canvas.height, T, phase, 0.80, 0.78, 0.74, 1, 0.06, 0.14, 0.36, 1, -0.5 + tilt[0], 0.4, 0.8, 0])); writeR(0);
         const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(mu.pb); rp.setBindGroup(0, mu.gb); rp.draw(3); rp.setPipeline(mu.pd); rp.setBindGroup(0, mu.gd); rp.draw(4, SL); markPass(rp); rp.end();

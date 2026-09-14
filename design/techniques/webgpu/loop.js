@@ -60,7 +60,7 @@ function makeSystem(dev, canvas, n, colA, colB, opts) {
   const { ctx, fit } = attach(canvas);
   const pos = storage(n * 8), vel = storage(n * 8), target = storage(n * 8);
   const seed = new Float32Array(n * 2); for (let i = 0; i < n; i++) { seed[i * 2] = hash2(i, 1); seed[i * 2 + 1] = hash2(i, 2); } dev.queue.writeBuffer(pos, 0, seed); dev.queue.writeBuffer(target, 0, seed);
-  const u = uniform(64), ru = uniform(64), pk = compute(KERNEL), pd = render(DRAW, { blend: true });
+  const u = uniform(64), ru = uniform(64), pk = compute(KERNEL), pd = render(DRAW, { blend: true, topology: 'triangle-strip' });
   const bk = bind(pk, [u, pos, vel, target]), bd = bind(pd, [ru, pos, vel]);
   const U = new ArrayBuffer(64), Ui = new Uint32Array(U), Uf = new Float32Array(U);
   return {
