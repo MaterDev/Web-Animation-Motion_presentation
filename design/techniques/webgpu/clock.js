@@ -68,7 +68,7 @@ export function clockCard() {
     const seed = new Float32Array(N * 2); let h = 3; const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
     for (let i = 0; i < N * 2; i++) seed[i] = rnd(); this.__dev.queue.writeBuffer(pos, 0, seed);
     const u = uniform(32), ru = uniform(80);
-    const pFlow = compute(FLOW), pInt = compute(INTEGRATE), pDen = compute(DENSITY), pDraw = render(DRAW, { blend: true });
+    const pFlow = compute(FLOW), pInt = compute(INTEGRATE), pDen = compute(DENSITY), pDraw = render(DRAW, { blend: true, topology: 'triangle-strip' });
     const bFlow = bind(pFlow, [u, pos, vel]), bInt = bind(pInt, [u, pos, vel]), bDen = bind(pDen, [u, pos, dens]), bDraw = bind(pDraw, [ru, pos, dens]);
     const tm = timer(['flow', 'integrate', 'density', 'render']);
     const A = col(el, '--ck-dim'), B = col(el, '--ck-acc'), BG = col(el, '--ck-bg');
