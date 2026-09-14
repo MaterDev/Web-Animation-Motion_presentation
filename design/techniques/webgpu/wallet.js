@@ -265,9 +265,10 @@ fn gem(p0: vec3f) -> f32 { let p = rotX(rotY(p0 / 2.1, r.phase * 3.14159), 0.5 +
   let N = array<vec3f, 7>(vec3f(0.0, 1.0, 0.0), vec3f(0.0, -1.0, 0.0), vec3f(0.9, 0.3, 0.3), vec3f(-0.9, 0.3, 0.3), vec3f(0.3, 0.3, -0.9), vec3f(-0.3, -0.2, 0.9), vec3f(0.5, -0.6, -0.6));
   let H = array<f32, 7>(0.10, 0.09, 0.10, 0.10, 0.10, 0.11, 0.105); for (var i = 0; i < 7; i++) { d = max(d, dot(p, normalize(N[i])) - H[i]); } return (d - 0.004) * 2.1; }
 fn nrm(p: vec3f) -> vec3f { let e = vec2f(0.0012, 0.0); return normalize(vec3f(gem(p + e.xyy) - gem(p - e.xyy), gem(p + e.yxy) - gem(p - e.yxy), gem(p + e.yyx) - gem(p - e.yyx))); }
-fn env(d: vec3f) -> vec3f { let dd = normalize(vec3f(d.x + r.tilt.x * 0.6, d.y + r.tilt.y * 0.6, d.z)); var c = mix(vec3f(0.18, 0.17, 0.16), vec3f(1.0), smoothstep(-0.5, 0.7, dd.y)); c += vec3f(1.0, 0.97, 0.9) * pow(max(dot(dd, normalize(vec3f(0.5, 0.7, 0.5))), 0.0), 16.0) * 2.0 + vec3f(0.9, 0.95, 1.0) * pow(max(dot(dd, normalize(vec3f(-0.7, 0.1, 0.4))), 0.0), 24.0) * 1.2; c += vec3f(0.25) * step(0.92, abs(fract(dd.x * 2.5 + dd.y) - 0.5) * 2.0); return c; }
+/* a white softbox room: value only, so any colour on the glass is dispersion and nothing else */
+fn env(d: vec3f) -> vec3f { let dd = normalize(vec3f(d.x + r.tilt.x * 0.6, d.y + r.tilt.y * 0.6, d.z)); var c = mix(vec3f(0.30), vec3f(0.98), smoothstep(-0.6, 0.6, dd.y)); c += vec3f(1.0) * pow(max(dot(dd, normalize(vec3f(0.4, 0.8, 0.45))), 0.0), 10.0) * 0.9; c *= 0.85 + 0.15 * smoothstep(-0.2, 0.2, sin(dd.x * 6.0)); return c; }
 fn refr(I: vec3f, N: vec3f, eta: f32) -> vec3f { let k = 1.0 - eta * eta * (1.0 - dot(N, I) * dot(N, I)); if (k < 0.0) { return reflect(I, N); } return eta * I - (eta * dot(N, I) + sqrt(k)) * N; }
-fn through(ro: vec3f, rd: vec3f, eta: f32) -> f32 { let rin = refr(rd, nrm(ro), eta); var t = 0.003; var p = ro; for (var i = 0; i < 36; i++) { p = ro + rin * t; let h = -gem(p); if (h < 0.0008) { break; } t += max(h * 0.8, 0.0015); if (t > 0.6) { break; } } let rout = refr(rin, -nrm(p), 1.0 / eta); return dot(env(rout), vec3f(0.333)); }
+fn through(ro: vec3f, rd: vec3f, eta: f32) -> f32 { let rin = refr(rd, nrm(ro), eta); var t = 0.003; var p = ro; for (var i = 0; i < 48; i++) { p = ro + rin * t; let h = -gem(p); if (h < 0.0006) { break; } t += max(h * 0.7, 0.001); if (t > 0.9) { break; } } let rout = refr(rin, -nrm(p), 1.0 / eta); return dot(env(rout), vec3f(0.333)) * exp(-t * 0.6); }
 @fragment fn fs(o: VO) -> @location(0) vec4f { let uv = o.uv; var col = face(uv); let asp = r.res.x / r.res.y;
   let sc = vec2f(0.66, 0.32); let ro = vec3f((uv.x - sc.x) * asp, sc.y - uv.y, 0.8); let rd = normalize(vec3f(-r.tilt.x * 0.1, -r.tilt.y * 0.06, -1.0));
   /* the caustic: the key light through the stopper lands on the stock, spread into a spectrum; it flares when two facets align */
@@ -276,8 +277,8 @@ fn through(ro: vec3f, rd: vec3f, eta: f32) -> f32 { let rin = refr(rd, nrm(ro), 
   col += caus * 0.9;
   var t = 0.0; var hit = -1.0; for (var i = 0; i < 60; i++) { let h = gem(ro + rd * t); if (h < 0.0006) { hit = t; break; } t += h * 0.9; if (t > 2.0) { break; } }
   if (hit > 0.0) { let p = ro + rd * hit; let n = nrm(p); let fr = 0.04 + 0.96 * pow(1.0 - max(dot(n, -rd), 0.0), 5.0);
-    let tr = vec3f(through(p, rd, 1.0 / 1.46), through(p, rd, 1.0 / 1.53), through(p, rd, 1.0 / 1.62)); let refl = env(reflect(rd, n));
-    var glass = mix(tr, refl, fr); let edge = pow(1.0 - abs(dot(n, -rd)), 3.0); glass += vec3f(1.0) * edge * 0.25; col = tonemap(glass * 1.05); }
+    let tr = vec3f(through(p, rd, 1.0 / 1.49), through(p, rd, 1.0 / 1.53), through(p, rd, 1.0 / 1.585)); let refl = env(reflect(rd, n));
+    var glass = mix(tr, refl, fr); let edge = pow(1.0 - abs(dot(n, -rd)), 3.0); glass += vec3f(1.0) * edge * 0.18; col = tonemap(glass * 1.0); }
   else { /* the stopper's soft shadow on the stock */ let sh = exp(-length((uv - sc - vec2f(0.03, 0.06)) * vec2f(asp, 1.0)) * 9.0); col *= 1.0 - 0.18 * sh; }
 ` + END;
 
@@ -338,7 +339,7 @@ const MU_BG = PRE + `@fragment fn fs(o: VO) -> @location(0) vec4f { let uv = o.u
 const posterT = { orrery: 4.2, rosette: 6.0, vesper: 9.5, syringa: 3.4, halation: 6.4, vitrine: 9.3, busbar: 3.5, mullion: 2.1 };
 
 /* ── the wallet, on the Duo's inner display at 1 px = 1 pt ───────────── */
-const STACK_X = 52, STACK_Y = 45, REVEAL = 46, OPEN_X = 477, OPEN_Y = 104;
+const STACK_X = 80, STACK_Y = 134, REVEAL = 39, OPEN_X = 474, OPEN_Y = 82;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 export function walletCards() {
   const wallet = $('wl-card'), fit = $('wl-fit'), duo = $('wl-phone'), detail = $('wl-detail'); let open = 0, lastTouch = 0, openedAt = 0, busy = false, auto = true;
