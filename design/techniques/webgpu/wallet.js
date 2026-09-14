@@ -337,27 +337,43 @@ const MU_BG = PRE + `@fragment fn fs(o: VO) -> @location(0) vec4f { let uv = o.u
 
 const posterT = { orrery: 4.2, rosette: 6.0, vesper: 9.5, syringa: 3.4, halation: 6.4, vitrine: 9.3, busbar: 3.5, mullion: 2.1 };
 
-/* ── the wallet ───────────────────────────────────────────────────────── */
+/* ── the wallet, on the Duo's inner display at 1 px = 1 pt ───────────── */
+const STACK_X = 52, STACK_Y = 45, REVEAL = 46, OPEN_X = 477, OPEN_Y = 104;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 export function walletCards() {
-  const wallet = $('wl-card'), phone = $('wl-phone'), stack = $('wl-stack'), detail = $('wl-detail'); let open = -1, lastTouch = 0, openedAt = 0;
+  const wallet = $('wl-card'), fit = $('wl-fit'), duo = $('wl-phone'), detail = $('wl-detail'); let open = 0, lastTouch = 0, openedAt = 0, busy = false, auto = true;
   const els = CARDS.map((c) => $('wl-' + c.id));
-  const layout = () => { const H = stack.clientHeight, cardH = els[0].offsetHeight, step = Math.min(44, (H - cardH - 12) / (CARDS.length - 1));
-    els.forEach((el, i) => { if (open < 0) { el.style.transform = `translateY(${i * step}px)`; el.style.zIndex = i + 1; el.classList.remove('wl-on', 'wl-peek'); }
-      else if (i === open) { el.style.transform = 'translateY(0px)'; el.style.zIndex = 20; el.classList.add('wl-on'); el.classList.remove('wl-peek'); }
-      else { const j = i < open ? i : i - 1; el.style.transform = `translateY(${H - 46 + j * 5}px) scale(${1 - (CARDS.length - 2 - j) * 0.012})`; el.style.zIndex = 8 - j; el.classList.add('wl-peek'); el.classList.remove('wl-on'); } });
-    detail.hidden = open < 0; if (open >= 0) { const c = CARDS[open]; detail.style.top = (cardH + 18) + 'px'; $('wl-d-name').textContent = $('wl-' + c.id).querySelector('.wl-name').textContent; $('wl-d-title').textContent = c.issuer; $('wl-d-mail').textContent = c.issuer.split(' · ')[0]; $('wl-d-tel').textContent = $('wl-' + c.id).querySelector('.wl-pan').textContent; }
-    wallet.classList.toggle('wl-is-open', open >= 0); phone.scrollTop = 0; stack.scrollTop = 0; };
-  const setOpen = (i) => { open = i; openedAt = performance.now(); layout(); };
-  let auto = true, busy = false;
-  const goto = (i) => { if (busy) return; busy = true; if (open >= 0) { setOpen(-1); setTimeout(() => { setOpen(i); busy = false; }, 950); } else { setOpen(i); busy = false; } };
-  els.forEach((el, i) => { el.addEventListener('click', () => { if (open === i) return; lastTouch = performance.now(); goto(i); }); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lastTouch = performance.now(); goto(i); } }); });
-  $('wl-close').addEventListener('click', () => { lastTouch = performance.now(); setOpen(-1); });
-  new ResizeObserver(layout).observe(stack); requestAnimationFrame(layout);
-  const step = (d) => { const cur = open < 0 ? (d > 0 ? -1 : 0) : open; goto((cur + d + CARDS.length) % CARDS.length); };
-  $('wl-prev').addEventListener('click', () => { lastTouch = performance.now(); step(-1); }); $('wl-next').addEventListener('click', () => { lastTouch = performance.now(); step(1); });
-  $('wl-auto').addEventListener('click', () => { auto = !auto; $('wl-auto').classList.toggle('wl-auto-on', auto); $('wl-auto').textContent = auto ? 'auto · on' : 'auto · off'; lastTouch = performance.now(); });
-  let tourAt = 0; setInterval(() => { if (!auto || busy || performance.now() - lastTouch < 6000) return; if (open < 0) { goto(tourAt % CARDS.length); tourAt++; } else if (performance.now() - openedAt > 14000) { goto((open + 1) % CARDS.length); tourAt = open + 2; } }, 500);
-  lastTouch = performance.now() - 4000;
+  /* the frame scales as a whole when the column is narrower than 928 px; it is never re-laid */
+  const scale = () => { const sc = Math.min(1, fit.clientWidth / 928); duo.style.setProperty('--wl-scale', sc); fit.style.height = (664 * sc) + 'px'; };
+  new ResizeObserver(scale).observe(fit); scale();
+  const stackOrder = () => CARDS.map((_, i) => i).filter((i) => i !== open);
+  const slotOf = (i) => { const k = stackOrder().indexOf(i); return [STACK_X, STACK_Y + k * REVEAL]; };
+  const place = (el, x, y, sc = 1) => { el.style.transform = `translate(${x}px, ${y}px) scale(${sc})`; };
+  const layout = () => { stackOrder().forEach((i, k) => { place(els[i], STACK_X, STACK_Y + k * REVEAL); els[i].style.zIndex = k + 1; els[i].classList.remove('wl-on'); }); place(els[open], OPEN_X, OPEN_Y); els[open].style.zIndex = 30; els[open].classList.add('wl-on'); writeDetail(); };
+  const writeDetail = () => { const c = CARDS[open]; $('wl-d-name').textContent = els[open].querySelector('.wl-name').textContent; $('wl-d-title').textContent = c.issuer; $('wl-d-mail').textContent = c.issuer.split(' · ')[0]; $('wl-d-tel').textContent = els[open].querySelector('.wl-pan').textContent; };
+  const arc = (a, b, t, apex) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t + apex * 4 * t * (1 - t)];
+  /* cubic-bezier(0.32, 0.72, 0, 1), sampled */
+  const bz = (t) => { const p1 = 0.32, p2 = 0.0, q1 = 0.72, q2 = 1.0; let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2, x = 3 * (1 - m) * (1 - m) * m * p1 + 3 * (1 - m) * m * m * p2 + m * m * m; if (x < t) lo = m; else hi = m; } const u = (lo + hi) / 2; return 3 * (1 - u) * (1 - u) * u * q1 + 3 * (1 - u) * u * u * q2 + u * u * u; };
+  /* EXCHANGE: card m leaves the stack, card n returns to it; they cross the fold in opposite arcs, 640 ms, m in front */
+  const exchange = (m) => { if (busy || m === open) return; const n = open; busy = true; const from = slotOf(m); const t0 = performance.now();
+    detail.classList.add('wl-d-out'); detail.classList.remove('wl-d-in');
+    const to = (() => { const order = CARDS.map((_, i) => i).filter((i) => i !== m); const k = order.indexOf(n); return [STACK_X, STACK_Y + k * REVEAL]; })();
+    open = m; openedAt = t0; els[m].style.zIndex = 40; els[n].style.zIndex = 35; els[m].classList.add('wl-on'); els[n].classList.remove('wl-on');
+    /* the stack re-slots underneath, staggered, while the two cards fly */
+    const order = stackOrder(); els.forEach((el, i) => { if (i === m || i === n) return; const k = order.indexOf(i); el.style.transition = `transform 0.2s cubic-bezier(0.32, 0.72, 0, 1) ${70 + k * 24}ms`; place(el, STACK_X, STACK_Y + k * REVEAL); el.style.zIndex = k + 1; });
+    if (reduced.matches) { els[m].style.transition = 'opacity 0.12s 0.06s'; els[n].style.transition = 'opacity 0.12s'; els[n].style.opacity = '0'; setTimeout(() => { place(els[n], to[0], to[1]); place(els[m], OPEN_X, OPEN_Y); els[n].style.opacity = '1'; els[m].style.opacity = '1'; writeDetail(); detail.classList.remove('wl-d-out'); detail.classList.add('wl-d-in'); els.forEach((el) => { el.style.transition = ''; }); busy = false; }, 320); return; }
+    const tick = (now) => { const t = now - t0;
+      const k = Math.max(0, Math.min(1, (t - 90) / 320)), e = bz(k); const lift = t < 40 ? 0 : t < 110 ? (t - 40) / 70 : t < 380 ? 1 : t < 470 ? 1 - (t - 380) / 90 : 0; const sc = 1 + 0.025 * lift;
+      const pm = arc(from, [OPEN_X, OPEN_Y], e, -32), pn = arc([OPEN_X, OPEN_Y], to, e, 32); place(els[m], pm[0], pm[1], sc); place(els[n], pn[0], pn[1], sc);
+      if (t >= 430 && !detail.classList.contains('wl-d-in')) { writeDetail(); detail.classList.remove('wl-d-out'); detail.classList.add('wl-d-in'); }
+      if (t < 640) requestAnimationFrame(tick); else { els.forEach((el) => { el.style.transition = ''; }); const k2 = stackOrder().indexOf(n); els[n].style.zIndex = k2 + 1; els[m].style.zIndex = 30; busy = false; } };
+    requestAnimationFrame(tick); };
+  els.forEach((el, i) => { el.addEventListener('click', () => { lastTouch = performance.now(); exchange(i); }); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lastTouch = performance.now(); exchange(i); } }); });
+  const step = (d) => { const order = stackOrder(); const k = order.indexOf(open); exchange(order[((d > 0 ? open + d : open + d) % CARDS.length + CARDS.length) % CARDS.length === open ? (open + d * 2 + CARDS.length) % CARDS.length : (open + d + CARDS.length) % CARDS.length] !== undefined ? (open + d + CARDS.length) % CARDS.length : order[0]); void k; };
+  $('wl-prev').addEventListener('click', () => { lastTouch = performance.now(); exchange((open + CARDS.length - 1) % CARDS.length); }); $('wl-next').addEventListener('click', () => { lastTouch = performance.now(); exchange((open + 1) % CARDS.length); });
+  $('wl-auto').addEventListener('click', () => { auto = !auto; $('wl-auto').classList.toggle('wl-auto-on', auto); $('wl-auto').textContent = auto ? '⏸' : '⏵'; lastTouch = performance.now(); });
+  setInterval(() => { if (!auto || busy || performance.now() - lastTouch < 6000 || performance.now() - openedAt < 14000) return; exchange((open + 1) % CARDS.length); }, 500);
+  requestAnimationFrame(() => { layout(); openedAt = performance.now(); detail.classList.add('wl-d-in'); }); lastTouch = performance.now() - 4000; void step;
 
   return CARDS.map((c, ci) => {
     const el = els[ci], stage = $('wl-' + c.id + '-stage'), canvas = $('wl-' + c.id + '-canvas'); let s = null, ptr = [-9, -9], on = 0, tilt = [0, 0], last = null, force = [0, 0], drag = [0, 0];

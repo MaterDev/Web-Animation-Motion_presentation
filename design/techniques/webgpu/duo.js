@@ -8,10 +8,14 @@
    prints which. */
 import { $, DPR, TAU, uniform, render, bind, attach, timer, card, pointer, FSQ_VS } from './common.js';
 
-/* centimetres. Update from conductor/tracks/004-webgpu-sl-14/wallet-duo.md when the research lands. */
+/* centimetres. Verified figures from Apple's published dimensions via conductor/tracks/004-webgpu-sl-14/wallet-duo.md:
+   open 164.6 × 117.8 × 5.2 mm, closed 84.1 × 117.8 × 11.3 mm; inner panel 1878 × 2670 @ 430 ppi → 110.93 × 157.72 mm,
+   so the open bezel is 3.44 mm all round; outer panel 1398 × 2034 @ 460 ppi → closed bezels 3.46 mm sides, 2.75 mm top/bottom.
+   Apple publishes no corner radius and no crease width: those are constructed and say so. */
 export const SPECS = {
-  paneW: { v: 7.2, src: 'estimated' }, paneH: { v: 15.6, src: 'estimated' }, paneT: { v: 0.56, src: 'estimated' },
-  hingeR: { v: 0.30, src: 'estimated' }, cornerR: { v: 0.95, src: 'estimated' }, bezel: { v: 0.32, src: 'estimated' },
+  leafW: { v: 8.23, src: 'verified' }, leafH: { v: 11.78, src: 'verified' }, leafT: { v: 0.52, src: 'verified' },
+  bezel: { v: 0.344, src: 'derived' }, outerBezelSide: { v: 0.346, src: 'derived' }, outerBezelEnd: { v: 0.275, src: 'derived' },
+  cornerR: { v: 0.78, src: 'constructed' }, hingeR: { v: 0.30, src: 'constructed' },
 };
 
 const SHADER = FSQ_VS + `
@@ -24,18 +28,20 @@ fn sdBox2(p: vec2f, b: vec2f, rad: f32) -> f32 { let q = abs(p) - b + rad; retur
 fn hash(p: vec2f) -> f32 { return fract(sin(dot(p, vec2f(127.1, 311.7))) * 43758.5453); }
 fn vn(p: vec2f) -> f32 { let i = floor(p); var f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2f(1, 0)), f.x), mix(hash(i + vec2f(0, 1)), hash(i + vec2f(1, 1)), f.x), f.y); }
 /* one pane in its own frame: x from the hinge outward, y up, inner face toward +z */
-fn pane(p: vec3f) -> vec2f { let W = r.dims.x; let H = r.dims.y; let T = r.dims.z; let cr = r.dims.w;
-  let body = sdRBox(p - vec3f(W * 0.5, 0.0, 0.0), vec3f(W * 0.5, H * 0.5, T * 0.5), cr);
-  /* the screen: the inner face inset by the bezel, a hair below the glass */
-  let sc = sdBox2(p.xy - vec2f(W * 0.5, 0.0), vec2f(W * 0.5 - r.misc.x, H * 0.5 - r.misc.x), cr - r.misc.x * 0.6);
-  var m = 1.0; if (sc < 0.0 && p.z > T * 0.5 - 0.08) { m = 2.0; }
-  /* the back: a camera plateau on pane B only, handled by the caller */
+fn pane(p: vec3f, outer: bool) -> vec2f { let W = r.dims.x; let H = r.dims.y; let T = r.dims.z; let cr = r.dims.w; let bz = r.misc.x;
+  /* the leaf: square-edged at the hinge, rounded outboard, so the closed device is one slab */
+  let body = max(sdRBox(p - vec3f(W * 0.5 + cr, 0.0, 0.0), vec3f(W * 0.5 + cr, H * 0.5, T * 0.5), cr), -p.x);
+  /* the inner display is one continuous sheet: inset by the bezel on the three outboard sides only */
+  let sc = sdBox2(p.xy - vec2f((W - bz) * 0.5 + bz * 0.5, 0.0), vec2f((W - bz) * 0.5 + bz * 0.5, H * 0.5 - bz), cr - bz * 0.6); let scx = max(sc, -p.x);
+  var m = 1.0; if (scx < 0.0 && p.z > T * 0.5 - 0.08) { m = 2.0; }
+  /* the outer display on the back of one leaf, with Apple's asymmetric closed bezels */
+  if (outer) { let so = sdBox2(p.xy - vec2f(W * 0.5, 0.0), vec2f(W * 0.5 - r.misc.w, H * 0.5 - r.misc.w * 0.8), cr - r.misc.w * 0.6); if (so < 0.0 && p.z < -T * 0.5 + 0.08) { m = 7.0; } }
   return vec2f(body, m); }
 fn map(p: vec3f) -> vec2f {
   /* pane B is fixed; pane A is mirrored across the hinge and folded toward +z by the fold angle */
-  let a = pane(p); let pa = rotY(p, r.fold); let b = pane(vec3f(-pa.x, pa.y, pa.z)); let hr = r.misc.y;
+  let a = pane(p, true); let pa = rotY(p, r.fold); let b = pane(vec3f(-pa.x, pa.y, pa.z), false); let hr = r.misc.y;
   let hinge = length(vec2f(p.x, p.z)) - hr; let hcap = max(hinge, abs(p.y) - r.dims.y * 0.5 + r.dims.w * 0.4);
-  var d = a.x; var m = a.y; if (b.x < d) { d = b.x; m = b.y + 2.0; } if (hcap < d) { d = hcap; m = 5.0; }
+  var d = a.x; var m = a.y; if (b.x < d) { d = b.x; m = select(b.y + 2.0, b.y, b.y > 6.5); } if (hcap < d) { d = hcap; m = 5.0; }
   let floor = p.y + r.dims.y * 0.5 + 0.05; if (floor < d) { d = floor; m = 6.0; }
   return vec2f(d, m); }
 fn nrm(p: vec3f) -> vec3f { let e = vec2f(0.004, 0.0); return normalize(vec3f(map(p + e.xyy).x - map(p - e.xyy).x, map(p + e.yxy).x - map(p - e.yxy).x, map(p + e.yyx).x - map(p - e.yyx).x)); }
@@ -58,12 +64,15 @@ fn screenA(uv: vec2f) -> vec3f { var c = mix(vec3f(0.05, 0.05, 0.07), vec3f(0.09
   for (var i = 0; i < 3; i++) { let y = 0.46 - f32(i) * 0.09; c = mix(c, vec3f(0.24), smoothstep(0.004, 0.0, abs(uv.y - y)) * step(0.08, uv.x) * step(uv.x, 0.92)); c = mix(c, vec3f(0.55), (1.0 - smoothstep(0.0, 0.004, sdBox2(uv - vec2f(0.20, y + 0.035), vec2f(0.10, 0.012), 0.008)))); }
   c = mix(c, vec3f(0.92), 1.0 - smoothstep(0.0, 0.005, sdBox2(uv - vec2f(0.5, 0.12), vec2f(0.30, 0.03), 0.03)));
   return c; }
+fn screenO(uv: vec2f) -> vec3f { var c = mix(vec3f(0.05, 0.05, 0.08), vec3f(0.12, 0.08, 0.16), uv.y); c += vec3f(0.6, 0.3, 0.7) * exp(-length((uv - vec2f(0.5, 0.65)) * vec2f(1.0, 1.4)) * 2.2) * 0.5;
+  /* the time, as two blocks, and a notification pill */
+  c = mix(c, vec3f(0.95), 1.0 - smoothstep(0.0, 0.006, sdBox2(uv - vec2f(0.5, 0.78), vec2f(0.20, 0.05), 0.02))); c = mix(c, vec3f(0.85), 1.0 - smoothstep(0.0, 0.006, sdBox2(uv - vec2f(0.5, 0.30), vec2f(0.34, 0.04), 0.03)) * 0.5); return c; }
 fn shade(p: vec3f, n: vec3f, rd: vec3f, m: f32) -> vec3f { let key = normalize(r.key.xyz); let rimL = normalize(r.rim.xyz); let sh = shadow(p + n * 0.02, key); let occ = ao(p, n);
   let nd = max(dot(n, key), 0.0); let hv = normalize(key - rd); let fr = pow(1.0 - max(dot(n, -rd), 0.0), 5.0); let hemi = mix(vec3f(0.05, 0.05, 0.06), vec3f(0.22, 0.23, 0.26), 0.5 + 0.5 * n.y);
   var col: vec3f;
-  if ((m > 1.5 && m < 2.5) || (m > 3.5 && m < 4.5)) { /* the glass over a lit screen: emissive content plus a sharp reflection */
-    let W = r.dims.x; let H = r.dims.y; var q = p; if (m > 3.5) { let pa = rotY(p, r.fold); q = vec3f(-pa.x, pa.y, pa.z); } let uv = vec2f(q.x / W, q.y / H + 0.5);
-    let content = select(screenA(uv), screenB(uv), m < 2.5); let ph = pow(max(dot(n, hv), 0.0), 400.0) * 3.0;
+  if ((m > 1.5 && m < 2.5) || (m > 3.5 && m < 4.5) || m > 6.5) { /* the glass over a lit screen: emissive content plus a sharp reflection */
+    let W = r.dims.x; let H = r.dims.y; var q = p; if (m > 3.5 && m < 4.5) { let pa = rotY(p, r.fold); q = vec3f(-pa.x, pa.y, pa.z); } let uv = vec2f(q.x / W, q.y / H + 0.5);
+    let content = select(select(screenA(uv), screenB(uv), m < 2.5), screenO(vec2f(1.0 - uv.x, uv.y)), m > 6.5); let ph = pow(max(dot(n, hv), 0.0), 400.0) * 3.0;
     col = content * 1.15 + vec3f(ph) * sh + hemi * fr * 1.2 + vec3f(0.06) * fr; }
   else if (m > 5.5) { /* the floor */ col = vec3f(0.09, 0.09, 0.10) * (0.35 + 0.65 * nd * sh) * occ + hemi * 0.15; }
   else { /* titanium: brushed, warm, with an anisotropic lobe along the edges */
@@ -89,7 +98,7 @@ export function duoCard() {
   slider.addEventListener('input', () => { manual = true; lastTouch = performance.now(); foldDeg = +slider.value; $('du-fold-v').textContent = foldDeg + '°'; });
   $('du-auto').addEventListener('click', () => { manual = false; lastTouch = -1e9; });
   pointer(stage, (p) => { if (drag) { yaw = drag.yaw + (p.x - drag.x) * 4.0; pitch = Math.max(-0.2, Math.min(1.0, drag.pitch - (p.y - drag.y) * 2.5)); lastTouch = performance.now(); } }, () => { drag = null; }, (p) => { drag = { x: p.x, y: p.y, yaw, pitch }; lastTouch = performance.now(); }, () => { drag = null; });
-  $('du-specs').innerHTML = Object.entries(SPECS).map(([k, v]) => `<span>${k.replace(/([A-Z])/g, ' $1').toLowerCase()} <b>${v.v} cm</b> <i>${v.src}</i></span>`).join('');
+  $('du-specs').innerHTML = Object.entries(SPECS).map(([k, v]) => `<span>${k.replace(/([A-Z])/g, ' $1').toLowerCase()} <b>${(v.v * 10).toFixed(2)} mm</b> <i>${v.src}</i></span>`).join('');
   return card({ name: 'duo', el, init() {
     const dev = this.__dev, { ctx } = attach(canvas), ru = uniform(64 + 64 + 128), pipe = render(SHADER), g = bind(pipe, [ru]), tm = timer(['march'], 4);
     s = { ctx, ru, pipe, g, tm }; status.hidden = true;
@@ -103,12 +112,12 @@ export function duoCard() {
     if (!manual) { foldDeg = Math.round(fold * 180); slider.value = foldDeg; $('du-fold-v').textContent = foldDeg + '°'; }
     const idle = (now - lastTouch) / 1000; if (idle > 4 && !drag) { yaw = lerp(yaw, 0.55 + 0.35 * Math.sin(T * 0.11), 1 - Math.pow(0.05, dt)); pitch = lerp(pitch, 0.18 + 0.08 * Math.sin(T * 0.07), 1 - Math.pow(0.05, dt)); }
     /* the camera looks at the hinge; the frame is sized to hold the device open */
-    const W = SPECS.paneW.v, H = SPECS.paneH.v, T_ = SPECS.paneT.v, dist = 34, tgt = [W * 0.5 - W * 0.5 * Math.cos(Math.PI - fold * Math.PI) * 0.5, 0.5, 2.5];
+    const W = SPECS.leafW.v, H = SPECS.leafH.v, T_ = SPECS.leafT.v, dist = 30, tgt = [W * 0.5 - W * 0.5 * Math.cos(Math.PI - fold * Math.PI) * 0.5, 0.5, 2.5];
     const pos = [tgt[0] + Math.sin(yaw) * Math.cos(pitch) * dist, tgt[1] + Math.sin(pitch) * dist, tgt[2] + Math.cos(yaw) * Math.cos(pitch) * dist];
     const F = norm([tgt[0] - pos[0], tgt[1] - pos[1], tgt[2] - pos[2]]), Rt = norm(cross(F, [0, 1, 0])), Up = cross(Rt, F);
     const RB = new ArrayBuffer(256), Rf = new Float32Array(RB);
     Rf.set(pos, 0); Rf[3] = T; Rf.set(F, 4); Rf[7] = canvas.width / canvas.height; Rf.set(Rt, 8); Rf[11] = Math.PI - fold * Math.PI; Rf.set(Up, 12); Rf[15] = (tl % 6) / 6 < 0.5 ? 0 : 1;
-    Rf.set([W, H, T_, SPECS.cornerR.v], 16); Rf.set([SPECS.bezel.v, SPECS.hingeR.v, Math.floor(T / 6) % 8, 0], 20); Rf.set([-0.5, 0.9, 0.8, 0], 24); Rf.set([0.35, 0.55, 1.0, 0], 28);
+    Rf.set([W, H, T_, SPECS.cornerR.v], 16); Rf.set([SPECS.bezel.v, SPECS.hingeR.v, Math.floor(T / 6) % 8, SPECS.outerBezelSide.v], 20); Rf.set([-0.5, 0.9, 0.8, 0], 24); Rf.set([0.35, 0.55, 1.0, 0], 28);
     STOCKS.forEach((c, i) => Rf.set([...c, 1], 32 + i * 4));
     dev.queue.writeBuffer(s.ru, 0, RB);
     const enc = dev.createCommandEncoder(); const rp = enc.beginRenderPass({ colorAttachments: [{ view: s.ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }], ...s.tm.begin(0) });
