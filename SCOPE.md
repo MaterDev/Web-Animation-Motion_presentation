@@ -4,21 +4,9 @@
 **Presentation date:** Thursday, September 17, 2026
 **Doc drafted:** August 3, 2026 · **Last revised:** September 10, 2026
 
-## Timeline
-
-**Moved from August 7 to August 21, then to September 17** — as of September 10 that is seven calendar days, roughly five working. The paragraph below was written when the move bought slack; it no longer does, and the prototyping room it describes is gone. This changes the plan in one specific way and not others: the build was never the thing most at risk, sequencing and rehearsal were, and those still need reserving. What the extra two weeks genuinely buys is room to prototype the two unproven items (layout-animation slide transitions, and the WebGPU compute sim at a real particle count) *before* they're load-bearing, instead of discovering their limits during the build.
-
-It also makes learning an unfamiliar stack a reasonable choice rather than a gamble — see Technical Approach.
-
-Scope decision, unchanged: **build all demos live** (no video substitutions except the WebGPU fallback), on the basis that demo code will be AI-generated rather than hand-written, which compresses the build. Presentation chrome to be polished/branded, on the reasoning that a talk arguing craft is the differentiator should itself demonstrate craft.
-
 ## Overview
 
 A tour through web animation and motion, built and delivered as a custom interactive app (not slides) so every example is real, running code rather than a screenshot or description. Ends on WebGPU, framed as an underused frontier with applications beyond the browser.
-
-## Audience
-
-Mixed technical/non-technical crowd who has seen this kind of work before but hasn't necessarily understood what's happening under the hood or what's technically possible.
 
 ## Objective / Thesis
 
@@ -30,54 +18,27 @@ As AI becomes a universal interface for searching, synthesizing, and experiencin
 - WebGPU has real browser support now but negligible real-world adoption — "untapped frontier" is accurate for usage, not availability.
 - WebGPU/WGSL genuinely runs outside the browser (Dawn, wgpu/Rust powering real game engines) — this is the most solidly evidenced claim of the four.
 
-## Format & Delivery
+### The second thesis — the one the room actually has to act on
 
-Custom-built app, not PowerPoint/Keynote, so animation/interaction examples run as live code rather than being described or screen-recorded. Requirements:
-- Slide-based navigation (forward/back, keyboard control)
-- Preview/speaker view (current + next slide, notes) — likely a second synced browser window via `BroadcastChannel` or `localStorage` events
-- Fullscreen presentation mode via the native Fullscreen API
+The argument above is about *why* this work is worth doing. It is aimed at the room at large. There is a second argument underneath it, aimed at the engineers, and it is the one a team takes back to work on Monday.
 
-**Presenting environment:** presenter's own machine, Chrome. WebGPU support is therefore low-risk, though a fallback recording is still produced for the WebGPU section.
+**Showing that something is possible is no longer the hard part.** A striking demo is cheap now, and AI assistance makes it cheaper — these techniques can be vibe-coded into existence in an afternoon. What is *not* cheap, and what a team actually needs from an engineer who has done this, is the discipline around it: **how to build this kind of work so that it is responsible, observable and debuggable — a reliable service rather than an experiment that happened to ship.**
 
-**Visual design:** polished and branded. Existing brand/style guide to be supplied as a build input — visual direction (type, palette, motion language) is not defined in this document.
+So the deck is not a gallery of what is possible. It is eight techniques, each shown as real running code, and then a closing argument about **working inside constraints and requirements instead of exploring freely without concern**. The demos earn the right to make that argument; the argument is what the demos are for.
 
-## The Thread Demo
+**The obstacles that argument is built from** — named here as the shape, not yet as slides, because the details of each need working out rather than theory-crafting:
 
-A single recurring visual runs through the entire deck: **a particle system that assembles into a personal brandmark.**
+- **Performance and optimisation** — the cost of a technique, measured rather than asserted, and what you do when it is too expensive.
+- **Responsiveness** — not a cleanup pass. See "Mobile-First vs. Mobile-Friendly".
+- **Adapting the experience across what users actually have** — web, devices, platforms. Some concerns are shared across every one of the eight techniques; others are specific to a single platform, and telling those two apart is most of the work.
+- **Observability and debuggability** — how you know what a demo is doing, and how you find out why it is not, when the thing on screen is a shader or a canvas buffer rather than a DOM tree.
+- **Degradation as a requirement, not a fallback** — already covered by the ladder and by reduced motion; this closing section is where it stops being an accessibility footnote and becomes an engineering contract.
 
-Why this concept:
-- **It escalates naturally.** Particle count and simulation fidelity are the exact axis on which these technologies differ — a handful of particles in SVG, more in Canvas, thousands in WebGL, millions via WebGPU compute shaders. The audience sees the capability jump rather than being told about it.
-- **It resolves.** Each stage ends with the particles forming the brandmark, giving every section a payoff beat instead of an abstract loop.
-- **It makes the off-browser surfaces legible.** The same asset shown as a broadcast lower-third, a billboard, an ad unit, and a vertical social video reads immediately as real brand work, not a tech demo.
-
-Each technique section shows this same demo rebuilt in that technique, so the through-line is a continuous comparison rather than a series of unrelated examples.
-
-## Content Outline
-
-Structured as a "spectrum" from passive/cheap to powerful/expensive rendering techniques, with one recurring "thread demo" that reappears in a new form at each stage as a visual callback, culminating in a WebGPU-upgraded version at the end.
-
-1. **Title / Cold Open** — thread demo already running full-bleed, no explanation yet.
-2. **The Thesis** — stated above; visual: plain chat-answer mockup vs. thread demo as a real site.
-3. **The Map** — preview of the spectrum (Video → GIF → CSS → Layout/Paint/Composite → Layout Animation → SVG → Canvas → WebGL → WebGPU); tells the audience to watch for the recurring demo.
-4. **Baseline: Video** — pre-baked pixels with a real element around them. Continuous tone, gradients, grain — everything a palette format loses — plus the only pre-baked format that can be paused, scrubbed and stopped from JS, which is what makes it the one that survives slide 15's reduced-motion test. Visual: the thread demo baked to a 16:9 and a 9:16 cut of the same loop, generated rather than cropped, so the surfaces argument from slide 13 is already on screen.
-5. **Baseline: GIF** — the same idea with the player taken away: an `<img>` that plays anywhere, fights no autoplay policy, and cannot be stopped. A 256-colour palette and no JS control are the price. Visual: the thread demo as a sticker set, staged in the contexts that actually argue for reaching for it, with file sizes labeled against slide 4's video.
-6. **CSS Transitions/Animations + Render Pipeline** — browser-managed motion; introduces Layout → Paint → Composite; visual: animated pipeline diagram + simple live hover/transition demo (generic, not the thread demo — keep this one legible).
-7. **CPU vs. GPU: Compositing** — `transform`/`opacity` are GPU-cheap, `width`/`top`/`left` force layout ("jank"); visual: live side-by-side janky vs. smooth box animation with a measured FPS readout and an adjustable layout load.
-8. **Layout Animation** — the technique that gets a layout-affecting change (grid to list, a reorder, a resize) to move smoothly without paying the layout cost slide 7 just demonstrated: measure the DOM before, measure it after, then animate only the cheap transform delta between the two — the FLIP technique. Anime.js's layout animation support (https://animejs.com/documentation/layout) does this natively off real measured DOM state rather than a hand-rolled FLIP implementation; visual: a real UI element — the thread demo's own technique-spectrum grid — reflowing between two very different arrangements, animated as one continuous move rather than a cut.
-9. **When Motion Earns Its Place** — the restraint beat, placed here because the audience has just seen that motion has a cost. Covers what motion is *for* (feedback, continuity, attention, perceived speed, brand), when it backfires, and the frequency/intensity rule. See "Motion Craft & Restraint" below; visual: the same interaction shown three ways — no motion, well-judged motion, overdone motion — so the audience can feel the difference rather than be told.
-10. **SVG Animation** — vector, DOM-based, path morphing; visual: thread demo as SVG — a low particle count (tens), each one a real DOM node, resolving into the brandmark via path morph/draw-on. Worth surfacing the DOM-node cost as the reason the count stays low.
-11. **Canvas 2D** — imperative pixel drawing, CPU-bound, good for generative work; visual: thread demo in Canvas 2D at a visibly higher particle count (thousands), no DOM overhead.
-12. **WebGL** — GPU shaders, real 3D; visual: thread demo in WebGL — tens of thousands of particles, now reactive to cursor, brandmark forming in 3D space.
-13. **Same Tech, Different Surfaces (Beyond the Browser)** — same build outputs to broadcast graphics (OBS/CasparCG/Singular.live-style browser sources), digital signage (embedded-browser displays or baked video loops), programmatic ad creative (HTML5 templates + data swaps), and baked-for-social video (Remotion/Rive-style export); visual: four-panel of the thread demo as a broadcast lower-third, a billboard mockup, an ad template, and a vertical social video.
-14. **WebGPU: The New Layer** — compute shaders enable particle/fluid sims and on-device ML at a scale WebGL can't reach; support has arrived, adoption hasn't; same WGSL code runs outside the browser too; visual: thread demo in WebGPU at a particle count the WebGL version couldn't sustain (hundreds of thousands to millions, simulated on the GPU) — the payoff of the whole callback chain.
-15. **Building the Version Without It** — deliberately placed immediately after the most spectacular slide in the deck: here is the most impressive thing I can show you, and here is why you must also build the version that doesn't do any of it. Covers `prefers-reduced-motion`, the fallback ladder, and mobile as a design starting point rather than a cleanup pass. See "Accessibility & Reduced Motion" and "Fallbacks" below; visual: the same WebGPU scene shown at four rungs of the ladder — full compute sim, WebGL reduced, static poster frame, reduced-motion cross-fade — all four running side by side.
-16. **Close: Full Circle** — recap thesis; visual: return to the opening hook shot of the thread demo in its most advanced form.
-
-**Timing note:** at 16 slides this is now tight for 15-20 minutes (roughly 60-80 seconds per slide including demo watch time). The three compressible slides are 8, 9, and 15 — each can degrade to a spoken aside over the neighbouring demo, or move to a Q&A appendix, if the run-through goes long. Recommend building them as full slides and deciding after the first timed rehearsal, since they're the ones that most improve credibility with the technical half of the room.
+**This reframes what the deck has to demonstrate about itself.** If the close argues for observable, debuggable, constrained work, then the app delivering the talk is the first exhibit — and every measured number in it is part of the argument rather than a nicety. That is already the repo's standing rule ("measured, not claimed"); this thesis is the reason for it.
 
 ## Motion Craft & Restraint
 
-Content for slide 9. The through-line: motion is a communication tool with a cost, so it should be spent where it does work. "More animation" is not the same as "better experience" — the difference between a site that feels crafted and one that feels exhausting is almost entirely judgement about where motion goes.
+The restraint beat. The through-line: motion is a communication tool with a cost, so it should be spent where it does work. "More animation" is not the same as "better experience" — the difference between a site that feels crafted and one that feels exhausting is almost entirely judgement about where motion goes.
 
 **What motion is legitimately for.** Roughly six jobs, worth naming explicitly because they're the test for whether a given animation deserves to exist:
 
@@ -117,7 +78,7 @@ Content for slide 9. The through-line: motion is a communication tool with a cos
 
 ## Accessibility & Reduced Motion
 
-Content for slide 15. Framed not as a compliance chore but as the thing that separates motion work that's actually professional from motion work that's just impressive.
+Framed not as a compliance chore but as the thing that separates motion work that's actually professional from motion work that's just impressive.
 
 - **`prefers-reduced-motion` is a stated preference, not an edge case.** It's an OS-level setting the user has already deliberately turned on. Ignoring it isn't a missed enhancement, it's overriding an explicit request.
 - **The harm is physical, not aesthetic.** Large-area movement, parallax, scaling/zooming, and spinning are documented vestibular triggers and can cause genuine nausea and dizziness. Flashing content above ~3 times per second is a seizure risk (WCAG 2.3.1). This is the part worth stating plainly to a mixed audience, because the non-technical half generally hasn't heard it.
@@ -128,7 +89,7 @@ Content for slide 15. Framed not as a compliance chore but as the thing that sep
 
 ## Fallbacks & The Degradation Ladder
 
-Also slide 15. Principle: **build the static state first and layer motion onto it**, rather than building the rich version and stripping it back. Stripping back reliably produces broken intermediate states; layering up doesn't.
+Principle: **build the static state first and layer motion onto it**, rather than building the rich version and stripping it back. Stripping back reliably produces broken intermediate states; layering up doesn't.
 
 The ladder, top to bottom — each rung a complete experience in itself:
 
@@ -146,7 +107,7 @@ Practical notes:
 
 ## Mobile-First vs. Mobile-Friendly
 
-Also slide 15 — the distinction is worth making explicitly because it changes what gets built.
+The distinction is worth making explicitly because it changes what gets built.
 
 - **Mobile-friendly** means designed for desktop and then made to survive on a phone. Motion gets scaled down or switched off as a cleanup pass.
 - **Mobile-first** means the constrained case is the starting point: motion is designed to work within a small viewport, touch input, and a thermal/battery budget, then *enhanced* on capable hardware.
@@ -216,7 +177,7 @@ Practical stance: design the motion system mobile-first — decide what's essent
 - **Unfamiliar framework.** Svelte 5 is a deliberate learning choice (see Technical Approach) and the risk is contained — the shell is the cheapest layer to rewrite and the demos are largely framework-agnostic. The thing to watch is runes-specific reactivity surprises landing mid-animation. Build one real slide end to end early, before committing the other fourteen to the pattern.
 - **Evidence caveats:** the AI-traffic-decline data is directionally solid but contested by Google; state it as "multiple studies show," not as settled fact.
 - **Slide 15 demands extra build work.** Showing four rungs of the degradation ladder side by side means actually building the reduced, static, and reduced-motion variants — not just describing them. Worth it (it's the credibility slide), but it's the one place where the talk's content and the app's engineering overlap most expensively.
-- **The deck should practice what slide 15 preaches.** A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks. Low cost to honour it in the presentation app; worth doing.
+- **The deck should practice what it preaches.** A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks. Low cost to honour it in the presentation app; worth doing.
 - **Layout-animation-driven slide transitions are the highest-upside, least-proven build item.** Genuinely distinctive if it works — a deck whose own navigation demonstrates the technique it's teaching — but "animate real slide layouts into each other" has more surface area for visual bugs (overlapping text mid-transition, wrong measured state after a fast double-advance) than a standard slide/fade. Prototype this early against real slide content, not a toy example, and keep a plain cross-fade as a fallback transition if it doesn't hold up under rehearsal.
 - **Anime.js's layout animation is incompatible with a CSS-transform-scaled slide, which is the obvious way to fit a fixed-size slide to the window.** During a transition it takes each element out of flow and sets `position: fixed; left: 0; top: 0` plus a `translate` of the measured screen-space delta. A `transform` on any ancestor both re-roots that fixed positioning (a transformed element becomes the containing block for fixed descendants) and scales the translate, so elements fly to the wrong place and snap back at the end. Found and reproduced in the design harness — see the transition preview on the layouts page, which is rendered at true 1:1 for exactly this reason. **This shapes the app's architecture**: either size slides responsively so no scale transform is needed, or scale via a mechanism that doesn't create a containing block, or accept the cross-fade fallback. Decide this before building the chrome, not after. Note that the layout grid is currently specified in fixed pixels quantised to a 6px LED cell (see `design/layouts/index.html`), which assumes a fixed-size slide — so "size slides responsively" is not a free swap and needs its own decision. **This is also the sharpest test to run against the other two transition candidates**: if View Transitions or `animate:flip` tolerate a scaled ancestor, that alone likely decides which one ships.
 

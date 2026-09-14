@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>broken</title>
+<style>html,body{margin:0;height:100%;background:transparent}</style>
+<script>
+/* FILLER DEMO — fails on purpose.
+
+   Kept deliberately, because "a broken demo does not take the deck
+   down" is only true if something actually breaks and it is checked.
+   The failure is contained to this frame; the surface hears about it
+   and shows the slide's fallback. */
+(function () {
+  try {
+    throw new Error('this demo fails on purpose');
+  } catch (e) {
+    parent.postMessage({ deck: 'error', message: e.message }, '*');
+  }
+})();
+</script>
