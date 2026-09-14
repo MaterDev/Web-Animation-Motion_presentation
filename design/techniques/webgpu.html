@@ -274,7 +274,23 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .hc-cta { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hc-bg); background: var(--hc-acc); border: 0; padding: 11px 12px; cursor: pointer; margin-top: 4px; }
 .hc-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--hc-dim); border-top: var(--hair) solid var(--hc-rule); padding-top: 8px; margin-top: auto; }
 .hc-stats b { color: var(--hc-ink); font-weight: 500; }
-@media (max-width: 560px) { .ck-panel, .tw-panel, .hc-panel { border-left: 0; } }
+/* ─── §7 · the device ──────────────────────────────────────────────────── */
+.du { --du-bg: oklch(0.13 0.006 260); --du-ink: oklch(0.95 0.005 260); --du-dim: oklch(0.60 0.01 260); --du-rule: oklch(0.26 0.01 260); --du-acc: oklch(0.80 0.10 220); background: var(--du-bg); color: var(--du-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 860px) { .du { grid-template-columns: minmax(0, 1fr) 250px; } }
+.du .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.10 0.006 260); cursor: grab; }
+.du-hint { position: absolute; left: 16px; bottom: 12px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.9 0.005 260 / 0.55); pointer-events: none; }
+.du-panel { padding: 16px; border-left: var(--hair) solid var(--du-rule); display: flex; flex-direction: column; gap: 12px; }
+.du-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--du-dim); }
+.du-k b { color: var(--du-ink); font-weight: 500; }
+.du-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+.du-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--du-rule); outline: none; margin: 8px 0 2px; }
+.du-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--du-acc); cursor: pointer; border: 0; }
+.du-btn { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--du-ink); background: transparent; border: var(--hair) solid var(--du-rule); padding: 9px 12px; cursor: pointer; }
+.du-specs { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 9px; color: var(--du-dim); border-top: var(--hair) solid var(--du-rule); padding-top: 10px; }
+.du-specs span { display: flex; justify-content: space-between; gap: 8px; } .du-specs b { color: var(--du-ink); font-weight: 500; margin-left: auto; } .du-specs i { font-style: normal; color: var(--du-acc); letter-spacing: 0.1em; text-transform: uppercase; font-size: 8px; }
+.du-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--du-dim); border-top: var(--hair) solid var(--du-rule); padding-top: 8px; margin-top: auto; }
+.du-stats b { color: var(--du-ink); font-weight: 500; }
+@media (max-width: 560px) { .ck-panel, .tw-panel, .hc-panel, .du-panel { border-left: 0; } }
 </style>
 </head>
 <body data-testid="technique-webgpu">
@@ -571,6 +587,33 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       </div>
     </div>
     <div class="gp-cap"><b>Halcyon · campaign</b> · a drop page whose hero is a live diorama: kaleidoscopic IFS chamber, SDF shoe and plinth, key + rim light, soft shadow, five-tap occlusion, one reflection bounce; the colourway retints the fractal's orbit-trap palette · <i>one fragment pass, no geometry, no textures</i></div>
+  </section>
+
+  <!-- ═══ §7 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-7">
+    <div class="gp-label">Signed distance · hardware</div>
+    <h2>the device, as a model rather than a photograph</h2>
+    <p>The wallet above is staged on the iPhone Duo; here the Duo is the subject. Two
+      rounded slabs, a barrel hinge and two inset panes of glass are a few distance
+      functions; the panes are emissive and show a live, procedural screen; a studio
+      key, a coloured rim and the floor's reflection do the rest. It opens and closes on
+      its own. <b>Every dimension is either verified with a source or labelled an
+      estimate</b> — the sheet says which, because a model that looks measured and is
+      not would be the wrong kind of convincing.</p>
+    <div class="du" data-testid="du-card">
+      <div class="gp-stage" data-testid="du-stage"><canvas data-testid="du-canvas"></canvas><span class="gp-status" data-testid="du-status">requesting a device…</span>
+        <div class="du-hint" data-testid="du-hint">drag to orbit · the hinge runs itself</div>
+      </div>
+      <div class="du-panel">
+        <div class="du-k">iPhone Duo · model</div>
+        <div class="du-name">Two panes, one hinge</div>
+        <div><div class="du-k" style="display:flex;justify-content:space-between"><span>hinge</span><b data-testid="du-fold-v">0°</b></div><input class="du-range" type="range" min="0" max="180" step="1" value="0" data-testid="du-fold" aria-label="hinge angle"></div>
+        <button class="du-btn" data-testid="du-auto">let it run</button>
+        <div class="du-specs" data-testid="du-specs"></div>
+        <div class="du-stats" data-testid="du-stats">one pass · march <b data-testid="du-t-march">—</b></div>
+      </div>
+    </div>
+    <div class="gp-cap"><b>iPhone Duo · model</b> · sphere-traced signed-distance hardware: two rounded slabs, a hinge, inset glass over emissive procedural screens; key + rim + hemisphere, soft shadow, five-tap occlusion, one floor bounce · <i>one fragment pass, no mesh, no textures; dimensions labelled verified or estimated</i></div>
   </section>
 
   <div class="notes" data-testid="notes">
