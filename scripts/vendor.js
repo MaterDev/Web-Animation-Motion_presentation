@@ -10,7 +10,7 @@
    bundles it) and the harness reads these vendored copies. One
    dependency, one version, two consumers.
 
-   This also closes a risk SCOPE.md raised on its own: the WebGL page
+   This also closes a risk the original SCOPE.md raised on its own: the WebGL page
    previously pulled Three.js from unpkg at runtime, with a note that
    the real build should vendor it rather than depend on a live CDN
    during the talk. It now does.

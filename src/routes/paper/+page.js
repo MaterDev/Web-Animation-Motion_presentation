@@ -1,5 +1,6 @@
 import { Marked } from 'marked';
 import raw from '../../../SCOPE.md?raw';
+import { slug, sections } from '$lib/paper.js';
 
 /* Rendered at build time, not runtime: `?raw` inlines the file into
    the bundle and this module runs during prerender, so the shipped
@@ -8,20 +9,6 @@ import raw from '../../../SCOPE.md?raw';
    SCOPE.md stays the single source — it's the working document that
    gets edited during the build, and this route is a view of it
    rather than a copy. Edit the markdown, rebuild, the page follows. */
-
-/* One slug function, used by BOTH the heading renderer and the table
-   of contents. They have to agree, and the way they stop agreeing is
-   by being written twice. The first version had no renderer at all
-   and relied on marked adding ids — it doesn't — so every TOC link
-   pointed at nothing. Caught by SvelteKit's prerender anchor check,
-   which is the reason that check is left switched on. */
-/** @param {string} s */
-const slug = (s) =>
-  s
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-');
 
 const marked = new Marked({ gfm: true, breaks: false });
 
@@ -42,17 +29,51 @@ marked.use({
   },
 });
 
+/* Front matter: flat `key: value` lines between `---` fences. Parsed
+   by hand because that is all the paper carries, and a YAML
+   dependency for four dates would be most of this module's weight. */
+const FRONT = /^---\n([\s\S]*?)\n---\n/;
+
+/* The readout, in reading order. Keys the paper doesn't set are
+   skipped rather than printed blank. */
+const FIELDS = [
+  ['presenter', 'Presenter'],
+  ['presented', 'Presented'],
+  ['drafted', 'Drafted'],
+  ['revised', 'Revised'],
+];
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/* ISO dates read as "17 Sep 2026", the form the rest of the site's
+   readouts use. Split by hand, not new Date(): a bare ISO date parses
+   as UTC midnight and prints as the day before west of Greenwich. */
+/** @param {string} v */
+const readout = (v) => {
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` : v;
+};
+
 export function load() {
-  const html = marked.parse(raw);
+  const fm = raw.match(FRONT);
+  /** @type {Record<string, string>} */
+  const meta = {};
+  for (const line of (fm?.[1] ?? '').split('\n')) {
+    const i = line.indexOf(':');
+    if (i > 0) meta[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+  }
+  const front = FIELDS.filter(([k]) => meta[k]).map(([key, label]) => ({ key, label, value: readout(meta[key]) }));
 
-  /* TOC off the source rather than the rendered HTML: the source is
-     stable, and re-parsing our own output to find headings would be
-     a second place for the two to drift. */
-  const toc = raw
-    .split('\n')
-    .filter((l) => l.startsWith('## '))
-    .map((l) => l.slice(3).trim())
-    .map((title) => ({ title, id: slug(title) }));
+  /* The title moves into the front panel, so it comes out of the body
+     rather than rendering twice. */
+  let body = fm ? raw.slice(fm[0].length) : raw;
+  const h1 = body.match(/^\s*# (.+)\n/);
+  const title = h1 ? h1[1].trim() : '';
+  if (h1) body = body.slice(h1[0].length);
 
-  return { html, toc };
+  const html = marked.parse(body);
+
+  const toc = sections(body);
+
+  return { html, toc, title, front };
 }

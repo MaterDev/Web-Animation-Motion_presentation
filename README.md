@@ -18,12 +18,12 @@ Three top-level sections, deployed as one static site:
 |---|---|
 | `/design` | Methodology — how the design system was made, and why the process is what it is |
 | `/design/reference` | The live reference sheets: materials, motion, graphic language, layouts, and seven technique demos |
-| `/paper` | [SCOPE.md](./SCOPE.md), rendered — the full scope the whole build defers to |
+| `/paper` | [SCOPE.md](./SCOPE.md), rendered — the paper the talk is built on |
 | `/presentation` | The deck itself. Not built yet; next phase |
 
 ## Documents
 
-- **[SCOPE.md](./SCOPE.md)** — the paper. Thesis, content outline, motion craft, accessibility, fallbacks, technical approach, risks. Written first; everything defers to it.
+- **[SCOPE.md](./SCOPE.md)** — the paper. Thesis, motion craft, accessibility, the degradation ladder, mobile-first motion. Written first; everything defers to it.
 - **[DESIGN.md](./DESIGN.md)** — the design research it produced. Visual language, motion system, architecture, conventions.
 
 ## Tech stack
@@ -34,8 +34,6 @@ Three top-level sections, deployed as one static site:
 - Per-technique demo tooling native to each rendering method — plain CSS, plain SVG, raw Canvas 2D, Three.js for WebGL/WebGPU
 - **Anime.js** for JS animation, including the layout-animation slide transitions
 - No CDNs. Every dependency, fonts included, is installed and vendored — see below.
-
-See SCOPE.md's *Technical Approach* for why each of these, including what was ruled out (Tailwind, Tauri/Wails) and why.
 
 ## Running it
 
