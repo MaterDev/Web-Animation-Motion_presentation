@@ -1,6 +1,6 @@
 # Design & Architecture — Presentation App
 
-**Companion to:** [SCOPE.md](./SCOPE.md) — this document supplies the "brand/style guide" and app architecture that SCOPE.md lists as a build input (SCOPE.md §Format & Delivery, §Dependencies).
+**Companion to:** [SCOPE.md](./SCOPE.md) — this document supplies the "brand/style guide" and app architecture that the original SCOPE.md listed as a build input.
 
 **Scope of this doc:** the presentation *application* — its visual language, motion system, architecture, and feature set. Not the slide content. Slides are built against placeholder content first; real content lands later.
 
@@ -24,7 +24,7 @@ This document was written **before** the six treatments were built, and it did i
 
 **6. The material question mostly dissolved.** §1.4 treats surface material as the primary carrier of the aesthetic, and an open question through the treatments was how far to push plastic and glass against anodised aluminium. Once the screens arrived, that stopped mattering much: the displays carry the identity, and the chassis is deliberately quiet around them. Of the eleven material recipes in §1.4, nine now appear only in T-06's own materials catalogue, which documents them; `.mat-anodised` is the only one doing real work in the app. They're kept rather than pruned — the catalogue is part of the record of how the system got here, and it costs nothing but a section on one sheet. **The live distinction is screen vs. chassis, not metal vs. plastic.**
 
-**7. The stack moved off React, so all of Part 3 is a superseded proposal.** This document specifies a React app — `useDeck`/`useSync`/`useTimer`, `dangerouslySetInnerHTML`, JSX-free deck data, a `src/deck` · `src/runtime` · `src/ui` · `src/demos` tree. **None of that was built and none of those directories exist.** The shell is SvelteKit 2 / Svelte 5 runes on Bun, decided 5 Aug 2026 — SCOPE.md:166 owns that decision and the reasoning for it. Part 3, the file-structure block in Part 5, and Part 6's step 1 are kept as the record of what was proposed; read them as history, not as instructions. **`conductor/tech-stack.md` is the single source of truth for what actually runs.**
+**7. The stack moved off React, so all of Part 3 is a superseded proposal.** This document specifies a React app — `useDeck`/`useSync`/`useTimer`, `dangerouslySetInnerHTML`, JSX-free deck data, a `src/deck` · `src/runtime` · `src/ui` · `src/demos` tree. **None of that was built and none of those directories exist.** The shell is SvelteKit 2 / Svelte 5 runes on Bun, decided 5 Aug 2026 — the reasoning lived in SCOPE.md's Technical Approach until 2026-09-15, when SCOPE.md became the talk paper (see git history). Part 3, the file-structure block in Part 5, and Part 6's step 1 are kept as the record of what was proposed; read them as history, not as instructions. **`conductor/tech-stack.md` is the single source of truth for what actually runs.**
 
 What survived the port is the part that was never framework-specific, and it is the load-bearing half: data and UI strictly separated, a slide as a plain serialisable structure, lazy-loaded demos behind a registry, the iframe-per-heavy-demo escape hatch and the reason for it (the ~16 concurrent WebGL context cap). The dependency rule still holds; only the directory names in it are wrong.
 
@@ -108,7 +108,7 @@ Crucially, colour is then **informational, not decorative** — a Dieter Rams / 
 
 ### Reflexive constraint (non-negotiable)
 
-SCOPE.md §Risks, final bullet: *"A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks."*
+The original SCOPE.md risk list: *"A talk that argues for `prefers-reduced-motion` support and then ignores it in its own chrome undercuts itself if anyone checks."*
 
 The app is itself evidence for slides 9 and 15. Therefore:
 
@@ -191,7 +191,7 @@ The active tint is published as `--tint` on the stage element, so every componen
 
 Body text (`--hz-600` on `--hz-100`) clears WCAG 2 AA. The genuine risk in a technical-grey palette is annotation text — the small mono labels are the most on-brand element and the easiest to make illegible. **Hard floor: no text below `--hz-500`, ever, at any size.** `--hz-400` is for disabled states and non-text marks only.
 
-Second consideration specific to this project: it is being projected. Projectors crush blacks and wash mid-tones badly. `--hz-000` through `--hz-100` may collapse into one another on the actual hardware. **Action: test the ramp on the real projector during Thursday's rehearsal** (SCOPE.md §Risks flags rehearsal as unscoped — this is one more reason to book it).
+Second consideration specific to this project: it is being projected. Projectors crush blacks and wash mid-tones badly. `--hz-000` through `--hz-100` may collapse into one another on the actual hardware. **Action: test the ramp on the real projector during Thursday's rehearsal** (rehearsal is track 010 — add this to it).
 
 ### 1.2 Typography
 
@@ -237,7 +237,7 @@ Used sparingly and only where a physical device would have a segment or matrix d
 
 #### Scale
 
-Fluid via `clamp()`, but note this app has an unusual constraint: **it targets one machine at one resolution, projected.** So fluid type is a convenience during development, not a responsive requirement (SCOPE.md §Out of Scope excludes responsive layout). The more important axis is that **slide type must be legible from the back of a room** — which means the floor for body copy is considerably higher than web-normal. Baseline assumption: minimum ~24px effective body, headlines 64px+. Validate by standing at the back of the actual room.
+Fluid via `clamp()`, but note this app has an unusual constraint: **it targets one machine at one resolution, projected.** So fluid type is a convenience during development, not a responsive requirement (`conductor/product.md` §Out of scope excludes responsive layout). The more important axis is that **slide type must be legible from the back of a room** — which means the floor for body copy is considerably higher than web-normal. Baseline assumption: minimum ~24px effective body, headlines 64px+. Validate by standing at the back of the actual room.
 
 ### 1.3 Grid & Layout
 
@@ -435,7 +435,7 @@ Substitute, don't delete (SCOPE.md §Accessibility):
 ### 2.6 Performance
 
 - Animate **`transform` and `opacity` only** in the chrome. The deck cannot afford chrome-induced jank during a talk whose slide 7 is literally about jank.
-- `will-change` applied narrowly and removed after — a permanently promoted layer costs memory, and with WebGL contexts already competing (SCOPE.md §Architecture) that matters.
+- `will-change` applied narrowly and removed after — a permanently promoted layer costs memory, and with WebGL contexts already competing (browsers cap live WebGL contexts at ~16) that matters.
 - Chrome animation must not run while a demo is initialising. A heavy WebGL mount will drop frames; overlapping a transition with it guarantees a visible stutter at exactly the wrong moment. **Sequence: transition completes → demo mounts.**
 
 ---
@@ -518,7 +518,7 @@ Hybrid, per the default I flagged earlier:
 - **`inline` (default).** The slide renders into the stage element in the main document. Fast, shares fonts and tokens, transitions are trivial, component state is available. *(Written as "React state"; see Revision item 7.)*
 - **`iframe` (opt-in per slide).** A sandboxed document. Reserved for the heavy WebGL/WebGPU demos.
 
-The iframe path exists to solve a real, named risk: SCOPE.md §Architecture flags that browsers cap concurrent WebGL contexts at ~16 and that exhausting them crashes the tab mid-talk. An iframe gets its own context budget and, more importantly, **tearing down the iframe reliably reclaims the GPU resources**, which manual Three.js disposal often does not do completely. For a 20-minute live talk with no second take, that reliability is worth the plumbing.
+The iframe path exists to solve a real, named risk: Browsers cap concurrent WebGL contexts at ~16 and that exhausting them crashes the tab mid-talk. An iframe gets its own context budget and, more importantly, **tearing down the iframe reliably reclaims the GPU resources**, which manual Three.js disposal often does not do completely. For a 20-minute live talk with no second take, that reliability is worth the plumbing.
 
 Cost, stated honestly: tokens and fonts must be injected into each frame, and cross-frame transitions are harder. Mitigation is to treat the iframe as opaque during transition — cross-fade the frame element itself rather than its contents.
 
@@ -580,7 +580,7 @@ Everything a presenter reaches for reflexively. Grouped by build priority.
 | Autoplay / loop | For the kiosk and billboard panels on slide 13 |
 | Safe mode | Boot flag disabling all live demos, posters only. Insurance |
 
-Note the pattern: three "app features" are also **slide content**. Building the perf HUD, the reduced-motion toggle, and the rung switcher as real chrome features means slides 7 and 15 largely build themselves. SCOPE.md §Risks calls slide 15 "the one place where the talk's content and the app's engineering overlap most expensively" — this is how that cost gets recovered.
+Note the pattern: three "app features" are also **slide content**. Building the perf HUD, the reduced-motion toggle, and the rung switcher as real chrome features means slides 7 and 15 largely build themselves. The original SCOPE.md risk list called slide 15 "the one place where the talk's content and the app's engineering overlap most expensively" — this is how that cost gets recovered.
 
 ### Nice-to-have
 
@@ -588,7 +588,7 @@ Laser pointer / cursor spotlight · on-screen annotation · PDF export · slide-
 
 ### Explicitly out
 
-Editing UI, CMS, multi-deck management, audience-facing responsive layout (SCOPE.md §Out of Scope), cross-browser support beyond Chrome.
+Editing UI, CMS, multi-deck management, audience-facing responsive layout (`conductor/product.md` §Out of scope), cross-browser support beyond Chrome.
 
 ---
 
@@ -631,7 +631,7 @@ The dependency rule: `deck/` imports nothing. `runtime/` imports `deck/`. `ui/` 
 
 ## Part 6 — Build Order
 
-Deliberately sequenced so the app is *presentable* early and improves, rather than being complete only at the end. SCOPE.md §Risks names the real failure mode: "chrome polish eating the day before the talk."
+Deliberately sequenced so the app is *presentable* early and improves, rather than being complete only at the end. The original SCOPE.md risk list named the real failure mode: "chrome polish eating the day before the talk."
 
 1. **Skeleton** — ~~Vite + React + TS~~ Vite + SvelteKit + JSDoc-checked JS (Revision item 7), tokens, reset, type scale. Placeholder deck of stub slides carrying the real titles and sections. *(Said 14; SCOPE.md's outline owns the count and it is 16.)*
 2. **Runtime** — navigation, steps, deep links, keyboard. Ugly but complete. *The deck is now navigable end to end.*
@@ -647,7 +647,7 @@ Steps 1–4 are roughly a day and produce a working presentation tool with place
 
 ## Open Questions
 
-1. **Brandmark asset.** SCOPE.md §Dependencies needs personal vector path data for the particle target. It should also drive the app's own identity — a loading state that assembles the mark from particles would tie chrome and content together for near-zero extra cost.
+1. **Brandmark asset.** The original SCOPE.md dependency list needed personal vector path data for the particle target. It should also drive the app's own identity — a loading state that assembles the mark from particles would tie chrome and content together for near-zero extra cost.
 2. **Typeface licensing.** If commercial faces (Diatype, Suisse, Söhne, Berkeley Mono) are available under an existing personal licence, they meaningfully raise the ceiling. Otherwise Inter + JetBrains Mono + Doto is a genuinely strong free stack.
 3. **Existing personal brand guide.** SCOPE.md §Format says one is to be supplied. If it exists, it outranks this document — this is a proposal, and the section-tint system in particular should be checked against real brand colour before it's built.
 4. **Projector test.** The dark palette and hairline details are the two things most likely to fail on real projection hardware. Book time.

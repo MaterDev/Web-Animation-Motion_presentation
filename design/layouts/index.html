@@ -91,7 +91,7 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
    So: 960 × 540 at scale 1, in a scroll container for narrow
    viewports. This matters well beyond this page — the real deck will
    want to scale slides to fit the window, and that is the same
-   transform. Flagged in SCOPE.md's risk list. */
+   transform. Flagged in the original SCOPE.md risk list. */
 .tx-scroll { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
 .tx-box { position: relative; width: 960px; height: 540px; border-radius: 6px; overflow: hidden; background: var(--well-floor); box-shadow: var(--recess), var(--lift-1); }
 .tx-box .led-slide { position: absolute; top: 0; left: 0; }
@@ -265,7 +265,7 @@ dialog::backdrop { background: oklch(0.05 0 0 / 0.78); backdrop-filter: blur(4px
     every other stage on the page is scaled down.
   </div>
   <div class="note warn" style="max-width:66ch">
-    <b>This is the part SCOPE.md flags as least-proven.</b> It reads well with four blocks
+    <b>This is the part the original SCOPE.md flagged as least-proven.</b> It reads well with four blocks
     and no text reflow. The open questions are real slide content — headings of different
     lengths, a media well that's a live canvas, a fast double-advance landing mid-flight —
     and the scaling constraint above, since a real deck will want to scale slides to fit
