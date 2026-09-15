@@ -32,6 +32,11 @@ export default defineConfig({
     // The phone runs the remote control, so the dev server has to be
     // reachable from the LAN rather than only from localhost.
     host: true,
+    // …and by name. Vite accepts a bare IP but 403s any hostname it was not
+    // told about, so a phone that reaches this Mac as `MacBook-Pro.local`
+    // (Bonjour) was blocked while the IP worked. `.local` allows every
+    // mDNS name on the LAN, and nothing outside it resolves to one.
+    allowedHosts: ['.local'],
   },
   plugins: [
     // Presenter-only, dev-only: remote control and notes storage. It
