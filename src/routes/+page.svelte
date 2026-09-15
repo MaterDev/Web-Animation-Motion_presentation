@@ -7,7 +7,7 @@
      it offers is something the display shows. */
 
   /* same order as the top nav: the talk first, the reference behind it */
-  const SECTIONS = [
+  const SECTIONS = $derived([
     {
       href: '/paper',
       code: 'PA',
@@ -38,7 +38,7 @@
       meta: '16 sheets',
       status: 'live',
     },
-  ];
+  ]);
 
   const SPECTRUM = ['video', 'css', 'composite', 'svg', 'canvas', 'webgl', 'webgpu'];
 
