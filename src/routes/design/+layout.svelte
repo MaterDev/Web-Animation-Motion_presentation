@@ -78,7 +78,7 @@
         >
           <span class="item-code">{item.code}</span>
           <span class="item-name">
-            {item.name}{#if item.kept}<span class="kept">kept</span>{/if}
+            {item.name}{#if item.kept}<span class="kept" data-testid={`side-${item.code.toLowerCase()}-kept`}>chosen</span>{/if}
           </span>
           {#if item.note}<span class="item-note">{item.note}</span>{/if}
         </a>
@@ -121,10 +121,12 @@
     color: var(--ct, var(--hz-400)); padding-top: 2px;
   }
   .item-name { font-size: 13px; color: var(--hz-700); display: flex; align-items: baseline; gap: 7px; }
+  /* same decision marker as the treatments list, at sidebar scale */
   .kept {
-    font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--tint); background: color-mix(in oklch, var(--tint) 18%, var(--hz-100));
-    padding: 1px 5px; border-radius: 2px;
+    align-self: center;
+    font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--hz-000); background: var(--ok);
+    padding: 2px 6px; border-radius: 3px;
   }
   .item-note {
     grid-column: 2; font-family: var(--mono); font-size: 8.5px; line-height: 1.55;

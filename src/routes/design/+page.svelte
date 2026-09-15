@@ -19,7 +19,7 @@
       code: 'ITR',
       title: 'treatments',
       meta: `${TREATMENTS.length}`,
-      note: 'The competing directions, in the order they were made. Five superseded, one kept.',
+      note: 'The competing directions, the kept one first and the rest newest to oldest. Five superseded, one kept.',
       status: 'all viewable',
     },
     {

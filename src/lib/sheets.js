@@ -61,7 +61,10 @@ export const SHEETS = [
   { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
 ];
 
-/* The six treatments, in the order they were made. Kept reachable
+/* The six treatments: the kept one first, then the rest newest to
+   oldest, so the list opens on the decision and reads back through
+   how it was reached. The codes still number them in the order they
+   were made. Kept reachable
    and viewable rather than deleted, because the methodology's
    central claim — that directions were built, looked at, and thrown
    away — is one you should be able to check.
@@ -74,42 +77,14 @@ export const SHEETS = [
 export const TREATMENTS = [
   {
     group: 'Treatments',
-    code: 'T-01',
-    name: 'Instrument housing',
-    file: 'treatments/01-instrument-housing.html',
+    code: 'T-06',
+    name: 'Field unit (dark)',
+    file: 'treatments/06-field-unit-dark.html',
     ground: 'dark',
-    note: 'Dark ground, machined-instrument metaphor, clickable section tints',
+    kept: true,
+    note: 'T-05 re-derived on a dark ramp — same components, values recomputed',
     verdict:
-      'Established the housing idea and the tint system. Landed too close to the terminal/blueprint cliché DESIGN.md had set out to avoid.',
-  },
-  {
-    group: 'Treatments',
-    code: 'T-02',
-    name: 'Daylight panel',
-    file: 'treatments/02-daylight-panel.html',
-    ground: 'light',
-    note: 'Inverted to a near-white ground — four structural changes, not a re-skin',
-    verdict:
-      'Proved the ramp has to be re-derived rather than flipped: tints built to pop off a dark ground go muddy on a light one.',
-  },
-  {
-    group: 'Treatments',
-    code: 'T-03',
-    name: 'Panel grey',
-    file: 'treatments/03-panel-grey.html',
-    ground: 'light',
-    note: 'Off white to a mid grey; argues light is the safer projection choice',
-    verdict: 'Right about contrast. The surface still read as flat and papery — no material yet.',
-  },
-  {
-    group: 'Treatments',
-    code: 'T-04',
-    name: 'Chassis',
-    file: 'treatments/04-chassis.html',
-    ground: 'light',
-    note: 'Adds the architecture diagram and the annotated presenter unit',
-    verdict:
-      'Where the system stopped being a palette and became a spec. Most of the component vocabulary starts here.',
+      'Kept. The dark ground is what let the LED-screen premise work, and the grid and slide surface are both built on it.',
   },
   {
     group: 'Treatments',
@@ -123,14 +98,42 @@ export const TREATMENTS = [
   },
   {
     group: 'Treatments',
-    code: 'T-06',
-    name: 'Field unit (dark)',
-    file: 'treatments/06-field-unit-dark.html',
-    ground: 'dark',
-    kept: true,
-    note: 'T-05 re-derived on a dark ramp — same components, values recomputed',
+    code: 'T-04',
+    name: 'Chassis',
+    file: 'treatments/04-chassis.html',
+    ground: 'light',
+    note: 'Adds the architecture diagram and the annotated presenter unit',
     verdict:
-      'Kept. The dark ground is what let the LED-screen premise work, and the grid and slide surface are both built on it.',
+      'Where the system stopped being a palette and became a spec. Most of the component vocabulary starts here.',
+  },
+  {
+    group: 'Treatments',
+    code: 'T-03',
+    name: 'Panel grey',
+    file: 'treatments/03-panel-grey.html',
+    ground: 'light',
+    note: 'Off white to a mid grey; argues light is the safer projection choice',
+    verdict: 'Right about contrast. The surface still read as flat and papery — no material yet.',
+  },
+  {
+    group: 'Treatments',
+    code: 'T-02',
+    name: 'Daylight panel',
+    file: 'treatments/02-daylight-panel.html',
+    ground: 'light',
+    note: 'Inverted to a near-white ground — four structural changes, not a re-skin',
+    verdict:
+      'Proved the ramp has to be re-derived rather than flipped: tints built to pop off a dark ground go muddy on a light one.',
+  },
+  {
+    group: 'Treatments',
+    code: 'T-01',
+    name: 'Instrument housing',
+    file: 'treatments/01-instrument-housing.html',
+    ground: 'dark',
+    note: 'Dark ground, machined-instrument metaphor, clickable section tints',
+    verdict:
+      'Established the housing idea and the tint system. Landed too close to the terminal/blueprint cliché DESIGN.md had set out to avoid.',
   },
 ];
 
