@@ -9,6 +9,7 @@
     "dev": "bun run vendor && bun run sync:design && vite dev",
     "build": "bun run vendor && bun run sync:design && vite build",
     "preview": "vite preview",
+    "deploy": "bash scripts/deploy.sh",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json"
   },

@@ -1,8 +1,12 @@
 # Netlify. The build is fully static (adapter-static), so this is
 # just "run the build, publish the folder" — no functions, no edge
-# runtime, nothing host-specific in the app itself. render.yaml sits
-# alongside this for the same reason: the hosting decision is still
-# open, and neither file locks it in.
+# runtime, nothing host-specific in the app itself.
+#
+# Deployed to Netlify project "wam-2026" by `bun run deploy`
+# (scripts/deploy.sh), which builds locally and uploads build/. The
+# [build] block below only runs if the site is ever connected to git
+# for remote builds; the headers apply either way. render.yaml stays
+# so the host remains swappable — nothing in the app depends on Netlify.
 
 [build]
   command = "bun run build"
