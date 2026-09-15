@@ -14,34 +14,53 @@
    an honest "not available", and nothing about deployment changes.
 
    State is in memory — it is a pointer at the current slide, and it
-   is meaningless once the talk is over. Notes are a real file, because
-   they are written over days, by hand and with Claude, and want to be
-   diffable. */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+   is meaningless once the talk is over. Notes are real files, one
+   Markdown file per slide in `deck-notes/`, because they are written
+   over days, by hand and with Claude, and want to be diffable and
+   editable outside the app. They are read fresh on every request, so
+   an edit made in the file shows up on the next load.
+
+   Editing is LOCAL ONLY by construction: this API exists only under
+   `vite dev`. The built site bundles the same files read-only and has
+   nowhere to write to. */
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { networkInterfaces } from 'node:os';
 
-const NOTES_FILE = 'deck-notes.json';
+const NOTES_DIR = 'deck-notes';
+/* A slide id becomes a filename, so it is held to a shape that cannot
+   climb out of the directory. */
+const NOTE_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
 
-/** @param {string} root */
+/** Every slide's notes, as Markdown, straight from disk.
+ *  @param {string} root @returns {Record<string, string>} */
 function loadNotes(root) {
-  const f = join(root, NOTES_FILE);
-  if (!existsSync(f)) return {};
-  try {
-    return JSON.parse(readFileSync(f, 'utf8'));
-  } catch (err) {
-    /* Do not silently reset someone's speaker notes because a file got
-       mangled. Say so and hand back nothing for this session. */
-    console.error(`[deck-api] ${NOTES_FILE} is not valid JSON — notes not loaded.`, err);
-    return {};
+  const dir = join(root, NOTES_DIR);
+  if (!existsSync(dir)) return {};
+  /** @type {Record<string, string>} */
+  const out = {};
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith('.md')) continue;
+    const id = f.slice(0, -3);
+    if (NOTE_ID.test(id)) out[id] = readFileSync(join(dir, f), 'utf8');
   }
+  return out;
 }
 
-/** @param {string} root @param {Record<string, string>} notes */
-function saveNotes(root, notes) {
-  const f = join(root, NOTES_FILE);
-  mkdirSync(dirname(f), { recursive: true });
-  writeFileSync(f, JSON.stringify(notes, null, 2) + '\n');
+/** Write one slide's notes. Empty notes delete the file rather than
+ *  leaving an empty one behind. Returns the path written, or null.
+ *  @param {string} root @param {string} id @param {string} markdown */
+function saveNote(root, id, markdown) {
+  const dir = join(root, NOTES_DIR);
+  const file = join(dir, `${id}.md`);
+  const text = markdown.trim();
+  if (!text) {
+    if (existsSync(file)) unlinkSync(file);
+    return null;
+  }
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(file, text + '\n');
+  return `${NOTES_DIR}/${id}.md`;
 }
 
 /** Every address the phone could actually reach this machine on.
@@ -73,14 +92,12 @@ function body(req) {
 export function deckApi() {
   /** @type {{ i: number, ex: number, rev: number, mode: string }} */
   const state = { i: 0, ex: 0, rev: 0, mode: 'grid' };
-  /** @type {Record<string, string>} */
-  let notes = {};
   let root = process.cwd();
 
   return {
     name: 'wam-deck-api',
     apply: 'serve',                       // dev only; never in the build
-    configResolved(c) { root = c.root; notes = loadNotes(root); },
+    configResolved(c) { root = c.root; },
     configureServer(server) {
       const port = server.config.server.port ?? 5173;
 
@@ -106,20 +123,19 @@ export function deckApi() {
             return send(200, state);
           }
 
-          if (url.pathname === '/notes' && req.method === 'GET') return send(200, notes);
+          if (url.pathname === '/notes' && req.method === 'GET') return send(200, loadNotes(root));
 
           if (url.pathname === '/notes' && req.method === 'PUT') {
             const b = /** @type {any} */ (await body(req));
-            if (typeof b.id === 'string' && typeof b.html === 'string') {
-              notes[b.id] = b.html;
-              saveNotes(root, notes);
-              return send(200, { ok: true, id: b.id });
+            if (typeof b.id !== 'string' || !NOTE_ID.test(b.id) || typeof b.markdown !== 'string') {
+              return send(400, { error: 'expected { id, markdown } with a slide id' });
             }
-            return send(400, { error: 'expected { id, html }' });
+            const file = saveNote(root, b.id, b.markdown);
+            return send(200, { ok: true, id: b.id, file });
           }
 
           if (url.pathname === '/info' && req.method === 'GET') {
-            return send(200, { urls: lanUrls(port), notesFile: NOTES_FILE });
+            return send(200, { urls: lanUrls(port), notesDir: NOTES_DIR, notesEditable: true });
           }
 
           return send(404, { error: 'no such deck-api route' });

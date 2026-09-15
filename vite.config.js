@@ -14,7 +14,7 @@ const projectRoot = fileURLToPath(new URL('.', import.meta.url));
    Static output: every route is prerenderable (see
    src/routes/+layout.js). The app is a reference site plus a
    presenter-driven deck with no server-side anything, which is what
-   SCOPE.md's "Out of Scope" already commits to. Static also means it
+   conductor/product.md's "Out of scope" already commits to. Static also means it
    deploys identically to Netlify, Render, or a plain file server, so
    the hosting decision stays open instead of being baked in now.
 
@@ -37,6 +37,12 @@ export default defineConfig({
     // (Bonjour) was blocked while the IP worked. `.local` allows every
     // mDNS name on the LAN, and nothing outside it resolves to one.
     allowedHosts: ['.local'],
+    // Speaker notes autosave into deck-notes/*.md as they are typed. The
+    // deck bundles those files for the static build, so Vite watched them,
+    // and every save hot-reloaded the deck — resetting the editor mid-word.
+    // In dev the notes come from the deck API, read fresh, so nothing here
+    // needs the watch.
+    watch: { ignored: ['**/deck-notes/**'] },
   },
   plugins: [
     // Presenter-only, dev-only: remote control and notes storage. It

@@ -31,17 +31,24 @@ export const setState = (patch) =>
     body: JSON.stringify(patch),
   });
 
-/** @returns {Promise<Record<string, string>|null>} */
+/** Every slide's notes as Markdown, read from `deck-notes/` on disk.
+ *  `null` when there is no local API — the built site — which is also
+ *  what makes notes read-only there.
+ *  @returns {Promise<Record<string, string>|null>} */
 export const getNotes = () => req('/notes');
 
-/** @param {string} id @param {string} html */
-export async function putNote(id, html) {
+/** Save one slide's notes to `deck-notes/<id>.md`. Local dev server only.
+ *  `keepalive` lets a save started as the page closes finish anyway.
+ *  @param {string} id @param {string} markdown @param {boolean} [keepalive]
+ *  @returns {Promise<{ ok: true, id: string, file: string|null }>} */
+export async function putNote(id, markdown, keepalive = false) {
   const ok = await req('/notes', {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ id, html }),
+    body: JSON.stringify({ id, markdown }),
+    keepalive,
   });
-  if (!ok) throw new Error('notes API unavailable');
+  if (!ok) throw new Error('the local notes API is not answering');
   return ok;
 }
 
