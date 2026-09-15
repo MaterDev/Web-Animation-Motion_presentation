@@ -73,241 +73,29 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 .ck-total b { color: var(--ck-ink); font-weight: 500; }
 .ck-note { font-size: 9px; line-height: 1.5; color: var(--ck-dim); }
 
-/* ─── §2 · particles as interface ──────────────────────────────────────── */
-.at { --at-bg: oklch(0.93 0.025 80); --at-ink: oklch(0.28 0.04 60); --at-dim: oklch(0.52 0.04 60); --at-acc: oklch(0.55 0.13 40); background: var(--at-bg); color: var(--at-ink); }
-.at .gp-stage { aspect-ratio: 16 / 12; }
-.at-ui { position: absolute; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 18px; }
-.at-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.32em; text-transform: uppercase; }
-.at-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; margin-left: 10px; color: var(--at-dim); font-size: 11px; }
-.at-field { pointer-events: auto; display: flex; align-items: center; gap: 10px; background: color-mix(in oklch, var(--at-bg) 70%, white); border: var(--hair) solid var(--at-dim); padding: 10px 14px; }
-.at-field input { flex: 1; border: 0; background: transparent; font-family: var(--sans); font-size: 15px; color: var(--at-ink); outline: none; min-width: 0; }
-.at-field input::placeholder { color: var(--at-dim); }
-.at-field button { pointer-events: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--at-bg); background: var(--at-acc); border: 0; padding: 8px 12px; cursor: pointer; }
-.at-hint { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--at-dim); }
-.at-months, .at-from, .at-route, .at-results { position: absolute; left: 18px; right: 18px; opacity: 0; transition: opacity 0.6s; }
-.at-months { top: 63%; display: grid; grid-template-columns: repeat(12, 1fr); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.08em; color: var(--at-dim); text-align: center; }
-.at-month b { display: block; color: var(--at-ink); font-weight: 500; font-size: 8px; margin-top: 2px; }
-.at-from { top: 13%; font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.at-route { top: 56%; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 0 7%; color: var(--at-ink); }
-.at-results { top: 12%; display: flex; flex-direction: column; gap: 4px; width: 46%; }
-.at-results div { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; background: color-mix(in oklch, var(--at-bg) 40%, white); padding: 6px 10px; font-family: var(--sans); font-size: 11px; }
-.at-results b { font-weight: 600; } .at-results span { grid-column: 1; color: var(--at-dim); font-size: 10px; } .at-results i { grid-row: 1 / 3; align-self: center; font-style: normal; font-weight: 700; color: var(--at-acc); font-size: 14px; }
-.at[data-phase="chart"] .at-months, .at[data-phase="chart"] .at-from, .at[data-phase="route"] .at-route, .at[data-phase="route"] .at-results { opacity: 1; }
-.nc { --nc-bg: oklch(0.16 0.03 75); --nc-card: oklch(0.22 0.04 75); --nc-ink: oklch(0.95 0.02 85); --nc-dim: oklch(0.66 0.05 80); --nc-gold: oklch(0.82 0.16 85); --nc-cool: oklch(0.75 0.10 220); background: var(--nc-bg); color: var(--nc-ink); display: grid; place-items: center; padding: 18px; }
-.nc-phone { width: min(100%, 300px); aspect-ratio: 9 / 16; border-radius: 28px; border: 2px solid oklch(0.32 0.02 75); background: var(--nc-bg); position: relative; overflow: hidden; }
-.nc-phone .gp-stage { position: absolute; inset: 0; }
-.nc-ui { position: absolute; inset: 0; pointer-events: none; padding: 26px 18px; display: flex; flex-direction: column; gap: 8px; }
-.nc-top { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); display: flex; justify-content: space-between; }
-.nc-hive { font-family: var(--sans); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; color: var(--nc-gold); }
-.nc-hero { margin-top: 52%; text-align: center; }
-.nc-hero small { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.nc-bal { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--nc-dim); margin-top: 2px; font-variant-numeric: tabular-nums; }
-.nc-sub { font-family: var(--sans); font-size: 11px; color: var(--nc-ink); margin-top: 2px; }
-.nc-ring { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--nc-gold); margin-top: 2px; }
-.nc-list { margin-top: auto; } .nc-list small { font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.nc-tx { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 11.5px; padding: 5px 4px; border-bottom: 1px solid oklch(0.24 0.03 75); } .nc-tx b { font-weight: 500; font-variant-numeric: tabular-nums; } .nc-tx .nc-in { color: var(--nc-gold); }
-.nc-tx-new { animation: nc-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-@keyframes nc-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-.nc-pull { text-align: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--nc-dim); }
-.wl { --wl-bg: oklch(0.13 0.008 260); --wl-ink: oklch(0.95 0.005 260); --wl-dim: oklch(0.62 0.01 260); --wl-ground: oklch(0.09 0.006 260); background: var(--wl-bg); color: var(--wl-ink); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 18px; }
-/* the frame at 1 CSS px = 1 iOS point; below 928 px of room it scales as a whole, never re-laid */
-.wl-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
-.wl-duo { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--wl-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.20 0.006 260); border: var(--hair) solid oklch(0.32 0.01 260); box-sizing: border-box; }
-.wl-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: var(--wl-ground); overflow: hidden; }
-/* the Home Screen behind the app, laid out the way iOS 27 lays it out on the Duo: the dunes wallpaper, the time and the radios disc tucked in the top-right corner, the Dock down the right edge, the search button bottom-right */
-.wl-wall { position: absolute; inset: 0; background: radial-gradient(60% 30% at 30% 78%, oklch(0.92 0.05 85) 0%, transparent 70%), radial-gradient(70% 26% at 78% 96%, oklch(0.90 0.05 80) 0%, transparent 70%), linear-gradient(180deg, oklch(0.70 0.10 245) 0%, oklch(0.86 0.05 225) 38%, oklch(0.90 0.06 70) 47%, oklch(0.46 0.035 45) 49.5%, oklch(0.56 0.04 50) 56%, oklch(0.84 0.06 80) 60%, oklch(0.78 0.07 78) 100%); }
-.wl-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0 0 0 / 0.18); mix-blend-mode: multiply; }
-.wl-status { position: absolute; top: 10px; right: 20px; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.01em; color: oklch(1 0 0 / 0.95); text-shadow: 0 1px 2px oklch(0 0 0 / 0.25); }
-.wl-radios { position: absolute; top: 28px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: oklch(1 0 0 / 0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; } .wl-radios svg { width: 16px; height: 16px; }
-.wl-search { position: absolute; right: 14px; bottom: 14px; width: 30px; height: 30px; border-radius: 50%; background: oklch(1 0 0 / 0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; } .wl-search svg { width: 14px; height: 14px; }
-.wl-dock { position: absolute; right: 10px; top: 45%; transform: translateY(-50%); width: 40px; padding: 7px 0; border-radius: 20px; background: oklch(1 0 0 / 0.42); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6); display: flex; flex-direction: column; align-items: center; gap: 9px; }
-.wl-dock i { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(145deg, color-mix(in oklch, var(--c) 100%, white 25%), var(--c)); box-shadow: 0 1px 2px oklch(0 0 0 / 0.3); } .wl-dock .wl-dock-on { outline: 2px solid oklch(1 0 0 / 0.6); outline-offset: 2px; }
-/* the app: two windows of one app, translucent over the wallpaper, each with its bar */
-.wl-win { position: absolute; border-radius: 18px; background: oklch(0.13 0.01 260 / 0.78); backdrop-filter: blur(24px) saturate(1.2); -webkit-backdrop-filter: blur(24px) saturate(1.2); border: var(--hair) solid oklch(1 0 0 / 0.14); box-shadow: 0 18px 50px oklch(0 0 0 / 0.35); }
-.wl-win-l { left: 70px; top: 30px; width: 360px; height: 594px; } .wl-win-r { left: 462px; top: 30px; width: 366px; height: 594px; }
-.wl-winbar { display: flex; align-items: baseline; gap: 8px; padding: 12px 16px 8px; font-family: var(--sans); font-size: 12px; color: oklch(0.95 0.005 260); } .wl-winbar b { font-weight: 700; } .wl-winbar span { color: var(--wl-dim); font-size: 11px; } .wl-winbar i { margin-left: auto; font-style: normal; color: var(--wl-dim); }
-.wl-cmd { margin: 2px 12px 0; height: 30px; border-radius: 10px; background: oklch(1 0 0 / 0.08); display: flex; align-items: center; gap: 8px; padding: 0 10px; font-family: var(--sans); font-size: 11px; color: var(--wl-dim); } .wl-cmd span { font-size: 13px; }
-.wl-cardface { position: absolute; left: 0; top: 0; width: 340px; height: 214px; border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 -4px 14px oklch(0 0 0 / 0.5); will-change: transform; transform-origin: center; }
-.wl-cardface .gp-stage { position: absolute; inset: 0; }
-.wl-cardface.wl-on { box-shadow: 0 14px 34px oklch(0 0 0 / 0.55); cursor: default; }
-.wl-detail { position: absolute; left: 474px; top: 340px; width: 290px; height: 220px; }
-.wl-detail > * { transition: opacity 0.18s cubic-bezier(0.32, 0.72, 0, 1), transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
-.wl-detail.wl-d-out > * { opacity: 0; transform: translateY(8px); transition-timing-function: cubic-bezier(0.55, 0, 1, 0.45); transition-duration: 0.11s; }
-.wl-detail.wl-d-in > * { animation: wl-write 0.18s cubic-bezier(0.32, 0.72, 0, 1) both; }
-.wl-detail > :nth-child(2) { animation-delay: 0.04s; } .wl-detail > :nth-child(3) { animation-delay: 0.08s; } .wl-detail > :nth-child(4) { animation-delay: 0.12s; }
-@keyframes wl-write { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-.wl-d-name { font-family: var(--sans); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
-.wl-d-title { font-family: var(--sans); font-size: 11px; color: var(--wl-dim); margin-bottom: 10px; }
-.wl-d-rows div { display: flex; justify-content: space-between; gap: 10px; font-family: var(--sans); font-size: 11px; padding: 7px 0; border-top: var(--hair) solid oklch(0.22 0.01 260); }
-.wl-d-rows span { color: var(--wl-dim); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; } .wl-d-rows b { font-weight: 500; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wl-d-btns { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
-.wl-d-btns button { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--wl-bg); background: var(--wl-ink); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
-/* the rail: three 44 px targets at the outboard edge of the right leaf */
-.wl-rail { position: absolute; left: 776px; top: 340px; width: 44px; display: flex; flex-direction: column; gap: 14px; }
-.wl-rail button { width: 40px; height: 40px; }
-.wl-rail button { width: 44px; height: 44px; font-family: var(--mono); font-size: 12px; color: var(--wl-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(0.3 0.01 260); border-radius: 12px; cursor: pointer; padding: 0; }
-.wl-rail .wl-auto-on { background: var(--wl-ink); color: var(--wl-bg); }
-.wl-side { display: flex; flex-direction: column; gap: 10px; max-width: 72ch; }
-.wl-k { font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); }
-.wl-side p { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: oklch(0.85 0.006 260); margin: 0; }
-.wl-note { font-size: 11px !important; color: var(--wl-dim) !important; } .wl-note code { font-family: var(--mono); font-size: 10px; color: var(--wl-ink); }
-/* the printed block: identical structure on all eight, flat, never lit, never moving. Positions are fractions of the face. */
-.wl-face { position: absolute; inset: 0; pointer-events: none; color: var(--wl-face-ink, white); }
-.wl-word { position: absolute; left: 7%; top: 9%; font-family: var(--wl-face-font, var(--mono)); font-size: 12px; letter-spacing: var(--wl-face-track, 0.22em); text-transform: var(--wl-face-case, uppercase); font-weight: var(--wl-face-weight, 500); line-height: 1; }
-.wl-chip { position: absolute; left: 7%; top: 30%; width: 34px; height: 26px; border-radius: 4px; background: linear-gradient(135deg, oklch(0.86 0.06 85), oklch(0.66 0.08 80)); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; padding: 3px; box-sizing: border-box; }
-.wl-chip i { border: 1px solid oklch(0.45 0.05 80 / 0.7); border-radius: 2px; }
-.wl-tap { position: absolute; left: calc(7% + 42px); top: 31%; width: 18px; height: 18px; opacity: 0.85; }
-.wl-pan { position: absolute; left: 7%; top: 60%; font-family: var(--mono); font-size: 13px; letter-spacing: 0.06em; font-variant-numeric: tabular-nums; line-height: 1; }
-.wl-exp { position: absolute; left: 7%; top: 74%; font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.08em; line-height: 1; opacity: 0.8; }
-.wl-name { position: absolute; left: 7%; top: 84%; font-family: var(--sans); font-size: 9.5px; letter-spacing: 0.10em; text-transform: uppercase; line-height: 1; }
-.wl-scheme { position: absolute; right: 7%; bottom: 8%; width: 30px; height: 21px; opacity: 0.9; }
-.wl-orrery, .wl-vesper, .wl-halation, .wl-busbar { --wl-face-ink: oklch(0.92 0.012 80); }
-.wl-rosette, .wl-syringa, .wl-vitrine, .wl-mullion { --wl-face-ink: oklch(0.20 0.01 260); }
-.wl-rosette { --wl-face-font: var(--sans); --wl-face-track: 0.08em; --wl-face-weight: 600; }
-.wl-syringa { --wl-face-font: Georgia, "Times New Roman", serif; --wl-face-track: 0.10em; --wl-face-case: none; --wl-face-weight: 400; } .wl-syringa .wl-word { font-variant: small-caps; font-size: 15px; }
-.wl-vesper { --wl-face-font: var(--sans); --wl-face-track: 0.14em; --wl-face-weight: 700; --wl-face-ink: oklch(0.94 0.014 70); }
-.wl-vitrine { --wl-face-font: Georgia, "Didot", serif; --wl-face-track: 0.30em; --wl-face-weight: 400; } .wl-vitrine .wl-word { font-size: 13px; }
-.wl-mullion { --wl-face-font: var(--sans); --wl-face-track: 0.02em; --wl-face-case: none; --wl-face-weight: 500; } .wl-mullion .wl-word { font-size: 14px; }
-.wl-halation { --wl-face-track: -0.01em; --wl-face-case: none; } .wl-halation .wl-word { font-size: 13px; }
-.wl-busbar { --wl-face-track: 0.18em; } .wl-orrery { --wl-face-track: 0.22em; }
-
-/* ─── §3 · fluids ──────────────────────────────────────────────────────── */
-.tn { --tn-bg: oklch(0.975 0.004 90); --tn-ink: oklch(0.18 0.01 30); --tn-dim: oklch(0.55 0.01 30); --tn-red: oklch(0.52 0.20 25); background: var(--tn-bg); color: var(--tn-ink); }
-.tn .gp-stage { aspect-ratio: 16 / 8; cursor: crosshair; }
-.tn-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 20px; display: flex; flex-direction: column; justify-content: space-between; }
-.tn-brand { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
-.tn-brand span { font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tn-dim); margin-left: 10px; font-size: 11px; }
-.tn-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
-.tn-title { font-family: var(--sans); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
-.tn-title b { font-weight: inherit; }
-.tn-title span { display: block; font-size: 11px; font-weight: 400; color: var(--tn-dim); letter-spacing: 0.04em; margin-top: 6px; }
-.tn-price { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--tn-red); }
-.tn-swatches { display: flex; gap: 6px; }
-.tn-sw { width: 18px; height: 18px; border-radius: 50%; border: var(--hair) solid var(--tn-dim); cursor: pointer; pointer-events: auto; padding: 0; }
-.tn-sw.tn-on { outline: 2px solid var(--tn-ink); outline-offset: 2px; }
-.fm { --fm-bg: oklch(0.14 0.01 60); --fm-ink: oklch(0.95 0.01 80); --fm-dim: oklch(0.62 0.02 70); background: var(--fm-bg); color: var(--fm-ink); }
-.fm .gp-stage { aspect-ratio: 4 / 5; background: oklch(0.10 0.01 60); }
-.fm-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
-.fm-brand { font-family: var(--sans); font-size: 13px; font-weight: 300; letter-spacing: 0.5em; text-transform: uppercase; }
-.fm-brand span { display: block; font-weight: 400; letter-spacing: 0.1em; color: var(--fm-dim); font-size: 9px; margin-top: 4px; font-family: var(--mono); }
-.fm-note-name { font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 8px; }
-.fm-notes { display: flex; gap: 6px; }
-.fm-note { pointer-events: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fm-ink); background: oklch(1 0 0 / 0.06); border: var(--hair) solid oklch(1 0 0 / 0.2); padding: 6px 10px; cursor: pointer; }
-.fm-note.fm-on { background: var(--fm-ink); color: var(--fm-bg); }
-.fm-stat { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; color: var(--fm-dim); margin-top: 10px; }
-.pr { --pr-bg: oklch(0.95 0.01 80); --pr-ink: oklch(0.22 0.02 60); --pr-dim: oklch(0.52 0.02 60); background: var(--pr-bg); color: var(--pr-ink); }
-.pr .gp-stage { aspect-ratio: 4 / 5; cursor: ew-resize; }
-.pr-ui { position: absolute; inset: 0; pointer-events: none; padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; }
-.pr-brand { font-family: var(--sans); font-size: 13px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; }
-.pr-brand span { display: block; font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--pr-dim); font-size: 11px; margin-top: 2px; }
-.pr-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.pr-price { font-family: var(--mono); font-size: 11px; color: var(--pr-dim); margin: 2px 0 8px; }
-.pr-fls { display: flex; gap: 6px; flex-wrap: wrap; }
-.pr-fl { pointer-events: auto; font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--pr-ink); background: white; border: var(--hair) solid oklch(0.8 0.01 80); border-radius: 999px; padding: 5px 10px 5px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.pr-fl::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
-.pr-fl.pr-on { outline: 2px solid var(--pr-ink); outline-offset: -2px; }
-.pr-stat { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; color: var(--pr-dim); margin-top: 10px; }
-
-/* ─── §4 · populations ─────────────────────────────────────────────────── */
-.mu { --mu-paper: oklch(0.965 0.005 90); --mu-ink: oklch(0.22 0.01 288); --mu-dim: oklch(0.50 0.012 288); --mu-rule: oklch(0.82 0.008 90); --mu-topo: oklch(0.78 0.12 170); --mu-metr: oklch(0.70 0.14 348); --mu-pred: oklch(0.62 0.19 28);
-  background: var(--mu-paper); color: var(--mu-ink); padding: 14px 16px; }
-.mu-head { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.mu-head span { font-family: var(--mono); font-weight: 400; letter-spacing: 0.1em; color: var(--mu-dim); font-size: 9px; }
-.mu-title { font-family: var(--sans); font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; margin: 8px 0 10px; line-height: 1.35; text-transform: none; }
-.mu .gp-stage { aspect-ratio: 2 / 1; background: oklch(0.09 0.014 288); }
-.mu-panels { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template-columns: 1fr 1fr; }
-.mu-panel { padding: 10px 12px; display: flex; flex-direction: column; justify-content: space-between; }
-.mu-panel + .mu-panel { border-left: var(--hair) solid var(--mu-dim); }
-.mu-panel-k { font-family: var(--sans); font-size: 12px; font-weight: 700; color: oklch(0.95 0.005 90); align-self: flex-start; background: oklch(0.18 0.02 288 / 0.72); padding: 4px 8px; border-radius: 3px; }
-.mu-panel-k i { font-style: normal; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; margin-left: 8px; font-weight: 500; }
-.mu-panel-k.mu-m i { color: var(--mu-metr); } .mu-panel-k.mu-t i { color: var(--mu-topo); }
-.mu-panel-r { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: oklch(0.80 0.006 90); align-self: flex-start; background: oklch(0.18 0.02 288 / 0.72); padding: 4px 8px; border-radius: 3px; }
-.mu-panel-r b { color: oklch(0.96 0.005 90); font-weight: 500; }
-.mu-cue { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mu-pred); pointer-events: none; opacity: 0; }
-.mu-cue.mu-on { opacity: 1; }
-.mu-foot { display: flex; gap: 8px 14px; flex-wrap: wrap; align-items: center; margin-top: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; color: var(--mu-dim); }
-.mu-foot button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mu-ink); background: transparent; border: var(--hair) solid var(--mu-rule); padding: 5px 9px; cursor: pointer; }
-.mu-foot button.mu-stoop { color: var(--mu-pred); border-color: var(--mu-pred); }
-.mu-foot b { color: var(--mu-ink); font-weight: 500; }
-
-/* ─── §5 · procedural ──────────────────────────────────────────────────── */
-.tw { --tw-bg: oklch(0.15 0.01 250); --tw-ink: oklch(0.94 0.006 90); --tw-dim: oklch(0.62 0.01 250); --tw-rule: oklch(0.28 0.01 250); --tw-acc: oklch(0.80 0.12 180); background: var(--tw-bg); color: var(--tw-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 860px) { .tw { grid-template-columns: minmax(0, 1fr) 240px; } }
-.tw .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.12 0.01 250); cursor: default; }
-.tw-panel { padding: 14px 16px; border-left: var(--hair) solid var(--tw-rule); display: flex; flex-direction: column; gap: 12px; }
-.tw-brand { font-family: var(--sans); font-size: 12px; font-weight: 700; letter-spacing: 0.26em; text-transform: uppercase; }
-.tw-brand span { display: block; font-weight: 400; letter-spacing: 0.02em; text-transform: none; color: var(--tw-dim); font-size: 11px; margin-top: 2px; }
-.tw-btn { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-bg); background: var(--tw-acc); border: 0; padding: 10px 12px; cursor: pointer; }
-.tw-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); display: flex; justify-content: space-between; }
-.tw-k b { color: var(--tw-ink); font-weight: 500; }
-.tw-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--tw-rule); outline: none; margin: 6px 0 2px; }
-.tw-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--tw-acc); cursor: pointer; border: 0; }
-.tw-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--tw-dim); border-top: var(--hair) solid var(--tw-rule); padding-top: 8px; }
-.tw-stats b { color: var(--tw-ink); font-weight: 500; }
-.tw-note { font-family: var(--sans); font-size: 11px; color: var(--tw-dim); }
-.tw-hud { position: absolute; top: 12px; left: 14px; right: 14px; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: oklch(0.96 0.005 90 / 0.85); pointer-events: none; text-shadow: 0 1px 8px oklch(0 0 0 / 0.5); }
-.tw-hud span span { margin-left: 10px; opacity: 0.7; }
-.tw-pins { position: absolute; inset: 0; pointer-events: none; }
-.tw-pin { position: absolute; transform: translate(-50%, -50%); background: transparent; border: 0; padding: 0; cursor: pointer; pointer-events: auto; display: flex; align-items: center; gap: 7px; color: oklch(0.97 0.005 90); font-family: var(--sans); font-size: 11.5px; font-weight: 600; opacity: 0; transition: opacity 0.6s; }
-.tw-pin.tw-pin-on { opacity: 1; }
-.tw-pin i { width: 10px; height: 10px; border-radius: 50%; background: var(--tw-acc); box-shadow: 0 0 0 4px oklch(0.80 0.12 180 / 0.25), 0 0 18px oklch(0.80 0.12 180 / 0.6); animation: tw-pulse 2.4s ease-in-out infinite; }
-@keyframes tw-pulse { 50% { box-shadow: 0 0 0 9px oklch(0.80 0.12 180 / 0.12), 0 0 18px oklch(0.80 0.12 180 / 0.6); } }
-.tw-pin span { text-shadow: 0 1px 6px oklch(0 0 0 / 0.7); background: oklch(0.12 0.01 250 / 0.55); padding: 3px 8px; border-radius: 3px; }
-.tw-pin:hover span { background: oklch(0.12 0.01 250 / 0.85); }
-.tw-over { position: absolute; left: 14px; bottom: 14px; width: min(300px, calc(100% - 28px)); background: oklch(0.12 0.012 250 / 0.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: var(--hair) solid oklch(0.96 0.005 90 / 0.18); padding: 14px 16px; color: var(--tw-ink); animation: tw-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both; animation-delay: 1.6s; }
-.tw-over[hidden] { display: none; }
-@keyframes tw-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-.tw-over-k { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--tw-acc); }
-.tw-over-name { font-family: var(--sans); font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin-top: 6px; }
-.tw-over-kind { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tw-dim); margin-top: 2px; }
-.tw-over-clim { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: oklch(0.85 0.006 90); margin-top: 8px; }
-.tw-over-text { font-family: var(--sans); font-size: 12px; line-height: 1.5; color: oklch(0.90 0.006 90); margin: 8px 0 10px; }
-.tw-over-species { display: flex; gap: 6px; flex-wrap: wrap; }
-.tw-over-species span { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; border: var(--hair) solid oklch(0.96 0.005 90 / 0.3); padding: 3px 7px; border-radius: 999px; }
-.tw-over-btns { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
-.tw-over-btns button { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tw-ink); background: transparent; border: var(--hair) solid oklch(0.96 0.005 90 / 0.35); padding: 6px 9px; cursor: pointer; }
-.tw-over-btns button:hover { border-color: var(--tw-acc); color: var(--tw-acc); }
-
-/* ─── §6 · optics ──────────────────────────────────────────────────────── */
-.hc { --hc-bg: oklch(0.11 0.01 60); --hc-ink: oklch(0.95 0.01 80); --hc-dim: oklch(0.60 0.02 70); --hc-rule: oklch(0.24 0.015 60); --hc-acc: oklch(0.82 0.15 80); background: var(--hc-bg); color: var(--hc-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 860px) { .hc { grid-template-columns: minmax(0, 1fr) 250px; } }
-.hc .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.08 0.01 60); cursor: grab; }
-.hc-brand { position: absolute; top: 14px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: baseline; pointer-events: none; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.9 0.01 80 / 0.8); }
-.hc-brand b { font-family: var(--sans); font-size: 14px; font-weight: 800; letter-spacing: 0.34em; color: var(--hc-ink); }
-.hc-hint { position: absolute; left: 16px; bottom: 12px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.9 0.01 80 / 0.55); pointer-events: none; }
-.hc-panel { padding: 16px; border-left: var(--hair) solid var(--hc-rule); display: flex; flex-direction: column; gap: 10px; }
-.hc-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hc-dim); }
-.hc-name { font-family: var(--sans); font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
-.hc-name span { display: block; font-size: 12px; font-weight: 500; letter-spacing: 0; color: var(--hc-dim); margin-top: 4px; }
-.hc-price { font-family: var(--sans); font-size: 16px; font-weight: 700; }
-.hc-price span { font-size: 10px; font-weight: 400; color: var(--hc-dim); margin-left: 8px; }
-.hc-ways { display: flex; gap: 8px; }
-.hc-way { width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; cursor: pointer; background: linear-gradient(135deg, var(--a) 50%, var(--b) 50%); outline: 2px solid transparent; outline-offset: 3px; }
-.hc-way.hc-on { outline-color: var(--hc-ink); }
-.hc-sizes { display: flex; gap: 5px; flex-wrap: wrap; }
-.hc-size { font-family: var(--mono); font-size: 10px; color: var(--hc-ink); background: transparent; border: var(--hair) solid var(--hc-rule); width: 30px; height: 28px; cursor: pointer; }
-.hc-size.hc-on { border-color: var(--hc-acc); color: var(--hc-acc); }
-.hc-cta { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hc-bg); background: var(--hc-acc); border: 0; padding: 11px 12px; cursor: pointer; margin-top: 4px; }
-.hc-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--hc-dim); border-top: var(--hair) solid var(--hc-rule); padding-top: 8px; margin-top: auto; }
-.hc-stats b { color: var(--hc-ink); font-weight: 500; }
-/* ─── §7 · the device ──────────────────────────────────────────────────── */
-.du { --du-bg: oklch(0.985 0.003 90); --du-ink: oklch(0.20 0.005 260); --du-dim: oklch(0.52 0.01 260); --du-rule: oklch(0.88 0.005 260); --du-acc: oklch(0.55 0.12 240); background: var(--du-bg); color: var(--du-ink); border: var(--hair) solid var(--du-rule); display: grid; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 860px) { .du { grid-template-columns: minmax(0, 1fr) 250px; } }
-.du .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.97 0.003 90); cursor: grab; }
-.du-hint { position: absolute; left: 16px; bottom: 12px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: oklch(0.4 0.005 260 / 0.7); pointer-events: none; }
-.du-panel { padding: 16px; border-left: var(--hair) solid var(--du-rule); display: flex; flex-direction: column; gap: 12px; }
-.du-k { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--du-dim); }
-.du-k b { color: var(--du-ink); font-weight: 500; }
-.du-name { font-family: var(--sans); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-.du-range { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: var(--du-rule); outline: none; margin: 8px 0 2px; }
-.du-range::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--du-acc); cursor: pointer; border: 0; }
-.du-btn { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--du-ink); background: transparent; border: var(--hair) solid oklch(0.7 0.005 260); padding: 9px 12px; cursor: pointer; }
-.du-ways { display: flex; gap: 6px; } .du-way { font-family: var(--sans); font-size: 11px; font-weight: 600; color: var(--du-ink); background: transparent; border: var(--hair) solid oklch(0.7 0.005 260); border-radius: 999px; padding: 6px 11px; cursor: pointer; } .du-way.du-on { background: var(--du-ink); color: var(--du-bg); border-color: var(--du-ink); }
-.du-specs { display: flex; flex-direction: column; gap: 4px; font-family: var(--mono); font-size: 9px; color: var(--du-dim); border-top: var(--hair) solid var(--du-rule); padding-top: 10px; }
-.du-specs span { display: flex; justify-content: space-between; gap: 8px; } .du-specs b { color: var(--du-ink); font-weight: 500; margin-left: auto; } .du-specs i { font-style: normal; color: var(--du-acc); letter-spacing: 0.1em; text-transform: uppercase; font-size: 8px; }
-.du-stats { font-family: var(--mono); font-size: 9px; line-height: 1.7; color: var(--du-dim); border-top: var(--hair) solid var(--du-rule); padding-top: 8px; margin-top: auto; }
-.du-stats b { color: var(--du-ink); font-weight: 500; }
-@media (max-width: 560px) { .ck-panel, .tw-panel, .hc-panel, .du-panel { border-left: 0; } }
+/* ─── §2 · one device, eight apps ─────────────────────────────────────── */
+.dv { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 80vw; margin-left: calc(50% - 40vw); }
+/* the plate the phone sits on: very light grey, 24 px of air all round, the frame scaled to the room inside it */
+.dv-plate { width: 100%; box-sizing: border-box; padding: 24px; border-radius: 68px; background: oklch(0.955 0.003 260); }
+/* the Duo's inner display as a shell: 890 × 626 at 1 CSS px = 1 pt, scaled as a whole to the room it has (up to 1.6×), never re-laid */
+.dd-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
+.dd-frame { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--dd-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.22 0.006 260); border: var(--hair) solid oklch(0.36 0.01 260); box-sizing: border-box; box-shadow: inset 0 0 0 2px oklch(0.09 0.005 260), 0 30px 80px oklch(0 0 0 / 0.35); }
+.dd-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: oklch(0.09 0.006 260); overflow: hidden; }
+.dd-display canvas { position: absolute; inset: 0; width: 890px; height: 626px; display: block; touch-action: none; }
+.dd-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0 0 0 / 0.14); mix-blend-mode: multiply; pointer-events: none; z-index: 5; }
+/* iOS 27's furniture on this device: the time over the radios disc, top-right; the Dock down the right edge */
+.dd-status { position: absolute; top: 10px; right: 20px; z-index: 6; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.01em; color: oklch(1 0 0 / 0.95); text-shadow: 0 1px 2px oklch(0 0 0 / 0.35); pointer-events: none; mix-blend-mode: difference; }
+.dd-radios { position: absolute; top: 28px; right: 14px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; background: oklch(1 0 0 / 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; pointer-events: none; box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6); } .dd-radios svg { width: 22px; height: 22px; }
+.dd-dock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 6; width: 44px; padding: 8px 0; border-radius: 22px; background: oklch(1 0 0 / 0.42); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6), 0 6px 20px oklch(0 0 0 / 0.18); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dd-dock button { width: 32px; height: 32px; border-radius: 9px; border: 0; padding: 0; cursor: pointer; background: linear-gradient(145deg, color-mix(in oklch, var(--c) 100%, white 28%), var(--c)); box-shadow: 0 1px 2px oklch(0 0 0 / 0.3); display: grid; place-items: center; font-family: var(--sans); font-size: 13px; font-weight: 800; color: white; letter-spacing: -0.02em; transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
+.dd-dock button:hover { transform: scale(1.08); } .dd-dock button.dd-dock-on { outline: 2px solid oklch(1 0 0 / 0.85); outline-offset: 2px; }
+.dd-dock button svg { width: 19px; height: 19px; filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.3)); }
+.dv-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.85 0.006 260); background: oklch(0.12 0.01 260 / 0.7); padding: 8px 14px; border-radius: 999px; pointer-events: none; }
+.dv-loading[hidden] { display: none; }
+/* the one HTML input: it takes the keystrokes for Atlas and is never seen */
+.dv-input { position: absolute; left: 72px; top: 222px; width: 300px; height: 20px; opacity: 0; z-index: 3; pointer-events: none; font-size: 16px; }
+.dv-caps { width: 100%; max-width: 100ch; } .dv-caps .gp-cap { max-width: none; } .dv-caps .gp-cap[hidden] { display: none; }
+@media (max-width: 560px) { .ck-panel { border-left: 0; } }
 </style>
 </head>
 <body data-testid="technique-webgpu">
@@ -320,11 +108,11 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
   <p class="dek" data-testid="dek">
     The GPU stops being a place you send pictures to and becomes a place things
     <b>happen</b>. Compute passes read and write storage buffers that never come back;
-    a hundred thousand grains can be an interface, ink and smoke and a drink can be
-    solved rather than faked, a flock can be an experiment, a world can be grown and
-    flown over, and a product shot can be lit without a product. Six things WebGPU is
-    for, each shown as a fragment of a product that could ship — because a technique
-    on a coloured square teaches nothing about where you would reach for it.
+    a hundred thousand grains can be an interface, a flock can be a game, a world can be
+    grown and flown over, a product shot can be lit without a product — and the app
+    around each of those can be the GPU's work too. One device, eight apps, one canvas,
+    each a fragment of a product that could ship — because a technique on a coloured
+    square teaches nothing about where you would reach for it.
   </p>
   <p class="gp-instr" data-testid="instrument-plate">
     <b>Every number on this sheet is measured on this machine, now.</b> The GPU
@@ -364,283 +152,42 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
 
   <!-- ═══ §2 ══════════════════════════════════════════════════════════ -->
   <section class="gp-sec" data-testid="section-2">
-    <div class="gp-label">Storage buffers · compute</div>
-    <h2>particles and pixels as interface</h2>
-    <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. It
-      is more useful as an <b>interface</b>: when a hundred thousand grains live in a
-      storage buffer and a compute pass moves every one of them each frame, text can be
-      made of sand, a refresh can be a swarm, a switch can pour, a hero can part around
-      the hand — and the CPU sends nothing per frame but the pointer. And when the
-      motion is the brand rather than the data, the card itself can be the program:
-      a wallet of eight business cards, each carrying its company's real mark, alive.</p>
-    <div class="gp-grid">
-      <div class="gp-card">
-        <div class="at" data-testid="at-card">
-          <div class="gp-stage" data-testid="at-stage"><canvas data-testid="at-canvas"></canvas>
-            <div class="at-ui"><div class="at-brand">Atlas<span>flights · stays · the whole coast</span></div>
-              <div class="at-months" data-testid="at-months"><span class="at-month">J<b>—</b></span><span class="at-month">F<b>—</b></span><span class="at-month">M<b>—</b></span><span class="at-month">A<b>—</b></span><span class="at-month">M<b>—</b></span><span class="at-month">J<b>—</b></span><span class="at-month">J<b>—</b></span><span class="at-month">A<b>—</b></span><span class="at-month">S<b>—</b></span><span class="at-month">O<b>—</b></span><span class="at-month">N<b>—</b></span><span class="at-month">D<b>—</b></span></div>
-              <div class="at-from" data-testid="at-from">—</div>
-              <div class="at-route" data-testid="at-route"><span>LON</span><span data-testid="at-r-city">Lisbon</span></div>
-              <div class="at-results" data-testid="at-results"><div><b>07:15 → 10:05</b><span>direct · 2h 50</span><i>£84</i></div><div><b>13:40 → 16:35</b><span>direct · 2h 55</span><i>£96</i></div><div><b>18:20 → 21:10</b><span>direct · 2h 50</span><i>£71</i></div></div>
-              <div><div class="at-field"><input data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false"><button data-testid="at-go">search</button></div><div class="at-hint" data-testid="at-hint" style="margin-top:8px">type a city · the sand spells it, charts it, dates it, flies it</div></div>
-            </div>
-          </div>
+    <div class="gp-label">One device · eight apps · one canvas</div>
+    <h2>WebGPU treated as an app, not a demo</h2>
+    <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. The
+      argument here is that the GPU can be <b>the whole app</b>: below is one iPhone Duo,
+      and everything inside its display — the panes, the type, the glass, the buttons,
+      the cards, the sand, the honey, the flock, the world, the shoe, the storm and the
+      phone's own portrait — is drawn by WebGPU from one canvas. The phone around it is CSS, there
+      only to say "this form factor". The Dock opens one app at a time; the last one is
+      torn down before the next compiles, so a single set of buffers is ever alive.
+      Text is glyphs in an atlas, panels are signed distances, and frosted glass samples
+      a blurred copy of whatever the app drew behind it.</p>
+    <div class="dv" data-testid="dv-card">
+      <div class="dv-plate" data-testid="dv-plate"><div class="dd-fit" data-testid="dv-fit"><div class="dd-frame" data-testid="dv-phone">
+        <div class="dd-display" data-testid="dv-display">
+          <canvas data-testid="dv-canvas"></canvas>
+          <input class="dv-input" data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false" autocomplete="off">
+          <div class="dd-crease" aria-hidden="true"></div>
+          <div class="dd-status" aria-hidden="true">9:41</div>
+          <div class="dd-radios" aria-hidden="true" title="battery · Wi-Fi · cellular"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"><path d="M12 2.6a9.4 9.4 0 1 1-6.6 2.7" /><path d="M7.6 10.3a6.2 6.2 0 0 1 8.8 0"/><path d="M9.7 12.6a3.3 3.3 0 0 1 4.6 0"/><circle cx="12" cy="14.9" r="0.9" fill="#111" stroke="none"/><g fill="#111" stroke="none"><circle cx="8.4" cy="18.6" r="1"/><circle cx="10.8" cy="18.6" r="1"/><circle cx="13.2" cy="18.6" r="1"/></g><circle cx="15.6" cy="18.6" r="0.8" stroke-width="0.9"/></svg></div>
+          <div class="dd-dock" data-testid="dv-dock"><button data-testid="dv-app-wallet" style="--c:oklch(0.30 0.02 260)" aria-label="Wallet" title="Wallet"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M15 15h3"/></svg></button><button data-testid="dv-app-atlas" style="--c:oklch(0.68 0.14 45)" aria-label="Atlas" title="Atlas"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.6" ry="8.5"/><path d="M3.5 12h17"/></svg></button><button data-testid="dv-app-nectar" style="--c:oklch(0.78 0.16 85)" aria-label="Nectar" title="Nectar"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><path d="M12 8.5l3 1.75v3.5L12 15.5l-3-1.75v-3.5z"/></svg></button><button data-testid="dv-app-flock" style="--c:oklch(0.55 0.10 288)" aria-label="Roost" title="Roost"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3-4 6-4 9 0 3-4 6-4 9 0"/><path d="M6 17.5c2-2.5 4-2.5 6 0 2-2.5 4-2.5 6 0"/></svg></button><button data-testid="dv-app-tessera" style="--c:oklch(0.62 0.12 180)" aria-label="Tessera" title="Tessera"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 19L9 7l4.5 8 2.5-4 5.5 8z"/><circle cx="17.5" cy="6" r="1.8"/></svg></button><button data-testid="dv-app-halcyon" style="--c:oklch(0.25 0.03 60)" aria-label="Halcyon" title="Halcyon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3-7.3-2.2 7.3-2.2z"/></svg></button><button data-testid="dv-app-storm" style="--c:oklch(0.45 0.08 280)" aria-label="Supercell" title="Supercell"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M5 9h14"/><path d="M8 13h9"/><path d="M10 17h5"/><path d="M12 21h1"/></svg></button><button data-testid="dv-app-duo" style="--c:oklch(0.62 0.02 260)" aria-label="Duo" title="Duo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M12 3v18"/><path d="M8.5 7.5h1M14.5 7.5h1"/></svg></button></div>
+          <span class="dv-loading" data-testid="dv-loading" hidden>opening…</span>
+          <span class="gp-status" data-testid="dv-status">requesting a device…</span>
         </div>
-        <div class="gp-cap"><b>Atlas · travel search</b> · one buffer of 160 000 grains is the whole interface: it spells the city, becomes the price chart, becomes the dates, becomes the route — each state is a new target set uploaded once; the frames upload nothing · <i>compute pass · storage buffer · instanced quads</i></div>
-      </div>
-      <div class="gp-card">
-        <div class="nc" data-testid="nc-card">
-          <div class="nc-phone"><div class="gp-stage" data-testid="nc-stage"><canvas data-testid="nc-canvas"></canvas>
-            <div class="nc-ui"><div class="nc-top"><span>9:41</span><span>hive · 3 accounts</span></div><div class="nc-hive">Nectar</div>
-              <div class="nc-hero"><small>Everyday</small><div class="nc-bal" data-testid="nc-bal">£2,418.60</div><div class="nc-sub" data-testid="nc-sub">updated just now</div><div class="nc-ring" data-testid="nc-ring">42% of budget</div></div>
-              <div class="nc-list"><small>Today</small><div data-testid="nc-tx-list"><div class="nc-tx"><span>Ottolenghi</span><b>−£38.40</b></div><div class="nc-tx"><span>TfL travel</span><b>−£6.70</b></div><div class="nc-tx"><span>Salary · Hive Ltd</span><b class="nc-in">+£3,120.00</b></div></div></div>
-              <div class="nc-pull" data-testid="nc-pull">pull down to refresh</div></div>
-          </div></div>
-        </div>
-        <div class="gp-cap"><b>Nectar · banking</b> · the balance is not printed, it is thirty-six thousand bees holding the digits; a transaction lands and the figure swings to the new number on an under-damped spring, the bees re-form every tick, the budget ring fills, the colour turns · pull down and they forage · <i>one kernel, targets rebuilt as the number moves</i></div>
-      </div>
-      <div class="gp-card gp-wide">
-        <div class="wl" data-testid="wl-card">
-          <div class="wl-fit" data-testid="wl-fit"><div class="wl-duo" data-testid="wl-phone">
-            <div class="wl-display" data-testid="wl-stack">
-              <div class="wl-wall" aria-hidden="true"></div>
-              <div class="wl-crease" aria-hidden="true"></div>
-              <div class="wl-status" aria-hidden="true">9:41</div>
-              <div class="wl-radios" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round"><path d="M2.5 7.2a7.5 7.5 0 0 1 11 0"/><path d="M4.8 9.6a4.4 4.4 0 0 1 6.4 0"/><circle cx="8" cy="12.2" r="0.9" fill="#111" stroke="none"/></svg></div>
-              <div class="wl-dock" aria-hidden="true"><i style="--c:oklch(0.7 0.18 150)"></i><i style="--c:oklch(0.62 0.18 250)"></i><i style="--c:oklch(0.72 0.17 145)"></i><i style="--c:oklch(0.62 0.21 20)"></i><i class="wl-dock-on" style="--c:oklch(0.30 0.02 260)"></i></div>
-              <div class="wl-search" aria-hidden="true"><svg viewBox="0 0 14 14" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"><circle cx="6" cy="6" r="3.8"/><path d="M9 9l3 3"/></svg></div>
-              <div class="wl-win wl-win-l" data-testid="wl-win-stack"><div class="wl-winbar"><b>Wallet</b><span>Cards · 8</span><i>⋯</i></div><div class="wl-cmd"><span>⌕</span>Search cards, passes, tickets</div></div>
-              <div class="wl-win wl-win-r" data-testid="wl-win-card"><div class="wl-winbar"><b>Wallet</b><span>Card</span><i>⋯</i></div></div>
-              <div class="wl-cardface wl-orrery" data-testid="wl-orrery" role="button" tabindex="0" aria-label="ORRERY card"><div class="gp-stage" data-testid="wl-orrery-stage"><canvas data-testid="wl-orrery-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-orrery-word">ORRERY</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-orrery-pan">•••• •••• •••• 4821</div><div class="wl-exp">GOOD THRU 09/29</div><div class="wl-name">A. M. Castellane</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-rosette" data-testid="wl-rosette" role="button" tabindex="0" aria-label="ROSETTE DIAGNOSTICS card"><div class="gp-stage" data-testid="wl-rosette-stage"><canvas data-testid="wl-rosette-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-rosette-word">ROSETTE DIAGNOSTICS</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-rosette-pan">•••• •••• •••• 1174</div><div class="wl-exp">GOOD THRU 03/28</div><div class="wl-name">Dr Ines Marlow</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-vesper" data-testid="wl-vesper" role="button" tabindex="0" aria-label="VESPER LINE card"><div class="gp-stage" data-testid="wl-vesper-stage"><canvas data-testid="wl-vesper-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-vesper-word">VESPER LINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-vesper-pan">•••• •••• •••• 9038</div><div class="wl-exp">GOOD THRU 11/27</div><div class="wl-name">Tomas Reade</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-syringa" data-testid="wl-syringa" role="button" tabindex="0" aria-label="SYRINGA card"><div class="gp-stage" data-testid="wl-syringa-stage"><canvas data-testid="wl-syringa-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-syringa-word">SYRINGA</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-syringa-pan">•••• •••• •••• 5501</div><div class="wl-exp">GOOD THRU 06/30</div><div class="wl-name">Marisol Vega</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-halation" data-testid="wl-halation" role="button" tabindex="0" aria-label="halation card"><div class="gp-stage" data-testid="wl-halation-stage"><canvas data-testid="wl-halation-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-halation-word">halation</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-halation-pan">•••• •••• •••• 2260</div><div class="wl-exp">GOOD THRU 01/29</div><div class="wl-name">Kenji Sato</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-vitrine" data-testid="wl-vitrine" role="button" tabindex="0" aria-label="VITRINE card"><div class="gp-stage" data-testid="wl-vitrine-stage"><canvas data-testid="wl-vitrine-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-vitrine-word">VITRINE</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-vitrine-pan">•••• •••• •••• 7713</div><div class="wl-exp">GOOD THRU 08/28</div><div class="wl-name">Dana Whitfield</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-busbar" data-testid="wl-busbar" role="button" tabindex="0" aria-label="BUSBAR card"><div class="gp-stage" data-testid="wl-busbar-stage"><canvas data-testid="wl-busbar-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-busbar-word">BUSBAR</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-busbar-pan">•••• •••• •••• 3395</div><div class="wl-exp">GOOD THRU 12/29</div><div class="wl-name">Owen Hartley</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-cardface wl-mullion" data-testid="wl-mullion" role="button" tabindex="0" aria-label="mullion card"><div class="gp-stage" data-testid="wl-mullion-stage"><canvas data-testid="wl-mullion-canvas"></canvas></div>
-                <div class="wl-face"><div class="wl-word" data-testid="wl-mullion-word">mullion</div><div class="wl-chip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><svg class="wl-tap" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a8 8 0 0 1 0 8M10 5.5a12 12 0 0 1 0 13M14 3a16 16 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-                  <div class="wl-pan" data-testid="wl-mullion-pan">•••• •••• •••• 6642</div><div class="wl-exp">GOOD THRU 04/28</div><div class="wl-name">Amara Cole</div>
-                  <svg class="wl-scheme" viewBox="0 0 34 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M2.5 12h29" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></div></div>
-              <div class="wl-detail" data-testid="wl-detail">
-                <div class="wl-d-name" data-testid="wl-d-name">—</div><div class="wl-d-title" data-testid="wl-d-title">—</div>
-                <div class="wl-d-rows"><div><span>issuer</span><b data-testid="wl-d-mail">—</b></div><div><span>card</span><b data-testid="wl-d-tel">—</b></div><div><span>scheme</span><b data-testid="wl-d-site">SPECIE · contactless</b></div></div>
-                <div class="wl-d-btns"><button data-testid="wl-add">set as default</button><button data-testid="wl-share">card details</button></div>
-              </div>
-              <div class="wl-rail" data-testid="wl-bar"><button data-testid="wl-prev" aria-label="previous card">▲</button><button class="wl-auto wl-auto-on" data-testid="wl-auto" aria-label="auto">⏸</button><button data-testid="wl-next" aria-label="next card">▼</button></div>
-            </div>
-          </div></div>
-          <div class="wl-side">
-            <div class="wl-k">Wallet · one app, two windows, on the iPhone Duo</div>
-            <p>Eight invented issuers, one wallet, drawn on the Duo's inner display at one CSS pixel per point as one app in two windows over the Home Screen — the time and the radios disc in the top-right corner, the Dock down the right edge, the way iOS 27 lays the device out — the stack in the left window, one card always live in the right with its details and a side rail; nothing rests on the crease. Tap a card in the stack and the two exchange — opposite arcs across the fold, 640 ms, the touched card in front — which is the one event a single screen cannot stage. The printed block is identical on every card and never moves; above it each card runs one process: Orrery's brass rings under a sweeping key light; Rosette's blood cells drifting in depth; Syringa's quatrefoil pumping violet dye at sixty beats a minute; Vesper Line's night train seen only as the light it leaves; Vitrine's glass stopper throwing a caustic; Mullion's louvred wall turning in a wave; Halation's thirty thousand points settling into volumes; Busbar's grid where charge hops one link per tick.</p>
-            <p class="wl-note">Every company, person, mark and scheme is invented; the marks are drawn in code. The device geometry is Apple's published 164.6 × 117.8 mm open, 1878 × 2670 inner panel — see conductor/tracks/004-webgpu-sl-14/wallet-duo.md for what is verified and what is constructed. In the stack each card is a still; its process runs on the right leaf. Left on auto, the wallet exchanges every fourteen seconds; the rail steps by hand.</p>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Wallet · brand</b> · payment cards for eight invented issuers, ID-1 proportion, one printed block; direction after the art director's brief (conductor/tracks/004-webgpu-sl-14/wallet-concepts-v2.md) · eight mechanisms: a sphere-traced solid, depth-tested sphere impostors, a stable fluid, a heightfield with a persistence trail, ray-marched glass with dispersion, lit instanced slats, 30k compute particles, a compute pass over a graph · <i>every mark drawn from a predicate, its signed distance computed once</i></div>
-      </div>
-    <div class="gp-strip" data-testid="loop-strip"><span>grains on this section</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
-  </section>
-
-  <!-- ═══ §3 ══════════════════════════════════════════════════════════ -->
-  <section class="gp-sec" data-testid="section-3">
-    <div class="gp-label">Fluids · 2-D grids · 3-D volumes · particles</div>
-    <h2>things that pour, drift and write</h2>
-    <p>A fluid is the one effect a designer asks for and a front-end team says no to.
-      In WebGL it is a texture ping-pong at whatever resolution a quad can afford. In
-      compute it is the natural shape of the work — a grid or a particle set in a
-      storage buffer, a few passes a frame, as many as the frame can pay for — and
-      that makes three kinds of fluid practical on a page: <b>a stable solve on paper,
-      a volume you can walk light through, and particles that behave like a drink.</b></p>
-    <div class="gp-grid">
-      <div class="gp-card gp-wide">
-        <div class="tn" data-testid="tn-card">
-          <div class="gp-stage" data-testid="tn-stage"><canvas data-testid="tn-canvas"></canvas>
-            <div class="tn-ui"><div class="tn-brand">Tinta<span>fountain pen ink · small batch</span></div>
-              <div class="tn-row"><div class="tn-title" data-testid="tn-title"><b data-testid="tn-name">Nº 07 — Oxblood</b><span data-testid="tn-note">30 ml · iron-gall · shading, sheen</span></div>
-                <div><div class="tn-swatches" data-testid="tn-swatches"><button class="tn-sw tn-on" data-c="0" data-testid="tn-sw-oxblood" aria-label="Oxblood" style="background:oklch(0.42 0.19 25)"></button><button class="tn-sw" data-c="1" data-testid="tn-sw-ultramarine" aria-label="Ultramarine" style="background:oklch(0.35 0.14 260)"></button><button class="tn-sw" data-c="2" data-testid="tn-sw-verdigris" aria-label="Verdigris" style="background:oklch(0.40 0.12 160)"></button><button class="tn-sw" data-c="3" data-testid="tn-sw-sepia" aria-label="Sepia" style="background:oklch(0.22 0.02 60)"></button></div><div class="tn-price" style="margin-top:8px">£14 · the ink writes its name · move your hand through it</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Tinta · e-commerce</b> · the product demonstrates itself: a pen path through the ink's own name is injected into a stable fluid solve on paper, the letters bleed and feather the way this ink would, and the hand smears them · solve <i data-testid="tn-t-solve">—</i> per frame · <i>advect · diverge · 24 pressure iterations · project</i></div>
-      </div>
-      <div class="gp-card">
-        <div class="fm" data-testid="fm-card">
-          <div class="gp-stage" data-testid="fm-stage"><canvas data-testid="fm-canvas"></canvas><span class="gp-status" data-testid="fm-status">requesting a device…</span>
-            <div class="fm-ui"><div class="fm-brand">Fume<span>eau de parfum · Nº 3</span></div>
-              <div><div class="fm-note-name" data-testid="fm-note-name">Top · bergamot, pink pepper</div>
-                <div class="fm-notes" data-testid="fm-notes"><button class="fm-note fm-on" data-testid="fm-note-top">top</button><button class="fm-note" data-testid="fm-note-heart">heart</button><button class="fm-note" data-testid="fm-note-base">base</button></div>
-                <div class="fm-stat" data-testid="fm-t">—</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Fume · fragrance</b> · the bottle exhales a note every six seconds; the plume is a 64 × 96 × 64 fluid solved on the GPU and ray-marched with a short walk toward the light for self-shadow · the hand pushes it · <i>3-D advect · diverge · 14 Jacobi · project · one march</i></div>
-      </div>
-      <div class="gp-card">
-        <div class="pr" data-testid="pr-card">
-          <div class="gp-stage" data-testid="pr-stage"><canvas data-testid="pr-canvas"></canvas><span class="gp-status" data-testid="pr-status">requesting a device…</span>
-            <div class="pr-ui"><div class="pr-brand">Pour<span>the drinks menu</span></div>
-              <div><div class="pr-name" data-testid="pr-name">Yuzu &amp; sea salt</div><div class="pr-price" data-testid="pr-price">£3.20</div>
-                <div class="pr-fls" data-testid="pr-fls"><button class="pr-fl pr-on" data-testid="pr-fl-yuzu" style="--c:oklch(0.9 0.15 95)">yuzu</button><button class="pr-fl" data-testid="pr-fl-hibiscus" style="--c:oklch(0.55 0.2 15)">hibiscus</button><button class="pr-fl" data-testid="pr-fl-matcha" style="--c:oklch(0.68 0.12 130)">matcha</button><button class="pr-fl" data-testid="pr-fl-cold-brew" style="--c:oklch(0.3 0.05 60)">cold brew</button></div>
-                <div class="pr-stat"><span data-testid="pr-n">—</span> particles · <span data-testid="pr-t">—</span> · move to tilt</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="gp-cap"><b>Pour · hospitality</b> · a menu where the drink is the picture: five thousand SPH particles in a glass that tilts toward the hand, splatted to a density field and shaded as a surface with refraction and a rim · the flavour is a colour and a viscosity · <i>density · force · integrate, twice a frame · atomics splat · one surface pass</i></div>
+      </div></div></div>
+      <div class="dv-caps" data-testid="dv-caps">
+        <div class="gp-cap" data-testid="dv-cap-wallet"><b>Wallet · brand</b> · payment cards for eight invented issuers, ID-1 proportion, one printed block, one app in two windows over the Home Screen; direction after the art director's brief (conductor/tracks/004-webgpu-sl-14/wallet-concepts-v2.md) · eight mechanisms: a sphere-traced brass boss, sphere impostors with depth, a persistence buffer over a heightfield, a stable fluid with a cardiac pump, thirty thousand additive points retargeting, a faceted gem with per-channel refraction, an atomic-min hop graph, thirty-four slats in a wave — each card is a texture the app composites, and the exchange is two arcs across the fold · <i>the windows, the type and the rail are the GPU's too</i></div>
+        <div class="gp-cap" data-testid="dv-cap-atlas" hidden><b>Atlas · travel search</b> · a split-view app: the search card, the fares and the pill are glass and glyphs; the right pane is one buffer of 160 000 grains that spells the city, becomes the fares by month, the dates, the route — each state a target set uploaded once; the frames upload nothing but the pointer · <i>compute pass · storage buffer · instanced quads · one instance buffer for the UI</i></div>
+        <div class="gp-cap" data-testid="dv-cap-nectar" hidden><b>Nectar · banking</b> · accounts, a segmented control and the day's transactions in glass on the left; on the right the balance is not printed, it is thirty-six thousand bees holding the digits — a transaction lands and the figure swings to the new number on an under-damped spring, the bees re-form every tick, the budget ring fills, the colour turns · pull the right pane down and they forage · <i>one kernel, targets rebuilt as the number moves</i></div>
+        <div class="gp-cap" data-testid="dv-cap-flock" hidden><b>Roost · a game that plays itself</b> · 131 072 starlings on a rank-based rule (Ballerini et al. 2008): the flock is the player, an autopilot steers it to the roosts that light up and away from the hawk that stoops every so often; birds lost to the hawk come off the score, roosts reached go on it · binning by atomics, a sort by cell, a k-nearest query per bird per frame · <i>drag on the sky to steer it yourself</i></div>
+        <div class="gp-cap" data-testid="dv-cap-tessera" hidden><b>Tessera · a site as a world</b> · biome-blended noise, flow routing and stream-power carving grow the heights; every frame is a ray march through them — sun, soft shadows, water, fog; five places, one world, the pins projected from the buffer, the field guide in glass; left alone, it tours · <i>heights and flow live on the GPU; five floats come back so the camera knows where the ground is</i></div>
+        <div class="gp-cap" data-testid="dv-cap-halcyon" hidden><b>Halcyon · campaign</b> · a drop page whose hero is a live diorama: kaleidoscopic IFS chamber, SDF shoe and plinth, key + rim light, soft shadow, five-tap occlusion, one reflection bounce; the colourway you pick recolours the light, and the page — name, price, sizes, the notify button — is the same instance buffer as everything else · <i>drag to orbit; it films itself when you let go</i></div>
+        <div class="gp-cap" data-testid="dv-cap-storm" hidden><b>Supercell · tornado simulator</b> · from the Rock ’em Sock ’em stage "Vortex · snes-retro" (three.js WebGPU + TSL), rebuilt in raw WGSL as a standalone app: a storm director swings lull → build → peak → crash; up to three tornado agents roam a Mode-7 plain — wall cloud, swirling funnel, dust skirt — with forked lightning on the storm's cadence, rain from drizzle to torrential, and four thousand pieces of debris lofted by the funnels' wind field in a compute kernel · <i>fire a bolt · stir it up</i></div>
+        <div class="gp-cap" data-testid="dv-cap-duo" hidden><b>iPhone Duo · the device, inside itself</b> · sphere-traced signed-distance hardware: two rounded slabs on a hinge axis on the screen side, a spine that is flush open and the flat of the D closed, a polished band, a camera bar, emissive procedural screens that sleep and wake with the fold; a white softbox, a contact shadow, the sweep's reflection; every dimension labelled verified, derived or constructed · <i>the hinge runs itself; drag to orbit; the slider takes it</i></div>
       </div>
     </div>
-  </section>
-
-  <!-- ═══ §4 ══════════════════════════════════════════════════════════ -->
-  <section class="gp-sec" data-testid="section-4">
-    <div class="gp-label">Atomics · sorting · indirect draw</div>
-    <h2>populations big enough to be the content</h2>
-    <p>Past a few thousand agents, the hard part is not moving them — it is letting them
-      find each other. A scatter write (<b>this bird counts itself into that cell</b>)
-      needs atomics; sorting by cell needs a writable buffer; both are things a fragment
-      shader cannot do. With them, a quarter of a million agents can each consult their
-      neighbours every frame, and a simulation becomes something a researcher or a
-      game can put a question to.</p>
-    <div class="gp-grid">
-      <div class="gp-card gp-wide">
-        <div class="mu" data-testid="mu-card">
-          <div class="mu-head">Collective Behaviour · online edition<span>Fig. 3 · interactive · doi invented</span></div>
-          <div class="mu-title">Topological interaction preserves flock cohesion under predation: a rank-based rule (b) against a metric one (a), 262 144 birds per panel</div>
-          <div class="gp-stage" data-testid="mu-stage"><canvas data-testid="mu-canvas"></canvas>
-            <div class="mu-panels" aria-hidden="true">
-              <div class="mu-panel"><span class="mu-panel-k mu-m">a<i>metric · r = <span data-testid="mu-r-label">—</span></i></span><span class="mu-panel-r">fragments <b data-testid="mu-frag-a">—</b> · mean neighbours <b data-testid="mu-k-a">—</b></span></div>
-              <div class="mu-panel"><span class="mu-panel-k mu-t">b<i>topological · k = 7</i></span><span class="mu-panel-r">fragments <b data-testid="mu-frag-b">—</b> · mean neighbours <b data-testid="mu-k-b">—</b></span></div>
-            </div>
-            <span class="mu-cue" data-testid="mu-cue">stoop</span>
-            <span class="gp-status" data-testid="mu-status" style="color:oklch(0.8 0.006 90)">requesting a device…</span>
-          </div>
-          <div class="mu-foot"><button class="mu-stoop" data-testid="mu-stoop-now">stoop now</button><button data-testid="mu-reset">reset</button><span>passes · bin <b data-testid="mu-p-bin">—</b> · sort <b data-testid="mu-p-sort">—</b> · query <b data-testid="mu-p-query">—</b> · render <b data-testid="mu-p-render">—</b></span><span>readback, on cue · <b data-testid="mu-t-rb">—</b></span></div>
-        </div>
-        <div class="gp-cap"><b>Collective Behaviour · research figure</b> · Ballerini's finding made visible: on the metric rule the stoop shatters the flock, on the rank rule it holds · fragments counted from one readback three seconds after contact, and the readback's cost printed with it · <i>count · scan · scatter · k-NN in registers · one draw</i></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ §5 ══════════════════════════════════════════════════════════ -->
-  <section class="gp-sec" data-testid="section-5">
-    <div class="gp-label">Procedural generation</div>
-    <h2>a world grown, not drawn</h2>
-    <p>A downloaded map is a picture; a generated one is a process, and a process can be
-      re-run with one number changed. Compute passes write the heights from noise, route
-      water downhill across them and carve where it runs; a ray march then draws the
-      result with real light — and because the whole world is in a buffer, going
-      somewhere is a camera move rather than a page load. <b>Five places, one world, and
-      the site is the map.</b></p>
-    <div class="tw" data-testid="tw-card">
-      <div class="gp-stage" data-testid="tw-stage"><canvas data-testid="tw-canvas"></canvas><span class="gp-status" data-testid="tw-status" style="color:var(--tw-dim)">requesting a device…</span>
-        <div class="tw-pins" data-testid="tw-pins">
-          <button class="tw-pin" data-testid="tw-pin-ashmere"><i></i><span>Ashmere Sound</span></button>
-          <button class="tw-pin" data-testid="tw-pin-corvane"><i></i><span>Corvane Steps</span></button>
-          <button class="tw-pin" data-testid="tw-pin-sellith"><i></i><span>Sellith Shelf</span></button>
-          <button class="tw-pin" data-testid="tw-pin-vell"><i></i><span>Vell Caldera</span></button>
-          <button class="tw-pin" data-testid="tw-pin-yarrow"><i></i><span>Yarrowfell</span></button>
-        </div>
-        <div class="tw-over" data-testid="tw-over" hidden>
-          <div class="tw-over-k"><span data-testid="tw-over-n">1 / 5</span><span>field guide</span></div>
-          <div class="tw-over-name" data-testid="tw-over-name">—</div>
-          <div class="tw-over-kind" data-testid="tw-over-kind">—</div>
-          <div class="tw-over-clim" data-testid="tw-over-clim">—</div>
-          <p class="tw-over-text" data-testid="tw-over-text">—</p>
-          <div class="tw-over-species" data-testid="tw-over-species"></div>
-          <div class="tw-over-btns"><button data-testid="tw-back">← back to the map</button><button data-testid="tw-next">next place →</button></div>
-        </div>
-        <div class="tw-hud" data-testid="tw-hud"><span>Tessera</span><span data-testid="tw-name">—<span data-testid="tw-seed">seed —</span></span></div>
-      </div>
-      <div class="tw-panel">
-        <div class="tw-brand">Tessera<span>a world instead of a website · click a place to travel there</span></div>
-        <button class="tw-btn" data-testid="tw-generate">grow another world</button>
-        <div><div class="tw-k"><span>sea level</span><b data-testid="tw-sea-v">0.42</b></div><input class="tw-range" type="range" min="0.2" max="0.65" step="0.01" value="0.42" data-testid="tw-sea"></div>
-        <div><div class="tw-k"><span>erosion</span><b data-testid="tw-ero-v">24 passes</b></div><input class="tw-range" type="range" min="0" max="64" step="1" value="24" data-testid="tw-ero"></div>
-        <div class="tw-stats" data-testid="tw-stats">1024 × 640 heights · on grow: noise <b data-testid="tw-t-noise">—</b> · flow <b data-testid="tw-t-flow">—</b> · carve <b data-testid="tw-t-carve">—</b><br>every frame: march <b data-testid="tw-t-march">—</b></div>
-        <div class="tw-note">Five places in one grown world. Left alone, it tours them.</div>
-      </div>
-    </div>
-    <div class="gp-cap"><b>Tessera · a site as a world</b> · biome-blended noise, flow routing and stream-power carving grow the heights; every frame is a ray march through them — sun, soft shadows, water, height fog, per-place air. A click is a flight, not a page load · <i>three compute passes on grow, one march pass per frame, five floats read back</i></div>
-  </section>
-
-  <!-- ═══ §6 ══════════════════════════════════════════════════════════ -->
-  <section class="gp-sec" data-testid="section-6">
-    <div class="gp-label">Ray marching · signed distance · fractals</div>
-    <h2>a product shot with no product</h2>
-    <p>Nothing here is a mesh. The chamber is a fractal folded nine times, the plinth a
-      cylinder, the shoe a dozen distance functions — and every pixel is a ray walked
-      through that description with soft shadows, occlusion, a reflection bounce and a
-      rim light. It is the photography a campaign would fly a crew for, <b>generated on
-      the visitor's GPU with the colourway they chose</b>, and it never repeats a frame.</p>
-    <div class="hc" data-testid="hc-card">
-      <div class="gp-stage" data-testid="hc-stage"><canvas data-testid="hc-canvas"></canvas><span class="gp-status" data-testid="hc-status">requesting a device…</span>
-        <div class="hc-brand"><b>Halcyon</b><span>drop 07 · 14 Sept · 09:00 BST</span></div>
-        <div class="hc-hint" data-testid="hc-hint">drag to orbit · it films itself when you let go</div>
-      </div>
-      <div class="hc-panel">
-        <div class="hc-k">Kestrel 07 · limited</div>
-        <div class="hc-name">Kestrel 07 <span data-testid="hc-way-name">Obsidian / Brass</span></div>
-        <div class="hc-price">£165 <span>free returns · 30 days</span></div>
-        <div class="hc-k">colourway</div>
-        <div class="hc-ways" data-testid="hc-ways"><button class="hc-way hc-on" data-testid="hc-way-obsidian" aria-label="Obsidian / Brass" style="--a:#111;--b:#f2b840"></button><button class="hc-way" data-testid="hc-way-reef" aria-label="Reef / Coral" style="--a:#10575c;--b:#ff5c4d"></button><button class="hc-way" data-testid="hc-way-glacier" aria-label="Glacier / Ice" style="--a:#ebeff3;--b:#4d8cff"></button></div>
-        <div class="hc-k">size · UK</div>
-        <div class="hc-sizes" data-testid="hc-sizes"><button class="hc-size" data-testid="hc-size-6">6</button><button class="hc-size" data-testid="hc-size-7">7</button><button class="hc-size" data-testid="hc-size-8">8</button><button class="hc-size hc-on" data-testid="hc-size-9">9</button><button class="hc-size" data-testid="hc-size-10">10</button><button class="hc-size" data-testid="hc-size-11">11</button><button class="hc-size" data-testid="hc-size-12">12</button></div>
-        <button class="hc-cta" data-testid="hc-cta">notify me · UK 9</button>
-        <div class="hc-stats" data-testid="hc-stats">one pass · march <b data-testid="hc-t-march">—</b></div>
-      </div>
-    </div>
-    <div class="gp-cap"><b>Halcyon · campaign</b> · a drop page whose hero is a live diorama: kaleidoscopic IFS chamber, SDF shoe and plinth, key + rim light, soft shadow, five-tap occlusion, one reflection bounce; the colourway retints the fractal's orbit-trap palette · <i>one fragment pass, no geometry, no textures</i></div>
-  </section>
-
-  <!-- ═══ §7 ══════════════════════════════════════════════════════════ -->
-  <section class="gp-sec" data-testid="section-7">
-    <div class="gp-label">Signed distance · hardware</div>
-    <h2>the device, as a model rather than a photograph</h2>
-    <p>The wallet above is staged on the iPhone Duo; here the Duo is the subject. Two
-      rounded leaves, a hinge cover and glass front and back are a few distance
-      functions, shaded as the materials Apple names — mirror-polished titanium, a
-      micro-blasted hinge, Ceramic Shield, a nano-texture inner display — under a
-      white softbox with a contact shadow and the sweep's reflection; the screens are
-      emissive and show iOS 27 laid out the way Apple lays it out on this device. It opens and closes on
-      its own. <b>Every dimension is either verified with a source or labelled an
-      estimate</b> — the sheet says which, because a model that looks measured and is
-      not would be the wrong kind of convincing.</p>
-    <div class="du" data-testid="du-card">
-      <div class="gp-stage" data-testid="du-stage"><canvas data-testid="du-canvas"></canvas><span class="gp-status" data-testid="du-status">requesting a device…</span>
-        <div class="du-hint" data-testid="du-hint">drag to orbit · the hinge runs itself</div>
-      </div>
-      <div class="du-panel">
-        <div class="du-k">iPhone Duo · model</div>
-        <div class="du-name">Titanium, glass, one hinge</div>
-        <div><div class="du-k" style="display:flex;justify-content:space-between"><span>hinge</span><b data-testid="du-fold-v">0°</b></div><input class="du-range" type="range" min="0" max="180" step="1" value="0" data-testid="du-fold" aria-label="hinge angle"></div>
-        <div class="du-k">colourway</div><div class="du-ways" data-testid="du-ways"><button class="du-way du-on" data-way="night-sky" data-testid="du-way-night-sky">Night Sky</button><button class="du-way" data-way="star-white" data-testid="du-way-star-white">Star White</button></div>
-        <button class="du-btn" data-testid="du-auto">let it run</button>
-        <div class="du-specs" data-testid="du-specs"></div>
-        <div class="du-stats" data-testid="du-stats">one pass · march <b data-testid="du-t-march">—</b></div>
-      </div>
-    </div>
-    <div class="gp-cap"><b>iPhone Duo · model</b> · sphere-traced signed-distance hardware: two rounded slabs, a hinge, inset glass over emissive procedural screens; key + rim + hemisphere, soft shadow, five-tap occlusion, one floor bounce · <i>one fragment pass, no mesh, no textures; dimensions labelled verified or estimated</i></div>
+    <div class="gp-strip" data-testid="loop-strip"><span>open app</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
   </section>
 
   <div class="notes" data-testid="notes">
@@ -649,8 +196,8 @@ p.dek b { color: var(--hz-600); font-weight: 600; }
       <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
       <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
       <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
-      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument.</li>
-      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Tinta, Fume, Pour, the paper and its authors, Tessera and Halcyon do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
+      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument — and so is the interface: the text atlas, the signed-distance panels and the frosted glass in every app are a hundred lines of WGSL, not a framework.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Roost, Tessera, Halcyon and Supercell do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
     </ol>
   </div>
 </div>

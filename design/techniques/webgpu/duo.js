@@ -11,7 +11,8 @@
    the time, an under-display camera the panel nearly hides. It opens and closes on its
    own; drag orbits; the slider takes the hinge.
    Dimensions in SPECS, each labelled verified / derived / constructed. */
-import { $, DPR, TAU, uniform, render, bind, attach, timer, card, pointer, FSQ_VS } from './common.js';
+import { uniform, render, bind, timer, FSQ_VS } from './common.js';
+import { MONO } from './ui.js';
 
 /* centimetres. Apple: open 164.6 × 117.8 × 5.2 mm, closed 84.1 × 117.8 × 11.3 mm; inner 1878 × 2670 @ 430 ppi → 110.93 × 157.72 mm,
    so the open bezel is 3.44 mm all round; outer 1398 × 2034 @ 460 ppi → 3.46 mm sides, 2.75 mm ends. The hinge axis sits (11.3 − 5.2) / 2 = 3.05 mm in front of each leaf's centre plane. No radius or crease width is published. */
@@ -154,34 +155,44 @@ const norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const lerp = (a, b, t) => a + (b - a) * t, ease = (t) => t * t * (3 - 2 * t);
 
-export function duoCard() {
-  const el = $('du-card'), stage = $('du-stage'), canvas = $('du-canvas'), status = $('du-status'); let s = null, drag = null, yaw = 0.7, pitch = 0.22, lastTouch = -1e9, manual = false, foldDeg = 0, way = 'night-sky';
-  const slider = $('du-fold');
-  slider.addEventListener('input', () => { manual = true; lastTouch = performance.now(); foldDeg = +slider.value; $('du-fold-v').textContent = foldDeg + '°'; });
-  $('du-auto').addEventListener('click', () => { manual = false; lastTouch = -1e9; });
-  document.querySelectorAll('.du-way').forEach((b) => b.addEventListener('click', () => { way = b.dataset.way; document.querySelectorAll('.du-way').forEach((o) => o.classList.toggle('du-on', o === b)); }));
-  pointer(stage, (p) => { if (drag) { yaw = drag.yaw + (p.x - drag.x) * 4.0; pitch = Math.max(-0.1, Math.min(1.0, drag.pitch - (p.y - drag.y) * 2.5)); lastTouch = performance.now(); } }, () => { drag = null; }, (p) => { drag = { x: p.x, y: p.y, yaw, pitch }; lastTouch = performance.now(); }, () => { drag = null; });
-  $('du-specs').innerHTML = Object.entries(SPECS).map(([k, v]) => `<span>${k.replace(/([A-Z])/g, ' $1').toLowerCase()} <b>${(v.v * 10).toFixed(2)} mm</b> <i>${v.src}</i></span>`).join('');
-  return card({ name: 'duo', el, init() {
-    const dev = this.__dev, { ctx } = attach(canvas), ru = uniform(64 + 80 + 128), pipe = render(SHADER), g = bind(pipe, [ru]), tm = timer(['march'], 4);
-    s = { ctx, ru, pipe, g, tm }; status.hidden = true;
-  }, frame(t, dt, now) {
-    if (!s) return; const dev = this.__dev, T = now / 1000;
-    const rc = stage.getBoundingClientRect(), bw = Math.round(rc.width * Math.min(DPR, 1.5) * 0.75), bh = Math.round(rc.height * Math.min(DPR, 1.5) * 0.75);
-    if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
-    const tl = T % 20; let fold = tl < 2.5 ? 0 : tl < 8 ? ease((tl - 2.5) / 5.5) : tl < 14 ? 1 : tl < 18.5 ? 1 - ease((tl - 14) / 4.5) : 0;
-    if (manual && now - lastTouch < 8000) fold = foldDeg / 180; else if (manual) { manual = false; }
-    if (!manual) { foldDeg = Math.round(fold * 180); slider.value = foldDeg; $('du-fold-v').textContent = foldDeg + '°'; }
-    const idle = (now - lastTouch) / 1000; if (idle > 4 && !drag) { yaw = lerp(yaw, 0.7 + 0.45 * Math.sin(T * 0.09), 1 - Math.pow(0.05, dt)); pitch = lerp(pitch, 0.2 + 0.1 * Math.sin(T * 0.06), 1 - Math.pow(0.05, dt)); }
-    const W = SPECS.leafW.v, H = SPECS.leafH.v, T_ = SPECS.leafT.v, dist = 27, tgt = [W * 0.5 * (fold - 0.5) * 0.8, 0.3, 0.5 + (1 - fold) * 0.3];
-    const pos = [tgt[0] + Math.sin(yaw) * Math.cos(pitch) * dist, tgt[1] + Math.sin(pitch) * dist, tgt[2] + Math.cos(yaw) * Math.cos(pitch) * dist];
-    const F = norm([tgt[0] - pos[0], tgt[1] - pos[1], tgt[2] - pos[2]]), Rt = norm(cross(F, [0, 1, 0])), Up = cross(Rt, F);
-    const cw = COLOURWAYS[way], RB = new ArrayBuffer(272), Rf = new Float32Array(RB);
-    Rf.set(pos, 0); Rf[3] = T; Rf.set(F, 4); Rf[7] = canvas.width / canvas.height; Rf.set(Rt, 8); Rf[11] = Math.PI - fold * Math.PI; Rf.set(Up, 12); Rf[15] = 0;
-    Rf.set([W, H, T_, SPECS.cornerR.v], 16); Rf.set([SPECS.bezel.v, SPECS.hingeAxis.v, SPECS.outerBezelEnd.v, SPECS.outerBezelSide.v], 20); Rf.set([...cw.frame, 1], 24); Rf.set([...cw.back, 1], 28); Rf.set([...cw.hinge, 1], 32);
-    dev.queue.writeBuffer(s.ru, 0, RB);
-    const enc = dev.createCommandEncoder(); const rp = enc.beginRenderPass({ colorAttachments: [{ view: s.ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }], ...s.tm.begin(0) });
-    rp.setPipeline(s.pipe); rp.setBindGroup(0, s.g); rp.draw(3); rp.end(); s.tm.resolve(enc); dev.queue.submit([enc.finish()]);
-    const rd = s.tm.read(); if (rd.march !== undefined) $('du-t-march').textContent = rd.march.toFixed(2) + ' ms · ' + canvas.width + ' × ' + canvas.height;
-  } });
+export function duoApp() {
+  let dev = null, ui = null, s = null, drag = null, yaw = 0.7, pitch = 0.22, lastTouch = -1e9, manual = false, foldDeg = 0, way = 'night-sky', sliding = false, hover = null, running = true;
+  const C = { ink: [0.14, 0.14, 0.16, 1], dim: [0.50, 0.50, 0.54, 1], glass: [1, 1, 1, 0.55], cell: [0, 0, 0, 0.06], cellHi: [0, 0, 0, 0.12], acc: [0.15, 0.45, 0.95, 1] };
+  const PX = 560, PW = 268, TRK = [PX + 22, PW - 44];
+  const draw = (now, rd) => { const wy = COLOURWAYS[way];
+    ui.text(24, 22, 'IPHONE DUO', 14, C.ink, { weight: 800, track: 0.30 }); ui.text(24, 42, 'the device, as a model rather than a photograph', 10.5, C.dim);
+    ui.text(24, 598, 'DRAG TO ORBIT · THE HINGE RUNS ITSELF', 9, C.dim, { weight: 600, track: 0.14, op: 0.8 });
+    ui.glass(PX, 60, PW, 506, C.glass, 24, 0.18);
+    let y = 84; ui.text(PX + 22, y, 'IPHONE DUO · MODEL', 9.5, C.dim, { weight: 600, track: 0.16 }); y += 20; ui.text(PX + 22, y, 'Titanium, glass, one hinge', 20, C.ink, { weight: 700, track: -0.02 }); y += 40;
+    ui.text(PX + 22, y, 'HINGE', 9.5, C.dim, { weight: 600, track: 0.16 }); ui.text(PX + PW - 22, y, foldDeg + '°', 11, C.ink, { align: 'right', family: MONO, weight: 600 }); y += 22;
+    ui.rect(TRK[0], y + 5, TRK[1], 3, [0, 0, 0, 0.12], 1.5); const kx = TRK[0] + foldDeg / 180 * TRK[1]; ui.rect(TRK[0], y + 5, kx - TRK[0], 3, C.acc, 1.5); ui.disc(kx, y + 6.5, 9, [1, 1, 1, 1]); ui.ring(kx, y + 6.5, 9, [0, 0, 0, 0.15], 1); ui.hit('fold', TRK[0] - 10, y - 8, TRK[1] + 20, 30); y += 34;
+    ui.text(PX + 22, y, 'COLOURWAY', 9.5, C.dim, { weight: 600, track: 0.16 }); y += 20;
+    [['night-sky', 'Night Sky'], ['star-white', 'Star White']].forEach(([id, nm], i) => { const x = PX + 22 + i * 116, on = way === id; ui.rect(x, y, 108, 30, on ? C.ink : hover === 'way-' + id ? C.cellHi : C.cell, 15); ui.disc(x + 18, y + 15, 7, [...COLOURWAYS[id].back, 1]); ui.ring(x + 18, y + 15, 7, [...COLOURWAYS[id].frame, 1], 1.5); ui.text(x + 32, y + 8, nm, 11.5, on ? [1, 1, 1, 1] : C.ink, { weight: 600 }); ui.hit('way-' + id, x, y, 108, 30); }); y += 46;
+    const hot = hover === 'auto'; ui.rect(PX + 22, y, PW - 44, 36, running ? (hot ? C.cellHi : C.cell) : C.acc, 18); ui.text(PX + PW / 2, y + 10, running ? 'Running itself' : 'Let it run', 12, running ? C.ink : [1, 1, 1, 1], { align: 'center', weight: 600 }); ui.hit('auto', PX + 22, y, PW - 44, 36); y += 52;
+    ui.rect(PX + 22, y, PW - 44, 1, [0, 0, 0, 0.1]); y += 10;
+    Object.entries(SPECS).forEach(([k, v]) => { ui.text(PX + 22, y, k.replace(/([A-Z])/g, ' $1').toLowerCase(), 9, C.dim, { family: MONO }); ui.text(PX + PW - 22, y, (v.v * 10).toFixed(2) + ' mm', 9, C.ink, { align: 'right', family: MONO, weight: 500 }); ui.text(PX + PW - 82, y + 1, v.src.toUpperCase(), 7, v.src === 'verified' ? [0.15, 0.55, 0.35, 1] : v.src === 'derived' ? C.acc : [0.75, 0.45, 0.10, 1], { align: 'right', weight: 700, track: 0.1 }); y += 15; });
+    y += 6; ui.rect(PX + 22, y, PW - 44, 1, [0, 0, 0, 0.1]); y += 10; ui.text(PX + 22, y, 'ONE PASS · MARCH', 8.5, C.dim, { weight: 600, track: 0.14, family: MONO }); ui.text(PX + PW - 22, y, rd, 9.5, C.ink, { align: 'right', family: MONO }); };
+  const setFold = (px) => { foldDeg = Math.round(Math.max(0, Math.min(180, (px - TRK[0]) / TRK[1] * 180))); manual = true; running = false; lastTouch = performance.now(); };
+  return { cursor: 'grab', init(d, host) { dev = d; ui = host.ui; const ru = uniform(64 + 80 + 128), pipe = render(SHADER), g = bind(pipe, [ru]), tm = timer(['march'], 4); s = { ru, pipe, g, tm, rd: '—' }; },
+    down(p, id) { if (id === 'fold') { sliding = true; setFold(p.x); } else if (!id) { drag = { x: p.x, y: p.y, yaw, pitch }; lastTouch = performance.now(); } },
+    move(p, hov) { hover = hov; if (sliding) setFold(p.x); else if (drag) { yaw = drag.yaw + (p.x - drag.x) / 890 * 4.0; pitch = Math.max(-0.1, Math.min(1.0, drag.pitch - (p.y - drag.y) / 626 * 2.5)); lastTouch = performance.now(); } },
+    up(p, id, same) { drag = null; sliding = false; if (same && id && id.startsWith('way-')) way = id.slice(4); if (same && id === 'auto') { manual = false; running = true; lastTouch = -1e9; } }, leave() { drag = null; sliding = false; hover = null; },
+    destroy() { s.ru.destroy(); s = null; },
+    frame(t, dt, now, hov) { if (!s) return; const T = now / 1000; hover = hov; const tgt = ui.prepare(0.6);
+      const tl = T % 20; let fold = tl < 2.5 ? 0 : tl < 8 ? ease((tl - 2.5) / 5.5) : tl < 14 ? 1 : tl < 18.5 ? 1 - ease((tl - 14) / 4.5) : 0;
+      if (manual) fold = foldDeg / 180; else { foldDeg = Math.round(fold * 180); running = true; }
+      const idle = (now - lastTouch) / 1000; if (idle > 4 && !drag) { yaw = lerp(yaw, 0.7 + 0.45 * Math.sin(T * 0.09), 1 - Math.pow(0.05, dt)); pitch = lerp(pitch, 0.2 + 0.1 * Math.sin(T * 0.06), 1 - Math.pow(0.05, dt)); }
+      const W = SPECS.leafW.v, H = SPECS.leafH.v, T_ = SPECS.leafT.v, dist = 30, tg0 = [W * 0.5 * (fold - 0.5) * 0.8, 0.3, 0.5 + (1 - fold) * 0.3];
+      const pos0 = [tg0[0] + Math.sin(yaw) * Math.cos(pitch) * dist, tg0[1] + Math.sin(pitch) * dist, tg0[2] + Math.cos(yaw) * Math.cos(pitch) * dist];
+      const F0 = norm([tg0[0] - pos0[0], tg0[1] - pos0[1], tg0[2] - pos0[2]]), Rt0 = norm(cross(F0, [0, 1, 0]));
+      /* the phone sits left of centre; the panel has the right leaf */
+      const tg = [tg0[0] + Rt0[0] * 4.2, tg0[1], tg0[2] + Rt0[2] * 4.2], pos = pos0; const F = norm([tg[0] - pos[0], tg[1] - pos[1], tg[2] - pos[2]]), Rt = norm(cross(F, [0, 1, 0])), Up = cross(Rt, F);
+      const cw = COLOURWAYS[way], RB = new ArrayBuffer(272), Rf = new Float32Array(RB);
+      Rf.set(pos, 0); Rf[3] = T; Rf.set(F, 4); Rf[7] = tgt.w / tgt.h; Rf.set(Rt, 8); Rf[11] = Math.PI - fold * Math.PI; Rf.set(Up, 12); Rf[15] = 0;
+      Rf.set([W, H, T_, SPECS.cornerR.v], 16); Rf.set([SPECS.bezel.v, SPECS.hingeAxis.v, SPECS.outerBezelEnd.v, SPECS.outerBezelSide.v], 20); Rf.set([...cw.frame, 1], 24); Rf.set([...cw.back, 1], 28); Rf.set([...cw.hinge, 1], 32);
+      dev.queue.writeBuffer(s.ru, 0, RB);
+      const enc = dev.createCommandEncoder(); const rp = enc.beginRenderPass({ colorAttachments: [{ view: tgt.view, loadOp: 'clear', storeOp: 'store' }], ...s.tm.begin(0) });
+      rp.setPipeline(s.pipe); rp.setBindGroup(0, s.g); rp.draw(3); rp.end(); s.tm.resolve(enc);
+      const rd = s.tm.read(); if (rd.march !== undefined) s.rd = rd.march.toFixed(2) + ' ms · ' + tgt.w + ' × ' + tgt.h;
+      draw(now, s.rd); ui.compose(enc); dev.queue.submit([enc.finish()]); } };
 }

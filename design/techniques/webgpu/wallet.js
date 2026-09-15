@@ -14,7 +14,8 @@
      BUSBAR       energy · grid     a transmission graph; charge hops one link a tick
      MULLION      museum            a louvred wall turning in a travelling wave
    Every company, person, mark and scheme is invented; the marks are drawn in code. */
-import { $, DPR, TAU, device, format, storage, uniform, compute, render, bind, attach, card, pointer, hash2, FSQ_VS } from './common.js';
+import { DPR, TAU, device, format, storage, uniform, compute, render, bind, hash2, FSQ_VS } from './common.js';
+import { ICONS, MONO, SANS, SERIF } from './ui.js';
 
 /* stock and ink are display values; the mark box is (x, y, w, h) in face fractions, square in pixels at 1.586 */
 const MB = [0.64 - 0.075, 0.34 - 0.119, 0.15, 0.238];
@@ -338,51 +339,75 @@ const MU_BG = PRE + `@fragment fn fs(o: VO) -> @location(0) vec4f { let uv = o.u
 
 const posterT = { orrery: 4.2, rosette: 6.0, vesper: 9.5, syringa: 3.4, halation: 6.4, vitrine: 9.3, busbar: 3.5, mullion: 2.1 };
 
-/* ── the wallet, on the Duo's inner display at 1 px = 1 pt ───────────── */
-const STACK_X = 80, STACK_Y = 134, REVEAL = 39, OPEN_X = 474, OPEN_Y = 82;
-const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-export function walletCards() {
-  const wallet = $('wl-card'), fit = $('wl-fit'), duo = $('wl-phone'), detail = $('wl-detail'); let open = 0, lastTouch = 0, openedAt = 0, busy = false, auto = true;
-  const els = CARDS.map((c) => $('wl-' + c.id));
-  /* the frame scales as a whole when the column is narrower than 928 px; it is never re-laid */
-  const scale = () => { const sc = Math.min(1, fit.clientWidth / 928); duo.style.setProperty('--wl-scale', sc); fit.style.height = (664 * sc) + 'px'; };
-  new ResizeObserver(scale).observe(fit); scale();
-  const stackOrder = () => CARDS.map((_, i) => i).filter((i) => i !== open);
-  const slotOf = (i) => { const k = stackOrder().indexOf(i); return [STACK_X, STACK_Y + k * REVEAL]; };
-  const place = (el, x, y, sc = 1) => { el.style.transform = `translate(${x}px, ${y}px) scale(${sc})`; };
-  const layout = () => { stackOrder().forEach((i, k) => { place(els[i], STACK_X, STACK_Y + k * REVEAL); els[i].style.zIndex = k + 1; els[i].classList.remove('wl-on'); }); place(els[open], OPEN_X, OPEN_Y); els[open].style.zIndex = 30; els[open].classList.add('wl-on'); writeDetail(); };
-  const writeDetail = () => { const c = CARDS[open]; $('wl-d-name').textContent = els[open].querySelector('.wl-name').textContent; $('wl-d-title').textContent = c.issuer; $('wl-d-mail').textContent = c.issuer.split(' · ')[0]; $('wl-d-tel').textContent = els[open].querySelector('.wl-pan').textContent; };
-  const arc = (a, b, t, apex) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t + apex * 4 * t * (1 - t)];
-  /* cubic-bezier(0.32, 0.72, 0, 1), sampled */
-  const bz = (t) => { const p1 = 0.32, p2 = 0.0, q1 = 0.72, q2 = 1.0; let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2, x = 3 * (1 - m) * (1 - m) * m * p1 + 3 * (1 - m) * m * m * p2 + m * m * m; if (x < t) lo = m; else hi = m; } const u = (lo + hi) / 2; return 3 * (1 - u) * (1 - u) * u * q1 + 3 * (1 - u) * u * u * q2 + u * u * u; };
-  /* EXCHANGE: card m leaves the stack, card n returns to it; they cross the fold in opposite arcs, 640 ms, m in front */
-  const exchange = (m) => { if (busy || m === open) return; const n = open; busy = true; const from = slotOf(m); const t0 = performance.now();
-    detail.classList.add('wl-d-out'); detail.classList.remove('wl-d-in');
-    const to = (() => { const order = CARDS.map((_, i) => i).filter((i) => i !== m); const k = order.indexOf(n); return [STACK_X, STACK_Y + k * REVEAL]; })();
-    open = m; openedAt = t0; els[m].style.zIndex = 40; els[n].style.zIndex = 35; els[m].classList.add('wl-on'); els[n].classList.remove('wl-on');
-    /* the stack re-slots underneath, staggered, while the two cards fly */
-    const order = stackOrder(); els.forEach((el, i) => { if (i === m || i === n) return; const k = order.indexOf(i); el.style.transition = `transform 0.2s cubic-bezier(0.32, 0.72, 0, 1) ${70 + k * 24}ms`; place(el, STACK_X, STACK_Y + k * REVEAL); el.style.zIndex = k + 1; });
-    if (reduced.matches) { els[m].style.transition = 'opacity 0.12s 0.06s'; els[n].style.transition = 'opacity 0.12s'; els[n].style.opacity = '0'; setTimeout(() => { place(els[n], to[0], to[1]); place(els[m], OPEN_X, OPEN_Y); els[n].style.opacity = '1'; els[m].style.opacity = '1'; writeDetail(); detail.classList.remove('wl-d-out'); detail.classList.add('wl-d-in'); els.forEach((el) => { el.style.transition = ''; }); busy = false; }, 320); return; }
-    const tick = (now) => { const t = now - t0;
-      const k = Math.max(0, Math.min(1, (t - 90) / 320)), e = bz(k); const lift = t < 40 ? 0 : t < 110 ? (t - 40) / 70 : t < 380 ? 1 : t < 470 ? 1 - (t - 380) / 90 : 0; const sc = 1 + 0.025 * lift;
-      const pm = arc(from, [OPEN_X, OPEN_Y], e, -32), pn = arc([OPEN_X, OPEN_Y], to, e, 32); place(els[m], pm[0], pm[1], sc); place(els[n], pn[0], pn[1], sc);
-      if (t >= 430 && !detail.classList.contains('wl-d-in')) { writeDetail(); detail.classList.remove('wl-d-out'); detail.classList.add('wl-d-in'); }
-      if (t < 640) requestAnimationFrame(tick); else { els.forEach((el) => { el.style.transition = ''; }); const k2 = stackOrder().indexOf(n); els[n].style.zIndex = k2 + 1; els[m].style.zIndex = 30; busy = false; } };
-    requestAnimationFrame(tick); };
-  els.forEach((el, i) => { el.addEventListener('click', () => { lastTouch = performance.now(); exchange(i); }); el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); lastTouch = performance.now(); exchange(i); } }); });
-  const step = (d) => { const order = stackOrder(); const k = order.indexOf(open); exchange(order[((d > 0 ? open + d : open + d) % CARDS.length + CARDS.length) % CARDS.length === open ? (open + d * 2 + CARDS.length) % CARDS.length : (open + d + CARDS.length) % CARDS.length] !== undefined ? (open + d + CARDS.length) % CARDS.length : order[0]); void k; };
-  $('wl-prev').addEventListener('click', () => { lastTouch = performance.now(); exchange((open + CARDS.length - 1) % CARDS.length); }); $('wl-next').addEventListener('click', () => { lastTouch = performance.now(); exchange((open + 1) % CARDS.length); });
-  $('wl-auto').addEventListener('click', () => { auto = !auto; $('wl-auto').classList.toggle('wl-auto-on', auto); $('wl-auto').textContent = auto ? '⏸' : '⏵'; lastTouch = performance.now(); });
-  setInterval(() => { if (!auto || busy || performance.now() - lastTouch < 6000 || performance.now() - openedAt < 14000) return; exchange((open + 1) % CARDS.length); }, 500);
-  requestAnimationFrame(() => { layout(); openedAt = performance.now(); detail.classList.add('wl-d-in'); }); lastTouch = performance.now() - 4000; void step;
+/* ── the wallet, as an app on the device ─────────────────────────────── */
+const STACK_X = 80, STACK_Y = 134, REVEAL = 39, OPEN_X = 474, OPEN_Y = 82, CW_ = 340, CH_ = 214;
+const PRINT = { orrery: ['ORRERY', '4821', '09/29', 'A. M. Castellane'], rosette: ['ROSETTE DIAGNOSTICS', '1174', '03/28', 'Dr Ines Marlow'], vesper: ['VESPER LINE', '9038', '11/27', 'Tomas Reade'], syringa: ['SYRINGA', '5501', '06/30', 'Marisol Vega'], halation: ['halation', '2260', '01/29', 'Kenji Sato'], vitrine: ['VITRINE', '7713', '08/28', 'Dana Whitfield'], busbar: ['BUSBAR', '3395', '12/29', 'Owen Hartley'], mullion: ['mullion', '6642', '04/28', 'Amara Cole'] };
+const WORD = { orrery: { family: MONO, size: 12, track: 0.22 }, rosette: { family: MONO, size: 12, track: 0.22 }, vesper: { family: MONO, size: 12, track: 0.22 }, syringa: { family: SERIF, size: 12.5, track: 0.10 }, halation: { family: MONO, size: 13, track: -0.01 }, vitrine: { family: SERIF, size: 13, track: 0.30 }, busbar: { family: MONO, size: 12, track: 0.18 }, mullion: { family: SANS, size: 14, track: 0.02, weight: 500 } };
+/* the dunes, for the Home Screen behind the app */
+const WALL = FSQ_VS + `
+struct U { aspect: f32, time: f32, pad: vec2f }; @group(0) @binding(0) var<uniform> u: U;
+fn hash(p: vec2f) -> f32 { return fract(sin(dot(p, vec2f(127.1, 311.7))) * 43758.5453); }
+fn vn(p: vec2f) -> f32 { let i = floor(p); var f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2f(1, 0)), f.x), mix(hash(i + vec2f(0, 1)), hash(i + vec2f(1, 1)), f.x), f.y); }
+@fragment fn fs(o: VO) -> @location(0) vec4f { let u2 = vec2f(o.uv.x, 1.0 - o.uv.y); var c = mix(vec3f(0.86, 0.89, 0.93), vec3f(0.44, 0.63, 0.87), smoothstep(0.46, 1.0, u2.y)); c = mix(c, vec3f(0.93, 0.86, 0.74), smoothstep(0.64, 0.46, u2.y) * 0.8); let x = u2.x * u.aspect;
+  let m1 = 0.50 + 0.05 * vn(vec2f(x * 4.0 + 3.0, 0.5)) + 0.025 * vn(vec2f(x * 13.0, 1.5)) + 0.012 * vn(vec2f(x * 40.0, 2.5)); c = mix(c, mix(vec3f(0.52, 0.45, 0.42), vec3f(0.74, 0.66, 0.60), smoothstep(0.0, 0.10, m1 - u2.y)), smoothstep(0.003, -0.003, u2.y - m1));
+  let m2 = 0.455 + 0.06 * vn(vec2f(x * 3.0 + 11.0, 5.5)) + 0.03 * vn(vec2f(x * 9.0 + 2.0, 6.5)) + 0.012 * vn(vec2f(x * 30.0, 7.5)); let lit = smoothstep(-0.02, 0.02, vn(vec2f(x * 9.0 + 2.0, 6.5)) - vn(vec2f(x * 9.0 + 2.1, 6.5))); c = mix(c, mix(vec3f(0.30, 0.25, 0.23), vec3f(0.50, 0.42, 0.37), lit) + vec3f(0.12, 0.10, 0.09) * smoothstep(0.0, 0.12, m2 - u2.y), smoothstep(0.003, -0.003, u2.y - m2));
+  let d1 = 0.40 + 0.06 * sin(x * 3.1 + 0.8) + 0.035 * vn(vec2f(x * 2.5 + 1.0, 9.5)); let s1 = mix(vec3f(0.74, 0.66, 0.54), vec3f(0.90, 0.84, 0.72), smoothstep(-1.0, 1.0, cos(x * 3.1 + 0.8))); c = mix(c, s1 + 0.03 * vn(vec2f(x * 90.0, u2.y * 60.0)), smoothstep(0.003, -0.003, u2.y - d1));
+  let d2 = 0.22 + 0.10 * sin(x * 2.2 - 1.4) + 0.03 * vn(vec2f(x * 3.0 + 4.0, 12.5)); let s2 = mix(vec3f(0.70, 0.62, 0.50), vec3f(0.93, 0.87, 0.75), smoothstep(-1.0, 1.0, -cos(x * 2.2 - 1.4))); c = mix(c, s2 + 0.03 * vn(vec2f(x * 120.0 + u2.y * 30.0, u2.y * 80.0)), smoothstep(0.003, -0.003, u2.y - d2));
+  return vec4f(c, 1.0); }`;
+const destroyAll = (o, seen = new Set()) => { if (!o || typeof o !== 'object' || seen.has(o)) return; seen.add(o); if (o instanceof GPUBuffer || o instanceof GPUTexture) { try { o.destroy(); } catch {} return; } if (Array.isArray(o)) { o.forEach((x) => destroyAll(x, seen)); return; } if (o instanceof GPUBindGroup || o instanceof GPURenderPipeline || o instanceof GPUComputePipeline || o instanceof GPUSampler) return; for (const k in o) destroyAll(o[k], seen); };
+/* cubic-bezier(0.32, 0.72, 0, 1), sampled */
+const bz = (t) => { const p1 = 0.32, p2 = 0.0, q1 = 0.72, q2 = 1.0; let lo = 0, hi = 1; for (let i = 0; i < 20; i++) { const m = (lo + hi) / 2, x = 3 * (1 - m) * (1 - m) * m * p1 + 3 * (1 - m) * m * m * p2 + m * m * m; if (x < t) lo = m; else hi = m; } const u = (lo + hi) / 2; return 3 * (1 - u) * (1 - u) * u * q1 + 3 * (1 - u) * u * u * q2 + u * u * u; };
+const arc = (a, b, t, apex) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t + apex * 4 * t * (1 - t)];
+const TAP = (x) => { for (let i = 0; i < 3; i++) { x.beginPath(); x.arc(0.3, 0.5, 0.16 + i * 0.16, -0.75, 0.75); x.stroke(); } };
 
-  return CARDS.map((c, ci) => {
-    const el = els[ci], stage = $('wl-' + c.id + '-stage'), canvas = $('wl-' + c.id + '-canvas'); let s = null, ptr = [-9, -9], on = 0, tilt = [0, 0], last = null, force = [0, 0], drag = [0, 0];
-    pointer(stage, (p) => { ptr = [p.x, p.y]; on = 1; if (last) { force = [(p.x - last[0]) * 60, (p.y - last[1]) * 60]; drag = [drag[0] + (p.x - last[0]), drag[1] + (p.y - last[1])]; } last = [p.x, p.y]; }, () => { on = 0; last = null; });
-    const isOpen = () => open === ci;
-    return card({ name: 'wallet-' + c.id, el, init() {
-      const dev = this.__dev, { ctx, fit } = attach(canvas); const ru = uniform(112), smp = dev.createSampler({ magFilter: 'linear', minFilter: 'linear' });
-      const mc = drawMark(c.mark), mt = markTextures(dev, mc); s = { ctx, fit, ru, smp, mt, ready: false };
+export function walletApp() {
+  let dev = null, ui = null, open = 0, openedAt = 0, lastTouch = 0, auto = true, hover = null, ex = null, wall = null, wu = null, wg = null, slots = [];
+  const C = { ink: [0.95, 0.95, 0.96, 1], dim: [0.64, 0.64, 0.68, 1], win: [0.12, 0.12, 0.14, 0.78], cell: [1, 1, 1, 0.08], cellHi: [1, 1, 1, 0.16] };
+  const stackOrder = () => CARDS.map((_, i) => i).filter((i) => i !== open);
+  const slotOf = (i, order = stackOrder()) => { const k = order.indexOf(i); return [STACK_X, STACK_Y + k * REVEAL]; };
+  const cards = [];
+  /* EXCHANGE: card m leaves the stack, card n returns to it; opposite arcs across the fold, 640 ms, m in front; the stack re-slots underneath, staggered */
+  const exchange = (m) => { if (ex || m === open) return; const n = open, t0 = performance.now(), from = slots[m].slice(); const order = CARDS.map((_, i) => i).filter((i) => i !== m); const to = [STACK_X, STACK_Y + order.indexOf(n) * REVEAL];
+    const moves = {}; CARDS.forEach((_, i) => { if (i === m || i === n) return; moves[i] = { from: slots[i].slice(), to: [STACK_X, STACK_Y + order.indexOf(i) * REVEAL], delay: 70 + order.indexOf(i) * 24 }; });
+    ex = { m, n, t0, from, to, moves }; open = m; openedAt = t0; };
+  const layoutAt = (now) => { const out = CARDS.map((_, i) => ({ pos: slots[i], sc: 1, z: stackOrder().indexOf(i) + 1 })); out[open].z = 30; out[open].pos = [OPEN_X, OPEN_Y];
+    if (ex) { const t = now - ex.t0; const k = Math.max(0, Math.min(1, (t - 90) / 320)), e = bz(k); const lift = t < 40 ? 0 : t < 110 ? (t - 40) / 70 : t < 380 ? 1 : t < 470 ? 1 - (t - 380) / 90 : 0; const sc = 1 + 0.025 * lift;
+      out[ex.m] = { pos: arc(ex.from, [OPEN_X, OPEN_Y], e, -32), sc, z: 40 }; out[ex.n] = { pos: arc([OPEN_X, OPEN_Y], ex.to, e, 32), sc, z: 35 };
+      Object.entries(ex.moves).forEach(([i, mv]) => { const kk = Math.max(0, Math.min(1, (t - mv.delay) / 200)); out[+i].pos = [mv.from[0] + (mv.to[0] - mv.from[0]) * bz(kk), mv.from[1] + (mv.to[1] - mv.from[1]) * bz(kk)]; });
+      if (t >= 640) { CARDS.forEach((_, i) => { if (i !== open) slots[i] = slotOf(i); }); ex = null; } }
+    return out; };
+  const detailK = (now) => { if (!ex) return Math.min(1, (now - openedAt - 430) / 180); const t = now - ex.t0; return t < 430 ? Math.max(0, 1 - t / 110) * -1 : Math.min(1, (t - 430) / 180); };
+  const draw = (now, lay) => { const T = now / 1000; const cd = CARDS[open], pr = PRINT[cd.id];
+    /* the two windows of the app */
+    ui.glass(70, 30, 360, 594, C.win, 18, 0.08); ui.glass(462, 30, 366, 594, C.win, 18, 0.08);
+    ui.text(86, 41, 'Wallet', 12, C.ink, { weight: 700 }); ui.text(134, 42, 'Cards · 8', 11, C.dim); ui.icon('wmore', 404, 42, 14, C.dim, ICONS.more);
+    ui.rect(82, 62, 336, 30, C.cell, 10); ui.icon('wsearch', 92, 69, 15, C.dim, ICONS.search); ui.text(112, 70, 'Search cards, passes, tickets', 11, C.dim);
+    ui.text(478, 41, 'Wallet', 12, C.ink, { weight: 700 }); ui.text(526, 42, 'Card', 11, C.dim); ui.icon('wmore2', 802, 42, 14, C.dim, ICONS.more);
+    /* the detail, written in after the exchange lands */
+    const dk = detailK(now); const op = dk < 0 ? 1 + dk : dk, yo = dk < 0 ? -dk * 8 : (1 - dk) * 12; if (op > 0) { const dx = 474, dy = 340 + yo;
+      ui.text(dx, dy, pr[3], 18, C.ink, { weight: 700, track: -0.02, op }); ui.text(dx, dy + 24, cd.issuer, 11, C.dim, { op });
+      [['ISSUER', cd.issuer.split(' · ')[0]], ['CARD', '•••• •••• •••• ' + pr[1]], ['SCHEME', 'SPECIE · contactless']].forEach(([k, v], i) => { const y = dy + 50 + i * 30; ui.rect(dx, y, 290, 1, [1, 1, 1, 0.1], 0, op); ui.text(dx, y + 9, k, 8.5, C.dim, { weight: 600, track: 0.14, family: MONO, op }); ui.text(dx + 290, y + 8, v, 11, C.ink, { align: 'right', weight: 500, op }); });
+      [['default', 'Set as default'], ['details', 'Card details']].forEach(([id, lab], i) => { const w = ui.measure(lab.toUpperCase(), 8.5, { weight: 600, track: 0.14, family: MONO }) + 26; const x = dx + (i ? ui.measure('SET AS DEFAULT', 8.5, { weight: 600, track: 0.14, family: MONO }) + 26 + 6 : 0); ui.rect(x, dy + 148, w, 26, hover === id ? [1, 1, 1, 0.9] : C.ink, 13, op); ui.text(x + 13, dy + 155, lab.toUpperCase(), 8.5, [0.1, 0.1, 0.12, 1], { weight: 600, track: 0.14, family: MONO, op }); ui.hit(id, x, dy + 148, w, 26); }); }
+    /* the rail: previous, auto, next */
+    [['prev', ICONS.up], ['auto', auto ? ICONS.x : ICONS.chevron], ['next', ICONS.down]].forEach(([id, ic], i) => { const y = 340 + i * 58; const on = id === 'auto' && auto; ui.rect(776, y, 44, 44, on ? C.ink : hover === id ? C.cellHi : C.cell, 14); if (id === 'auto') { if (auto) { ui.rect(793, y + 15, 4, 14, [0.1, 0.1, 0.12, 1], 1); ui.rect(801, y + 15, 4, 14, [0.1, 0.1, 0.12, 1], 1); } else ui.icon('play', 790, y + 14, 16, C.ink, ICONS.chevron); } else ui.icon('rail' + id, 788, y + 12, 20, C.ink, ic); ui.hit(id, 776, y, 44, 44); });
+    /* the cards, in depth order, then their printed blocks above */
+    const order = lay.map((l, i) => i).sort((a, b) => lay[a].z - lay[b].z);
+    order.forEach((i) => { const l = lay[i], tex = cards[i].tex; if (!tex) return; const w = CW_ * l.sc, h = CH_ * l.sc, x = l.pos[0] - (w - CW_) / 2, y = l.pos[1] - (h - CH_) / 2; ui.rect(x + 2, y + 6, w - 4, h, [0, 0, 0, 0.35], 12); ui.image(tex, x, y, w, h, 12); ui.hit('card' + i, x, y, w, h); });
+    ui.layer(1);
+    order.forEach((i) => { const l = lay[i], c = CARDS[i], p = PRINT[c.id], w = WORD[c.id], ink = [...c.ink, 1]; const sc = l.sc, x0 = l.pos[0] - (CW_ * sc - CW_) / 2, y0 = l.pos[1] - (CH_ * sc - CH_) / 2; const X = (f) => x0 + f * CW_ * sc, Y = (f) => y0 + f * CH_ * sc;
+      const printed = i === open || stackOrder().indexOf(i) >= 0; if (!printed) return; const clip = i === open ? null : [x0, y0, CW_ * sc, (i === open ? CH_ : REVEAL + 8) * sc]; ui.clip(clip);
+      ui.text(X(0.07), Y(0.09), p[0], w.size * sc, ink, { family: w.family, weight: w.weight || (w.family === MONO ? 500 : 400), track: w.track }); ui.clip(null); if (i !== open) return;
+      ui.grad(X(0.07), Y(0.30), 34 * sc, 26 * sc, [0.86, 0.78, 0.55, 1], [0.66, 0.55, 0.32, 1], 4 * sc, true); ui.rect(X(0.07) + 11 * sc, Y(0.30), 1, 26 * sc, [0.45, 0.35, 0.2, 0.6]); ui.rect(X(0.07) + 22 * sc, Y(0.30), 1, 26 * sc, [0.45, 0.35, 0.2, 0.6]); ui.rect(X(0.07), Y(0.30) + 13 * sc, 34 * sc, 1, [0.45, 0.35, 0.2, 0.6]);
+      ui.icon('tap', X(0.07) + 42 * sc, Y(0.31), 18 * sc, [...c.ink, 0.85], TAP);
+      ui.text(X(0.07), Y(0.60), '•••• •••• •••• ' + p[1], 13 * sc, ink, { family: MONO, track: 0.06 }); ui.text(X(0.07), Y(0.74), 'GOOD THRU ' + p[2], 7.5 * sc, ink, { family: MONO, track: 0.08, op: 0.8 }); ui.text(X(0.07), Y(0.84), p[3].toUpperCase(), 9.5 * sc, ink, { track: 0.10, weight: 500 });
+      const sx = X(0.93) - 30 * sc, sy = Y(0.92) - 21 * sc; ui.ring(sx + 12 * sc, sy + 11 * sc, 9.5 * sc, ink, 3 * sc, 0.9); ui.rect(sx + 2 * sc, sy + 9.5 * sc, 29 * sc, 3 * sc, ink, 1.5 * sc, 0.9); }); };
+  const act = (id) => { if (!id) return; lastTouch = performance.now(); if (id.startsWith('card')) exchange(+id.slice(4)); if (id === 'prev') exchange((open + CARDS.length - 1) % CARDS.length); if (id === 'next') exchange((open + 1) % CARDS.length); if (id === 'auto') auto = !auto; };
+  const makeCard = (c, ci) => {
+    let s = null, ptr = [-9, -9], on = 0, tilt = [0, 0], last = null, force = [0, 0], drag = [0, 0], tex = null, cw = 0, ch = 0;
+    const setPtr = (p) => { ptr = [p.x, p.y]; on = 1; if (last) { force = [(p.x - last[0]) * 60, (p.y - last[1]) * 60]; drag = [drag[0] + (p.x - last[0]), drag[1] + (p.y - last[1])]; } last = [p.x, p.y]; }, clearPtr = () => { on = 0; last = null; };
+    return { get tex() { return tex; }, setPtr, clearPtr, destroy() { if (tex) { ui.forget(tex); tex.destroy(); } destroyAll(s); }, init() {
+      const ru = uniform(112), smp = dev.createSampler({ magFilter: 'linear', minFilter: 'linear' });
+      const mc = drawMark(c.mark), mt = markTextures(dev, mc); s = { ru, smp, mt, ready: false };
       mt.upload().then(() => {
         const faceBind = (pipe, extra = []) => dev.createBindGroup({ layout: pipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: ru } }, { binding: 1, resource: mt.tex.createView() }, { binding: 2, resource: smp }, { binding: 3, resource: mt.sdf.createView() }, ...extra] });
         const pm = render(MARK, { blend: true }); s.mark = { pm, gm: faceBind(pm) };
@@ -405,22 +430,22 @@ export function walletCards() {
           s.bb.reset = () => { const t0 = new Uint32Array(BN).fill(0xffffffff); t0[s.bb.seed] = 0; dev.queue.writeBuffer(tickB, 0, t0); s.bb.lastTick = 0; }; s.bb.reset(); }
         else if (c.id === 'mullion') { const pr = uniform(64), pd = render(MU_D, { topology: 'triangle-strip' }), pb = render(MU_BG); s.mu = { pr, pd, pb, gd: bind(pd, [pr]), gb: faceBind(pb) }; }
         s.ready = true; }).catch((e) => console.error('wallet', c.id, e));
-    }, frame(t, dt, now) {
-      if (!s) return; const resized = s.fit(); const dev = this.__dev, op = isOpen() ? 1 : 0, since = (now - openedAt) / 1000, T = op ? since : posterT[c.id]; const sc = c.scale || 1, mb = [MB[0] + MB[2] * (1 - sc) / 2, MB[1] + MB[3] * (1 - sc) / 2, MB[2] * sc, MB[3] * sc];
+    }, frame(dt, now, ppp) {
+      if (!s) return; const w = Math.round(340 * ppp), h = Math.round(214 * ppp); let resized = false; if (!tex || cw !== w || ch !== h) { if (tex) { ui.forget(tex); tex.destroy(); } tex = dev.createTexture({ size: [w, h], format, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING }); cw = w; ch = h; resized = true; } const op = open === ci ? 1 : 0, since = (now - openedAt) / 1000, T = op ? since : posterT[c.id]; const sc = c.scale || 1, mb = [MB[0] + MB[2] * (1 - sc) / 2, MB[1] + MB[3] * (1 - sc) / 2, MB[2] * sc, MB[3] * sc];
       if (!op) { if (s.stillDrawn && !resized) return; if (s.ready) s.stillDrawn = true; } else { s.stillDrawn = false; }
       const want = !op ? [0.15, 0.05] : on ? [(ptr[0] - 0.5) * 1.2, (ptr[1] - 0.5) * 1.2] : [0, 0];
       if (!op) tilt = [...want]; else { tilt[0] += (want[0] - tilt[0]) * Math.min(1, dt * 4); tilt[1] += (want[1] - tilt[1]) * Math.min(1, dt * 4); }
-      const view = s.ctx.getCurrentTexture().createView(), enc = dev.createCommandEncoder(), asp = canvas.width / canvas.height;
-      const writeR = (phase, a = 0, b = 0) => dev.queue.writeBuffer(s.ru, 0, new Float32Array([canvas.width, canvas.height, T, phase, tilt[0], tilt[1], op, on, ...c.stock, 1, ...mb, ptr[0], ptr[1], a, b, ...c.ink, 1]));
+      const view = tex.createView(), enc = dev.createCommandEncoder(), asp = cw / ch;
+      const writeR = (phase, a = 0, b = 0) => dev.queue.writeBuffer(s.ru, 0, new Float32Array([cw, ch, T, phase, tilt[0], tilt[1], op, on, ...c.stock, 1, ...mb, ptr[0], ptr[1], a, b, ...c.ink, 1]));
       if (!s.ready) { const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store', clearValue: { r: c.stock[0], g: c.stock[1], b: c.stock[2], a: 1 } }] }); rp.end(); dev.queue.submit([enc.finish()]); return; }
       const steps = op ? 1 : 40, fdt = Math.min(dt, 1 / 30);
       const markPass = (rp) => { rp.setPipeline(s.mark.pm); rp.setBindGroup(0, s.mark.gm); rp.draw(3); };
       const simple = (phase, a = 0) => { writeR(phase, a); const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(s.face.pf); rp.setBindGroup(0, s.face.gf); rp.draw(3); markPass(rp); rp.end(); };
       if (c.id === 'orrery') { /* one key light, −55° to +55° and back over sixteen seconds; the tilt moves it */ const az = (-0.96 + 1.92 * (0.5 - 0.5 * Math.cos((T % 16) / 16 * TAU))) + tilt[0] * 1.2; simple(az); }
       else if (c.id === 'vitrine') { /* a half turn over fourteen seconds; a flare at nine */ const tl = T % 14; const flare = Math.exp(-Math.pow((tl - 9.0) / 0.5, 2)) * (tl < 9 ? 1 : 1) * Math.max(0, 1 - Math.max(0, tl - 9.3) / 1.4); simple(tl / 14 + (on ? drag[0] * 0.8 : 0), flare); }
-      else if (c.id === 'rosette') { const ro = s.ro; if (!ro.depth || ro.depth.width !== canvas.width || ro.depth.height !== canvas.height) ro.depth = dev.createTexture({ size: [canvas.width, canvas.height], format: 'depth24plus', usage: GPUTextureUsage.RENDER_ATTACHMENT });
+      else if (c.id === 'rosette') { const ro = s.ro; if (!ro.depth || ro.depth.width !== cw || ro.depth.height !== ch) ro.depth = dev.createTexture({ size: [cw, ch], format: 'depth24plus', usage: GPUTextureUsage.RENDER_ATTACHMENT });
         for (let k = 0; k < steps; k++) { const U = new ArrayBuffer(32), Ui = new Uint32Array(U), Uf = new Float32Array(U); Ui[0] = RM; Uf[4] = fdt; Uf[5] = T + k / 60; Uf[6] = asp; dev.queue.writeBuffer(ro.u, 0, U); const cp = enc.beginComputePass(); cp.setPipeline(ro.pk); cp.setBindGroup(0, ro.gk); cp.dispatchWorkgroups(Math.ceil(RM / 64)); cp.end(); }
-        dev.queue.writeBuffer(ro.pr, 0, new Float32Array([canvas.width, canvas.height, T, 0, -0.4 + tilt[0], 0.7 + tilt[1], 0.7, 0, on ? drag[0] * 4 : 0, on ? drag[1] * 4 : 0, 0, 0])); writeR(0);
+        dev.queue.writeBuffer(ro.pr, 0, new Float32Array([cw, ch, T, 0, -0.4 + tilt[0], 0.7 + tilt[1], 0.7, 0, on ? drag[0] * 4 : 0, on ? drag[1] * 4 : 0, 0, 0])); writeR(0);
         const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }], depthStencilAttachment: { view: ro.depth.createView(), depthClearValue: 1, depthLoadOp: 'clear', depthStoreOp: 'store' } });
         rp.setPipeline(ro.pb); rp.setBindGroup(0, ro.gb); rp.draw(3); rp.setPipeline(ro.pd); rp.setBindGroup(0, ro.gd); rp.draw(4, RM); rp.end();
         const rp2 = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'load', storeOp: 'store' }] }); markPass(rp2); rp2.end();
@@ -436,18 +461,29 @@ export function walletCards() {
         writeR(0); const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(sy.pd); rp.setBindGroup(0, sy.gd[sy.cur ^ 1]); rp.draw(3); markPass(rp); rp.end();
       } else if (c.id === 'halation') { /* three retargets, at 0, 5 and 10 seconds */ const ha = s.ha, setIx = Math.floor((T % 15) / 5);
         for (let k = 0; k < steps; k++) { const U = new ArrayBuffer(48), Ui = new Uint32Array(U), Uf = new Float32Array(U); Ui[0] = HN; Ui[1] = setIx; Uf[4] = fdt; Uf[5] = T + k / 60; Uf[6] = on; Uf[7] = asp; Uf[8] = ptr[0]; Uf[9] = ptr[1]; dev.queue.writeBuffer(ha.u, 0, U); const cp = enc.beginComputePass(); cp.setPipeline(ha.pk); cp.setBindGroup(0, ha.gk); cp.dispatchWorkgroups(Math.ceil(HN / 256)); cp.end(); }
-        dev.queue.writeBuffer(ha.pr, 0, new Float32Array([canvas.width, canvas.height, 2.0 * DPR, 0.14, Math.sin(T * 0.2) * 0.5 + tilt[0] * 0.4, 0, 0, 0, 0.35, 0.95, 0.80, 1])); writeR(0);
+        dev.queue.writeBuffer(ha.pr, 0, new Float32Array([cw, ch, 2.0 * DPR, 0.14, Math.sin(T * 0.2) * 0.5 + tilt[0] * 0.4, 0, 0, 0, 0.35, 0.95, 0.80, 1])); writeR(0);
         const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(ha.pb); rp.setBindGroup(0, ha.gb); rp.draw(3); rp.setPipeline(ha.pd); rp.setBindGroup(0, ha.gd); rp.draw(4, HN); markPass(rp); rp.end();
       } else if (c.id === 'busbar') { /* twenty-eight ticks at half a second; the front returns to its seed */ const bb = s.bb, tl = T % 14, tick = Math.floor(tl / 0.5);
         if (tick < bb.lastTick) bb.reset(); for (let k = bb.lastTick + 1; k <= tick; k++) { dev.queue.writeBuffer(bb.u, 0, new Uint32Array([BL, k, 0, 0])); for (let rep = 0; rep < 2; rep++) { const cp = enc.beginComputePass(); cp.setPipeline(bb.pk); cp.setBindGroup(0, bb.gk); cp.dispatchWorkgroups(1); cp.end(); } bb.lastTick = k; }
-        dev.queue.writeBuffer(bb.pr, 0, new Float32Array([canvas.width, canvas.height, T, tl / 0.5, 0.55, 0.78, 0.86, 1, 1.0, 0.70, 0.18, 1])); writeR(0);
+        dev.queue.writeBuffer(bb.pr, 0, new Float32Array([cw, ch, T, tl / 0.5, 0.55, 0.78, 0.86, 1, 1.0, 0.70, 0.18, 1])); writeR(0);
         const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bb.pb); rp.setBindGroup(0, bb.gb); rp.draw(3); rp.setPipeline(bb.pd); rp.setBindGroup(0, bb.gd); rp.draw(6, BL + BN); markPass(rp); rp.end();
       } else if (c.id === 'mullion') { /* a travelling wave with a 3.5 s period; the hand sets its phase */ const mu = s.mu, phase = (on ? drag[0] * 6 : 0) + (T % 14) / 3.5 * TAU;
-        dev.queue.writeBuffer(mu.pr, 0, new Float32Array([canvas.width, canvas.height, T, phase, 0.80, 0.78, 0.74, 1, 0.06, 0.14, 0.36, 1, -0.5 + tilt[0], 0.4, 0.8, 0])); writeR(0);
+        dev.queue.writeBuffer(mu.pr, 0, new Float32Array([cw, ch, T, phase, 0.80, 0.78, 0.74, 1, 0.06, 0.14, 0.36, 1, -0.5 + tilt[0], 0.4, 0.8, 0])); writeR(0);
         const rp = enc.beginRenderPass({ colorAttachments: [{ view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(mu.pb); rp.setBindGroup(0, mu.gb); rp.draw(3); rp.setPipeline(mu.pd); rp.setBindGroup(0, mu.gd); rp.draw(4, SL); markPass(rp); rp.end();
       }
       dev.queue.submit([enc.finish()]);
-    } });
-  });
+    } };
+  };
+  return { init(d, host) { dev = d; ui = host.ui; CARDS.forEach((c, i) => { cards.push(makeCard(c, i)); cards[i].init(); }); slots = CARDS.map((_, i) => slotOf(i)); wall = render(WALL); wu = uniform(16); wg = bind(wall, [wu]); openedAt = performance.now(); lastTouch = performance.now() - 4000; },
+    move(p, hov) { hover = hov; if (hov && hov.startsWith('card') && +hov.slice(4) === open) { const l = [OPEN_X, OPEN_Y]; cards[open].setPtr({ x: (p.x - l[0]) / CW_, y: (p.y - l[1]) / CH_ }); } else cards[open].clearPtr(); },
+    leave() { hover = null; cards[open].clearPtr(); }, up(p, id, same) { if (same) act(id); },
+    destroy() { cards.forEach((c) => c.destroy()); wu.destroy(); },
+    frame(t, dt, now, hov) { hover = hov; const T = now / 1000;
+      if (auto && !ex && now - lastTouch > 6000 && now - openedAt > 14000) exchange((open + 1) % CARDS.length);
+      const tgt = ui.prepare(0.5); const enc = dev.createCommandEncoder(); dev.queue.writeBuffer(wu, 0, new Float32Array([tgt.w / tgt.h, T, 0, 0]));
+      const rp = enc.beginRenderPass({ colorAttachments: [{ view: tgt.view, loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(wall); rp.setBindGroup(0, wg); rp.draw(3); rp.end(); dev.queue.submit([enc.finish()]);
+      const ppp = Math.min(2.0, ui.ppp()); cards.forEach((c) => c.frame(dt, now, ppp));
+      const lay = layoutAt(now); draw(now, lay); const enc2 = dev.createCommandEncoder(); ui.compose(enc2); dev.queue.submit([enc2.finish()]); }
+  };
 }
 export const WALLET_CARDS = CARDS;

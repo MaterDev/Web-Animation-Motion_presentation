@@ -4,7 +4,8 @@
    shadow, water, height fog, per-biome air. The map is the same march from
    high up; a click flies the camera down into a place and a field guide
    slides over it. Going somewhere on this site is travelling. */
-import { $, DPR, storage, uniform, readback, compute, render, bind, attach, timer, card, pointer, FSQ_VS } from './common.js';
+import { storage, uniform, readback, compute, render, bind, timer, FSQ_VS } from './common.js';
+import { MONO } from './ui.js';
 
 const W = 1024, H = 640, HS = 210;
 /* the five places, in map fractions; the same table lives in the shader */
@@ -161,78 +162,86 @@ const lerp = (a, b, t) => a + (b - a) * t, ease = (t) => t * t * (3 - 2 * t), v3
 const norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l); };
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 
-export function proceduralCard() {
-  const el = $('tw-card'), stage = $('tw-stage'), canvas = $('tw-canvas'), status = $('tw-status'), over = $('tw-over');
-  let s = null, seed = 412, sea = 0.42, erosion = 24, dirty = true;
-  /* where the camera is: -1 is the map, 0..4 a place; the flight is a blend */
-  let at = -1, from = -1, flightT = 1, flightDur = 3.2, lastTouch = 0, orbit = 0, heights = [0.5, 0.5, 0.5, 0.5, 0.5];
+/* word-wrap for the field guide */
+function wrap(ui, text, size, width, o) { const words = text.split(' '), lines = []; let line = ''; for (const w of words) { const t = line ? line + ' ' + w : w; if (ui.measure(t, size, o) > width && line) { lines.push(line); line = w; } else line = t; } if (line) lines.push(line); return lines; }
+
+export function tesseraApp() {
+  let dev = null, ui = null, s = null, seed = 412, sea = 0.42, erosion = 24, dirty = true, hover = null, sliding = null;
+  let at = -1, from = -1, flightT = 1, flightDur = 3.2, lastTouch = 0, orbit = 0, heights = [0.5, 0.5, 0.5, 0.5, 0.5], pinsOn = [], worldName = '—', rd = {};
   const OVERVIEW = { sun: [-0.35, 0.6, 0.35], sunC: [1.0, 0.94, 0.86], fog: [0.72, 0.76, 0.80], sky: [0.50, 0.64, 0.82], sea: [0.06, 0.16, 0.22], wet: 0.0 };
-  const pins = PLACES.map((p) => $('tw-pin-' + p.id));
-  const goTo = (k, user) => { if (k === at || flightT < 1) return; from = at; at = k; flightT = 0; if (user) lastTouch = performance.now();
-    over.hidden = k < 0; el.classList.toggle('tw-away', k >= 0); if (k >= 0) { const p = PLACES[k]; $('tw-over-name').textContent = p.name; $('tw-over-kind').textContent = p.kind; $('tw-over-clim').textContent = p.clim; $('tw-over-text').textContent = p.text; $('tw-over-species').innerHTML = p.species.map((x) => `<span>${x}</span>`).join(''); $('tw-over-n').textContent = `${k + 1} / 5`; } };
-  pins.forEach((b, k) => b.addEventListener('click', () => goTo(k, true)));
-  $('tw-back').addEventListener('click', () => goTo(-1, true)); $('tw-next').addEventListener('click', () => goTo((at + 1) % 5, true));
-  $('tw-generate').addEventListener('click', () => { seed = Math.floor(Math.random() * 100000); dirty = true; lastTouch = performance.now(); });
-  $('tw-sea').addEventListener('input', (e) => { sea = +e.target.value; $('tw-sea-v').textContent = sea.toFixed(2); dirty = true; lastTouch = performance.now(); });
-  $('tw-ero').addEventListener('input', (e) => { erosion = +e.target.value; $('tw-ero-v').textContent = erosion + ' passes'; dirty = true; lastTouch = performance.now(); });
-  pointer(stage, () => { lastTouch = performance.now(); });
-  /* poses: the map from high up, a place from a slow orbit at 110 m */
+  const C = { ink: [0.95, 0.95, 0.92, 1], dim: [0.70, 0.72, 0.74, 1], acc: [0.55, 0.85, 0.80, 1], glass: [0.06, 0.07, 0.09, 0.55], cell: [1, 1, 1, 0.1], cellHi: [1, 1, 1, 0.2] };
+  const PX = 560, PW = 268, TRK = [PX + 22, PW - 44];
+  const goTo = (k, user) => { if (k === at || flightT < 1) return; from = at; at = k; flightT = 0; if (user) lastTouch = performance.now(); };
   const poseOf = (k, T) => { if (k < 0) { return { pos: [W * 0.5, 820, H * 1.18], tgt: [W * 0.5, 0, H * 0.44], fov: 0.78 }; }
     const p = PLACES[k], cx = p.u * W, cz = p.v * H, cy = Math.max(sea, heights[k]) * HS; const a = orbit + k * 1.3;
     return { pos: [cx + Math.cos(a) * 210, cy + 70 + 18 * Math.sin(T * 0.11 + k), cz + Math.sin(a) * 210], tgt: [cx, cy + 14, cz], fov: 0.95 }; };
   const atmoOf = (k) => k < 0 ? OVERVIEW : { ...PLACES[k], wet: [0.5, 0.08, 0.25, 0.5, 0.8][k] };
-  return card({ name: 'tessera', el, init() {
-    const dev = this.__dev, { ctx } = attach(canvas), cells = W * H;
-    const height = storage(cells * 4), flow = [storage(cells * 4), storage(cells * 4)];
-    const u = uniform(32), ru = uniform(160);
-    const pN = compute(NOISE), pF = compute(FLOW), pC = compute(CARVE), pM = render(MARCH);
-    const gN = bind(pN, [u, height]), gF = [bind(pF, [u, height, flow[0], flow[1]]), bind(pF, [u, height, flow[1], flow[0]])], gC = [bind(pC, [u, flow[1], height]), bind(pC, [u, flow[0], height])], gM = [bind(pM, [ru, height, flow[0]]), bind(pM, [ru, height, flow[1]])];
-    const tm = timer(['noise', 'flow', 'carve', 'march'], 4);
-    const hRead = readback(64);
-    s = { ctx, u, ru, pN, pF, pC, pM, gN, gF, gC, gM, tm, height, hRead, cur: 0, reading: false };
-    status.hidden = true; lastTouch = performance.now();
-  }, frame(t, dt, now) {
-    if (!s) return;
-    /* the march is per pixel; render at two-thirds of the backing store */
-    const r = stage.getBoundingClientRect(), bw = Math.round(r.width * Math.min(DPR, 1.5) * 0.66), bh = Math.round(r.height * Math.min(DPR, 1.5) * 0.66);
-    if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
-    const dev = this.__dev, T = now / 1000, gx = Math.ceil(W / 16), gy = Math.ceil(H / 16);
-    const enc = dev.createCommandEncoder();
-    if (dirty) {
-      dirty = false; const U = new ArrayBuffer(32), Ui = new Uint32Array(U), Uf = new Float32Array(U); Ui[0] = W; Ui[1] = H; Ui[2] = seed; Uf[4] = sea; Uf[5] = erosion / 24; dev.queue.writeBuffer(s.u, 0, U);
-      let pass = enc.beginComputePass(s.tm.begin(0)); pass.setPipeline(s.pN); pass.setBindGroup(0, s.gN); pass.dispatchWorkgroups(gx, gy); pass.end();
-      const rounds = Math.max(1, Math.round(erosion / 8)); s.cur = 0;
-      for (let k = 0; k < rounds; k++) {
-        pass = enc.beginComputePass(s.tm.begin(1)); pass.setPipeline(s.pF); for (let i = 0; i < 10; i++) { pass.setBindGroup(0, s.gF[s.cur]); pass.dispatchWorkgroups(gx, gy); s.cur ^= 1; } pass.end();
-        if (erosion > 0) { pass = enc.beginComputePass(s.tm.begin(2)); pass.setPipeline(s.pC); for (let i = 0; i < 8; i++) { pass.setBindGroup(0, s.gC[s.cur]); pass.dispatchWorkgroups(gx, gy); } pass.end(); }
+  const slider = (y, label, val, id, fmt) => { ui.text(PX + 22, y, label, 9.5, C.dim, { weight: 600, track: 0.16 }); ui.text(PX + PW - 22, y, fmt, 10.5, C.ink, { align: 'right', family: MONO }); y += 22;
+    ui.rect(TRK[0], y + 5, TRK[1], 3, [1, 1, 1, 0.15], 1.5); const kx = TRK[0] + val * TRK[1]; ui.rect(TRK[0], y + 5, kx - TRK[0], 3, C.acc, 1.5); ui.disc(kx, y + 6.5, 8, [1, 1, 1, 1]); ui.hit(id, TRK[0] - 10, y - 8, TRK[1] + 20, 30); return y + 34; };
+  const draw = (now) => { const T = now / 1000;
+    ui.text(24, 22, 'TESSERA', 14, C.ink, { weight: 800, track: 0.30 }); ui.text(24, 42, worldName + ' · seed ' + seed, 10.5, C.dim, { family: MONO });
+    /* pins, on the map */
+    if (at < 0 && flightT >= 1) PLACES.forEach((p, k) => { const q = pinsOn[k]; if (!q) return; const hot = hover === 'pin' + k; ui.disc(q[0], q[1], 5, C.acc); ui.ring(q[0], q[1], 9 + 3 * Math.sin(T * 3 + k), [...C.acc.slice(0, 3), 0.5], 1.5);
+      const w = ui.measure(p.name, 11, { weight: 600 }) + 20; ui.glass(q[0] - w / 2, q[1] + 14, w, 24, hot ? [0.1, 0.12, 0.14, 0.85] : C.glass, 12, 0.1); ui.text(q[0], q[1] + 19, p.name, 11, C.ink, { align: 'center', weight: 600 }); ui.hit('pin' + k, q[0] - w / 2, q[1] - 12, w, 50); });
+    /* the field guide, at a place */
+    if (at >= 0) { const p = PLACES[at]; const k = Math.min(1, flightT * 1.6), op = k, yo = (1 - k) * 14; const gx = 24, gy = 292 + yo, gw = 400; ui.glass(gx, gy, gw, 310, C.glass, 22, 0.12, op);
+      ui.text(gx + 22, gy + 20, `${at + 1} / 5`, 9.5, C.dim, { weight: 600, track: 0.16, family: MONO, op }); ui.text(gx + gw - 22, gy + 20, 'FIELD GUIDE', 9.5, C.dim, { weight: 600, track: 0.16, align: 'right', op });
+      ui.text(gx + 22, gy + 40, p.name, 24, C.ink, { weight: 800, track: -0.02, op }); ui.text(gx + 22, gy + 74, p.kind.toUpperCase(), 9.5, C.acc, { weight: 600, track: 0.14, op }); ui.text(gx + 22, gy + 92, p.clim, 10.5, C.dim, { family: MONO, op });
+      let y = gy + 116; wrap(ui, p.text, 12, gw - 44, {}).forEach((ln) => { ui.text(gx + 22, y, ln, 12, C.ink, { op }); y += 17; }); y += 8;
+      let x = gx + 22; p.species.forEach((sp) => { const w = ui.measure(sp.toUpperCase(), 8.5, { weight: 600, track: 0.1 }) + 18; if (x + w > gx + gw - 22) { x = gx + 22; y += 26; } ui.stroke(x, y, w, 20, [1, 1, 1, 0.3], 10, 1, op); ui.text(x + 9, y + 5, sp.toUpperCase(), 8.5, C.ink, { weight: 600, track: 0.1, op }); x += w + 6; }); y += 34;
+      const bw = (gw - 44 - 8) / 2; ui.rect(gx + 22, gy + 262, bw, 32, hover === 'back' ? C.cellHi : C.cell, 16, op); ui.text(gx + 22 + bw / 2, gy + 271, '← Back to the map', 11, C.ink, { align: 'center', weight: 600, op }); ui.hit('back', gx + 22, gy + 262, bw, 32);
+      ui.rect(gx + 30 + bw, gy + 262, bw, 32, hover === 'next' ? C.cellHi : C.cell, 16, op); ui.text(gx + 30 + bw + bw / 2, gy + 271, 'Next place →', 11, C.ink, { align: 'center', weight: 600, op }); ui.hit('next', gx + 30 + bw, gy + 262, bw, 32); }
+    /* the panel */
+    ui.glass(PX, 60, PW, 350, C.glass, 24, 0.12); let y = 84; ui.text(PX + 22, y, 'A WORLD INSTEAD OF A WEBSITE', 9.5, C.dim, { weight: 600, track: 0.16 }); y += 18; ui.text(PX + 22, y, 'Click a place to travel there.', 12, C.ink); y += 30;
+    ui.rect(PX + 22, y, PW - 44, 36, hover === 'grow' ? [0.55, 0.85, 0.80, 1] : C.acc, 18); ui.text(PX + PW / 2, y + 10, 'Grow another world', 12, [0.05, 0.08, 0.09, 1], { align: 'center', weight: 700 }); ui.hit('grow', PX + 22, y, PW - 44, 36); y += 54;
+    y = slider(y, 'SEA LEVEL', (sea - 0.2) / 0.45, 'sea', sea.toFixed(2)); y = slider(y, 'EROSION', erosion / 64, 'ero', erosion + ' passes');
+    ui.rect(PX + 22, y, PW - 44, 1, [1, 1, 1, 0.1]); y += 10; ui.text(PX + 22, y, '1024 × 640 HEIGHTS · ON GROW', 8.5, C.dim, { weight: 600, track: 0.12, family: MONO }); y += 16;
+    [['noise', 'noise'], ['flow', 'flow'], ['carve', 'carve'], ['march', 'march · every frame']].forEach(([k, lab]) => { ui.text(PX + 22, y, lab, 9, C.dim, { family: MONO }); ui.text(PX + PW - 22, y, rd[k] !== undefined ? rd[k].toFixed(2) + ' ms' : '—', 9, C.ink, { align: 'right', family: MONO }); y += 14; });
+    y += 6; ui.text(PX + 22, y, 'Five places in one grown world. Left alone, it tours them.', 10, C.dim); };
+  const setSlider = (id, px) => { const v = Math.max(0, Math.min(1, (px - TRK[0]) / TRK[1])); if (id === 'sea') sea = 0.2 + v * 0.45; else erosion = Math.round(v * 64); dirty = true; lastTouch = performance.now(); };
+  const act = (id) => { if (!id) return; if (id.startsWith('pin')) goTo(+id.slice(3), true); if (id === 'back') goTo(-1, true); if (id === 'next') goTo((at + 1) % 5, true); if (id === 'grow') { seed = Math.floor(Math.random() * 100000); dirty = true; lastTouch = performance.now(); } };
+  return { init(d, host) { dev = d; ui = host.ui; const cells = W * H;
+      const height = storage(cells * 4), flow = [storage(cells * 4), storage(cells * 4)]; const u = uniform(32), ru = uniform(160);
+      const pN = compute(NOISE), pF = compute(FLOW), pC = compute(CARVE), pM = render(MARCH);
+      const gN = bind(pN, [u, height]), gF = [bind(pF, [u, height, flow[0], flow[1]]), bind(pF, [u, height, flow[1], flow[0]])], gC = [bind(pC, [u, flow[1], height]), bind(pC, [u, flow[0], height])], gM = [bind(pM, [ru, height, flow[0]]), bind(pM, [ru, height, flow[1]])];
+      const tm = timer(['noise', 'flow', 'carve', 'march'], 4); const hRead = readback(64);
+      s = { u, ru, pN, pF, pC, pM, gN, gF, gC, gM, tm, height, flow, hRead, cur: 0, reading: false }; dirty = true; lastTouch = performance.now(); },
+    down(p, id) { if (id === 'sea' || id === 'ero') { sliding = id; setSlider(id, p.x); } lastTouch = performance.now(); },
+    move(p, hov) { hover = hov; if (sliding) setSlider(sliding, p.x); }, up(p, id, same) { sliding = null; if (same) act(id); }, leave() { sliding = null; hover = null; },
+    destroy() { s.height.destroy(); s.flow.forEach((b) => b.destroy()); s.u.destroy(); s.ru.destroy(); s.hRead.destroy(); s = null; },
+    frame(t, dt, now, hov) { if (!s) return; hover = hov; const T = now / 1000, gx = Math.ceil(W / 16), gy = Math.ceil(H / 16); const tgt = ui.prepare(0.6);
+      const enc = dev.createCommandEncoder();
+      if (dirty) {
+        dirty = false; const U = new ArrayBuffer(32), Ui = new Uint32Array(U), Uf = new Float32Array(U); Ui[0] = W; Ui[1] = H; Ui[2] = seed; Uf[4] = sea; Uf[5] = erosion / 24; dev.queue.writeBuffer(s.u, 0, U);
+        let pass = enc.beginComputePass(s.tm.begin(0)); pass.setPipeline(s.pN); pass.setBindGroup(0, s.gN); pass.dispatchWorkgroups(gx, gy); pass.end();
+        const rounds = Math.max(1, Math.round(erosion / 8)); s.cur = 0;
+        for (let k = 0; k < rounds; k++) {
+          pass = enc.beginComputePass(s.tm.begin(1)); pass.setPipeline(s.pF); for (let i = 0; i < 10; i++) { pass.setBindGroup(0, s.gF[s.cur]); pass.dispatchWorkgroups(gx, gy); s.cur ^= 1; } pass.end();
+          if (erosion > 0) { pass = enc.beginComputePass(s.tm.begin(2)); pass.setPipeline(s.pC); for (let i = 0; i < 8; i++) { pass.setBindGroup(0, s.gC[s.cur]); pass.dispatchWorkgroups(gx, gy); } pass.end(); }
+        }
+        pass = enc.beginComputePass(s.tm.begin(1)); pass.setPipeline(s.pF); for (let i = 0; i < 14; i++) { pass.setBindGroup(0, s.gF[s.cur]); pass.dispatchWorkgroups(gx, gy); s.cur ^= 1; } pass.end();
+        if (!s.reading) { PLACES.forEach((p, k) => enc.copyBufferToBuffer(s.height, (Math.round(p.v * H) * W + Math.round(p.u * W)) * 4, s.hRead, k * 4, 4)); s.reading = true; }
+        worldName = NAMES[seed % NAMES.length];
       }
-      pass = enc.beginComputePass(s.tm.begin(1)); pass.setPipeline(s.pF); for (let i = 0; i < 14; i++) { pass.setBindGroup(0, s.gF[s.cur]); pass.dispatchWorkgroups(gx, gy); s.cur ^= 1; } pass.end();
-      /* five heights come back so the camera knows where the ground is */
-      PLACES.forEach((p, k) => enc.copyBufferToBuffer(s.height, (Math.round(p.v * H) * W + Math.round(p.u * W)) * 4, s.hRead, k * 4, 4)); s.reading = true;
-      $('tw-name').firstChild.textContent = NAMES[seed % NAMES.length]; $('tw-seed').textContent = 'seed ' + seed;
-    }
-    /* the flight, and the tour that runs while nobody is touching it */
-    if (flightT < 1) flightT = Math.min(1, flightT + dt / flightDur);
-    orbit += dt * 0.05;
-    const idle = (now - lastTouch) / 1000; if (flightT >= 1 && idle > 14) { lastTouch = now - 2000; goTo(at < 0 ? 0 : (at + 1) % 5 === 0 && at === 4 ? -1 : (at + 1) % 5, false); }
-    const k = ease(flightT), A = poseOf(from, T), B = poseOf(at, T);
-    const pos = v3lerp(A.pos, B.pos, k), tgt = v3lerp(A.tgt, B.tgt, k), fov = lerp(A.fov, B.fov, k);
-    /* arc the flight upward so a place-to-place hop clears the ridges */
-    if (from >= 0 && at >= 0) pos[1] += Math.sin(k * Math.PI) * 260;
-    const F = norm([tgt[0] - pos[0], tgt[1] - pos[1], tgt[2] - pos[2]]), Rt = norm(cross(F, [0, 1, 0])), Up = cross(Rt, F);
-    const aa = atmoOf(from), ab = atmoOf(at), mixA = (key) => v3lerp(aa[key], ab[key], k).map((c) => Math.pow(c, 2.2)); /* display → linear */
-    const RB = new ArrayBuffer(160), Rf = new Float32Array(RB); const aspect = canvas.width / canvas.height;
-    Rf.set(pos, 0); Rf[3] = fov; Rf.set(F, 4); Rf[7] = sea; Rf.set(Rt, 8); Rf[11] = T; Rf.set(Up, 12); Rf[15] = aspect;
-    Rf.set(norm(v3lerp(aa.sun, ab.sun, k)), 16); Rf[19] = k; Rf.set(mixA('sunC'), 20); Rf[23] = at; Rf.set(mixA('fog'), 24); Rf[27] = lerp(aa.wet, ab.wet, k); Rf.set(mixA('sky'), 28); Rf.set(mixA('sea'), 32);
-    dev.queue.writeBuffer(s.ru, 0, RB);
-    const rp = enc.beginRenderPass({ colorAttachments: [{ view: s.ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }], ...s.tm.begin(3) });
-    rp.setPipeline(s.pM); rp.setBindGroup(0, s.gM[s.cur]); rp.draw(3); rp.end();
-    s.tm.resolve(enc); dev.queue.submit([enc.finish()]);
-    if (s.reading) { s.reading = false; s.hRead.mapAsync(GPUMapMode.READ).then(() => { heights = Array.from(new Float32Array(s.hRead.getMappedRange().slice(0, 20))); s.hRead.unmap(); }).catch(() => {}); }
-    /* project the five places to the screen for the pins */
-    const tf = Math.tan(fov / 2);
-    PLACES.forEach((p, i) => { const wp = [p.u * W, Math.max(sea, heights[i]) * HS, p.v * H], v = [wp[0] - pos[0], wp[1] - pos[1], wp[2] - pos[2]]; const z = v[0] * F[0] + v[1] * F[1] + v[2] * F[2]; const x = (v[0] * Rt[0] + v[1] * Rt[1] + v[2] * Rt[2]) / (z * tf * aspect), y = (v[0] * Up[0] + v[1] * Up[1] + v[2] * Up[2]) / (z * tf);
-      const on = z > 0 && Math.abs(x) < 1 && Math.abs(y) < 1 && at < 0 && flightT >= 1; pins[i].style.left = ((x + 1) * 50) + '%'; pins[i].style.top = ((1 - y) * 50) + '%'; pins[i].classList.toggle('tw-pin-on', on); });
-    const rd = s.tm.read(); ['noise', 'flow', 'carve', 'march'].forEach((n) => { if (rd[n] !== undefined) $('tw-t-' + n).textContent = rd[n].toFixed(2) + ' ms'; });
-  } });
+      if (flightT < 1) flightT = Math.min(1, flightT + dt / flightDur);
+      orbit += dt * 0.05;
+      const idle = (now - lastTouch) / 1000; if (flightT >= 1 && idle > 14) { lastTouch = now - 2000; goTo(at < 0 ? 0 : at === 4 ? -1 : at + 1, false); }
+      const k = ease(flightT), A = poseOf(from, T), B = poseOf(at, T);
+      const pos = v3lerp(A.pos, B.pos, k), tg = v3lerp(A.tgt, B.tgt, k), fov = lerp(A.fov, B.fov, k);
+      if (from >= 0 && at >= 0) pos[1] += Math.sin(k * Math.PI) * 260;
+      const F = norm([tg[0] - pos[0], tg[1] - pos[1], tg[2] - pos[2]]), Rt = norm(cross(F, [0, 1, 0])), Up = cross(Rt, F);
+      const aa = atmoOf(from), ab = atmoOf(at), mixA = (key) => v3lerp(aa[key], ab[key], k).map((c) => Math.pow(c, 2.2));
+      const RB = new ArrayBuffer(160), Rf = new Float32Array(RB); const aspect = tgt.w / tgt.h;
+      Rf.set(pos, 0); Rf[3] = fov; Rf.set(F, 4); Rf[7] = sea; Rf.set(Rt, 8); Rf[11] = T; Rf.set(Up, 12); Rf[15] = aspect;
+      Rf.set(norm(v3lerp(aa.sun, ab.sun, k)), 16); Rf[19] = k; Rf.set(mixA('sunC'), 20); Rf[23] = at; Rf.set(mixA('fog'), 24); Rf[27] = lerp(aa.wet, ab.wet, k); Rf.set(mixA('sky'), 28); Rf.set(mixA('sea'), 32);
+      dev.queue.writeBuffer(s.ru, 0, RB);
+      const rp = enc.beginRenderPass({ colorAttachments: [{ view: tgt.view, loadOp: 'clear', storeOp: 'store' }], ...s.tm.begin(3) });
+      rp.setPipeline(s.pM); rp.setBindGroup(0, s.gM[s.cur]); rp.draw(3); rp.end(); s.tm.resolve(enc);
+      /* project the five places to points for the pins */
+      const tf = Math.tan(fov / 2);
+      pinsOn = PLACES.map((p, i) => { const wp = [p.u * W, Math.max(sea, heights[i]) * HS, p.v * H], v = [wp[0] - pos[0], wp[1] - pos[1], wp[2] - pos[2]]; const z = v[0] * F[0] + v[1] * F[1] + v[2] * F[2]; const x = (v[0] * Rt[0] + v[1] * Rt[1] + v[2] * Rt[2]) / (z * tf * aspect), y = (v[0] * Up[0] + v[1] * Up[1] + v[2] * Up[2]) / (z * tf);
+        return z > 0 && Math.abs(x) < 1 && Math.abs(y) < 1 ? [(x + 1) * 0.5 * 890, (1 - y) * 0.5 * 626] : null; });
+      const r = s.tm.read(); Object.keys(r).forEach((k2) => { rd[k2] = r[k2]; });
+      draw(now); ui.compose(enc); dev.queue.submit([enc.finish()]);
+      if (s.reading && !s.mapping) { s.mapping = true; s.hRead.mapAsync(GPUMapMode.READ).then(() => { if (!s) return; heights = Array.from(new Float32Array(s.hRead.getMappedRange().slice(0, 20))); s.hRead.unmap(); s.reading = false; s.mapping = false; }).catch(() => { if (s) { s.reading = false; s.mapping = false; } }); } } };
 }
