@@ -22,10 +22,10 @@
     </a>
 
     <nav class="mainnav" aria-label="Main">
-      <!-- Design System is a menu because the section has real
-           sub-pages; the other two are single destinations and stay
-           plain links. -->
-      <NavMenu />
+      <!-- Paper and Presentation lead: they are the talk. Design
+           System follows as the reference behind it, and is a menu
+           because the section has real sub-pages; the other two are
+           single destinations and stay plain links. -->
       {#each NAV as item (item.href)}
         <a
           href={item.href}
@@ -38,6 +38,7 @@
           <span class="navlabel">{item.label}</span>
         </a>
       {/each}
+      <NavMenu />
     </nav>
 
     <span class="mono topmeta" data-testid="topbar-meta">Key Clark · 21 Aug 2026</span>

@@ -91,7 +91,11 @@
             <span class="row-top">
               <span class="led-micro code">{t.code}</span>
               <span class="led-micro ground">{t.ground}</span>
-              {#if t.kept}<span class="tag">kept</span>{/if}
+              {#if t.kept}
+                <span class="tag" data-testid={`tr-${t.code.toLowerCase()}-kept`}>
+                  <span class="led" style="--c:var(--ok)" aria-hidden="true"></span>chosen design
+                </span>
+              {/if}
             </span>
             <span class="row-name">{t.name}</span>
             <span class="row-note">{t.note}</span>
@@ -168,11 +172,17 @@
   .row-top { display: flex; align-items: baseline; gap: 10px; }
   .code { color: var(--hz-500); }
   .ground { color: var(--hz-400); margin-left: auto; }
+  /* The decision marker. It was a 7.5px tint-on-tint label and read
+     as metadata; it is the one fact on this list that matters most,
+     so it gets a solid ground, a lit lamp and body-copy size. */
   .tag {
-    font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--tint); background: color-mix(in oklch, var(--tint) 20%, transparent);
-    padding: 1px 5px; border-radius: 2px;
+    display: inline-flex; align-items: center; gap: 7px; align-self: center;
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--hz-000); background: var(--ok);
+    padding: 4px 9px 4px 7px; border-radius: 3px;
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--ok) 60%, var(--hz-000)), 0 0 14px color-mix(in oklch, var(--ok) 35%, transparent);
   }
+  .tag .led { --c: var(--hz-000); width: 7px; height: 7px; box-shadow: none; }
 
   /* the pixel face, as a block on its own line — a wrapping headline
      never shares a flex line with anything else */
