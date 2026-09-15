@@ -4,150 +4,205 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-14 · WebGPU — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-14 · webgpu
+
+   `gp-`  the sheet: the frame around the cards, in the deck's own harness
+          language — section labels, prose, captions, the instrument strip.
+   Every card is a fragment of a different fictional product and carries its
+   own identity under its own prefix. Nothing about a card's chrome is
+   shared with its neighbours except the caption below it, which names the
+   mechanism. All motion on this page is WebGPU; the DOM holds the words.
+   ───────────────────────────────────────────────────────────────────────── */
 :root { --tint: var(--tint-webgpu); }
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
 .head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); display: grid; place-items: center; }
-.canvas-frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.fallback { text-align: center; padding: 0 calc(var(--u)*4); position: relative; z-index: 2; }
-.fallback .led { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto 14px; background: var(--signal); box-shadow: 0 0 10px color-mix(in oklch, var(--signal) 60%, transparent); }
-.fallback h4 { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-700); margin-bottom: 8px; }
-.fallback p { font-size: 12px; color: var(--hz-500); max-width: 46ch; margin: 0 auto; }
-.status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); z-index: 2; }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*3); }
+p.dek b { color: var(--hz-600); font-weight: 600; }
+.gp-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; max-width: 80ch; }
+.gp-instr b { color: var(--hz-500); font-weight: 500; }
+.gp-instr code { color: var(--hz-500); }
+.gp-sec { margin: calc(var(--u)*10) 0 0; }
+.gp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); margin-bottom: 6px; }
+.gp-sec h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0 0 10px; }
+.gp-sec > p { color: var(--hz-500); font-size: 13.5px; max-width: 74ch; margin: 0 0 calc(var(--u)*3); }
+.gp-sec > p b { color: var(--hz-600); font-weight: 600; }
+.gp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*3); }
+@media (min-width: 860px) { .gp-grid { grid-template-columns: 1fr 1fr; } .gp-grid .gp-wide { grid-column: 1 / -1; } }
+.gp-card { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.gp-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.55; letter-spacing: 0.04em; color: var(--hz-400); padding: 10px 2px 0; max-width: 70ch; }
+.gp-cap b { color: var(--hz-500); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp-cap i { font-style: normal; color: var(--tint); }
+.gp-strip { display: flex; gap: 10px 26px; flex-wrap: wrap; align-items: baseline; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); margin-top: 8px; }
+.gp-strip b { color: var(--hz-600); font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.gp-strip b.gp-zero { color: var(--tint); }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; } .notes li { margin-bottom: 8px; }
+.gp-stage { position: relative; overflow: hidden; touch-action: none; }
+.gp-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gp-status { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; pointer-events: none; }
+.gp-status[hidden] { display: none !important; }
+
+/* ─── §1 · the frame inspector ─────────────────────────────────────────── */
+.ck { --ck-bg: oklch(0.14 0.008 260); --ck-ink: oklch(0.92 0.004 260); --ck-dim: oklch(0.60 0.006 260); --ck-rule: oklch(0.28 0.008 260); --ck-acc: var(--tint);
+  background: var(--ck-bg); color: var(--ck-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 720px) { .ck { grid-template-columns: minmax(0, 1fr) 300px; } }
+.ck .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.10 0.008 260); }
+.ck-panel { padding: 14px 16px; border-left: var(--hair) solid var(--ck-rule); display: flex; flex-direction: column; gap: 10px; font-family: var(--mono); }
+.ck-k { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ck-dim); }
+.ck-pass { display: grid; grid-template-columns: 22px 92px minmax(0, 1fr) 64px; gap: 8px; align-items: center; font-size: 10px; }
+.ck-pass input { accent-color: var(--ck-acc); margin: 0; }
+.ck-pass label { color: var(--ck-ink); letter-spacing: 0.04em; }
+.ck-bar { height: 8px; background: var(--ck-rule); position: relative; }
+.ck-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ck-acc); width: 0; }
+.ck-ms { text-align: right; color: var(--ck-ink); font-variant-numeric: tabular-nums; }
+.ck-total { border-top: var(--hair) solid var(--ck-rule); padding-top: 8px; font-size: 10px; color: var(--ck-dim); display: flex; justify-content: space-between; }
+.ck-total b { color: var(--ck-ink); font-weight: 500; }
+.ck-note { font-size: 9px; line-height: 1.5; color: var(--ck-dim); }
+
+/* ─── §2 · one device, eight apps ─────────────────────────────────────── */
+.dv { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 80vw; margin-left: calc(50% - 40vw); }
+/* the plate the phone sits on: very light grey, 24 px of air all round, the frame scaled to the room inside it */
+.dv-plate { width: 100%; box-sizing: border-box; padding: 24px; border-radius: 68px; background: oklch(0.955 0.003 260); }
+/* the Duo's inner display as a shell: 890 × 626 at 1 CSS px = 1 pt, scaled as a whole to the room it has (up to 1.6×), never re-laid */
+.dd-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
+.dd-frame { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--dd-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.22 0.006 260); border: var(--hair) solid oklch(0.36 0.01 260); box-sizing: border-box; box-shadow: inset 0 0 0 2px oklch(0.09 0.005 260), 0 30px 80px oklch(0 0 0 / 0.35); }
+.dd-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: oklch(0.09 0.006 260); overflow: hidden; }
+.dd-display canvas { position: absolute; inset: 0; width: 890px; height: 626px; display: block; touch-action: none; }
+.dd-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0 0 0 / 0.14); mix-blend-mode: multiply; pointer-events: none; z-index: 5; }
+/* iOS 27's furniture on this device: the time over the radios disc, top-right; the Dock down the right edge */
+.dd-status { position: absolute; top: 10px; right: 20px; z-index: 6; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.01em; color: oklch(1 0 0 / 0.95); text-shadow: 0 1px 2px oklch(0 0 0 / 0.35); pointer-events: none; mix-blend-mode: difference; }
+.dd-radios { position: absolute; top: 28px; right: 14px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; background: oklch(1 0 0 / 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; pointer-events: none; box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6); } .dd-radios svg { width: 22px; height: 22px; }
+.dd-dock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 6; width: 44px; padding: 8px 0; border-radius: 22px; background: oklch(1 0 0 / 0.42); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6), 0 6px 20px oklch(0 0 0 / 0.18); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dd-dock button { width: 32px; height: 32px; border-radius: 9px; border: 0; padding: 0; cursor: pointer; background: linear-gradient(145deg, color-mix(in oklch, var(--c) 100%, white 28%), var(--c)); box-shadow: 0 1px 2px oklch(0 0 0 / 0.3); display: grid; place-items: center; font-family: var(--sans); font-size: 13px; font-weight: 800; color: white; letter-spacing: -0.02em; transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
+.dd-dock button:hover { transform: scale(1.08); } .dd-dock button.dd-dock-on { outline: 2px solid oklch(1 0 0 / 0.85); outline-offset: 2px; }
+.dd-dock button svg { width: 19px; height: 19px; filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.3)); }
+.dv-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.85 0.006 260); background: oklch(0.12 0.01 260 / 0.7); padding: 8px 14px; border-radius: 999px; pointer-events: none; }
+.dv-loading[hidden] { display: none; }
+/* the one HTML input: it takes the keystrokes for Atlas and is never seen */
+.dv-input { position: absolute; left: 72px; top: 222px; width: 300px; height: 20px; opacity: 0; z-index: 3; pointer-events: none; font-size: 16px; }
+.dv-caps { width: 100%; max-width: 100ch; } .dv-caps .gp-cap { max-width: none; } .dv-caps .gp-cap[hidden] { display: none; }
+@media (max-width: 560px) { .ck-panel { border-left: 0; } }
 </style>
 </head>
 <body data-testid="technique-webgpu">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14" data-testid="crumb-techniques">Techniques</a></div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="crumb"]').style.display = 'none';</script>
+
   <div class="head"><span class="code">SL-14</span><h1>webgpu</h1></div>
-  <p class="dek">
-    Compute shaders. Simulation moves onto the GPU — the particle count WebGL can't
-    sustain, and the payoff of the whole callback chain.
+  <p class="dek" data-testid="dek">
+    The GPU stops being a place you send pictures to and becomes a place things
+    <b>happen</b>. Compute passes read and write storage buffers that never come back;
+    a hundred thousand grains can be an interface, a flock can be a game, a world can be
+    grown and flown over, a product shot can be lit without a product — and the app
+    around each of those can be the GPU's work too. One device, eight apps, one canvas,
+    each a fragment of a product that could ship — because a technique on a coloured
+    square teaches nothing about where you would reach for it.
+  </p>
+  <p class="gp-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> The GPU
+    writes its own clock at the start and end of each pass (<code>timestamp-query</code>),
+    so cards print passes, not frames. A counter on the device queue records every
+    byte the CPU sends per frame. Adapter <b data-testid="instrument-adapter">…</b> ·
+    <code>timestamp-query</code> <b data-testid="instrument-ts">…</b> · state uploaded this
+    frame <b data-testid="instrument-bytes">…</b> · uniforms <b data-testid="instrument-uni">…</b>
+    · backing store <b data-testid="instrument-dpr">…</b>
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <canvas id="c" data-testid="canvas-el" hidden></canvas>
-    <div class="fallback" id="fallback">
-      <div class="led"></div>
-      <h4>Detecting WebGPU…</h4>
-      <p>Feature-detected on load, not device-sniffed — per SCOPE.md's degradation-ladder
-        rule. This machine's result will show in a moment.</p>
+  <!-- ═══ §1 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-1">
+    <div class="gp-label">Pipeline</div>
+    <h2>what a frame costs on the GPU</h2>
+    <p>A frame here is a list of <b>passes</b>. Each compute pass runs one program across
+      a grid of workgroups; the render pass draws. Validation happens once, when the
+      pipeline is created, so a pass costs what its work costs and nothing else — and
+      because the GPU timestamps the start and end of every pass, the cost is a
+      measurement rather than a guess. Switch passes off and watch the bars: the
+      scene loses the pass's effect and the frame loses exactly its time.</p>
+    <div class="ck" data-testid="ck-card">
+      <div class="gp-stage" data-testid="ck-stage"><canvas data-testid="ck-canvas"></canvas><span class="gp-status" data-testid="ck-status">requesting a device…</span></div>
+      <div class="ck-panel">
+        <div class="ck-k">frame · four passes · 200 000 particles</div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="0" data-testid="ck-p0"><label>flow field</label><div class="ck-bar"><i data-testid="ck-bar-0"></i></div><span class="ck-ms" data-testid="ck-ms-0">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="1" data-testid="ck-p1"><label>integrate</label><div class="ck-bar"><i data-testid="ck-bar-1"></i></div><span class="ck-ms" data-testid="ck-ms-1">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="2" data-testid="ck-p2"><label>density · atomics</label><div class="ck-bar"><i data-testid="ck-bar-2"></i></div><span class="ck-ms" data-testid="ck-ms-2">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked disabled data-pass="3" data-testid="ck-p3"><label>render</label><div class="ck-bar"><i data-testid="ck-bar-3"></i></div><span class="ck-ms" data-testid="ck-ms-3">—</span></div>
+        <div class="ck-total"><span>GPU time, this frame</span><b data-testid="ck-total">—</b></div>
+        <div class="ck-total"><span>bytes uploaded</span><b data-testid="ck-bytes">—</b></div>
+        <div class="ck-note" data-testid="ck-note">Compute passes cost per workgroup; the render pass per pixel. Neither costs a byte of transfer once the state is up.</div>
+      </div>
     </div>
-    <span class="status" id="status"></span>
-  </div>
+    <div class="gp-cap"><b>inspector</b> · a curl-noise flow, an integrate step, a density histogram by atomic add, one instanced draw · the medians of the last eight readings, each pass between two GPU timestamps</div>
+  </section>
 
-  <div class="controls">
-    <span class="fps" style="font-family:var(--mono);font-size:10px;color:var(--hz-500)">
-      <code>navigator.gpu</code>: <b id="supportLabel" style="color:var(--tint)">checking…</b>
-    </span>
-  </div>
+  <!-- ═══ §2 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-2">
+    <div class="gp-label">One device · eight apps · one canvas</div>
+    <h2>WebGPU treated as an app, not a demo</h2>
+    <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. The
+      argument here is that the GPU can be <b>the whole app</b>: below is one iPhone Duo,
+      and everything inside its display — the panes, the type, the glass, the buttons,
+      the cards, the sand, the honey, the flock, the world, the shoe, the storm and the
+      phone's own portrait — is drawn by WebGPU from one canvas. The phone around it is CSS, there
+      only to say "this form factor". The Dock opens one app at a time; the last one is
+      torn down before the next compiles, so a single set of buffers is ever alive.
+      Text is glyphs in an atlas, panels are signed distances, and frosted glass samples
+      a blurred copy of whatever the app drew behind it.</p>
+    <div class="dv" data-testid="dv-card">
+      <div class="dv-plate" data-testid="dv-plate"><div class="dd-fit" data-testid="dv-fit"><div class="dd-frame" data-testid="dv-phone">
+        <div class="dd-display" data-testid="dv-display">
+          <canvas data-testid="dv-canvas"></canvas>
+          <input class="dv-input" data-testid="at-input" value="Lisbon" maxlength="14" aria-label="destination" spellcheck="false" autocomplete="off">
+          <div class="dd-crease" aria-hidden="true"></div>
+          <div class="dd-status" aria-hidden="true">9:41</div>
+          <div class="dd-radios" aria-hidden="true" title="battery · Wi-Fi · cellular"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"><path d="M12 2.6a9.4 9.4 0 1 1-6.6 2.7" /><path d="M7.6 10.3a6.2 6.2 0 0 1 8.8 0"/><path d="M9.7 12.6a3.3 3.3 0 0 1 4.6 0"/><circle cx="12" cy="14.9" r="0.9" fill="#111" stroke="none"/><g fill="#111" stroke="none"><circle cx="8.4" cy="18.6" r="1"/><circle cx="10.8" cy="18.6" r="1"/><circle cx="13.2" cy="18.6" r="1"/></g><circle cx="15.6" cy="18.6" r="0.8" stroke-width="0.9"/></svg></div>
+          <div class="dd-dock" data-testid="dv-dock"><button data-testid="dv-app-wallet" style="--c:oklch(0.30 0.02 260)" aria-label="Wallet" title="Wallet"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18"/><path d="M15 15h3"/></svg></button><button data-testid="dv-app-atlas" style="--c:oklch(0.68 0.14 45)" aria-label="Atlas" title="Atlas"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><ellipse cx="12" cy="12" rx="3.6" ry="8.5"/><path d="M3.5 12h17"/></svg></button><button data-testid="dv-app-nectar" style="--c:oklch(0.78 0.16 85)" aria-label="Nectar" title="Nectar"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><path d="M12 8.5l3 1.75v3.5L12 15.5l-3-1.75v-3.5z"/></svg></button><button data-testid="dv-app-flock" style="--c:oklch(0.55 0.10 288)" aria-label="Roost" title="Roost"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3-4 6-4 9 0 3-4 6-4 9 0"/><path d="M6 17.5c2-2.5 4-2.5 6 0 2-2.5 4-2.5 6 0"/></svg></button><button data-testid="dv-app-tessera" style="--c:oklch(0.62 0.12 180)" aria-label="Tessera" title="Tessera"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 19L9 7l4.5 8 2.5-4 5.5 8z"/><circle cx="17.5" cy="6" r="1.8"/></svg></button><button data-testid="dv-app-halcyon" style="--c:oklch(0.25 0.03 60)" aria-label="Halcyon" title="Halcyon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l2.2 7.3 7.3 2.2-7.3 2.2L12 21.5l-2.2-7.3-7.3-2.2 7.3-2.2z"/></svg></button><button data-testid="dv-app-storm" style="--c:oklch(0.45 0.08 280)" aria-label="Supercell" title="Supercell"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M5 9h14"/><path d="M8 13h9"/><path d="M10 17h5"/><path d="M12 21h1"/></svg></button><button data-testid="dv-app-duo" style="--c:oklch(0.62 0.02 260)" aria-label="Duo" title="Duo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M12 3v18"/><path d="M8.5 7.5h1M14.5 7.5h1"/></svg></button></div>
+          <span class="dv-loading" data-testid="dv-loading" hidden>opening…</span>
+          <span class="gp-status" data-testid="dv-status">requesting a device…</span>
+        </div>
+      </div></div></div>
+      <div class="dv-caps" data-testid="dv-caps">
+        <div class="gp-cap" data-testid="dv-cap-wallet"><b>Wallet · brand</b> · payment cards for eight invented issuers, ID-1 proportion, one printed block, one app in two windows over the Home Screen; direction after the art director's brief (conductor/tracks/004-webgpu-sl-14/wallet-concepts-v2.md) · eight mechanisms: a sphere-traced brass boss, sphere impostors with depth, a persistence buffer over a heightfield, a stable fluid with a cardiac pump, thirty thousand additive points retargeting, a faceted gem with per-channel refraction, an atomic-min hop graph, thirty-four slats in a wave — each card is a texture the app composites, and the exchange is two arcs across the fold · <i>the windows, the type and the rail are the GPU's too</i></div>
+        <div class="gp-cap" data-testid="dv-cap-atlas" hidden><b>Atlas · travel search</b> · a split-view app: the search card, the fares and the pill are glass and glyphs; the right pane is one buffer of 160 000 grains that spells the city, becomes the fares by month, the dates, the route — each state a target set uploaded once; the frames upload nothing but the pointer · <i>compute pass · storage buffer · instanced quads · one instance buffer for the UI</i></div>
+        <div class="gp-cap" data-testid="dv-cap-nectar" hidden><b>Nectar · banking</b> · accounts, a segmented control and the day's transactions in glass on the left; on the right the balance is not printed, it is thirty-six thousand bees holding the digits — a transaction lands and the figure swings to the new number on an under-damped spring, the bees re-form every tick, the budget ring fills, the colour turns · pull the right pane down and they forage · <i>one kernel, targets rebuilt as the number moves</i></div>
+        <div class="gp-cap" data-testid="dv-cap-flock" hidden><b>Roost · a game that plays itself</b> · 131 072 starlings on a rank-based rule (Ballerini et al. 2008): the flock is the player, an autopilot steers it to the roosts that light up and away from the hawk that stoops every so often; birds lost to the hawk come off the score, roosts reached go on it · binning by atomics, a sort by cell, a k-nearest query per bird per frame · <i>drag on the sky to steer it yourself</i></div>
+        <div class="gp-cap" data-testid="dv-cap-tessera" hidden><b>Tessera · a site as a world</b> · biome-blended noise, flow routing and stream-power carving grow the heights; every frame is a ray march through them — sun, soft shadows, water, fog; five places, one world, the pins projected from the buffer, the field guide in glass; left alone, it tours · <i>heights and flow live on the GPU; five floats come back so the camera knows where the ground is</i></div>
+        <div class="gp-cap" data-testid="dv-cap-halcyon" hidden><b>Halcyon · campaign</b> · a drop page whose hero is a live diorama: kaleidoscopic IFS chamber, SDF shoe and plinth, key + rim light, soft shadow, five-tap occlusion, one reflection bounce; the colourway you pick recolours the light, and the page — name, price, sizes, the notify button — is the same instance buffer as everything else · <i>drag to orbit; it films itself when you let go</i></div>
+        <div class="gp-cap" data-testid="dv-cap-storm" hidden><b>Supercell · tornado simulator</b> · from the Rock ’em Sock ’em stage "Vortex · snes-retro" (three.js WebGPU + TSL), rebuilt in raw WGSL as a standalone app: a storm director swings lull → build → peak → crash; up to three tornado agents roam a Mode-7 plain — wall cloud, swirling funnel, dust skirt — with forked lightning on the storm's cadence, rain from drizzle to torrential, and four thousand pieces of debris lofted by the funnels' wind field in a compute kernel · <i>fire a bolt · stir it up</i></div>
+        <div class="gp-cap" data-testid="dv-cap-duo" hidden><b>iPhone Duo · the device, inside itself</b> · sphere-traced signed-distance hardware: two rounded slabs on a hinge axis on the screen side, a spine that is flush open and the flat of the D closed, a polished band, a camera bar, emissive procedural screens that sleep and wake with the fold; a white softbox, a contact shadow, the sweep's reflection; every dimension labelled verified, derived or constructed · <i>the hinge runs itself; drag to orbit; the slider takes it</i></div>
+      </div>
+    </div>
+    <div class="gp-strip" data-testid="loop-strip"><span>open app</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
+  </section>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 14</h3>
-    <p>"WebGPU: The New Layer — compute shaders enable particle/fluid sims and on-device ML
-      at a scale WebGL can't reach; visual: thread demo in WebGPU at a particle count the
-      WebGL version couldn't sustain (hundreds of thousands to millions) — the payoff of
-      the whole callback chain."</p>
-    <p>What's built so far is the honest floor: real feature detection and a clean
-      fallback card, which is itself half of slide 15's argument (the degradation ladder).
-      If this machine supports WebGPU, a clear-colour device init runs so the pipeline is
-      proven end to end. The actual compute-shader particle sim is the next step — not
-      built yet.</p>
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
+      <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
+      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
+      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument — and so is the interface: the text atlas, the signed-distance panels and the frosted glass in every app are a hundred lines of WGSL, not a framework.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Roost, Tessera, Halcyon and Supercell do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
+    </ol>
   </div>
 </div>
 
-<script type="module">
-const canvas = document.getElementById('c');
-const fallback = document.getElementById('fallback');
-const status = document.getElementById('status');
-const supportLabel = document.getElementById('supportLabel');
-
-async function init() {
-  if (!('gpu' in navigator)) {
-    supportLabel.textContent = 'unsupported';
-    fallback.querySelector('h4').textContent = 'WebGPU not available';
-    fallback.querySelector('p').textContent =
-      'navigator.gpu is undefined on this browser/machine. This is the fallback rung of the ladder — a static poster would render here in the real deck.';
-    return;
-  }
-  try {
-    const adapter = await navigator.gpu.requestAdapter();
-    if (!adapter) throw new Error('no adapter');
-    const device = await adapter.requestDevice();
-    const ctx = canvas.getContext('webgpu');
-    const format = navigator.gpu.getPreferredCanvasFormat();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const frame = canvas.closest('.canvas-frame');
-    const resize = () => {
-      const r = frame.getBoundingClientRect();
-      canvas.width = r.width * dpr;
-      canvas.height = r.height * dpr;
-    };
-    resize();
-    ctx.configure({ device, format, alphaMode: 'opaque' });
-
-    /* Regex-matching numbers out of getComputedStyle(probe).color
-       was wrong: current Chrome preserves oklch() through
-       getComputedStyle rather than normalising it to rgb(), so
-       that extracted [0.70, 0.26, 320] — the raw OKLCH values —
-       and divided THEM by 255 as if they were sRGB bytes. Canvas
-       2D genuinely parses oklch() (verified in canvas.html); paint
-       1px and read the real bytes back instead of parsing a string. */
-    function resolveToRGB(cssColor) {
-      const c = document.createElement('canvas');
-      c.width = c.height = 1;
-      const cctx = c.getContext('2d');
-      cctx.fillStyle = cssColor;
-      cctx.fillRect(0, 0, 1, 1);
-      return [...cctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
-    }
-    const tint = getComputedStyle(document.documentElement).getPropertyValue('--tint').trim();
-    const rgb = resolveToRGB(tint || 'oklch(0.70 0.26 320)');
-
-    function draw() {
-      const encoder = device.createCommandEncoder();
-      const pass = encoder.beginRenderPass({
-        colorAttachments: [{
-          view: ctx.getCurrentTexture().createView(),
-          clearValue: { r: rgb[0] / 255 * 0.35, g: rgb[1] / 255 * 0.35, b: rgb[2] / 255 * 0.35, a: 1 },
-          loadOp: 'clear', storeOp: 'store',
-        }],
-      });
-      pass.end();
-      device.queue.submit([encoder.finish()]);
-      requestAnimationFrame(draw);
-    }
-    draw();
-
-    canvas.hidden = false;
-    fallback.remove();
-    supportLabel.textContent = 'supported — device initialised';
-    status.textContent = `Adapter: ${adapter.info?.vendor || 'unknown vendor'} · clear-colour pipeline only`;
-  } catch (err) {
-    supportLabel.textContent = 'supported, init failed';
-    fallback.querySelector('h4').textContent = 'WebGPU present but device init failed';
-    fallback.querySelector('p').textContent = String(err.message || err);
-  }
-}
-init();
-</script>
-
+<script src="../system/wam.js"></script>
+<script type="module" src="./webgpu/sheet.js"></script>
 </body>
 </html>
