@@ -2,7 +2,8 @@
    After the Rock 'em Sock 'em stage's sprite sheet: recognisable silhouettes at a glance,
    chunky, shaded flat, with a dark outline so they read against a dark sky.
    Frames 0–5 are flung debris (cow, tree, barn, hay bale, fence, fish);
-   6–8 stand on the horizon (farmhouse, windmill, silo). */
+   6–8 stand on the horizon (farmhouse, windmill, silo); 9–11 are rooted in the middle
+   ground and sway (bush, poplar, utility pole). */
 export const SPRITE_PX = 64, SPRITE_FRAMES = 12;
 const TAU = Math.PI * 2;
 
@@ -15,7 +16,7 @@ function cow(x) {
   x.fillStyle = '#1b1b1b'; x.fillRect(11, 24, 2, 2);
 }
 function tree(x) {
-  x.fillStyle = '#5a3a22'; x.fillRect(28, 34, 8, 24);
+  x.fillStyle = '#5a3a22'; x.fillRect(28, 34, 8, 30);
   x.fillStyle = '#2f6b33'; for (const [cx, cy, r] of [[32, 22, 16], [20, 30, 11], [44, 30, 11], [32, 12, 10]]) { x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill(); }
   x.fillStyle = '#4b8d45'; x.beginPath(); x.arc(27, 17, 6, 0, TAU); x.fill();
 }
@@ -52,7 +53,21 @@ function silo(x) {
   x.beginPath(); x.arc(32, 16, 12, Math.PI, 0); x.fill();
   x.strokeStyle = '#8d9097'; x.lineWidth = 2; for (const y of [26, 36, 46]) { x.beginPath(); x.moveTo(20, y); x.lineTo(44, y); x.stroke(); }
 }
-const DRAW = [cow, tree, barn, hay, fence, fish, farmhouse, windmill, silo];
+/* the middle ground: things rooted to the plain that bend in the wind; each stands on the frame's bottom edge */
+function bush(x) {
+  x.fillStyle = '#24452a'; for (const [cx, cy, r] of [[32, 48, 15], [20, 52, 10], [44, 52, 10], [32, 38, 10]]) { x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill(); }
+  x.fillStyle = '#35603a'; x.beginPath(); x.arc(28, 40, 5, 0, TAU); x.fill();
+}
+function poplar(x) {
+  x.fillStyle = '#3d2a1c'; x.fillRect(30, 50, 4, 14);
+  x.fillStyle = '#1f3d26'; x.beginPath(); x.ellipse(32, 30, 11, 26, 0, 0, TAU); x.fill();
+  x.fillStyle = '#2c5233'; x.beginPath(); x.ellipse(29, 24, 5, 14, 0, 0, TAU); x.fill();
+}
+function pole(x) {
+  x.fillStyle = '#3a2c22'; x.fillRect(30, 4, 4, 60); x.fillRect(16, 10, 32, 3);
+  x.fillStyle = '#9aa0a8'; for (const px of [18, 30, 44]) x.fillRect(px, 7, 2, 3);
+}
+const DRAW = [cow, tree, barn, hay, fence, fish, farmhouse, windmill, silo, bush, poplar, pole];
 
 /* a 12 × 64 px canvas; each frame drawn, then outlined by dilating its alpha in a dark ink */
 export function spriteAtlas() {
