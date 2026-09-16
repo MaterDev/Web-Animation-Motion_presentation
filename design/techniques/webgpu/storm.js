@@ -15,7 +15,7 @@ import { reduced, adapterName } from './common.js';
 import { MONO } from './ui.js';
 import { SCENE, DEBRIS_KERNEL, DEBRIS_DRAW, GRASS } from './storm-wgsl.js';
 import { spriteAtlas, SPRITE_PX, SPRITE_FRAMES } from './storm-sprites.js';
-import { lensSim, MAX_DROPS, DROPS, LENS } from './storm-lens.js';
+import { lensSim, MAX_DROPS, MAX_SEGS, FIELD, FILM, FADE, LENS } from './storm-lens.js';
 
 const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v), mix = (a, b, t) => a + (b - a) * t, sstep = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
 const hash = (n) => { let x = Math.imul((n | 0) ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16; return (x >>> 0) / 4294967296; };
@@ -26,7 +26,8 @@ const SCENERY = (() => {
   const a = [[9, -1.15, 4.1], [10, 0.95, 4.25], [11, -1.7, 3.8]];
   for (let k = 0; k < 44; k++) a.push([13, -0.55 + k * 0.025 + (hash(k * 5) - 0.5) * 0.01, 0.62 + (hash(k * 7) - 0.5) * 0.03]);   /* a windbreak of poplars */
   for (let k = 0; k < 60; k++) a.push([14, 0.028, 0.03 + k * 0.057]);                                                          /* a pole line up the road */
-  for (let k = 0; k < 34; k++) if (hash(k * 23) > 0.22) a.push([15, -0.2 + k * 0.012 + (hash(k * 29) - 0.5) * 0.004, 0.16 + (hash(k * 31) - 0.5) * 0.012]);   /* a broken fence across the field */
+  /* a fence that curves away through the field, with most of it already gone and what is left leaning */
+  for (let k = 0; k < 70; k++) { if (hash(k * 23) < 0.55) continue; const x = -0.42 + k * 0.012; a.push([15, x + (hash(k * 29) - 0.5) * 0.004, 0.09 + 1.5 * x * x + (hash(k * 31) - 0.5) * 0.01, (hash(k * 37) - 0.5) * 0.9]); }
   for (let k = 0; k < 40; k++) { const z = 0.05 + hash(k * 11) * 0.5; a.push([12, (hash(k * 13) * 2 - 1) * (z + 0.01) * 0.62, z]); }   /* bushes */
   for (let k = 0; k < 18; k++) { const z = 0.2 + hash(k * 17) * 0.8; a.push([16, (hash(k * 19) * 2 - 1) * z * 0.6, z]); }            /* hay bales */
   return a;
@@ -86,15 +87,15 @@ function lightning(T) {
 
 export function stormApp() {
   let dev = null, ui = null, host = null, gpu = null, s = null, dead = false, err = null;
-  let lensOff = false, pauseAt = null, seek = 0, steps = 80, scale = 0.5, stillDone = false, renders = 0;
-  const spans = { scene: [], debris: [], drops: [], lens: [] }; let rafLast = 0, rafEMA = 0;
+  let lensOff = false, pauseAt = null, seek = 0, steps = 64, scale = 0.5, stillDone = false, renders = 0;
+  const spans = { scene: [], debris: [], drops: [], lens: [], frame: [] }; let workPending = false; let rafLast = 0, rafEMA = 0;
   const C = { ink: [0.95, 0.94, 0.90, 1], dim: [0.70, 0.70, 0.74, 1], glass: [0.08, 0.07, 0.12, 0.5], warn: [1.0, 0.82, 0.30, 1], bolt: [0.75, 0.86, 1.0, 1], red: [0.80, 0.13, 0.11, 1] };
   const q = new URLSearchParams(location.search);
   if (q.has('scale')) scale = clamp(+q.get('scale'), 0.25, 1); if (q.has('steps')) steps = Math.max(4, +q.get('steps') | 0);
   const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
   /* a handle for verification: pause or seek the storm, change the march's cost, read the timer */
   const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; }, lensOff(v) { lensOff = v; },
-    spans: () => ({ scene: med(spans.scene), debris: med(spans.debris), drops: med(spans.drops), lens: med(spans.lens), n: spans.scene.length, scale, steps, wet: s ? s.lens.count : 0 }), director: (T) => director(T), lightning: (T) => lightning(T), get renders() { return renders; } };
+    spans: () => ({ frame: med(spans.frame), scene: med(spans.scene), debris: med(spans.debris), drops: med(spans.drops), lens: med(spans.lens), n: spans.scene.length, scale, steps, wet: s ? s.lens.count : 0, running: s ? s.lens.running : 0 }), director: (T) => director(T), lightning: (T) => lightning(T), get renders() { return renders; } };
   globalThis.__supercell = api;
 
   /* the reduced-motion still: halfway through the first peak */
@@ -109,8 +110,10 @@ export function stormApp() {
     const init = new Float32Array(ND * 8);
     for (let i = 0; i < ND; i++) {
       const o = i * 8;
-      if (i < CHIPS + SPRITES) { init[o] = (hash(i * 3 + 1) * 2 - 1) * 2.2; init[o + 2] = 0.5 + hash(i * 5 + 2) * 3.6; init[o + 3] = i < CHIPS ? Math.floor(hash(i * 7) * 3) : 3 + Math.floor(hash(i * 11) * 6); init[o + 7] = hash(i * 13) * 6.28; }
-      else { const [kind, x, z] = SCENERY[i - CHIPS - SPRITES]; init[o] = x; init[o + 2] = z; init[o + 3] = kind; }
+      if (i < CHIPS + SPRITES) { init[o] = (hash(i * 3 + 1) * 2 - 1) * 2.2; init[o + 2] = 0.5 + hash(i * 5 + 2) * 3.6; init[o + 3] = i < CHIPS ? Math.floor(hash(i * 7) * 3) : 3 + Math.floor(hash(i * 11) * 6); init[o + 7] = hash(i * 13) * 6.28;
+        const gale = (i >= CHIPS - 3000 && i < CHIPS) || i >= CHIPS + SPRITES - 64;
+        if (gale) { const z = 0.004 + Math.pow(hash(i * 17), 1.8) * 0.45; init[o] = (hash(i * 19) * 2 - 1) * (0.02 + z * 0.8); init[o + 1] = 0.0004 + hash(i * 23) * (0.002 + z * 0.04); init[o + 2] = z; init[o + 3] += 20; } }
+      else { const [kind, x, z, tilt = 0] = SCENERY[i - CHIPS - SPRITES]; init[o] = x; init[o + 2] = z; init[o + 3] = kind; init[o + 7] = tilt; }
     }
     particles.write(init);
     const atlasC = spriteAtlas();
@@ -123,19 +126,25 @@ export function stormApp() {
     const debris = draw(gpu, { shader: DEBRIS_DRAW, label: 'supercell-debris', geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: ND, set: { cam, ds: particles, atlas, smp: sampler(gpu, { minFilter: 'nearest', magFilter: 'nearest' }), air } });
     const stV = { t0: [0, 1.4, 0.25, 1], t1: [0, 1.9, 0.25, 0], t2: [0, 2.4, 0.25, 0], s0: [0, 0, 0, 0], s1: [0, 0, 0, 0], s2: [0, 0, 0, 0], b0: [0, 0, 0, 0], b1: [0, 0, 0, 0], b2: [0, 0, 0, 0], b3: [0, 0, 0, 0], time: 0, storm: 0.4, flash: 0, wind: 0, rain: 0.2, tspin: 2.4, base: 0.62, tflow: 1 };
     const sceneFx = effect(gpu, SCENE, { label: 'supercell-scene', set: { cam, st: stV, debrisAlbedo: debrisT.colors[0], debrisDist: debrisT.colors[1] } });
-    /* rain on the lens: a refraction map of the drops, then the scene seen through it */
-    const dropT = target(gpu, { size: [64, 64], format: 'rgba8unorm', clearColor: [0.5, 0.5, 0, 0], label: 'supercell-drops' });
+    /* water on the lens, at the canvas's own resolution so its edges are crisp: a field of drops, a fading
+       film of the trails they leave, and the scene seen through both */
+    const fieldT = target(gpu, { size: [64, 64], format: 'rgba16float', clearColor: [0, 0, 0, 0], label: 'supercell-water' });
+    const filmA = target(gpu, { size: [64, 64], format: 'rgba16float', clearColor: [0, 0, 0, 0], label: 'supercell-film-a' });
+    const filmB = target(gpu, { size: [64, 64], format: 'rgba16float', clearColor: [0, 0, 0, 0], label: 'supercell-film-b' });
     const lensT = target(gpu, { size: [64, 64], format: 'rgba8unorm', label: 'supercell-lens' });
-    const dropBuf = storage(gpu, MAX_DROPS * 16);
-    const lensU = uniforms(gpu, { aspect: 1.42, count: 0, _a: 0, _b: 0 });
-    const drops = draw(gpu, { shader: DROPS, label: 'supercell-drops', geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: MAX_DROPS, set: { lens: lensU, drops: dropBuf } });
+    const dropBuf = storage(gpu, MAX_DROPS * 32), segBuf = storage(gpu, MAX_SEGS * 32);
+    const lensU = uniforms(gpu, { aspect: 1.42, count: 0, segs: 0, px: 0.001 });
+    const add = { color: { src: 'one', dst: 'one' } };
+    const fieldDraw = draw(gpu, { shader: FIELD, label: 'supercell-water-field', blend: add, geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: MAX_DROPS, set: { lens: lensU, drops: dropBuf } });
+    const filmDraw = draw(gpu, { shader: FILM, label: 'supercell-water-film', blend: add, geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: MAX_SEGS, set: { lens: lensU, segs: segBuf } });
+    const fadeFx = effect(gpu, FADE, { label: 'supercell-film-fade', set: { src: filmA, fade: [0.99, 0, 0, 0] } });
     const lin = sampler(gpu, { minFilter: 'linear', magFilter: 'linear' });
-    const lensFx = effect(gpu, LENS, { label: 'supercell-lens', set: { scene, dropMap: dropT, smp: lin, look: [0.035, 0, 1.42, 0] } });
+    const lensFx = effect(gpu, LENS, { label: 'supercell-lens', set: { scene, drops: fieldT, film: filmA, smp: lin, look: [0, 1.42, 0.001, 0.001] } });
     const sim = lensSim();
     const tm = dev.features.has('timestamp-query') ? timer(gpu) : null;
     if (tm) tm.onResults((r) => { for (const k of ['scene', 'debris', 'drops', 'lens']) if (r[k] !== undefined) { spans[k].push(r[k]); if (spans[k].length > 60) spans[k].shift(); } });
     gpu.onError && gpu.onError((e) => { err = e; console.error('supercell', e); });
-    s = { scene, debrisT, dropT, lensT, dropBuf, lensU, drops, lensFx, lens: sim, cam, air, particles, atlas, kernel, debris, grass, sceneFx, tm, sim: simU, stV, preRolled: false };
+    s = { scene, debrisT, fieldT, film: [filmA, filmB], lensT, dropBuf, segBuf, lensU, fieldDraw, filmDraw, fadeFx, lensFx, lens: sim, cam, air, particles, atlas, kernel, debris, grass, sceneFx, tm, sim: simU, stV, preRolled: false };
     if (host && host.invalidate) host.invalidate();
   }
 
@@ -150,8 +159,29 @@ export function stormApp() {
     return { D, L };
   }
 
-  function chrome(D, readout) {
-    ui.text(24, 22, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34, op: 0.9 });
+  /* the alert: a strobing banner, a ticker that never stops, and the edge of the screen pulsing red — faster as the storm peaks */
+  const TICKER = 'TORNADO EMERGENCY · MULTIPLE LARGE AND EXTREMELY DANGEROUS TORNADOES ON THE GROUND · TAKE COVER NOW · MOVE TO A BASEMENT OR AN INTERIOR ROOM ON THE LOWEST FLOOR · FLYING DEBRIS WILL BE DEADLY TO THOSE CAUGHT WITHOUT SHELTER · MOBILE HOMES WILL BE DESTROYED · DO NOT WAIT · THIS IS A PARTICULARLY DANGEROUS SITUATION · SIMULATED ALERT ·   ';
+  function chrome(D, readout, now, flash) {
+    const T = now / 1000, rate = 1.6 + D.storm * 3.2, beat = Math.sin(T * Math.PI * 2 * rate), on = beat > 0;
+    ui.text(24, 18, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34, op: 0.9 });
+    /* the red edge */
+    const pulse = 0.35 + 0.65 * Math.max(0, beat);
+    ui.stroke(3, 3, ui.W - 6, ui.H - 6, [1, 0.08, 0.06, 0.55 * pulse], 22, 6);
+    ui.stroke(10, 10, ui.W - 20, ui.H - 20, [1, 0.1, 0.08, 0.25 * pulse], 18, 3);
+    /* the banner: hazard stripes either side of the headline, strobing red on black */
+    const bx = 24, by = 42, bw = 560, bh = 34;
+    ui.rect(bx, by, bw, bh, on ? [0.86, 0.06, 0.05, 0.96] : [0.12, 0.02, 0.02, 0.92], 6);
+    ui.clip([bx, by, 46, bh]); for (let k = -2; k < 6; k++) ui.rect(bx - 20 + k * 14 + ((T * 40) % 14), by, 7, bh, on ? [0.06, 0.02, 0.02, 1] : [1, 0.82, 0.1, 1], 0); ui.clip(null);
+    ui.clip([bx + bw - 46, by, 46, bh]); for (let k = -2; k < 6; k++) ui.rect(bx + bw - 66 + k * 14 - ((T * 40) % 14), by, 7, bh, on ? [0.06, 0.02, 0.02, 1] : [1, 0.82, 0.1, 1], 0); ui.clip(null);
+    ui.text(bx + bw / 2, by + 7.5, '⚠  TORNADO EMERGENCY  ·  TAKE COVER NOW  ⚠', 15, on ? [1, 1, 1, 1] : [1, 0.18, 0.12, 1], { weight: 900, track: 0.06, align: 'center' });
+    /* the ticker */
+    const ty = by + bh + 4, th = 20;
+    ui.rect(bx, ty, bw, th, [0.03, 0.03, 0.05, 0.85], 4);
+    ui.clip([bx + 6, ty, bw - 12, th]);
+    const tw = ui.measure(TICKER, 10.5, { weight: 700, track: 0.04, family: MONO }), off = (T * 70) % tw;
+    for (let k = 0; k < 3; k++) ui.text(bx + 6 - off + k * tw, ty + 4, TICKER, 10.5, [1, 0.86, 0.3, 1], { weight: 700, track: 0.04, family: MONO });
+    ui.clip(null);
+    if (flash > 0.3) ui.rect(bx, by, bw, bh, [1, 1, 1, 0.35 * flash], 6);
     readout();
   }
 
@@ -166,7 +196,9 @@ export function stormApp() {
       if (reduced.matches && stillDone) return;
       const T = reduced.matches ? stillT() : pauseAt !== null ? pauseAt : now / 1000 + seek;
       const tgt = ui.prepare(scale), aspect = tgt.w / tgt.h;
-      if (s.scene.size[0] !== tgt.w || s.scene.size[1] !== tgt.h) { s.scene.resize([tgt.w, tgt.h]); s.debrisT.resize([tgt.w, tgt.h]); s.dropT.resize([Math.max(2, tgt.w >> 1), Math.max(2, tgt.h >> 1)]); s.lensT.resize([tgt.w, tgt.h]); s.sceneFx.set({ debrisAlbedo: s.debrisT.colors[0], debrisDist: s.debrisT.colors[1] }); s.lensFx.set({ scene: s.scene, dropMap: s.dropT }); }
+      if (s.scene.size[0] !== tgt.w || s.scene.size[1] !== tgt.h) { s.scene.resize([tgt.w, tgt.h]); s.debrisT.resize([tgt.w, tgt.h]); s.sceneFx.set({ debrisAlbedo: s.debrisT.colors[0], debrisDist: s.debrisT.colors[1] }); s.lensFx.set({ scene: s.scene }); }
+      const full = [ui.canvas.width, ui.canvas.height];
+      if (s.fieldT.size[0] !== full[0] || s.fieldT.size[1] !== full[1]) { for (const t of [s.fieldT, s.lensT, ...s.film]) t.resize(full); s.lensFx.set({ drops: s.fieldT }); }
       if (reduced.matches && !s.preRolled) { for (let i = 0; i < 480; i++) { step(T - (480 - i) / 60, 1 / 60, aspect); s.kernel.dispatch(Math.ceil(ND / 256)); } s.preRolled = true; }
       const { D, L } = step(T, dt, aspect);
       /* the camera: out in it — a low handheld eye in the grass, looking up at the funnels, rolling with
@@ -184,28 +216,35 @@ export function stormApp() {
       s.cam.set({ pos, tanHalf: 0.5, fwd, aspect, right, steps, up, pxH: tgt.h });
       /* the drops on the lens run on wall-clock time, however the storm is scrubbed */
       if (!reduced.matches || !s.lensWet) { const n = reduced.matches ? 360 : 1; for (let i = 0; i < n; i++) s.lens.step(reduced.matches ? 1 / 30 : dt, D.rain, D.wind, aspect); s.lensWet = true; }
-      s.dropBuf.write(s.lens.buf); s.lensU.set({ aspect, count: s.lens.count }); s.lensFx.set({ look: [0.035, L.flash, aspect, 0] });
+      s.dropBuf.write(s.lens.dropBuf); s.segBuf.write(s.lens.segBuf); s.lensU.set({ aspect, count: s.lens.count, segs: s.lens.segs, px: 1 / full[1] });
+      const [filmRead, filmWrite] = s.film; s.fadeFx.set({ src: filmRead, fade: [Math.exp(-(reduced.matches ? 0 : dt) * 0.35), 0, 0, 0] });
+      const frameStart = performance.now();
       if (!reduced.matches) s.kernel.dispatch(Math.ceil(ND / 256));
       frame(gpu, (f) => {
         f.pass(s.tm ? { target: s.debrisT, timer: s.tm.span('debris') } : s.debrisT, (p) => { p.draw(s.debris); p.draw(s.grass); });
         f.pass(s.tm ? { target: s.scene, timer: s.tm.span('scene') } : s.scene, s.sceneFx);
-        if (!lensOff) { f.pass(s.tm ? { target: s.dropT, timer: s.tm.span('drops') } : s.dropT, (p) => p.draw(s.drops, { instances: s.lens.count }));
-        f.pass(s.tm ? { target: s.lensT, timer: s.tm.span('lens') } : s.lensT, s.lensFx); }
+        if (!lensOff) {
+          f.pass(filmWrite, (p) => { p.draw(s.fadeFx); p.draw(s.filmDraw, { instances: s.lens.segs }); });
+          f.pass(s.tm ? { target: s.fieldT, timer: s.tm.span('drops') } : s.fieldT, (p) => p.draw(s.fieldDraw, { instances: s.lens.count }));
+          f.pass(s.lensT, (p) => { s.lensFx.set({ film: filmWrite, look: [L.flash, aspect, 1 / full[0], 1 / full[1]] }); p.draw(s.lensFx); });
+        }
       });
+      if (!lensOff) s.film.reverse();
       ui.scene(lensOff ? s.scene.color.gpu : s.lensT.color.gpu);
       if (!reduced.matches) { if (rafLast) { const iv = now - rafLast; rafEMA = rafEMA ? rafEMA * 0.92 + iv * 0.08 : iv; } rafLast = now; }
       chrome(D, () => {
         const rx = 826; let l1, l2, frac = null;
         if (reduced.matches) { l1 = 'motion reduced · one still frame'; l2 = 'no frame loop is running'; }
-        else if (s.tm) { const sc = med(spans.scene), db = med(spans.debris), dr = med(spans.drops) || 0;
-          /* the lens pass is left out: on Metal its span repeats the march's (switching the lens off leaves the march's
-             number unchanged), so adding it would count the march twice — measured 2026-09-16 */
-          if (sc !== null) { const tot = sc + (db || 0) + dr; l1 = `GPU ${tot.toFixed(2)} ms of 8.3 · march ${sc.toFixed(2)} · debris + grass ${(db || 0).toFixed(2)} · drops ${dr.toFixed(2)}`; frac = tot / 8.33; } else l1 = 'GPU — measuring'; l2 = `timestamp-query · ${adapterName()} · ${tgt.w}×${tgt.h} · lens pass not timed`; }
+        else if (med(spans.frame) !== null) { const fr = med(spans.frame); l1 = `GPU frame ${fr.toFixed(2)} ms of 8.3 · first submit → work done`; frac = fr / 8.33;
+          l2 = s.tm && med(spans.scene) !== null ? `timestamp spans overlap on Metal · march ${med(spans.scene).toFixed(2)} · ${adapterName()} · ${tgt.w}×${tgt.h}` : `${adapterName()} · ${tgt.w}×${tgt.h}`; }
         else { l1 = `rAF interval ${rafEMA.toFixed(1)} ms — not GPU cost`; l2 = 'timestamp-query unavailable on this adapter'; }
         ui.text(rx, 22, l1, 9.5, C.ink, { family: MONO, align: 'right' }); ui.text(rx, 36, l2, 8, C.dim, { family: MONO, align: 'right' });
         if (frac !== null) { ui.rect(rx - 180, 52, 180, 3, [1, 1, 1, 0.16], 1.5); ui.rect(rx - 180, 52, 180 * clamp(frac), 3, frac > 1 ? C.red : [0.55, 0.85, 0.6, 1], 1.5); }
-      });
+      }, now, L.flash);
       const enc = dev.createCommandEncoder(); ui.compose(enc); dev.queue.submit([enc.finish()]); renders++;
+      /* the whole frame on the GPU: from the first submit to the queue reporting that work done. Per-pass timestamp spans
+         cannot be summed on Metal — the pass after a heavy one inherits its time — so this is the number that counts. */
+      if (!workPending && !reduced.matches) { workPending = true; dev.queue.onSubmittedWorkDone().then(() => { spans.frame.push(performance.now() - frameStart); if (spans.frame.length > 60) spans.frame.shift(); workPending = false; }); }
       if (reduced.matches) stillDone = true;
     }
   };
