@@ -185,6 +185,9 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
   var bg = vec3f(0.0);
   if (tg < td) {
     var g = galb * (0.8 - S * 0.34);
+    /* gusts rolling away across the crop: bright and dark bands running toward the horizon */
+    let wave = 0.5 + 0.5 * sin(gp.z * 14.0 - T * (4.0 + S * 4.0) + gp.x * 2.2 + vnoise(vec3f(gp.xz * 3.0, T * 0.3)) * 3.0);
+    g *= 0.82 + 0.34 * wave * (1.0 - smoothstep(0.5, 6.0, tg));
     bg = mix(g, HAZE * (0.9 - S * 0.3), smoothstep(1.5, 14.0, tg));
   } else {
     /* fast scudding cloud over a slow-turning mesocyclone, darker as the storm builds */
@@ -204,6 +207,14 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
     bg = sky;
   }
   let az = atan2(rd.x, rd.z);
+  /* far background: a hazy line of low hills, then distant rain hanging in front of them */
+  if (tg > 12.0 || rd.y > 0.0) {
+    let hill = 0.006 + fbm2(vec3f(az * 5.0, 1.0, 7.0)) * 0.026;
+    if (rd.y < hill && rd.y > -0.004) { bg = mix(HORIZON * 0.75, CLOUD_DARK, 0.35 + S * 0.3); }
+    let curtainN = fbm2(vec3f(az * 9.0 - T * 0.08, rd.y * 4.0 + T * 0.9, 2.0));
+    let curtain = smoothstep(0.5, 0.78, curtainN) * (1.0 - smoothstep(0.0, 0.09, rd.y)) * smoothstep(-0.01, 0.0, rd.y) * (0.3 + S * 0.7);
+    bg = mix(bg, CLOUD_DARK2 * 1.2, curtain * 0.7);
+  }
   let bump = fbm2(vec3f(az * 40.0, 0.0, 3.0));
   if (rd.y > -0.002 && rd.y < 0.004 + bump * 0.012 && tg > 20.0) { bg = TREES; }
 
@@ -268,18 +279,40 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
   let bolt = channel(ro, rd, st.b0) + channel(ro, rd, st.b1) + channel(ro, rd, st.b2) + channel(ro, rd, st.b3);
   col += mix(vec3f(0.7, 0.85, 1.0), vec3f(1.0), clamp(bolt - 1.0, 0.0, 1.0)) * bolt;
 
-  /* ── rain: slanted streaks in two layers, counted by the storm ── */
-  let sp = vec2f(uv.x * cam.aspect, uv.y);
-  for (var L = 0; L < 2; L++) {
-    let fl = f32(L);
-    let scale = mix(90.0, 190.0, fl);
-    let rx = sp.x + sp.y * st.wind * 0.18 * (1.0 + fl * 0.4);
-    let colId = floor(rx * scale); let ph = h3(vec3i(i32(colId), 3 + L, 1));
-    let spd = mix(2.2, 3.6, ph) * (1.0 + fl * 0.5);
-    let ry = fract(sp.y * mix(1.4, 2.4, fl) - T * spd + ph * 7.0);
-    let on = step(h3(vec3i(i32(colId), 5 + L, 2)), st.rain * mix(0.7, 1.0, fl));
-    let streak = smoothstep(0.0, 0.05, ry) * smoothstep(0.22, 0.05, ry) * smoothstep(0.35, 0.05, abs(fract(rx * scale) - 0.5)) * on;
-    col = mix(col, vec3f(0.78, 0.82, 0.95), streak * mix(0.35, 0.22, fl));
+  /* ── rain in depth: six sheets of streaks at doubling distances along the view. Each sheet is
+     anchored in the world, so the near rain is big, soft and fast across the frame and the far
+     rain fine, and the camera's sway moves them against each other. Rain stops at whatever is
+     nearer: the grass, a flung cow, the ground. ── */
+  var hit = tEnd; if (dA.a > 0.5) { hit = min(hit, dD); }
+  let pxW = cam.tanHalf * 2.0 / cam.pxH;
+  for (var L = 0; L < 6; L++) {
+    let dk = 0.0016 * pow(2.1, f32(L));
+    if (dk < hit) {
+      let P = ro + rd * dk;
+      let cw = dk * 0.03;
+      let fall = 0.010 + 0.012 * st.storm;
+      let u = dot(P, cam.up) + T * fall * (1.0 + f32(L) * 0.15);
+      let xs = dot(P, cam.right) + st.wind * 0.3 * u;
+      let cid = vec2i(floor(vec2f(xs / cw, u / (cw * 7.0))));
+      let f = fract(vec2f(xs / cw, u / (cw * 7.0)));
+      let ox = 0.15 + 0.7 * h3(vec3i(cid.x, cid.y, 11 + L));
+      let on = step(h3(vec3i(cid.x, cid.y, 31 + L)), st.rain * 0.55);
+      let wid = max(dk * pxW * 1.1, cw * 0.035) / cw;
+      let len = mix(0.55, 0.3, f32(L) / 5.0);
+      let yph = h3(vec3i(cid.x, cid.y, 51 + L)) * (1.0 - len);
+      let streak = (1.0 - smoothstep(wid * 0.5, wid, abs(f.x - ox))) * smoothstep(yph, yph + 0.05, f.y) * (1.0 - smoothstep(yph + len - 0.1, yph + len, f.y)) * on;
+      let near = 1.0 - f32(L) / 6.0;
+      col = mix(col, vec3f(0.62, 0.66, 0.76) + vec3f(0.3) * st.flash, streak * mix(0.10, 0.22, 1.0 - near) * (0.6 + 0.4 * st.storm));
+    }
+  }
+  /* splashes on the ground close in: rings that open and fade, a new one per cell every so often */
+  if (tg < 0.06 && tg < hit + 1e-4) {
+    let sc = gp.xz / 0.0012; let sidc = vec2i(floor(sc)); let sf = fract(sc) - 0.5;
+    let slot = floor(T * 3.0 + h3(vec3i(sidc.x, sidc.y, 7)) * 3.0);
+    let age = fract(T * 3.0 + h3(vec3i(sidc.x, sidc.y, 7)) * 3.0);
+    let pos = vec2f(h3(vec3i(sidc.x, sidc.y, i32(slot))), h3(vec3i(sidc.y, sidc.x, i32(slot)))) - 0.5;
+    let ring = (1.0 - smoothstep(0.0, 0.06, abs(length(sf - pos * 0.6) - age * 0.35))) * (1.0 - age) * step(h3(vec3i(sidc.x + i32(slot), sidc.y, 3)), st.rain);
+    col += vec3f(0.5, 0.55, 0.62) * ring * 0.35 * (1.0 - tg / 0.06);
   }
   col = mix(col, vec3f(0.85, 0.9, 1.0), clamp(st.flash * 0.55, 0.0, 0.8));
   /* the stage's quantised finish, kept faint */
@@ -291,6 +324,7 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
 
 /* ── debris: the stage's wind-influence field, one kernel, three tornadoes ── */
 export const DEBRIS_STRUCTS = /* wgsl */ `
+struct Air { time: f32, wind: f32, storm: f32, flash: f32 };
 struct D { pos: vec3f, kind: f32, vel: vec3f, ang: f32 };
 struct Sim { dt: f32, time: f32, wind: f32, count: f32, t0: vec4f, t1: vec4f, t2: vec4f, storm: f32, maxH: f32, _p0: f32, _p1: f32 };
 `;
@@ -340,20 +374,30 @@ export const DEBRIS_DRAW = DEBRIS_STRUCTS + COMMON + /* wgsl */ `
 @group(0) @binding(1) var<storage, read> ds: array<D>;
 @group(0) @binding(2) var atlas: texture_2d<f32>;
 @group(0) @binding(3) var smp: sampler;
+@group(0) @binding(4) var<uniform> air: Air;
 const FRAMES = 12.0;
-struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col: vec3f, @location(2) dist: f32, @location(3) @interpolate(flat) frame: f32, @location(4) a: f32 };
+struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col: vec3f, @location(2) dist: f32, @location(3) @interpolate(flat) frame: f32, @location(4) a: f32, @location(5) @interpolate(flat) dim: f32 };
 @vertex fn vs_main(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
   let d = ds[ii]; var o: VO;
   let v = d.pos - cam.pos; let z = dot(v, cam.fwd);
   let corner = vec2f(f32(vi & 1u), f32((vi >> 1u) & 1u)) * 2.0 - 1.0;
   let kind = d.kind;
-  let chip = kind < 3.0; let scenery = kind >= 9.0;
-  /* world half-size: chips of straw, board and dirt; sprites played up to read at a glance */
-  let size = select(select(select(0.0028, 0.0045, kind >= 1.0), 0.0035, kind >= 2.0), select(0.028, 0.03, scenery), !chip);
+  let chip = kind < 3.0; let scenery = kind >= 9.0; let rooted = kind >= 12.0;
+  /* world half-size: chips of straw, board and dirt; flung sprites played up to read at a glance;
+     horizon buildings; then the middle ground — bush, poplar, pole, fence, hay bale */
+  var size = select(select(select(0.0028, 0.0045, kind >= 1.0), 0.0035, kind >= 2.0), select(0.028, 0.03, scenery), !chip);
+  if (kind >= 12.0) { size = select(select(select(select(0.0028, 0.0014, kind >= 16.0), 0.0017, kind >= 15.0), 0.0046, kind >= 14.0), 0.0075, kind >= 13.0); if (kind < 13.0) { size = 0.0034; } }
   let pxWorld = z * cam.tanHalf * 2.0 / cam.pxH;
   let rad = max(size, pxWorld * 0.6);
   let ca = cos(d.ang); let sa = sin(d.ang);
-  let rc = select(vec2f(corner.x * ca - corner.y * sa, corner.x * sa + corner.y * ca) * select(vec2f(1.0), vec2f(1.0, 0.5), chip), corner, scenery);
+  var rc = select(vec2f(corner.x * ca - corner.y * sa, corner.x * sa + corner.y * ca) * select(vec2f(1.0), vec2f(1.0, 0.5), chip), corner, scenery);
+  if (rooted) {
+    /* bend from the root: the top leans with the wind, shivers with the storm, and gusts roll away through the rows */
+    let gust = 0.55 + 0.45 * sin(d.pos.z * 26.0 - air.time * (3.5 + air.storm * 3.0) + d.pos.x * 9.0);
+    let bend = (air.wind * 0.22 + sin(air.time * (2.4 + air.storm * 3.0) + d.pos.x * 37.0 + d.pos.z * 11.0) * (0.08 + 0.2 * air.storm)) * gust * select(1.0, 0.25, kind >= 14.0);
+    let up01 = corner.y * 0.5 + 0.5;
+    rc.x += bend * up01 * up01 * 2.0;
+  }
   let lift = select(0.0, size, scenery);
   let x = dot(v, cam.right) + rc.x * rad; let y = dot(v, cam.up) + rc.y * rad + lift;
   /* only what is in the air is drawn; the horizon scenery always is */
@@ -362,7 +406,9 @@ struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col
   o.q = corner; o.dist = length(v);
   let t = h3(vec3i(i32(ii), 17, 3));
   o.col = select(select(vec3f(0.76, 0.62, 0.30), vec3f(0.45, 0.30, 0.18), kind >= 1.0), vec3f(0.62, 0.36, 0.24), kind >= 2.0) * (0.75 + 0.5 * t);
-  o.frame = select(-1.0, floor(kind) - 3.0, !chip);
+  /* what stands in the storm is in its shadow; what flies through it catches the light */
+  o.dim = select(1.0, 0.5 - 0.15 * air.storm, rooted) + air.flash * 0.6;
+  o.frame = select(-1.0, select(floor(kind) - 3.0, select(3.0, 4.0, kind < 16.0), kind >= 15.0), !chip);
   let cov = size / max(pxWorld * 0.6, 1e-6);
   o.a = select(1.0, clamp(cov * cov, 0.0, 1.0), rad > size);
   return o;
@@ -377,9 +423,42 @@ struct FO { @location(0) albedo: vec4f, @location(1) dist: vec4f };
     o.albedo = vec4f(v.col, v.a);
   } else {
     if (s.a < 0.5) { discard; }
-    o.albedo = vec4f(s.rgb, v.a);
+    o.albedo = vec4f(s.rgb * v.dim, v.a);
   }
   o.dist = vec4f(v.dist, 0.0, 0.0, 1.0);
   return o;
 }
+`;
+
+/* ── the foreground: tall prairie grass right at the lens, bending and shivering in the wind,
+   with gusts rolling away through it toward the storm. Every blade is placed, sized and bent in
+   the vertex stage from its instance index; nothing is stored. ── */
+export const GRASS = DEBRIS_STRUCTS + COMMON + /* wgsl */ `
+@group(0) @binding(0) var<uniform> cam: Cam;
+@group(0) @binding(1) var<uniform> air: Air;
+struct VO { @builtin(position) p: vec4f, @location(0) col: vec3f, @location(1) dist: f32 };
+@vertex fn vs_main(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
+  var o: VO;
+  let a = h3(vec3i(i32(ii), 1, 7)); let b = h3(vec3i(i32(ii), 2, 7)); let c = h3(vec3i(i32(ii), 3, 7)); let e = h3(vec3i(i32(ii), 4, 7));
+  /* dense at the lens, thinning into the field; spread wide enough to fill the frame as the camera drifts */
+  let z = 0.0022 + pow(a, 2.4) * 0.16;
+  let x = cam.pos.x + (b * 2.0 - 1.0) * (z + 0.002) * cam.tanHalf * cam.aspect * 1.35;
+  let root = vec3f(x, 0.0, cam.pos.z + z);
+  let height = mix(0.00025, 0.0009, c * c) * (1.0 + 0.4 * e);
+  let halfW = mix(0.000025, 0.00006, e);
+  /* five vertices: two at the root, two halfway, one at the tip */
+  let row = f32(vi / 2u); let t = select(row * 0.5, 1.0, vi == 4u);
+  let side = select(-1.0, 1.0, (vi & 1u) == 1u);
+  let gust = 0.5 + 0.5 * sin(z * 150.0 - air.time * (5.0 + air.storm * 4.0) + x * 40.0);
+  let bend = (air.wind * 0.4 + sin(air.time * (3.0 + air.storm * 5.0) + x * 900.0 + z * 300.0) * (0.2 + 0.5 * air.storm)) * (0.35 + 0.65 * gust) + (e - 0.5) * 0.3;
+  let p = root + vec3f(bend * height * t * t + side * halfW * (1.0 - t), height * t * (1.0 - 0.25 * bend * bend * t), 0.0);
+  let v = p - cam.pos; let zz = dot(v, cam.fwd);
+  o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(dot(v, cam.right) / (zz * cam.tanHalf * cam.aspect), dot(v, cam.up) / (zz * cam.tanHalf), clamp(zz / 40.0, 0.0, 1.0), 1.0), zz > 0.0005);
+  o.dist = length(v);
+  let tip = mix(vec3f(0.10, 0.13, 0.07), vec3f(0.19, 0.19, 0.10), b);
+  o.col = mix(vec3f(0.012, 0.018, 0.012), tip, t * t) * (0.7 + 0.3 * gust) * (0.9 - air.storm * 0.25) + vec3f(0.18, 0.22, 0.32) * air.flash * t * t;
+  return o;
+}
+struct FO { @location(0) albedo: vec4f, @location(1) dist: vec4f };
+@fragment fn fs_main(v: VO) -> FO { var o: FO; o.albedo = vec4f(v.col, 1.0); o.dist = vec4f(v.dist, 0.0, 0.0, 1.0); return o; }
 `;
