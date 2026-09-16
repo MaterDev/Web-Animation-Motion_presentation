@@ -1,217 +1,168 @@
-/* SUPERCELL · severe-weather hero graphics for a live broadcast segment (track 013).
-   A fictional product. The storm is a simulation with sourced anatomy, not a real case.
+/* SUPERCELL · a storm that runs itself (track 013).
+   From the Rock 'em Sock 'em stage "Vortex": a storm DIRECTOR swings lull → build → peak →
+   crash; up to three tornadoes roam the plain, each with its own wall cloud and dust skirt;
+   forked lightning fires on the storm's cadence with a flash and a shake; rain goes from
+   drizzle to torrential; debris — chips by the thousand, and cows, trees, barns, hay, fence
+   and fish — is lofted by the funnels' wind field and flung off the top.
 
-   The one app on the SL-14 device that runs on vgpu: it adopts the sheet's own GPUDevice
-   (initFromDevice), renders into its own targets, and hands the scene texture to ui.js,
-   which draws the glass chrome over it exactly as it does for every other app.
-
-   §1 the director — a pure function of storm time: one mesocyclone, one tornado derived
-      from it, organising → mature → rope-out → dissipating, then the next cycle.
-   §2 the cameras — three broadcast presets, each a slow drifting move, eased between.
-   §3 the frame — debris kernel (compute), debris particles (draw), the scene (effect).
-   §4 the chrome — presets, the lower third, the frame-cost readout with its instrument. */
-import { initFromDevice, effect, draw, compute, storage, target, frame, timer, uniforms } from '../../vendor/vgpu.module.js';
+   The one app on the SL-14 device that runs on vgpu. It adopts the sheet's own GPUDevice
+   (initFromDevice), renders into its own targets, and hands the scene texture to ui.js.
+   §1 the director — a pure function of time, so a still, a scrub and the live loop agree
+   §2 the frame — debris kernel (compute), debris draw, the scene (a marched effect)
+   §3 the chrome — the director's panel, and a frame cost that names its timer */
+import { initFromDevice, effect, draw, compute, storage, target, texture, sampler, frame, timer, uniforms } from '../../vendor/vgpu.module.js';
 import { reduced, adapterName } from './common.js';
 import { MONO } from './ui.js';
 import { SCENE, DEBRIS_KERNEL, DEBRIS_DRAW } from './storm-wgsl.js';
+import { spriteAtlas, SPRITE_PX, SPRITE_FRAMES } from './storm-sprites.js';
 
-const ND = 4096, YD = 1760;
-const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v), mix = (a, b, t) => a + (b - a) * t, ease = (t) => { t = clamp(t); return t * t * (3 - 2 * t); };
+const CHIPS = 8192, SPRITES = 160, SCENERY = [[9, -1.15, 4.1], [10, 0.95, 4.25], [11, -1.7, 3.8]];
+const ND = CHIPS + SPRITES + SCENERY.length;
+const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v), mix = (a, b, t) => a + (b - a) * t, sstep = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
 const hash = (n) => { let x = Math.imul((n | 0) ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16; return (x >>> 0) / 4294967296; };
-const polar = (deg, r) => [Math.cos(deg * Math.PI / 180) * r, Math.sin(deg * Math.PI / 180) * r];
 
 /* ── §1 the director ─────────────────────────────────────────────────── */
-export const STAGES = [
-  { id: 'organising', name: 'Organising', dur: 22, col: [0.96, 0.72, 0.28, 1] },
-  { id: 'mature', name: 'Mature', dur: 34, col: [0.93, 0.30, 0.24, 1] },
-  { id: 'rope-out', name: 'Rope-out', dur: 18, col: [0.95, 0.52, 0.22, 1] },
-  { id: 'dissipating', name: 'Dissipating', dur: 14, col: [0.62, 0.70, 0.80, 1] },
-];
-export const CYCLE = STAGES.reduce((a, s) => a + s.dur, 0);
-/* the storm moves north-east across the plains; the cameras move with it */
-const MESO_V = polar(50, 0.06);
-const SUN = (() => { const az = 288 * Math.PI / 180, el = 13 * Math.PI / 180; /* azimuth from north, clockwise: west-north-west, low */
-  return [Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)]; })();
-
-export function director(T) {
-  const c = Math.floor(T / CYCLE), tc = T - c * CYCLE, seed = hash(c * 7 + 3);
-  const wedge = hash(c * 3 + 1) < 0.55;
-  const Rg = wedge ? 0.42 + 0.1 * hash(c * 5 + 2) : 0.16 + 0.05 * hash(c * 5 + 2);
-  const topM = wedge ? Rg * 1.3 + 0.05 : Rg * 1.15 + 0.05, flareM = wedge ? 1.2 : 2.2;
-  let si = 0, u = tc; while (si < 3 && u >= STAGES[si].dur) { u -= STAGES[si].dur; si++; }
-  const a = u / STAGES[si].dur;
-  const P = { stage: si, a, cycle: c, wedge, seed, torR: 0.02, topR: 0.1, flare: 1.8, descend: 0, rope: 0, ragged: 0.95, broken: 0, wall: 0.35, slot: 0.08, core: 0.85, dust: 0, dustR: 0.12, occlude: 0 };
-  if (si === 0) {
-    Object.assign(P, { wall: mix(0.35, 1, ease(a)), descend: ease((a - 0.2) / 0.8), torR: mix(0.02, 0.05, a), topR: mix(0.1, 0.22, a), dust: ease((a - 0.55) / 0.4) * 0.55, dustR: 0.12 + 0.1 * a, slot: mix(0.08, 0.3, a) });
-  } else if (si === 1) {
-    const g = ease(a / 0.35); const torR = mix(0.05, Rg, g);
-    Object.assign(P, { wall: 1, descend: 1, torR, topR: mix(0.22, topM, g), flare: mix(1.8, flareM, g), ragged: mix(0.95, 0.35, g), dust: mix(0.55, 1, g), dustR: torR * 1.9 + 0.1, slot: mix(0.3, 0.72, a), core: 0.9 });
-  } else if (si === 2) {
-    const e = ease(a); const torR = mix(Rg, 0.016, ease(a / 0.6));
-    Object.assign(P, { wall: mix(1, 0.7, e), descend: 1, torR, topR: mix(topM, 0.06, e), flare: mix(flareM, 4, e), rope: e, ragged: mix(0.35, 0.6, e), dust: mix(1, 0.3, e), dustR: Math.max(torR * 1.9 + 0.1, mix(Rg * 1.9 + 0.1, 0.12, e)), slot: mix(0.72, 1, e), core: 0.9, occlude: e });
-  } else {
-    Object.assign(P, { wall: mix(0.7, 0.35, a), descend: 1 - ease((a - 0.2) / 0.6), torR: 0.016, topR: mix(0.06, 0.04, a), flare: 4, rope: 1, ragged: 0.6, broken: ease(a / 0.5), dust: 0.3 * (1 - ease(a * 1.5)), dustR: 0.12, slot: mix(1, 0.08, ease((a - 0.4) / 0.6)), core: mix(0.9, 0.85, a), occlude: 1 });
+const PHASE = { lull: 'Lull', build: 'Building', peak: 'Peak', crash: 'Crashing' };
+const phases = []; /* grown on demand: { id, t0, dur, tgt, s0 } */
+function phaseAt(T) {
+  if (!phases.length) phases.push({ id: 'lull', t0: 0, dur: 4, tgt: 0.25, s0: 0.4 });
+  while (phases[phases.length - 1].t0 + phases[phases.length - 1].dur <= T) {
+    const p = phases[phases.length - 1], k = phases.length, h = hash(k * 31 + 7);
+    const rate = p.tgt < p.s0 ? 1.1 : 0.6, s1 = p.tgt + (p.s0 - p.tgt) * Math.exp(-p.dur * rate);
+    const next = { lull: ['build', 2.5 + 2 * h, 0.98], build: ['peak', 3.5 + 3 * h, 1], peak: ['crash', 1.5 + 1.3 * h, 0.12], crash: ['lull', 3.5 + 2.5 * h, 0.15 + 0.17 * hash(k * 17 + 3)] }[p.id];
+    phases.push({ id: next[0], t0: p.t0 + p.dur, dur: next[1], tgt: next[2], s0: s1 });
   }
-  /* the tornado on the north prong of the horseshoe, just past the notch's tip (same geometry as notchDist in the shader);
-     as the storm occludes it trails back to the north-west */
-  const NU = [Math.SQRT1_2, Math.SQRT1_2], NV = [-Math.SQRT1_2, Math.SQRT1_2];
-  const sl = si === 3 ? 1 : P.slot; /* the funnel is still on screen while the slot fills back in: hold it where it was */
-  const tip = -1 + 1.25 * sl, hook = 0.35 * sl, w = 0.3 + 0.4 * sl, back = P.occlude || 0;
-  const along = tip + 0.05 - 0.5 * back, across = hook + w + 0.22 + 0.6 * back;
-  P.tor = [NU[0] * along + NV[0] * across, NU[1] * along + NV[1] * across];
-  /* the wall cloud centre, as wallCentre() in the shader: the funnel's top hangs from it */
-  const tipP = [NU[0] * (-1 + 1.25 * P.slot) + NV[0] * 0.35 * P.slot, NU[1] * (-1 + 1.25 * P.slot) + NV[1] * 0.35 * P.slot];
-  P.wall0 = [mix(P.tor[0], tipP[0], 0.35), mix(P.tor[1], tipP[1], 0.35)];
-  P.onGround = P.descend > 0.97 && P.broken < 0.5;
-  return P;
+  let lo = 0, hi = phases.length - 1; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (phases[m].t0 <= T) lo = m; else hi = m - 1; }
+  return phases[lo];
 }
-export const mesoAt = (T) => [MESO_V[0] * T, MESO_V[1] * T];
-/* the section road the chase unit holds for a whole cycle, in world miles */
-export const chaseRoad = (T) => Math.round(mesoAt(Math.floor(T / CYCLE) * CYCLE)[0] + 1.9);
+export function stormAt(T) { T = Math.max(0, T); const p = phaseAt(T), rate = p.tgt < p.s0 ? 1.1 : 0.6; return p.tgt + (p.s0 - p.tgt) * Math.exp(-(T - p.t0) * rate); }
 
-/* lightning, also pure: one chance per 0.35 s slot, the rate set by the stage; a return stroke 90 ms after the first */
-const RATE = [0.6, 1.5, 0.9, 0.35];
+export function director(T, aspect = 1.42, tanHalf = 0.42) {
+  const storm = stormAt(T), lag = stormAt(T - 1.2), p = phaseAt(Math.max(0, T));
+  const wind = (0.9 * Math.sin(T * 0.23) + 0.5 * Math.sin(T * 0.61 + 1)) * (0.5 + storm) * 0.9;
+  const tors = [0, 1, 2].map((i) => {
+    const th = [0, 0.32, 0.66][i], str = i === 0 ? 1 : sstep(th - 0.06, th + 0.1, lag);
+    const z = 1.3 + i * 0.45 + 0.3 * Math.sin(T * 0.09 + i * 2.1);
+    const lx = clamp(0.55 * Math.sin(T * 0.13 * (1 + 0.37 * i) + 1.7 * i) + 0.4 * Math.sin(T * 0.41 + 4.1 * i), -0.9, 0.9);
+    const x = lx * z * tanHalf * aspect * 0.85;
+    const r = 0.25 * (1 + 0.2 * Math.sin(T * 0.5 + i * 1.3) + 0.22 * storm);
+    return { x, z, r, str, sway: T * 0.55 + i * 2, lean: wind * 0.1, seed: 0.11 + i * 0.37, breath: T * 0.5 + i };
+  });
+  return { T, storm, phase: p.id, wind, tors, rain: mix(0.05, 0.75, sstep(0.05, 0.85, storm)), tspin: 2.2 + storm * 1.4, tflow: 0.9 + storm * 0.6 };
+}
+
+/* lightning, pure: one chance per quarter second at a rate set by the storm; a second bolt at the height of it */
+const SLOT = 0.25;
 function lightning(T) {
-  let flash = 0, bolt = [0, 0.8, 4], boltOn = 0, seed = 0;
-  for (let k = Math.floor(T / 0.35) - 2; k <= Math.floor(T / 0.35); k++) {
-    const t0 = k * 0.35 + hash(k * 13 + 1) * 0.3; const dt = T - t0; if (dt < 0 || dt > 0.6) continue;
-    const P = director(t0); if (hash(k * 17 + 5) > RATE[P.stage] * 0.35) continue;
-    const f = Math.exp(-dt / 0.06) + (dt > 0.09 ? 0.7 * Math.exp(-(dt - 0.09) / 0.07) : 0);
-    if (f > flash) { flash = f; const [bx, bz] = [1.9 + (hash(k * 19) - 0.5) * 5.0, 4.2 + (hash(k * 23) - 0.5) * 4.2]; const cg = hash(k * 29 + 7) < 0.35;
-      bolt = [bx, cg ? 0.4 : 1.1, bz]; boltOn = cg && dt < 0.22 ? 1 : 0; seed = hash(k * 31) ; }
+  const bolts = [], k1 = Math.floor(T / SLOT); let flash = 0, shake = 0;
+  for (let k = k1 - 3; k <= k1; k++) {
+    if (k < 0) continue;
+    for (let j = 0; j < 2; j++) {
+      const t0 = k * SLOT + hash(k * 13 + j * 101) * 0.2, s = stormAt(t0), iv = mix(4.5, 0.22, clamp(s));
+      if (s <= 0.25 || hash(k * 17 + 5) > SLOT / iv) continue;
+      if (j === 1 && !(s > 0.7 && hash(k * 19 + 9) < 0.6)) continue;
+      const dt = T - t0; if (dt < 0) continue;
+      const a = Math.max(0, 1 - dt * 7);
+      flash = Math.max(flash, (0.4 + s * 0.3) * Math.max(0, 1 - dt * 2.4));
+      shake = Math.max(shake, (0.2 + s * 0.2) * Math.max(0, 1 - dt * 2.2));
+      if (a > 0 && bolts.length < 4) { const bz = mix(1.2, 4.0, hash(k * 29 + j)); bolts.push([mix(-0.5, 0.5, hash(k * 23 + j)) * bz, bz, a, hash(k * 31 + j)]); }
+    }
   }
-  return { flash: Math.min(flash, 1.4), bolt, boltOn, seed };
+  const live = bolts.length;
+  while (bolts.length < 4) bolts.push([0, 0, 0, 0]);
+  return { bolts, flash, shake, live };
 }
-
-/* ── §2 the cameras ──────────────────────────────────────────────────── */
-export const PRESETS = [
-  { id: 'wide', name: 'Wide', at(T, P) { const b = -25 + 6 * Math.sin(T * 2 * Math.PI / 48); const [x, z] = polar(b, 8.2); return { pos: [x, 0.02 + 0.004 * Math.sin(T * 0.21), z], look: [-0.35, 0.34, 0.3], tanHalf: 0.16 }; } },
-  /* the chase unit sits on a north-south section road south of the tornado, looking up the road at it;
-     it keeps to one road for a whole cycle and drives north with the storm, and cuts to a new road between cycles */
-  { id: 'chase', name: 'Chase', at(T, P) { const m = mesoAt(T), road = chaseRoad(T);
-    const x = road - m[0], z = P.tor[1] - 3.2 - 0.25 * Math.sin(T * 2 * Math.PI / 40); return { pos: [x, 0.0028, z], look: [mix(x, P.tor[0], 0.55), 0.28, P.tor[1]], tanHalf: 0.30 }; } },
-  { id: 'sky', name: 'Sky cam', at(T, P) { const b = -68 + 12 * Math.sin(T * 2 * Math.PI / 60); const [x, z] = polar(b, 6.6); return { pos: [x, 0.42, z], look: [P.tor[0] * 0.8, 0.12, P.tor[1] * 0.8], tanHalf: 0.30 }; } },
-];
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], norm = (v) => { const l = Math.hypot(...v) || 1; return v.map((x) => x / l); };
-const crossV = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const lerp3 = (a, b, t) => [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)];
-function basis(v) { const fwd = norm(sub(v.look, v.pos)); const right = norm(crossV([0, 1, 0], fwd)); const up = crossV(fwd, right); return { fwd, right, up }; }
-
-const fmt = (n) => Math.round(n).toLocaleString('en-US');
 
 export function stormApp() {
-  let dev = null, ui = null, host = null, gpu = null, s = null, dead = false, err = null, hover = null;
-  let view = null, preset = 0, from = null, switchAt = -1e9, pauseAt = null, seek = 0, stepsFine = 64, stepsCoarse = 20, scale = 0.5;
-  const spans = { scene: [], debris: [] }; let rafLast = 0, rafEMA = 0, stillKey = '', renders = 0;
-  const C = { ink: [0.97, 0.96, 0.93, 1], dim: [0.72, 0.72, 0.74, 1], glass: [0.05, 0.05, 0.07, 0.52], cell: [1, 1, 1, 0.10], cellHi: [1, 1, 1, 0.22], red: [0.80, 0.13, 0.11, 1] };
-
+  let dev = null, ui = null, host = null, gpu = null, s = null, dead = false, err = null;
+  let pauseAt = null, seek = 0, steps = 80, scale = 0.5, stillDone = false, renders = 0, boltCount = 0, prevLive = 0;
+  const spans = { scene: [], debris: [] }; let rafLast = 0, rafEMA = 0;
+  const C = { ink: [0.95, 0.94, 0.90, 1], dim: [0.70, 0.70, 0.74, 1], glass: [0.08, 0.07, 0.12, 0.5], warn: [1.0, 0.82, 0.30, 1], bolt: [0.75, 0.86, 1.0, 1], red: [0.80, 0.13, 0.11, 1] };
   const q = new URLSearchParams(location.search);
-  if (q.has('scale')) scale = clamp(+q.get('scale'), 0.25, 1); if (q.has('steps')) stepsFine = Math.max(4, +q.get('steps') | 0);
-  /* a handle for verification: seek the storm, pin a preset, change the volume's cost */
-  const api = { seek(T) { seek = T - (performance.now() / 1000); pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, preset(id) { const i = PRESETS.findIndex((p) => p.id === id); if (i >= 0) choose(i, true); },
-    steps(n) { stepsFine = n; },
-    /* 'up': under the meso looking straight up at the base, drawn as a map (north up, east right) once flipped left-right;
-       'down': above the tornado looking down, with the measurement pass on (roads in red, funnel at 40 ft in green) */
-    view(v) { view = v; }, read: () => s && s.scene.color.read({ mipLevel: 0, region: 'all' }).then((px) => ({ w: s.scene.size[0], h: s.scene.size[1], px: Array.from(px) })), coarse(n) { stepsCoarse = n; }, scale(v) { scale = v; }, spans: () => ({ scene: med(spans.scene), debris: med(spans.debris), n: spans.scene.length, scale, steps: stepsFine }), director, get ready() { return !!s; }, get renders() { return renders; } };
-  globalThis.__supercell = api;
+  if (q.has('scale')) scale = clamp(+q.get('scale'), 0.25, 1); if (q.has('steps')) steps = Math.max(4, +q.get('steps') | 0);
   const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
+  /* a handle for verification: pause or seek the storm, change the march's cost, read the timer */
+  const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; },
+    spans: () => ({ scene: med(spans.scene), debris: med(spans.debris), n: spans.scene.length, scale, steps }), director: (T) => director(T), lightning: (T) => lightning(T), get renders() { return renders; } };
+  globalThis.__supercell = api;
 
-  const stormTime = (now) => { if (reduced.matches) { for (let c = 0; c < 12; c++) if (director(c * CYCLE).wedge) return c * CYCLE + STAGES[0].dur + STAGES[1].dur * 0.6; return STAGES[0].dur + 20; }
-    return pauseAt !== null ? pauseAt : now / 1000 + seek; };
-  const camAt = (T, P, now) => { const b = PRESETS[preset].at(T, P);
-    if (from && !reduced.matches) { const k = ease((now - switchAt) / 2500); if (k < 1) { const a = PRESETS[from.i].at(T, P); return { pos: lerp3(a.pos, b.pos, k), look: lerp3(a.look, b.look, k), tanHalf: mix(a.tanHalf, b.tanHalf, k) }; } }
-    return b; };
-  function choose(i, cut) { if (i === preset) return; from = cut ? null : { i: preset }; preset = i; switchAt = performance.now(); if (host && host.invalidate) host.invalidate(); }
+  /* the reduced-motion still: halfway through the first peak */
+  const stillT = () => { for (let T = 0; T < 600; T += 0.5) { const p = phaseAt(T); if (p.id === 'peak') return p.t0 + p.dur * 0.5; } return 30; };
 
   function build(g) {
     gpu = g;
-    const W = 64, H = 64;
-    const scene = target(gpu, { size: [W, H], format: 'rgba8unorm', label: 'supercell-scene' });
-    const debrisT = target(gpu, { size: [W, H], colors: [{ format: 'rgba8unorm' }, { format: 'r16float' }], depth: true, clearColor: [0, 0, 0, 0], label: 'supercell-debris' });
-    const camU = uniforms(gpu, { pos: [0, 0, 0], tanHalf: 0.4, fwd: [0, 0, 1], aspect: 1, right: [1, 0, 0], steps: stepsFine, up: [0, 1, 0], coarse: stepsCoarse, pxH: 600, _c0: 0, _c1: 0, _c2: 0 });
+    const scene = target(gpu, { size: [64, 64], format: 'rgba8unorm', label: 'supercell-scene' });
+    const debrisT = target(gpu, { size: [64, 64], colors: [{ format: 'rgba8unorm' }, { format: 'r16float' }], depth: true, clearColor: [0, 0, 0, 0], label: 'supercell-debris' });
+    const cam = uniforms(gpu, { pos: [0, 0.0055, -0.1], tanHalf: 0.42, fwd: [0, 0, 1], aspect: 1.42, right: [1, 0, 0], steps, up: [0, 1, 0], pxH: 600 });
     const particles = storage(gpu, ND * 32);
     const init = new Float32Array(ND * 8);
-    for (let i = 0; i < ND; i++) { const a = hash(i * 3 + 1) * Math.PI * 2, r = Math.sqrt(hash(i * 5 + 2)) * 0.6; init[i * 8] = Math.cos(a) * r; init[i * 8 + 2] = Math.sin(a) * r; init[i * 8 + 3] = i < ND * 0.5 ? 0 : i < ND * 0.8 ? 1 : 2; }
+    for (let i = 0; i < ND; i++) {
+      const o = i * 8;
+      if (i < CHIPS + SPRITES) { init[o] = (hash(i * 3 + 1) * 2 - 1) * 2.2; init[o + 2] = 0.5 + hash(i * 5 + 2) * 3.6; init[o + 3] = i < CHIPS ? Math.floor(hash(i * 7) * 3) : 3 + Math.floor(hash(i * 11) * 6); init[o + 7] = hash(i * 13) * 6.28; }
+      else { const [kind, x, z] = SCENERY[i - CHIPS - SPRITES]; init[o] = x; init[o + 2] = z; init[o + 3] = kind; }
+    }
     particles.write(init);
-    const simVals = { dt: 1 / 60, time: 0, torR: 0.05, strength: 0, drift: [0, 0], infR: 0.4, maxH: 0.12, frame: 0, count: ND, _p0: 0, _p1: 0 };
-    const kernel = compute(gpu, DEBRIS_KERNEL, { label: 'supercell-debris-kernel', set: { sim: simVals, ds: particles } });
-    const debris = draw(gpu, { shader: DEBRIS_DRAW, label: 'supercell-debris', geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: ND, set: { cam: camU, view: [0, 0, 600, 40], ds: particles } });
-    const stVals = { tor: [0, 0, 0], torR: 0.05, sun: SUN, flash: 0, bolt: [0, 1, 4], boltOn: 0, tilt: [0, 0], topR: 0.2, flare: 2, descend: 0, rope: 0, ragged: 0.9, spin: 0, wall: 0.5, slot: 0.1, core: 0.85, dust: 0, dustR: 0.1, base: 0.72, origin: [0, 0], time: 0, broken: 0, wedge: 0, seed: 0, poleX: 0, _s0: 0, _s1: 0, _s2: 0 };
-    const sceneFx = effect(gpu, SCENE, { label: 'supercell-scene', set: { cam: camU, st: stVals, debrisAlbedo: debrisT.colors[0], debrisDist: debrisT.colors[1] } });
+    const atlasC = spriteAtlas();
+    const atlas = texture(gpu, { kind: '2d', size: [SPRITE_PX * SPRITE_FRAMES, SPRITE_PX], format: 'rgba8unorm', usage: ['texture_binding', 'copy_dst', 'render_attachment'], label: 'supercell-sprites' });
+    dev.queue.copyExternalImageToTexture({ source: atlasC }, { texture: atlas.gpu }, [SPRITE_PX * SPRITE_FRAMES, SPRITE_PX]);
+    const sim = { dt: 1 / 60, time: 0, wind: 0, count: ND, t0: [0, 1.4, 0.25, 1], t1: [0, 1.9, 0.25, 0], t2: [0, 2.4, 0.25, 0], storm: 0.4, maxH: 0.3, _p0: 0, _p1: 0 };
+    const kernel = compute(gpu, DEBRIS_KERNEL, { label: 'supercell-debris-kernel', set: { sim, ds: particles } });
+    const debris = draw(gpu, { shader: DEBRIS_DRAW, label: 'supercell-debris', geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: ND, set: { cam, ds: particles, atlas, smp: sampler(gpu, { minFilter: 'nearest', magFilter: 'nearest' }) } });
+    const stV = { t0: [0, 1.4, 0.25, 1], t1: [0, 1.9, 0.25, 0], t2: [0, 2.4, 0.25, 0], s0: [0, 0, 0, 0], s1: [0, 0, 0, 0], s2: [0, 0, 0, 0], b0: [0, 0, 0, 0], b1: [0, 0, 0, 0], b2: [0, 0, 0, 0], b3: [0, 0, 0, 0], time: 0, storm: 0.4, flash: 0, wind: 0, rain: 0.2, tspin: 2.4, base: 0.62, tflow: 1 };
+    const sceneFx = effect(gpu, SCENE, { label: 'supercell-scene', set: { cam, st: stV, debrisAlbedo: debrisT.colors[0], debrisDist: debrisT.colors[1] } });
     const tm = dev.features.has('timestamp-query') ? timer(gpu) : null;
     if (tm) tm.onResults((r) => { for (const k of ['scene', 'debris']) if (r[k] !== undefined) { spans[k].push(r[k]); if (spans[k].length > 60) spans[k].shift(); } });
     gpu.onError && gpu.onError((e) => { err = e; console.error('supercell', e); });
-    s = { scene, debrisT, camU, particles, kernel, debris, sceneFx, tm, simVals, stVals, frameN: 0, prevTor: null };
+    s = { scene, debrisT, cam, particles, atlas, kernel, debris, sceneFx, tm, sim, stV, preRolled: false };
     if (host && host.invalidate) host.invalidate();
   }
 
-  /* one step of the whole storm at storm time T */
-  function step(T, dt, now, P) {
-    const meso = mesoAt(T), L = lightning(T);
-    const P2 = director(T - 0.05), m2 = mesoAt(T - 0.05);
-    const drift = [((meso[0] + P.tor[0]) - (m2[0] + P2.tor[0])) / 0.05, ((meso[1] + P.tor[1]) - (m2[1] + P2.tor[1])) / 0.05];
-    Object.assign(s.simVals, { dt: Math.min(dt, 1 / 30), time: T, torR: P.torR, strength: P.onGround ? P.dust : P.dust * 0.4, drift, infR: P.torR * 3 + 0.22, maxH: 0.05 + 0.12 * P.dust, frame: s.frameN++ });
-    s.kernel.set({ sim: s.simVals });
-    const wrap = (v) => ((v % 64) + 64) % 64;
-    Object.assign(s.stVals, { tor: [P.tor[0], 0, P.tor[1]], torR: P.torR, flash: reduced.matches ? 0 : L.flash, bolt: L.bolt, boltOn: reduced.matches ? 0 : L.boltOn, tilt: [P.wall0[0] - P.tor[0], P.wall0[1] - P.tor[1]], topR: P.topR, flare: P.flare,
-      descend: P.descend, rope: P.rope, ragged: P.ragged, spin: T * 2.2, wall: P.wall, slot: P.slot, core: P.core, dust: P.dust, dustR: P.dustR, origin: [wrap(meso[0]), wrap(meso[1])], time: T, broken: P.broken, wedge: P.wedge ? 1 : 0, seed: P.seed, poleX: chaseRoad(T) - meso[0] + 0.0045, _s0: view && view.mode === 'down' ? 1 : view && view.mode === 'map' ? 2 : 0 });
-    s.sceneFx.set({ st: s.stVals });
-    return { meso, L };
+  function step(T, dt, aspect) {
+    const D = director(T, aspect), L = reduced.matches ? { bolts: [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], flash: 0, shake: 0, live: 0 } : lightning(T);
+    const tv = D.tors.map((t) => [t.x, t.z, t.r, t.str]), sv = D.tors.map((t) => [t.sway, t.lean, t.seed, t.breath]);
+    Object.assign(s.sim, { dt: Math.min(dt, 1 / 30), time: T, wind: D.wind, t0: tv[0], t1: tv[1], t2: tv[2], storm: D.storm, maxH: 0.25 + D.storm * 0.2 });
+    s.kernel.set({ sim: s.sim });
+    Object.assign(s.stV, { t0: tv[0], t1: tv[1], t2: tv[2], s0: sv[0], s1: sv[1], s2: sv[2], b0: L.bolts[0], b1: L.bolts[1], b2: L.bolts[2], b3: L.bolts[3], time: T, storm: D.storm, flash: L.flash, wind: D.wind, rain: D.rain, tspin: D.tspin, tflow: D.tflow });
+    s.sceneFx.set({ st: s.stV });
+    return { D, L };
   }
 
-  function chrome(P, readout) {
-    const st = STAGES[P.stage];
+  function chrome(D, readout) {
+    const nAct = D.tors.filter((t) => t.str > 0.3).length, hot = D.storm > 0.66;
     ui.text(24, 22, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34 });
-    ui.text(24, 42, 'severe-weather hero graphics · live segment package', 10.5, C.dim);
-    ui.rect(24, 62, 84, 18, C.red, 4); ui.text(66, 64, 'SIMULATION', 9.5, C.ink, { weight: 800, track: 0.12, align: 'center' });
-    ui.text(116, 64.5, 'not a live storm · anatomy after NWS spotter guides', 9, C.dim);
-    /* camera presets, and a compass so north can be checked from any shot */
-    const px = 596, py = 20, pw = 76;
-    ui.glass(px - 4, py - 4, pw * 3 + 8, 42, C.glass, 21, 0.14);
-    PRESETS.forEach((p, i) => { const x = px + i * pw; const on = i === preset; if (on || hover === p.id) ui.rect(x, py, pw, 34, on ? [1, 1, 1, 0.9] : C.cellHi, 17);
-      ui.text(x + pw / 2, py + 9.5, p.name.toUpperCase(), 10.5, on ? [0.06, 0.06, 0.08, 1] : C.ink, { weight: 700, track: 0.1, align: 'center' }); ui.hit(p.id, x, py, pw, 34); });
+    ui.text(24, 42, 'a storm that runs itself · three tornadoes at most · from the Rock ’em Sock ’em stage, rebuilt on vgpu', 10.5, C.dim);
+    ui.glass(24, 70, 236, 112, C.glass, 20, 0.12);
+    ui.text(42, 84, 'STORM DIRECTOR', 9, C.dim, { weight: 600, track: 0.18 });
+    ui.text(42, 98, PHASE[D.phase], 22, hot ? C.warn : C.ink, { weight: 800, track: -0.02 });
+    ui.rect(42, 134, 200, 4, [1, 1, 1, 0.14], 2); ui.rect(42, 134, 200 * clamp(D.storm), 4, hot ? C.warn : C.bolt, 2);
+    ui.text(42, 146, `${Math.round(D.storm * 100)} % · ${nAct} tornado${nAct === 1 ? '' : 'es'} · wind ${D.wind >= 0 ? '→' : '←'} ${Math.abs(D.wind).toFixed(1)}`, 9.5, C.dim, { family: MONO });
+    ui.text(42, 162, `${boltCount} bolts so far`, 9.5, C.dim, { family: MONO });
     readout();
-    /* the lower third */
-    const lx = 24, ly = 500, lw = 800, lh = 100;
-    ui.glass(lx, ly, lw, lh, C.glass, 16, 0.14);
-    ui.rect(lx + 18, ly + 18, 4, 44, st.col, 2);
-    ui.text(lx + 32, ly + 16, 'TORNADO · LIFECYCLE STAGE', 8.5, C.dim, { weight: 600, track: 0.16 });
-    ui.text(lx + 32, ly + 30, st.name.toUpperCase() + (P.stage === 1 ? (P.wedge ? ' · WEDGE' : ' · STOVEPIPE') : ''), 24, C.ink, { weight: 800, track: 0.02 });
-    STAGES.forEach((sg, i) => { const x = lx + 32 + i * 60; ui.rect(x, ly + 66, 54, 3, [1, 1, 1, 0.16], 1.5); const f = i < P.stage ? 1 : i === P.stage ? P.a : 0; if (f > 0) ui.rect(x, ly + 66, 54 * f, 3, i === P.stage ? st.col : [1, 1, 1, 0.55], 1.5); });
-    const funnel = P.onGround ? `${fmt(P.torR * 2 * YD)} yd wide at the ground` : P.descend > 0.05 ? 'aloft · not yet on the ground' : 'no funnel';
-    const dust = P.dust > 0.15 ? `${fmt(P.dustR * 2 * YD)} yd` : '—';
-    ui.text(lx + 32, ly + 76, `Funnel ${funnel}   ·   debris cloud ${dust}`, 11, C.ink, { weight: 500 });
-    const rx = lx + 520; ui.rect(rx - 16, ly + 16, 1, lh - 32, [1, 1, 1, 0.14]);
-    ui.text(rx, ly + 16, 'FOR SCALE · WIDEST ON RECORD', 8.5, C.dim, { weight: 600, track: 0.16 });
-    ui.text(rx, ly + 31, 'El Reno, Okla. · 31 May 2013', 13, C.ink, { weight: 700 });
-    ui.text(rx, ly + 50, `2.6 mi · ${fmt(2.6 * YD)} yd maximum width`, 11, C.ink, { family: MONO });
-    ui.text(rx, ly + 70, 'source · NWS Norman event summary', 8.5, C.dim, { family: MONO });
-    ui.text(rx, ly + 82, 'one-mile section roads show the scale', 8.5, C.dim, { family: MONO });
+    ui.text(24, 598, 'THE DIRECTOR SWINGS LULL → BUILD → PEAK → CRASH ON ITS OWN', 8.5, C.dim, { weight: 600, track: 0.12, op: 0.8 });
   }
 
   return {
     init(d, h) { dev = d; host = h; ui = h.ui;
       initFromDevice(d).then((g) => { if (!dead) build(g); }).catch((e) => { err = e; console.error('supercell init', e); if (host.invalidate) host.invalidate(); }); },
-    move(p, hov) { hover = hov; }, leave() { hover = null; },
-    up(p, id, same) { if (!same || !id) return; const i = PRESETS.findIndex((x) => x.id === id); if (i >= 0) choose(i, reduced.matches); },
     destroy() { dead = true; if (globalThis.__supercell === api) delete globalThis.__supercell; if (gpu) gpu.dispose(); s = null; gpu = null; },
-    frame(t, dt, now, hov) { hover = hov;
-      if (!s) { const tgt = ui.prepare(scale); const enc = dev.createCommandEncoder(); const rp = enc.beginRenderPass({ colorAttachments: [{ view: tgt.view, loadOp: 'clear', clearValue: [0.06, 0.06, 0.07, 1], storeOp: 'store' }] }); rp.end();
-        ui.text(24, 22, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34 }); ui.text(24, 42, err ? 'could not start: ' + (err.message || err) : 'starting the storm…', 10.5, C.dim);
+    frame(t, dt, now) {
+      if (!s) { const tgt = ui.prepare(scale); const enc = dev.createCommandEncoder(); const rp = enc.beginRenderPass({ colorAttachments: [{ view: tgt.view, loadOp: 'clear', clearValue: [0.07, 0.06, 0.18, 1], storeOp: 'store' }] }); rp.end();
+        ui.text(24, 22, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34 }); ui.text(24, 42, err ? 'could not start: ' + (err.message || err) : 'brewing…', 10.5, C.dim);
         ui.compose(enc); dev.queue.submit([enc.finish()]); return; }
-      /* reduced motion: one composed still per preset, then nothing until something changes */
-      const key = preset + '|' + scale;
-      if (reduced.matches && stillKey === key) return;
-      const T = stormTime(now), P = director(T);
-      const tgt = ui.prepare(scale);
+      if (reduced.matches && stillDone) return;
+      const T = reduced.matches ? stillT() : pauseAt !== null ? pauseAt : now / 1000 + seek;
+      const tgt = ui.prepare(scale), aspect = tgt.w / tgt.h;
       if (s.scene.size[0] !== tgt.w || s.scene.size[1] !== tgt.h) { s.scene.resize([tgt.w, tgt.h]); s.debrisT.resize([tgt.w, tgt.h]); s.sceneFx.set({ debrisAlbedo: s.debrisT.colors[0], debrisDist: s.debrisT.colors[1] }); }
-      if (reduced.matches && !s.preRolled) { const P0 = director(T); for (let i = 0; i < 360; i++) { step(T - (360 - i) / 60, 1 / 60, now, P0); s.kernel.dispatch(Math.ceil(ND / 256)); } s.preRolled = true; }
-      step(T, reduced.matches ? 1 / 60 : dt, now, P);
-      let v = camAt(T, P, now), B = basis(v);
-      if (view && view.mode === 'up') { v = { pos: [0, 0.03, 0], tanHalf: view.tanHalf || 4 }; B = { fwd: [0, 1, 0], right: [-1, 0, 0], up: [0, 0, 1] }; }
-      if (view && view.mode === 'down') { v = { pos: [P.tor[0], view.h, P.tor[1]], tanHalf: view.tanHalf || 1 }; B = { fwd: [0, -1, 0], right: [1, 0, 0], up: [0, 0, 1] }; }
-      s.camU.set({ pos: v.pos, tanHalf: v.tanHalf, fwd: B.fwd, aspect: tgt.w / tgt.h, right: B.right, steps: stepsFine, up: B.up, coarse: stepsCoarse, pxH: tgt.h, _c0: 0, _c1: 0, _c2: 0 });
-      s.debris.set({ view: [P.tor[0], P.tor[1], tgt.h, 40] });
+      if (reduced.matches && !s.preRolled) { for (let i = 0; i < 480; i++) { step(T - (480 - i) / 60, 1 / 60, aspect); s.kernel.dispatch(Math.ceil(ND / 256)); } s.preRolled = true; }
+      const { D, L } = step(T, dt, aspect);
+      if (L.live > prevLive) boltCount += L.live - prevLive; prevLive = L.live;
+      /* the camera: a low eye on the plain, a slow drift, and a kick when lightning lands */
+      const sh = L.shake, fq = Math.floor(now / 33), jx = sh > 0 ? (hash(fq) - 0.5) * sh * 0.02 : 0, jy = sh > 0 ? (hash(fq + 99) - 0.5) * sh * 0.02 : 0;
+      const pos = [0.05 * Math.sin(T * 0.07) + jx, 0.0055 + jy * 0.2, -0.1], look = [0.06 * Math.sin(T * 0.05) + jx * 4, 0.16 + jy * 4, 2.3];
+      const fv = [look[0] - pos[0], look[1] - pos[1], look[2] - pos[2]], fl = Math.hypot(...fv), fwd = fv.map((x) => x / fl);
+      const rl = Math.hypot(fwd[2], fwd[0]), right = [fwd[2] / rl, 0, -fwd[0] / rl];
+      const up = [fwd[1] * right[2] - fwd[2] * right[1], fwd[2] * right[0] - fwd[0] * right[2], fwd[0] * right[1] - fwd[1] * right[0]];
+      s.cam.set({ pos, tanHalf: 0.42, fwd, aspect, right, steps, up, pxH: tgt.h });
       if (!reduced.matches) s.kernel.dispatch(Math.ceil(ND / 256));
       frame(gpu, (f) => {
         f.pass(s.tm ? { target: s.debrisT, timer: s.tm.span('debris') } : s.debrisT, s.debris);
@@ -219,19 +170,16 @@ export function stormApp() {
       });
       ui.scene(s.scene.color.gpu);
       if (!reduced.matches) { if (rafLast) { const iv = now - rafLast; rafEMA = rafEMA ? rafEMA * 0.92 + iv * 0.08 : iv; } rafLast = now; }
-      if (!view) chrome(P, () => {
-        const rx = 826; let line1, line2, frac = null;
-        if (reduced.matches) { line1 = 'motion reduced · one still frame'; line2 = 'no frame loop is running'; }
-        else if (s.tm) { const sc = med(spans.scene), db = med(spans.debris); if (sc !== null) { const tot = sc + (db || 0); line1 = `GPU ${tot.toFixed(2)} ms of 8.3 · scene ${sc.toFixed(2)} + debris ${(db || 0).toFixed(2)}`; frac = tot / 8.33; } else line1 = 'GPU — measuring'; line2 = `timestamp-query · ${adapterName()} · ${tgt.w}×${tgt.h}`; }
-        else { line1 = `rAF interval ${rafEMA.toFixed(1)} ms — not GPU cost`; line2 = 'timestamp-query unavailable on this adapter'; }
-        ui.text(rx, 66, line1, 9.5, C.ink, { family: MONO, align: 'right' }); ui.text(rx, 80, line2, 8, C.dim, { family: MONO, align: 'right' });
-        if (frac !== null) { ui.rect(rx - 180, 96, 180, 3, [1, 1, 1, 0.16], 1.5); ui.rect(rx - 180, 96, 180 * clamp(frac), 3, frac > 1 ? C.red : [0.55, 0.85, 0.6, 1], 1.5); }
-        const yaw = Math.atan2(B.fwd[0], B.fwd[2]); const cx = 572, cy = 37; ui.glassDisc(cx, cy, 17, C.glass, 0.18);
-        /* the dial's up is the camera's forward; north sits at minus the camera's bearing */
-        const nx = cx + Math.sin(-yaw) * 12, ny = cy - Math.cos(-yaw) * 12; ui.disc(nx, ny, 3, C.red); ui.text(cx, cy - 5.5, 'N', 9, C.ink, { weight: 800, align: 'center' });
+      chrome(D, () => {
+        const rx = 826; let l1, l2, frac = null;
+        if (reduced.matches) { l1 = 'motion reduced · one still frame'; l2 = 'no frame loop is running'; }
+        else if (s.tm) { const sc = med(spans.scene), db = med(spans.debris); if (sc !== null) { const tot = sc + (db || 0); l1 = `GPU ${tot.toFixed(2)} ms of 8.3 · march ${sc.toFixed(2)} + debris ${(db || 0).toFixed(2)}`; frac = tot / 8.33; } else l1 = 'GPU — measuring'; l2 = `timestamp-query · ${adapterName()} · ${tgt.w}×${tgt.h}`; }
+        else { l1 = `rAF interval ${rafEMA.toFixed(1)} ms — not GPU cost`; l2 = 'timestamp-query unavailable on this adapter'; }
+        ui.text(rx, 22, l1, 9.5, C.ink, { family: MONO, align: 'right' }); ui.text(rx, 36, l2, 8, C.dim, { family: MONO, align: 'right' });
+        if (frac !== null) { ui.rect(rx - 180, 52, 180, 3, [1, 1, 1, 0.16], 1.5); ui.rect(rx - 180, 52, 180 * clamp(frac), 3, frac > 1 ? C.red : [0.55, 0.85, 0.6, 1], 1.5); }
       });
       const enc = dev.createCommandEncoder(); ui.compose(enc); dev.queue.submit([enc.finish()]); renders++;
-      if (reduced.matches) stillKey = key;
+      if (reduced.matches) stillDone = true;
     }
   };
 }
