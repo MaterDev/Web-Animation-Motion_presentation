@@ -89,15 +89,39 @@ fn funnel(p: vec3f, i: i32, detail: f32) -> vec2f {
   let dens = body * (0.12 + 0.88 * smoothstep(0.3, 0.6, shade)) * env * A.w * 9.0 / max(R, 0.02);
   return vec2f(dens, shade);
 }
-fn wall(p: vec3f, i: i32, detail: f32) -> f32 {
-  let A = torA(i); if (A.w < 0.02 || p.y > st.base || p.y < st.base - 0.3) { return 0.0; }
-  let c = centre(i, 1.0); let Rw = A.z + 0.42;
-  let d = p.xz - c; let r = length(d) / Rw;
-  if (r > 1.2) { return 0.0; }
-  let np = vec3f(rot2(d, -st.time * 0.12) * 5.0, p.y * 4.0 + st.time * 0.1 + torB(i).z * 5.0);
+fn billow(p: vec3f, c: vec2f, fk: f32, spin: f32, orbit: f32, size: f32, top: f32) -> vec2f {
+  let ang = fk * 1.2566 + spin;
+  let bc = vec3f(c.x + cos(ang) * orbit, top - 0.07 + 0.06 * sin(fk * 2.3 + st.time * 0.8), c.y + sin(ang) * orbit);
+  let sz = size * (0.85 + 0.3 * sin(st.time * 1.3 + fk * 1.7));
+  return vec2f(1.0 - length(p - bc) / sz, bc.y);
+}
+/* the crown each funnel pours out of: a cloud burst — a heavy central mass and five boiling billows
+   wheeling round the top of the column, each one lumpy, bulging and churning as the storm turns.
+   Returns density and a shade: billow tops catch the light, undersides go dark. */
+fn wall(p: vec3f, i: i32, detail: f32) -> vec2f {
+  let A = torA(i); if (A.w < 0.02 || p.y > st.base + 0.02 || p.y < st.base - 0.42) { return vec2f(0.0); }
+  let c = centre(i, 1.0); let top = st.base - 0.05;
+  let d = p.xz - c; let reach = A.z * 1.5 + 0.36;
+  if (length(d) > reach) { return vec2f(0.0); }
+  let spin = st.time * (0.35 + 0.25 * st.storm) + torB(i).z * 9.0;
+  let np = vec3f(rot2(d, -spin * 0.7) * 6.0, p.y * 6.0 - st.time * 0.35 + torB(i).z * 5.0);
   var n = 0.5; if (detail > 0.5) { n = fbm3(np); } else { n = fbm2(np); }
-  let low = st.base - 0.22 * A.w * (1.0 - r * r);
-  return smoothstep(low - 0.01, low + 0.05, p.y + (n - 0.5) * 0.08) * smoothstep(0.32, 0.62, (1.0 - r) * (n + 0.5)) * A.w * 9.0;
+  /* the central mass, flattened and hanging */
+  let core = vec3f(c.x, top - 0.02, c.y);
+  var best = 1.0 - length((p - core) / vec3f(A.z + 0.2, 0.13 + 0.06 * A.w, A.z + 0.2));
+  var hiY = core.y;
+  /* the billows: orbiting, breathing, each at its own height */
+  let orbit = A.z * 0.95 + 0.1; let size = (A.z * 0.55 + 0.1) * (0.8 + 0.4 * A.w);
+  /* unrolled: a constant-bound loop in a function the march calls stalls compileShader on Metal */
+  let v0 = billow(p, c, 0.0, spin, orbit, size, top); if (v0.x > best) { best = v0.x; hiY = v0.y; }
+  let v1 = billow(p, c, 1.0, spin, orbit, size, top); if (v1.x > best) { best = v1.x; hiY = v1.y; }
+  let v2 = billow(p, c, 2.0, spin, orbit, size, top); if (v2.x > best) { best = v2.x; hiY = v2.y; }
+  let v3 = billow(p, c, 3.0, spin, orbit, size, top); if (v3.x > best) { best = v3.x; hiY = v3.y; }
+  let v4 = billow(p, c, 4.0, spin, orbit, size, top); if (v4.x > best) { best = v4.x; hiY = v4.y; }
+  /* cauliflower edges: the noise eats into every boundary */
+  let dens = smoothstep(0.0, 0.35, best + (n - 0.5) * 0.55) * A.w * 11.0;
+  let shade = smoothstep(-0.08, 0.1, p.y - hiY) * 0.6 + n * 0.4;
+  return vec2f(dens, shade);
 }
 fn dust(p: vec3f, i: i32, detail: f32) -> vec2f {
   let A = torA(i); if (A.w < 0.25) { return vec2f(0.0); }
@@ -249,7 +273,9 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
       if (!debrisDone && dD < t) { acc += Tr * dA.a * dA.rgb * (0.85 + st.flash * 1.2); Tr *= 1.0 - dA.a; debrisDone = true; }
       let p = ro + rd * t;
       let f0 = funnel(p, 0, 1.0); let f1 = funnel(p, 1, 1.0); let f2 = funnel(p, 2, 1.0);
-      let w = wall(p, 0, 1.0) + wall(p, 1, 1.0) + wall(p, 2, 1.0);
+      let w0 = wall(p, 0, 1.0); let w1 = wall(p, 1, 1.0); let w2 = wall(p, 2, 1.0);
+      let w = w0.x + w1.x + w2.x;
+      let shadeW = (w0.x * w0.y + w1.x * w1.y + w2.x * w2.y) / max(w, 1e-4);
       let d0 = dust(p, 0, 1.0); let d1 = dust(p, 1, 1.0); let d2 = dust(p, 2, 1.0);
       let fs = f0.x + f1.x + f2.x; let ds = d0.x + d1.x + d2.x;
       let sig = fs + w + ds;
@@ -258,10 +284,10 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
         let shadeD = (d0.x * d0.y + d1.x * d1.y + d2.x * d2.y) / max(ds, 1e-4);
         /* self-shadow from the upper left, so each column has a lit side and a dark side */
         let q = p + vec3f(-0.08, 0.08, -0.04);
-        let occ = funnel(q, 0, 0.0).x + funnel(q, 1, 0.0).x + funnel(q, 2, 0.0).x + wall(q, 0, 0.0) + wall(q, 1, 0.0) + wall(q, 2, 0.0);
+        let occ = funnel(q, 0, 0.0).x + funnel(q, 1, 0.0).x + funnel(q, 2, 0.0).x + wall(q, 0, 0.0).x + wall(q, 1, 0.0).x + wall(q, 2, 0.0).x;
         let lit = 0.55 + 0.5 * exp(-occ * 0.05);
         let colF = mix(T_DARK * 0.8, T_LITE, smoothstep(0.35, 0.85, shadeF) * 0.8);
-        let colW = mix(CLOUD_DARK, T_DARK, 0.5);
+        let colW = mix(CLOUD_DARK2, mix(T_DARK, T_LITE, 0.55), smoothstep(0.2, 0.9, shadeW));
         let colD = mix(mix(T_DARK, DUST_LITE, shadeD), RED_DIRT, 0.25);
         var c = (colF * fs + colW * w + colD * ds) / sig * lit;
         /* lightning lights the cloud it is near, not just the frame */
@@ -336,6 +362,24 @@ fn tor(i: u32) -> vec4f { return select(select(sim.t2, sim.t1, i == 1u), sim.t0,
 @compute @workgroup_size(256) fn cs_main(@builtin(global_invocation_id) id: vec3u) {
   let i = id.x; if (f32(i) >= sim.count) { return; }
   var d = ds[i];
+  if (d.kind >= 20.0) {
+    /* the gale layer: chips and wreckage blown flat across the foreground and middle ground, close to the ground */
+    let s2 = u32(sim.time * 60.0) * 7919u + i * 13u;
+    let dir = select(-1.0, 1.0, sim.wind >= 0.0);
+    let goal = dir * (0.12 + 0.28 * sim.storm + abs(sim.wind) * 0.12) * (0.7 + 0.6 * h1(i * 7u));
+    d.vel.x += (goal - d.vel.x) * sim.dt * 3.0;
+    d.vel.y = sin(sim.time * (3.0 + h1(i) * 4.0) + f32(i)) * 0.004 * (0.5 + sim.storm);
+    d.pos += d.vel * sim.dt;
+    d.pos.y = clamp(d.pos.y, 0.0002, 0.003 + d.pos.z * 0.05);
+    d.ang += (6.0 + h1(i * 3u) * 12.0) * sim.dt * dir;
+    let halfW = 0.02 + d.pos.z * 0.8;
+    if (abs(d.pos.x) > halfW) {
+      let z = 0.004 + pow(h1(s2 + 5u), 1.8) * 0.45;
+      d.pos = vec3f(-dir * (0.02 + z * 0.8), 0.0004 + h1(s2 + 6u) * (0.002 + z * 0.04), z);
+      d.vel = vec3f(goal * 0.8, 0.0, 0.0);
+    }
+    ds[i] = d; return;
+  }
   if (d.kind >= 9.0) { return; }                       /* scenery stays put */
   let big = d.kind >= 3.0;                               /* cows, trees, barns: heavier, flung harder */
   let dt = sim.dt; let seed = u32(sim.time * 60.0) * 7919u + i * 13u;
@@ -381,16 +425,19 @@ struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col
   let d = ds[ii]; var o: VO;
   let v = d.pos - cam.pos; let z = dot(v, cam.fwd);
   let corner = vec2f(f32(vi & 1u), f32((vi >> 1u) & 1u)) * 2.0 - 1.0;
-  let kind = d.kind;
+  let gale = d.kind >= 20.0;
+  let kind = select(d.kind, d.kind - 20.0, gale);
   let chip = kind < 3.0; let scenery = kind >= 9.0; let rooted = kind >= 12.0;
   /* world half-size: chips of straw, board and dirt; flung sprites played up to read at a glance;
      horizon buildings; then the middle ground — bush, poplar, pole, fence, hay bale */
   var size = select(select(select(0.0028, 0.0045, kind >= 1.0), 0.0035, kind >= 2.0), select(0.028, 0.03, scenery), !chip);
   if (kind >= 12.0) { size = select(select(select(select(0.0028, 0.0014, kind >= 16.0), 0.0017, kind >= 15.0), 0.0046, kind >= 14.0), 0.0075, kind >= 13.0); if (kind < 13.0) { size = 0.0034; } }
+  if (gale) { size *= select(0.075, 0.12, chip); }
   let pxWorld = z * cam.tanHalf * 2.0 / cam.pxH;
   let rad = max(size, pxWorld * 0.6);
   let ca = cos(d.ang); let sa = sin(d.ang);
   var rc = select(vec2f(corner.x * ca - corner.y * sa, corner.x * sa + corner.y * ca) * select(vec2f(1.0), vec2f(1.0, 0.5), chip), corner, scenery);
+  if (kind >= 15.0 && kind < 16.0) { rc = vec2f(corner.x * ca - corner.y * sa, corner.x * sa + corner.y * ca); }   /* broken fence sections lean */
   if (rooted) {
     /* bend from the root: the top leans with the wind, shivers with the storm, and gusts roll away through the rows */
     let gust = 0.55 + 0.45 * sin(d.pos.z * 26.0 - air.time * (3.5 + air.storm * 3.0) + d.pos.x * 9.0);
@@ -401,7 +448,7 @@ struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col
   let lift = select(0.0, size, scenery);
   let x = dot(v, cam.right) + rc.x * rad; let y = dot(v, cam.up) + rc.y * rad + lift;
   /* only what is in the air is drawn; the horizon scenery always is */
-  let ok = z > 0.02 && (d.pos.y > 0.002 || scenery);
+  let ok = z > select(0.02, 0.002, gale) && (d.pos.y > 0.002 || scenery || gale);
   o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(x / (z * cam.tanHalf * cam.aspect), y / (z * cam.tanHalf), clamp(z / 40.0, 0.0, 1.0), 1.0), ok);
   o.q = corner; o.dist = length(v);
   let t = h3(vec3i(i32(ii), 17, 3));
