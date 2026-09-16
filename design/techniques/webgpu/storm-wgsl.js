@@ -58,14 +58,25 @@ fn rot2(v: vec2f, a: f32) -> vec2f { let c = cos(a); let s = sin(a); return vec2
 fn bearing(xz: vec2f) -> f32 { var a = atan2(xz.y, xz.x); if (a < 0.0) { a += 2.0 * PI; } return a; }
 
 /* ── the cloud base as a coverage field: the storm body minus the RFD clear slot ── */
+/* The clear slot, after the NWS spotter guide (The Supercell, Pt. 2): the rear-flank downdraft surges in from the
+   southwest, out and under the updraft, and clears a notch. The updraft base bends round it into a horseshoe that opens
+   to the southwest, and the tornado and wall cloud sit on its north prong. The notch is a capsule on the south-west to
+   north-east axis whose tip hooks north as it grows. */
+const NU = vec2f(0.70710678, 0.70710678);   /* from the southwest toward the updraft */
+const NV = vec2f(-0.70710678, 0.70710678);  /* the north prong's side */
+fn notchTip() -> vec2f { return NU * (-1.0 + 1.25 * st.slot) + NV * (0.35 * st.slot); }
+/* the wall cloud hangs on the north prong: between the tornado and the notch tip (storm.js uses the same point for the funnel's top) */
+fn wallCentre() -> vec2f { return mix(st.tor.xz, notchTip(), 0.35); }
+fn notchDist(xz: vec2f) -> f32 {
+  let A = NU * -3.2; let B = notchTip();
+  let ab = B - A; let h = clamp(dot(xz - A, ab) / dot(ab, ab), 0.0, 1.0);
+  return length(xz - A - ab * h);
+}
+fn notchWidth() -> f32 { return 0.3 + 0.4 * st.slot; }
 fn slotMask(xz: vec2f) -> f32 {
-  /* the horseshoe: from the northwest, cyclonically round through west and south; it widens and wraps as the RFD surges */
-  let r = length(xz); let a = bearing(xz);
-  let a0 = radians(150.0); let a1 = radians(230.0 + 100.0 * st.slot);
-  let ang = smoothstep(a0 - 0.2, a0 + 0.15, a) * (1.0 - smoothstep(a1 - 0.3, a1 + 0.05, a));
   let n = vnoise(vec3f(xz * 1.1, st.seed * 7.0)) - 0.5;
-  let r0 = 1.15 + n * 0.3; let r1 = 1.5 + 2.2 * st.slot + n * 0.7;
-  return ang * smoothstep(r0 - 0.2, r0 + 0.25, r) * (1.0 - smoothstep(r1 - 0.5, r1 + 0.2, r)) * smoothstep(0.02, 0.25, st.slot);
+  let w = notchWidth();
+  return (1.0 - smoothstep(w - 0.15, w + 0.12, notchDist(xz) + n * 0.28)) * smoothstep(0.02, 0.25, st.slot);
 }
 fn bodyCover(xz: vec2f) -> f32 {
   let q = (xz - vec2f(2.5, 3.5)) / vec2f(13.0, 12.0);
@@ -75,9 +86,8 @@ fn bodyCover(xz: vec2f) -> f32 {
 fn deckCover(xz: vec2f) -> f32 { return bodyCover(xz) * (1.0 - 0.85 * slotMask(xz)); }
 /* the same two fields without their noise: lighting inside the march needs the shape, not the ragged edge */
 fn slotLo(xz: vec2f) -> f32 {
-  let r = length(xz); let a = bearing(xz);
-  let a0 = radians(150.0); let a1 = radians(230.0 + 100.0 * st.slot);
-  return smoothstep(a0 - 0.2, a0 + 0.15, a) * (1.0 - smoothstep(a1 - 0.3, a1 + 0.05, a)) * smoothstep(0.95, 1.4, r) * (1.0 - smoothstep(1.2 + 2.2 * st.slot, 1.8 + 2.2 * st.slot, r)) * smoothstep(0.02, 0.25, st.slot);
+  let w = notchWidth();
+  return (1.0 - smoothstep(w - 0.15, w + 0.12, notchDist(xz))) * smoothstep(0.02, 0.25, st.slot);
 }
 fn bodyLo(xz: vec2f) -> f32 { return 1.0 - smoothstep(0.8, 1.02, length((xz - vec2f(2.5, 3.5)) / vec2f(13.0, 12.0))); }
 fn coreShape(xz: vec2f) -> f32 { return 1.0 - smoothstep(0.35, 1.0, length((xz - CORE_C) / CORE_R)); }
@@ -106,7 +116,9 @@ fn funnelDens(p: vec3f, detail: f32) -> f32 {
   let h = clamp(p.y / wb, 0.0, 1.0); let tip = 1.0 - st.descend;
   if (h < tip - 0.05) { return 0.0; }
   let d = p.xz - centre(p.y); let r = length(d);
-  let taper = mix(0.2, 1.0, smoothstep(tip - 0.02, tip + 0.22, h));
+  /* only a funnel still descending narrows to a tip; one on the ground meets it at full width */
+  let descending = smoothstep(0.0, 0.05, tip);
+  let taper = mix(1.0, mix(0.2, 1.0, smoothstep(tip - 0.02, tip + 0.22, h)), descending);
   let R = radiusAt(h) * taper;
   if (r > R * 1.6 + 0.015) { return 0.0; }
   let rot = rot2(d, -st.spin);
@@ -118,26 +130,32 @@ fn funnelDens(p: vec3f, detail: f32) -> f32 {
   let q = r / max(Rn, 1e-3);
   /* helical striations, periodic in angle so there is no seam */
   let stri = 0.7 + 0.3 * sin(atan2(d.y, d.x) * 4.0 + p.y / max(R, 0.03) * 1.1 - st.spin * 2.0 + n * 4.0);
-  let body = 1.0 - smoothstep(0.72, 1.0, q);
+  let body = 1.0 - smoothstep(0.86, 1.14, q);   /* the half-density edge sits on the nominal radius, so the width the lower third reports is the width you see */
   let veil = (1.0 - smoothstep(1.0, 1.55, q)) * smoothstep(0.45, 0.7, n) * 0.18;
-  var dens = (body * stri + veil) * smoothstep(tip - 0.05, tip + 0.05, h);
+  var dens = (body * stri + veil) * mix(1.0, smoothstep(tip - 0.05, tip + 0.05, h), descending);
   if (st.broken > 0.0) { dens *= mix(1.0, smoothstep(0.42, 0.6, vnoise(vec3f(p.y * 16.0, st.seed * 9.0, st.time * 0.4))), st.broken); }
   /* optical depth across the diameter stays near 7 whatever the radius, so a rope is as solid as a wedge */
   return dens * 3.6 / max(R, 0.012);
 }
+/* the rain-free updraft base: a lowered horseshoe round the notch tip, open to the southwest where the RFD comes in,
+   with the wall cloud hanging lowest on its north prong */
 fn wallDens(p: vec3f, detail: f32) -> f32 {
   if (st.wall <= 0.0 || p.y > st.base || p.y < st.base - 0.4) { return 0.0; }
-  let r = length(p.xz) / 1.2;
-  if (r > 1.3) { return 0.0; }
-  let rot = rot2(p.xz, -st.spin * 0.12);
+  let w = notchWidth();
+  let rb = length(p.xz - notchTip());
+  if (rb > w + 1.5) { return 0.0; }
+  let wc = p.xz - wallCentre();
+  let rot = rot2(wc, -st.spin * 0.12);
   var n = 0.5;
   if (detail > 0.5) { let fp = vec3f(rot.x * 3.2, p.y * 3.2 + st.seed * 5.0, rot.y * 3.2); n = fbm3(fp);
     n += (vnoise(fp * vec3f(9.0, 5.0, 9.0) + vec3f(2.0)) - 0.5) * 0.18 * (1.0 - smoothstep(0.01, 0.04, lodPx)); } else { n = fbm2(vec3f(rot.x * 3.2, p.y * 3.2 + st.seed * 5.0, rot.y * 3.2)); }
-  let lower = 0.26 * st.wall * (1.0 - smoothstep(0.1, 1.0, r));
-  let yb = st.base - lower + (n - 0.5) * 0.08;
-  let v = smoothstep(yb - 0.012, yb + 0.06, p.y);
-  let erode = smoothstep(0.34, 0.6, n + 0.3 * (1.0 - r) - 0.05);
-  return v * erode * (1.0 - smoothstep(0.8, 1.2, r)) * 10.0;
+  let shoe = (1.0 - smoothstep(w + 0.8, w + 1.3, rb + (n - 0.5) * 0.4)) * (1.0 - smoothstep(0.35, 0.75, slotLo(p.xz)));
+  let rw = length(wc) / 0.85;
+  let lower = st.wall * (0.07 * shoe + 0.22 * (1.0 - smoothstep(0.1, 1.0, rw)));
+  let yb = st.base - lower + (n - 0.5) * 0.06;
+  let v = smoothstep(yb - 0.012, yb + 0.05, p.y);
+  let erode = smoothstep(0.34, 0.6, n + 0.3 * (1.0 - min(rw, 1.0)) - 0.05);
+  return v * erode * max(shoe, 1.0 - smoothstep(0.8, 1.2, rw)) * 10.0;
 }
 fn dustDens(p: vec3f, detail: f32) -> f32 {
   if (st.dust <= 0.0) { return 0.0; }
@@ -166,13 +184,14 @@ fn inflowDens(p: vec3f) -> f32 {
   return (1.0 - smoothstep(0.08, 0.28, abs(across) + (n - 0.5) * 0.15)) * (1.0 - smoothstep(0.015, 0.05, abs(p.y - yc))) * (1.0 - along / 7.0) * n * 4.0 * st.wall;
 }
 fn rfdDens(p: vec3f) -> f32 {
-  let r = length(p.xz); if (r < 1.8 || r > 5.5 || p.y > st.base) { return 0.0; }
-  let a = bearing(p.xz);
-  let ang = smoothstep(radians(165.0), radians(185.0), a) * (1.0 - smoothstep(radians(215.0 + 100.0 * st.slot), radians(235.0 + 100.0 * st.slot), a));
-  let rr = 1.5 + 2.2 * st.slot + 0.3;
-  let band = exp(-(r - rr) * (r - rr) / 0.12);
+  /* the rear flank's rain: a thin curtain along the south side of the notch, trailing back to the southwest */
+  if (p.y > st.base || st.slot <= 0.0) { return 0.0; }
+  let d = notchDist(p.xz); let w = notchWidth();
+  let side = smoothstep(0.1, -0.3, dot(p.xz, NV));
+  if (side <= 0.0 || d > w + 1.0) { return 0.0; }
+  let band = exp(-(d - w - 0.4) * (d - w - 0.4) / 0.06);
   let n = fbm2(vec3f(p.x * 2.2, p.y * 0.6 + st.time * 0.9, p.z * 2.2));
-  return ang * band * smoothstep(0.35, 0.75, n) * 1.2 * st.slot;
+  return side * band * smoothstep(0.35, 0.75, n) * 1.4 * st.slot;
 }
 
 fn cyl(o: vec3f, d: vec3f, c: vec2f, R: f32, y0: f32, y1: f32) -> vec2f {
@@ -254,6 +273,24 @@ fn groundAlbedo(xz: vec2f, dx: f32) -> vec3f {
   let dp = ro + rd * min(td, 400.0);
   let ddx = length(fwidth(dp.xz));
   let galb = groundAlbedo(gp.xz, gdx);
+  /* the measurement pass: section roads in red, the funnel's density field 40 ft above the ground in green */
+  let roadM = max(lineCov(gp.x + st.origin.x, 0.006, gdx), lineCov(gp.z + st.origin.y, 0.006, gdx));
+  if (st._s0 > 1.5) {
+    /* the plan map: the same fields the renderer uses, seen from above, north up, 12 miles across */
+    let m = vec2f(ndc.x * cam.aspect, ndc.y) * 4.0 + wallCentre();
+    var c = vec3f(0.93, 0.93, 0.93);
+    c = mix(c, vec3f(0.55, 0.58, 0.62), bodyCover(m));
+    c = mix(c, vec3f(0.26, 0.36, 0.52), clamp(wallDens(vec3f(m.x, st.base - 0.03, m.y), 1.0) / 10.0, 0.0, 1.0));
+    c = mix(c, vec3f(0.98, 0.93, 0.70), slotMask(m) * bodyCover(m));
+    c = mix(c, vec3f(0.20, 0.62, 0.30), smoothstep(0.2, 0.6, coreDens(vec3f(m.x, 0.2, m.y)) / 1.8) * 0.8);
+    c = mix(c, vec3f(0.85, 0.12, 0.10), 1.0 - smoothstep(0.08, 0.1, length(m - st.tor.xz)));
+    c = mix(c, vec3f(0.0), (1.0 - smoothstep(0.0, 0.02, abs(fract(m.x + st.origin.x) - 0.5) - 0.49)) * 0.08 + (1.0 - smoothstep(0.0, 0.02, abs(fract(m.y + st.origin.y) - 0.5) - 0.49)) * 0.08);
+    return vec4f(pow(c, vec3f(1.0)), 1.0);
+  }
+  if (st._s0 > 0.5) {
+    let fd = funnelDens(vec3f(gp.x, 0.008, gp.z), 1.0) * max(st.torR, 0.012) / 3.6;
+    return vec4f(roadM, step(0.3, fd), 0.0, 1.0);
+  }
   let tEnd = min(min(tg, td), FAR);
   let flashCol = vec3f(0.72, 0.78, 1.0) * st.flash * 6.0;
 
@@ -275,9 +312,9 @@ fn groundAlbedo(xz: vec2f, dx: f32) -> vec3f {
     let ex = 0.06; let dl = normalize(L.xz);
     let lumpW = 0.5 + (vnoise(vec3f((dp.xz + dl * ex) * 0.45, 3.0)) - 0.5) * 0.9 + (vnoise(vec3f((dp.xz + dl * ex) * 1.4, 6.0)) - 0.5) * 0.6 * f2 + (vnoise(vec3f((dp.xz + dl * ex) * 4.2, 9.0)) - 0.5) * 0.4 * f3;
     let relief = clamp(0.55 + (lump - lumpW) * 9.0, 0.15, 1.6);
-    let r = length(dp.xz);
+    let rc = dp.xz - wallCentre(); let r = length(rc);
     /* striated, rotating plates around the updraft — faded out at distance rather than aliased */
-    let ring = (0.5 + 0.5 * sin(r * 9.0 + bearing(dp.xz) * 1.0 - st.spin * 0.05)) * exp(-r * r / 12.0) * fade(0.7, ddx);
+    let ring = (0.5 + 0.5 * sin(r * 9.0 + bearing(rc) * 1.0 - st.spin * 0.05)) * exp(-r * r / 12.0) * fade(0.7, ddx);
     let far01 = smoothstep(4.0, 16.0, td);
     var under = vec3f(0.020, 0.023, 0.028) * mix(0.55 + 0.7 * lump, 0.9, far01 * 0.6) * mix(relief, 1.0, far01 * 0.5) * (0.85 + 0.4 * ring);
     under *= 1.0 + 2.5 * (1.0 - smoothstep(0.4, 1.0, c));
