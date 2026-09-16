@@ -29,9 +29,11 @@ export async function getDevice() {
   hasTS = adapter.features.has('timestamp-query');
   device = await adapter.requestDevice({ requiredFeatures: hasTS ? ['timestamp-query'] : [], requiredLimits: { maxStorageBufferBindingSize: Math.min(adapter.limits.maxStorageBufferBindingSize, 1 << 30), maxBufferSize: Math.min(adapter.limits.maxBufferSize, 1 << 30) } });
   format = navigator.gpu.getPreferredCanvasFormat();
-  /* the counter: every writeBuffer on the queue, split into state and uniforms */
+  /* the counter: every writeBuffer on the queue, split into state and uniforms. A buffer is a
+     uniform by its usage flag, not by who made it — Supercell's buffers come from vgpu, which
+     never sees the __uniform tag the helper below sets. */
   const wb = device.queue.writeBuffer.bind(device.queue);
-  device.queue.writeBuffer = (buf, off, data, dOff, size) => { const n = size !== undefined ? size : (data.byteLength !== undefined ? data.byteLength - (dOff || 0) : 0); if (buf.__uniform) bytes.frameUni += n; else bytes.frameState += n; return wb(buf, off, data, dOff, size); };
+  device.queue.writeBuffer = (buf, off, data, dOff, size) => { const n = size !== undefined ? size : (data.byteLength !== undefined ? data.byteLength - (dOff || 0) : 0); if (buf.__uniform || (buf.usage & GPUBufferUsage.UNIFORM)) bytes.frameUni += n; else bytes.frameState += n; return wb(buf, off, data, dOff, size); };
   return device;
 }
 export const adapterName = () => { const i = (adapter && adapter.info) || {}; return [i.vendor, i.architecture, i.description].filter(Boolean).join(' · ') || 'unnamed'; };
