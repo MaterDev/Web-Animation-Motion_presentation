@@ -142,7 +142,7 @@
   </div>
 
   <div class="led-chrome bot">
-    <span>960 × 540 · 6px cell</span><span>{slide.sample ? 'sample' : ''}</span>
+    <span>960 × 540 · 6px cell</span><span>{slide.sample ? 'sample' : slide.placeholder ? 'demos to choose' : slide.verify ? 'figures to verify' : ''}</span>
   </div>
 
   <div class="led-guides"><span class="margin"></span><span class="field"></span></div>
