@@ -35,3 +35,8 @@ A topographic survey sheet (cream stock, blue water, brown shoreline, red locato
 
 ## For the edit pass
 - Key has chosen this demo for the SVG slide. No specific edits have been requested yet.
+
+
+## Presentation edits (2026-09-17)
+- **2:1 window:** the 960×540 sheet is cropped 24px top and bottom. The cartouche and scale bar move in by the crop, and place labels cull against the cropped edges.
+- **Sequence speed:** the flight runs in 13 s, down from the sheet's 20 s (Key: "move through its sequence a little faster").

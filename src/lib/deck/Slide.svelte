@@ -663,6 +663,12 @@
               </div>
             {/each}
 
+          {:else if L === 'stage' && slide.demoId}
+            <!-- the demo is the slide: the whole field, scaled to fit, with
+                 the section label in the top band saying what it is -->
+            <div class="dk-led dk-demo-well" class:dk-wide169={slide.ratio === '16/9'} class:dk-even={slide.even} class:dk-bare={slide.bare} style={at(1, 12, 1, 6)} data-testid="well-{slide.id}">
+              <DemoHost id={slide.demoId} {live} fit width={slide.demoWidth ?? 1100} testId="demo-{slide.id}" />
+            </div>
           {:else if L === 'demo' && slide.demoId}
             <!-- a collection demo on the right, the point on the left -->
             <div class="dk-at" style={slide.wide ? at(1, 8, 1, 2) : at(1, 5, 1, 3)}>{@render heading()}</div>
@@ -716,6 +722,19 @@
   .dk-screen { position: absolute; inset: 0; }
   .dk-screen > .well { display: block; box-sizing: border-box; height: 100%; padding: 6px; border-radius: 0; }
   .dk-screen .lcd { height: 100%; border-radius: 0; }
+  /* The pixel grids over every slide, at half their system strength (Key:
+     "too intense … 50% more transparent"): the LED panel's cell grid, the
+     LCD's dot grid, and the grid inside LED wells. The deck only; the
+     design system and the site keep theirs. */
+  .led-slide::before, .dk-screen .lcd::before, .dk-led::before { opacity: 0.3; }
+  /* Demos float above the grid (Key): on a slide carrying a live demo, the
+     layers that would trap the demo under the pixel grid and sheen stop
+     forming their own stacking contexts, and the demo well is lifted over
+     the LED grid (z 4), its vignette (z 5) and the LCD grid and sheen. */
+  .led-slide:has(.dk-demo-well) :global(.led-field),
+  .led-slide:has(.dk-demo-well) :global(.lcd-body) { z-index: auto; }
+  .dk-demo-well { z-index: 6; }
+  .dk-demo-well::before { display: none; }  /* 0.5, then 40% less (Key) */
   /* Every slide's screen is cast in its section's tint, strongly enough
      to be the dominant colour (Key: "each section should have a
      dominant color treatment"). */
@@ -882,6 +901,19 @@
   .dk-led .dk-tag { color: var(--led-ground); background: oklch(from var(--ct) 0.84 calc(c * 2.2) h); }
   .dk-led .dk-meta { color: var(--led-dim); opacity: 1; }
   .dk-demo-well { position: relative; overflow: hidden; }
+  /* even: the same 42px of screen on all four sides of the demo. The screen
+     is 948 × 528 inside its 6px bezel, so the well is 864 × 444 at 42,42
+     on the screen: the field's width, pulled up 6px into the top band and
+     12px down into the bottom margin. */
+  /* bare: the demo sits on the screen itself, no LED well around it */
+  .dk-bare { background: transparent !important; box-shadow: none !important; }
+  .dk-bare::before, .dk-bare::after { display: none !important; }
+  .dk-even { align-self: start; margin-top: -6px; height: 444px; }
+  /* A 16:9 demo sits in a 768 × 432 well: the field's full height, and a
+     width of 128 × 6px cells, centred with a 48px margin of screen either
+     side. It fills its well edge to edge, and the slide's own margins
+     stay intact. */
+  .dk-wide169 { justify-self: center; width: 768px; background: transparent; box-shadow: 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 25%, transparent); }
   .dk-qr-meta { margin: 0; align-self: center; display: flex; gap: 24px; font-size: 16px; color: var(--lcd-ink); }
   .dk-qr-meta .k { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lcd-dim); margin-right: 6px; }
   .dk-qr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }

@@ -1,7 +1,0 @@
-- **Timeless**
-  - Fictional newsweekly; structure animated, zero JavaScript
-- **Drawing with CSS**
-  - **Metaballs:** `blur(11px)` + `contrast(26)`
-  - **Moiré:** `mix-blend-mode: difference`
-  - **Holographic type:** `conic-gradient` clipped to the text
-  - One flagged JavaScript exception: a few lines moving the aperture card's scrollbar

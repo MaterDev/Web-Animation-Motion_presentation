@@ -1,28 +1,34 @@
     <div class="v1" data-testid="v1-world">
-      <div class="v1-stage" data-testid="v1-explain-stage">
-        <canvas data-testid="v1-explain"></canvas>
-      </div>
       <p class="v1-cap" data-testid="v1-explain-cap">How one mark ages. Each
         generation is the one before it, dimmed by the decay and scaled 1.006 about
         the field's centre — so a mark drifts outward as it fades, and the ladder
         below it is what the palette does to that fade: sixteen steps, no dither,
         which is why the trail bands instead of dissolving.</p>
+
       <div class="v1-stage" data-testid="v1-stage">
         <canvas data-testid="v1-canvas"></canvas>
       </div>
 
-      <div class="v1-bar" data-testid="v1-bar">
-        <button class="v1-btn v1-on" data-mode="analyser" data-testid="v1-mode-analyser">analyser</button>
-        <button class="v1-btn" data-mode="scope" data-testid="v1-mode-scope">oscilloscope</button>
-        <button class="v1-btn" data-testid="v1-clear">clear the field</button>
-        <button class="v1-btn" data-testid="v1-quantise">quantise: on</button>
-      </div>
+      <div class="v1-panel" data-testid="v1-panel">
+        <div class="v1-stage v1-explain" data-testid="v1-explain-stage">
+          <canvas data-testid="v1-explain"></canvas>
+        </div>
 
-      <div class="v1-readouts" data-testid="v1-readouts">
-        <div class="v1-kv">frame<b class="v1-dot" data-testid="v1-frame">0</b></div>
-        <div class="v1-kv">palette<b data-testid="v1-palette">—</b></div>
-        <div class="v1-kv">decay per frame<b data-testid="v1-decay">—</b></div>
-        <div class="v1-kv">quantise cost<b data-testid="v1-qcost">—</b></div>
+        <div class="v1-controls" data-testid="v1-controls">
+          <div class="v1-readouts" data-testid="v1-readouts">
+            <div class="v1-kv" data-testid="v1-kv-frame">frame<b class="v1-dot" data-testid="v1-frame">0</b></div>
+            <div class="v1-kv" data-testid="v1-kv-palette">palette<b data-testid="v1-palette">—</b></div>
+            <div class="v1-kv" data-testid="v1-kv-decay">decay / frame<b data-testid="v1-decay">—</b></div>
+            <div class="v1-kv" data-testid="v1-kv-qcost">quantise cost<b data-testid="v1-qcost">—</b></div>
+          </div>
+
+          <div class="v1-bar" data-testid="v1-bar">
+            <button class="v1-btn v1-on" data-mode="analyser" data-testid="v1-mode-analyser">analyser</button>
+            <button class="v1-btn" data-mode="scope" data-testid="v1-mode-scope">oscilloscope</button>
+            <button class="v1-btn" data-testid="v1-clear">clear the field</button>
+            <button class="v1-btn" data-testid="v1-quantise">quantise: on</button>
+          </div>
+        </div>
       </div>
 
       <p class="cv-instr" data-testid="v1-instr">

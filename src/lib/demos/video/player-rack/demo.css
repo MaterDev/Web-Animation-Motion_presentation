@@ -173,3 +173,48 @@
    wraps and the editor takes a full line under the card. */
 .pr-stage .fx-temporal { flex-wrap: wrap; }
 .pr-stage .fx-curve.is-open { flex: 1 1 100%; }
+
+/* deck fit (presentation edit): the slide carries the label */
+.scene-label, .scene-note { display: none !important; }
+
+/* ── deck fit (presentation edit, Key): the controls sit to the LEFT of
+   the video, never over it. The stage is 960 × 400: a 290px rack column,
+   then the 16:9 picture (656 × 369) with its effect canvas and echo layer
+   aligned exactly on top of it. The rack is compact: names only, two
+   across, no footnote, so all thirteen effects fit without scrolling. */
+.card-grid { display: block !important; }
+.scene-card { display: block !important; }
+.pr-stage.stage-16x9 { aspect-ratio: auto !important; width: 960px; height: 400px; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; overflow: visible !important; }
+.pr-stage > video#prVideo,
+.pr-stage > .fx-canvas,
+.pr-stage > video.fx-echo { position: absolute !important; left: 304px !important; top: 15px !important; right: auto !important; bottom: auto !important; inset: auto; width: 656px !important; height: 369px !important; border-radius: 8px; object-fit: cover; }
+.pr-stage > video#prVideo { box-shadow: 0 8px 22px oklch(0 0 0 / 0.28); background: #000; }
+.pr-stage .fx-panel { position: absolute !important; left: 0 !important; top: 0 !important; bottom: 0 !important; right: auto !important; width: 290px !important; height: 400px !important; }
+.pr-stage .fx-head { padding: 9px 11px; }
+.pr-stage .fx-sub { display: none; }
+.pr-stage .fx-scroll { padding: 8px 10px; gap: 7px; overflow: hidden; }
+.pr-stage .fx-group { gap: 4px; }
+.pr-stage .fx-legend { font-size: 8px; }
+.pr-stage .fx-cards, .pr-stage .fx-cards-1 { grid-template-columns: 1fr 1fr !important; gap: 4px; }
+.pr-stage .fx-card { padding: 5px 8px; min-height: 0; }
+.pr-stage .fx-card i { display: none; }
+.pr-stage .fx-card b { font-size: 12px; }
+.pr-stage .fx-foot { display: none; }
+.pr-stage .fx-temporal .fx-cards { flex: 1 1 100%; }
+/* the curve editor opens over the picture's left edge rather than
+   pushing the rack past its height */
+.pr-stage .fx-curve.is-open { position: absolute; left: 300px; bottom: 16px; width: 330px; z-index: 4; box-shadow: 0 10px 24px oklch(0 0 0 / 0.35); }
+.pr-stage .fx-card { aspect-ratio: auto !important; height: 30px !important; min-height: 0 !important; justify-content: center !important; }
+.pr-stage .fx-title { font-size: 15px; }
+.pr-stage .fx-head-txt { white-space: nowrap; }
+/* title stays on one line beside the two controls; last 7px of rack fits */
+.pr-stage .fx-head { gap: 8px; }
+.pr-stage .fx-title { font-size: 13px; }
+.pr-stage .fx-reset, .pr-stage .fx-toggle { padding: 4px 7px; font-size: 8.5px; }
+.pr-stage .fx-scroll { gap: 5px; padding-top: 6px; padding-bottom: 6px; }
+
+/* people overlay: exactly over the picture, above the effects */
+.pr-stage > .fx-people-canvas { position: absolute !important; left: 304px; top: 15px; width: 656px; height: 369px; z-index: 3; pointer-events: none; border-radius: 8px; }
+.pr-stage .fx-vision .fx-cards { grid-template-columns: 1fr !important; }
+.fx-people.is-on { background: color-mix(in oklch, oklch(0.80 0.14 200) 30%, var(--hz-100)); border-color: oklch(0.80 0.14 200); }
+.fx-people.is-on b { color: var(--hz-900); }

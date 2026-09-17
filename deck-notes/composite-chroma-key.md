@@ -1,0 +1,10 @@
+- **An alpha channel the file never had**
+  - Footage shot against green screen, keyed live in the browser
+  - What remains is layered between real page elements, in front and behind
+- **Seven scenes, one decode**
+  - Float, inside type, inside a card, duotone, knockout, winter night, ticker
+- **Video as a component**
+  - Not a YouTube embed, not a cinematic piece: a material placed into the page
+  - The page elements stay real: selectable, accessible, editable
+- **A composite**
+  - Video carries the motion, the page carries the text, each on the surface that suits it

@@ -41,10 +41,14 @@ export function mount(host) {
   const smoothstep = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
   let scale = 1;
+  /* Presentation edit: the slide's field is 2:1, so the 960 × 540 sheet is
+     shown as 960 × 480 — 24px cropped off its top and bottom, the camera
+     still centred. Furniture that sat in those strips moves in by CROP. */
+  const CROP = 24;  /* 960 × 492: the slide well is 864 × 444 */
   function fit() {
     scale = paper.clientWidth / 960;
-    sheet.style.transform = 'scale(' + scale + ')';
-    paper.style.height = Math.round(540 * scale) + 'px';
+    sheet.style.transform = 'translateY(' + (-CROP * scale) + 'px) scale(' + scale + ')';
+    paper.style.height = Math.round((540 - 2 * CROP) * scale) + 'px';
   }
   if ('ResizeObserver' in window) bin.observer(new ResizeObserver(fit)).observe(paper);
   fit();
@@ -149,8 +153,8 @@ export function mount(host) {
   const plate = root.getElementById('svPlate');
   const scaleBar = root.getElementById('svScale');
   const record = root.getElementById('svRecord');
-  plate.style.cssText += ';left:22px;top:22px';
-  scaleBar.style.cssText += ';left:22px;bottom:22px';
+  plate.style.cssText += ';left:22px;top:' + (22 + CROP) + 'px';
+  scaleBar.style.cssText += ';left:22px;bottom:' + (22 + CROP) + 'px';
 
   if (target) {
     record.innerHTML =
@@ -341,7 +345,7 @@ export function mount(host) {
       if (pl.level !== show) { hide(pl.el); continue; }
       const sx = (W / 2) + (pl.x - c.cx) * c.k;
       const sy = (HH / 2) + (pl.y - c.cy) * c.k;
-      if (sx < 40 || sx > W - 40 || sy < 30 || sy > HH - 30) { hide(pl.el); continue; }
+      if (sx < 40 || sx > W - 40 || sy < 30 + CROP * W / 960 || sy > HH - 30 - CROP * W / 960) { hide(pl.el); continue; }
       const w = pl.w + PAD * 2, h = pl.h + PAD;
       const box = { l: sx - w / 2, r: sx + w / 2, t: sy - h / 2, b: sy + h / 2 };
       if (placed.some((q) => box.l < q.r && q.l < box.r && box.t < q.b && q.t < box.b)) {
@@ -379,7 +383,7 @@ export function mount(host) {
     record.style.opacity = beyond ? near.toFixed(3) : 0;
   }
 
-  wam.clock('frame-stage', { render, dur: 20000, el: sheet, poster: 1 });
+  wam.clock('frame-stage', { render, dur: 13000  /* presentation edit: 20s on the sheet; faster for the slide (Key) */, el: sheet, poster: 1 });
 
   return () => bin.run();
 }

@@ -70,3 +70,9 @@
 .wx-bar .k { color: var(--wx-sub); font-size: 9.5px; letter-spacing: 0.16em;
   text-transform: uppercase; flex: none; }
 .wx-bar .wx-hot b { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* presentation edits: 2:1 window, glow and radar rings */
+.wx { overflow: hidden; }
+.wx-glow { opacity: 0.55; mix-blend-mode: screen; }
+.wx-ring { fill: none; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+#wxField { opacity: 0.92; mix-blend-mode: screen; }

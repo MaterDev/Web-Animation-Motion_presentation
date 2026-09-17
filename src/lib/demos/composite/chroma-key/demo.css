@@ -263,3 +263,32 @@
 .ck-cap { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; margin-top: 9px;
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
 .ck-cap b { font-weight: 400; color: var(--hz-800); letter-spacing: 0.14em; }
+
+/* deck fit (presentation edit): the slide is 2:1, the stages are 9:16, so
+   the controls move to a column on the left and the composite and its
+   source stand side by side at the slide's full height */
+.ck { display: grid !important; grid-template-columns: 330px 1fr; gap: 28px; align-items: start; height: 480px; }
+.ck-bar { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 12px; height: 100%; box-sizing: border-box; }
+.ck-scenes { flex: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ck-scene b { font-size: 13px; }
+.ck-ctls { flex-direction: column; align-items: stretch; padding-left: 0; border-left: 0; padding-top: 12px; border-top: var(--hair) solid var(--hz-300); gap: 10px; }
+.ck-ctl { width: auto; }
+.ck-pair { flex-wrap: nowrap; gap: 24px; height: 480px; align-items: start; }
+.ck-stage { height: 440px !important; }
+/* keep the control column inside the 480px frame */
+.ck-bar { height: auto !important; max-height: 480px; overflow: hidden; padding: 10px 12px !important; gap: 8px !important; }
+.ck-scene { padding: 5px 9px; }
+.ck-scene i { font-size: 8px; }
+.ck-ctls { gap: 6px !important; padding-top: 8px !important; }
+.ck-bar-head b { font-size: 15px; }
+
+/* slide fixes (Key): no layout shift when switching scenes, no halo.
+   Each cell is locked to its stage's width (440 × 9/16) so a longer
+   caption can't widen it and shove the pair sideways; the caption
+   holds one fixed line. The stage's large drop shadow read as a
+   gradient around the players on the green screen, so it's removed. */
+.ck-cell { width: 247.5px !important; flex: none; }
+.ck-stage { box-shadow: 0 0 0 1px oklch(0 0 0 / 0.18) !important; }
+.ck-cap { width: 100%; }
+.ck-cap span, .ck-cap b { display: block; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.4em; }
+.ck-bar { box-shadow: none !important; }

@@ -10,6 +10,7 @@
         <source src="%MP4%" type="video/mp4">
       </video>
       <canvas id="fxCanvas" class="fx-canvas" data-testid="fx-canvas"></canvas>
+      <canvas id="fxPeopleCanvas" class="fx-people-canvas" data-testid="fx-people-canvas" hidden aria-hidden="true"></canvas>
       <video id="fxEcho" class="fx-echo" loop muted playsinline aria-hidden="true">
         <source src="%MP4%" type="video/mp4">
       </video>
@@ -28,6 +29,12 @@
             </div>
           </div>
           <div class="fx-scroll">
+            <div class="fx-group fx-vision">
+              <span class="fx-legend">vision · live camera</span>
+              <div class="fx-cards">
+                <button class="fx-card fx-people" id="fxPeople" role="switch" aria-checked="false" disabled data-testid="fx-people"><b id="fxPeopleLabel">detect people</b><i>faces + bodies, on device</i></button>
+              </div>
+            </div>
             <div class="fx-group">
               <span class="fx-legend">buffer · frame data</span>
               <div class="fx-cards">

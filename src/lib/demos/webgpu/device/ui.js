@@ -8,7 +8,7 @@
    real. Everything the app draws in a frame is one instance buffer and one
    draw call over the app's own background pass.
    Coordinates are points: the Duo's inner display is 890 × 626. */
-import { device, DPR, uniform, storage, render, bind, attach, FSQ_VS } from './common.js';
+import { device, uniform, storage, render, FSQ_VS } from './common.js';
 
 const AS = 2048, SS = 2, STRIDE = 20; /* floats per instance */
 export const SANS = '-apple-system, "SF Pro Text", Inter, system-ui, sans-serif';
@@ -64,8 +64,10 @@ const BLIT = FSQ_VS + `
 @group(0) @binding(0) var smp: sampler; @group(0) @binding(1) var src: texture_2d<f32>;
 @fragment fn fs(o: VO) -> @location(0) vec4f { return textureSample(src, smp, o.uv); }`;
 
+/* slide fit: the UI draws into a surface — { width, height, view() } — rather than a canvas's swap chain, so the OS layer
+   can hand it the Home Screen's or an app's texture and the hardware composites that onto the device's display */
 export function makeUI(canvas, W, H) {
-  const dev = device, { ctx, fit } = attach(canvas);
+  const dev = device, fit = () => {};
   const fmt = navigator.gpu.getPreferredCanvasFormat();
   /* the atlas: one shelf-packed rgba8 texture of glyphs and icons, rasterised at 2 px per pt */
   const ac = document.createElement('canvas'); ac.width = ac.height = AS; const ax = ac.getContext('2d', { willReadFrequently: false });
@@ -106,7 +108,7 @@ export function makeUI(canvas, W, H) {
     if (e) { data[o + 16] = e[0]; data[o + 17] = e[1]; data[o + 18] = e[2]; data[o + 19] = e[3] === undefined ? 1 : e[3]; } else { data[o + 16] = 0; data[o + 17] = 0; data[o + 18] = 0; data[o + 19] = 0; } n++; };
   const hits = []; let clipRect = null;
   const ui = {
-    ctx, fit, W, H, canvas, hits, time: 0,
+    W, H, canvas, hits, time: 0,
     begin() { n = 0; hits.length = 0; clipRect = null; imgs = []; split = -1; ext = null; },
     /* use a GPUTexture from elsewhere as this frame's scene, in place of prepare()'s view */
     scene(tex) { ext = tex; },
@@ -139,7 +141,7 @@ export function makeUI(canvas, W, H) {
       let rp = enc.beginRenderPass({ colorAttachments: [{ view: half.createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bp); rp.setBindGroup(0, blurA); rp.draw(3); rp.end();
       rp = enc.beginRenderPass({ colorAttachments: [{ view: halfB.createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bp); rp.setBindGroup(0, gBlurB); rp.draw(3); rp.end();
       if (imgs.length) dev.queue.writeBuffer(imgBuf, 0, imgData, 0, imgs.length * 8);
-      rp = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(blit); rp.setBindGroup(0, blitG); rp.draw(3);
+      rp = enc.beginRenderPass({ colorAttachments: [{ view: canvas.view(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(blit); rp.setBindGroup(0, blitG); rp.draw(3);
       const a = split < 0 ? n : split; if (a) { rp.setPipeline(pipe); rp.setBindGroup(0, g); rp.draw(4, a); }
       if (imgs.length) { rp.setPipeline(ip); imgs.forEach((tex, i) => { rp.setBindGroup(0, imgGroup(tex)); rp.draw(4, 1, 0, i); }); }
       if (split >= 0 && n > split) { rp.setPipeline(pipe); rp.setBindGroup(0, g); rp.draw(4, n - split, 0, split); } rp.end(); },

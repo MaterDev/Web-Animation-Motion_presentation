@@ -1,0 +1,8 @@
+- **Readback: the answer is in the pixels**
+  - A synthetic 48-slice scan, not a patient
+- **Everything on the right is computed from the image, every frame**
+  - Histogram, region stats, the magnified study, the profile line
+  - Change the slice, window, level or colour map and all of them follow
+- **Why canvas**
+  - A layout engine can tell you where its objects are
+  - It can't answer these, because the answer isn't in the objects, it's in the pixels

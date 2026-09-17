@@ -31,3 +31,8 @@ One baked slime character in four real contexts: a chat-reaction sticker, a proc
 
 ## For the edit pass
 - Key: "for gif we can show the set, but exclude the agent roster. put the 3 character animation gifs above the player." The roster exclusion and the row-above layout are both done in this phase. Anything further (16:9 fit, sizing the row against the device) is for the edit pass.
+
+
+## Presentation edits (2026-09-17)
+- **Layout:** the sprites are on the left as a 2 × 2 grid, the companion app on the right, both 420px tall. The slide gives the demo no container.
+- **Fourth context** (Key): "presence / idle", using `slime-idle.gif` (already an asset, previously used only by the device) with an "online · ready to help" tag.

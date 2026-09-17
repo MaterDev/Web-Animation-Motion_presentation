@@ -88,9 +88,11 @@ export function clockCard() {
     rp.setPipeline(s.pDraw); rp.setBindGroup(0, s.bDraw); rp.draw(4, N); rp.end();
     s.tm.resolve(enc); dev.queue.submit([enc.finish()]);
     const r = s.tm.read(); let total = 0, max = 0.01; s.tm.names.forEach((n) => { if (r[n] !== undefined) { total += r[n]; max = Math.max(max, r[n]); } });
-    s.tm.names.forEach((n, i) => { const v = r[n]; $('ck-ms-' + i).textContent = v === undefined ? (s.tm.available ? '—' : 'n/a') : v.toFixed(3) + ' ms'; $('ck-bar-' + i).style.width = v === undefined ? '0' : Math.min(100, v / max * 100) + '%'; });
+    /* slide fit: the unit sits in the panel head, so rows print the number; a stacked bar shows each pass's share of the frame */
+    s.tm.names.forEach((n, i) => { const v = r[n]; $('ck-ms-' + i).textContent = v === undefined ? (s.tm.available ? '—' : 'n/a') : v.toFixed(3); $('ck-bar-' + i).style.width = v === undefined ? '0' : Math.min(100, v / max * 100) + '%'; $('ck-stack-' + i).style.width = v === undefined || total <= 0 ? '0' : (v / total * 100) + '%'; });
     $('ck-total').textContent = s.tm.available ? total.toFixed(3) + ' ms' : 'timestamp-query unavailable';
-    $('ck-bytes').textContent = (bytes.frameState + bytes.frameUni) + ' B · uniforms only';
+    /* slide fit: the "uniforms only" label is read off the counter, not assumed (init's seed upload is state) */
+    $('ck-bytes').textContent = (bytes.frameState + bytes.frameUni) + ' B'; $('ck-bytes-kind').textContent = bytes.frameState === 0 ? 'uniforms only' : bytes.frameState + ' B state';
   } });
   return c;
 }

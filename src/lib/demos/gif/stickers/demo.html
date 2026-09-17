@@ -26,7 +26,7 @@
         <div class="scene-stage">
           <div class="mock-chat">
             <div class="mock-bubble">omg no way 😭</div>
-            <img class="mock-sticker-pop" src="assets/slime-happy.gif" alt="animated slime sticker, excited hop">
+            <span class="gif-frame sticker-frame"><img class="mock-sticker-pop" src="assets/slime-happy.gif" alt="animated slime sticker, excited hop"></span>
             <div class="mock-bubble me">sent a sticker</div>
           </div>
         </div>
@@ -37,7 +37,7 @@
       <div class="scene-card" data-testid="gif-scene-loading">
         <div class="scene-stage">
           <div class="mock-upload">
-            <img src="assets/slime-eat.gif" alt="slime eating, standing in for a processing indicator">
+            <span class="gif-frame sticker-frame"><img src="assets/slime-eat.gif" alt="slime eating, standing in for a processing indicator"></span>
             <div class="bar-track"><div class="bar-fill"></div></div>
             <span class="pct">processing — 64%</span>
           </div>
@@ -49,12 +49,25 @@
       <div class="scene-card" data-testid="gif-scene-away">
         <div class="scene-stage">
           <div class="mock-away">
-            <img src="assets/slime-sleep.gif" alt="sleeping slime, an away state illustration">
+            <span class="gif-frame sticker-frame"><img src="assets/slime-sleep.gif" alt="sleeping slime, an away state illustration"></span>
             <span class="away-tag">away · back in 20m</span>
           </div>
         </div>
         <span class="scene-label">empty / away state</span>
         <span class="scene-note">Low-motion, high-charm — a register a static illustration cannot hold and a spinner gets wrong.</span>
+      </div>
+
+      <!-- presentation edit: a fourth context so the sprites make a 2 × 2
+           grid; the idle loop, which the three contexts above don't use -->
+      <div class="scene-card" data-testid="gif-scene-online">
+        <div class="scene-stage">
+          <div class="mock-away mock-online">
+            <span class="gif-frame sticker-frame"><img src="assets/slime-idle.gif" alt="idle slime bobbing, an online presence indicator"></span>
+            <span class="away-tag online-tag"><i></i>online · ready to help</span>
+          </div>
+        </div>
+        <span class="scene-label">presence / idle</span>
+        <span class="scene-note">The idle loop as a presence mark: alive without asking for attention.</span>
       </div>
     </div>
 

@@ -198,7 +198,14 @@ var SEC2 = (function () {
    §2 · SCREEN — the console
    ════════════════════════════════════════════════════════════════════════ */
 (function () {
-  var W = 1200, H = 560;
+  /* SLIDE FIT: the sheet ran a fixed 1200×560 store. On the slide the press
+     sheet is the hero and fills an 864×414 CSS region under the button
+     strip, so the store is that region × devicePixelRatio (capped at 2) and
+     K rescales everything the sheet specified in its 1200-wide units — the
+     cell, the loupe, the view, the furniture — so the composition and the
+     dot count match the sheet's. */
+  var CSS_W = 864, CSS_H = 414, DPR = Math.min(2, Math.max(1, window.devicePixelRatio || 1));
+  var W = Math.round(CSS_W * DPR), H = Math.round(CSS_H * DPR), K = W / 1200;
   var cv = $('h2-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
@@ -226,7 +233,7 @@ var SEC2 = (function () {
      section about latency. A coarser ruling is also more legible at this
      magnification: the rosette needs its dots separable by eye, and at 8px
      they were not quite. */
-  var CELL = 12;
+  var CELL = 12 * K;
   var on = { c: true, m: true, y: true, k: true };
   var method = 'arc', gain = true, costs = [], dots = 0, locked = false;
   var proofing = true, loupeOn = true, plateCount = 4;
@@ -355,7 +362,7 @@ var SEC2 = (function () {
         x = lx * ca - ly * sa + W / 2;
         y = lx * sa + ly * ca + H / 2;
         if (x < -cell || y < -cell || x > W + cell || y > H + cell) continue;
-        c = dotGain(sample(ax0 + (x - W / 2) / zoom, ay0 + (y - H / 2) / zoom, p.ch));
+        c = dotGain(sample(ax0 + (x - W / 2) / (zoom * K), ay0 + (y - H / 2) / (zoom * K), p.ch));
         if (c < 0.02) continue;
         r = cell * 0.5 * Math.sqrt(c / 0.7854);      /* area → radius */
         if (r > cell * 0.78) r = cell * 0.78;
@@ -371,8 +378,8 @@ var SEC2 = (function () {
   }
 
   function trimMarks() {
-    var i, L = 26;
-    ctx.strokeStyle = RULE; ctx.lineWidth = 1;
+    var i, L = 26 * K;
+    ctx.strokeStyle = RULE; ctx.lineWidth = Math.max(1, Math.round(K));
     [[0, 0], [W, 0], [0, H], [W, H]].forEach(function (c) {
       ctx.beginPath();
       ctx.moveTo(c[0] + (c[0] ? -L : L) * 0.15, c[1] + 0.5); ctx.lineTo(c[0] + (c[0] ? -L : L), c[1] + 0.5);
@@ -381,10 +388,10 @@ var SEC2 = (function () {
     });
     /* the register target — four inks through one mark, which is the one
        piece of furniture that says "this came off a press" */
-    var cx = W / 2, cy = 16;
-    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, TAU); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx - 14, cy); ctx.lineTo(cx + 14, cy);
-    ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy + 14); ctx.stroke();
+    var cx = W / 2, cy = 16 * K;
+    ctx.beginPath(); ctx.arc(cx, cy, 9 * K, 0, TAU); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 14 * K, cy); ctx.lineTo(cx + 14 * K, cy);
+    ctx.moveTo(cx, cy - 14 * K); ctx.lineTo(cx, cy + 14 * K); ctx.stroke();
   }
 
   var demo = WAM.clock('h2-stage', {
@@ -435,7 +442,7 @@ var SEC2 = (function () {
          screen at once — which is the comparison the whole section is
          about. */
       if (loupeOn) {
-        var lr = 118;
+        var lr = 118 * K;
         var lx = W * (0.5 + 0.30 * Math.sin(t * TAU * 3));
         var ly = H * (0.5 + 0.26 * Math.sin(t * TAU * 5 + 2.1));
         var keepZ = zoom, keepX = ax0, keepY = ay0;
@@ -446,8 +453,8 @@ var SEC2 = (function () {
         /* re-screen the same sheet, three times closer, around the point
            the ring is actually over */
         var LOUPE = 3;
-        ax0 = keepX + (lx - W / 2) / keepZ;
-        ay0 = keepY + (ly - H / 2) / keepZ;
+        ax0 = keepX + (lx - W / 2) / (keepZ * K);
+        ay0 = keepY + (ly - H / 2) / (keepZ * K);
         zoom = keepZ * LOUPE;
         cellScale = LOUPE;
         ctx.translate(lx - W / 2, ly - H / 2);
@@ -462,19 +469,19 @@ var SEC2 = (function () {
         zoom = keepZ; ax0 = keepX; ay0 = keepY; cellScale = 1;
         /* the ring: a machined barrel, in the same flat notation as every
            other bevel on this sheet */
-        ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 7;
-        ctx.beginPath(); ctx.arc(lx, ly, lr + 3, 0, TAU); ctx.stroke();
-        ctx.strokeStyle = RULE; ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.lineWidth = 7 * K;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 3 * K, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = RULE; ctx.lineWidth = 2 * K;
         ctx.beginPath(); ctx.arc(lx, ly, lr, 0, TAU); ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(lx, ly, lr + 6, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = K;
+        ctx.beginPath(); ctx.arc(lx, ly, lr + 6 * K, 0, TAU); ctx.stroke();
       }
 
       trimMarks();
       $('h2-dots').textContent = n.toLocaleString();
       $('h2-cost').innerHTML = ms(median(costs)) + ' ms' + atFloor(median(costs));
-      $('h2-ruling').textContent = CELL + ' px cell · ' + zoom.toFixed(1) + '× on the sheet'
-        + (proofing ? ' · plate ' + plateCount + ' of 4' : '');
+      $('h2-ruling').textContent = Math.round(CELL / DPR) + ' px · ' + zoom.toFixed(1) + '×'
+        + (proofing ? ' · plate ' + plateCount + '/4' : '');
       $('h2-angles').textContent = locked
         ? 'Y 0 · C 15 · K 45 · M 75 — locked'
         : PLATES.map(function (p) { return p.ch.toUpperCase() + ' ' + angleOf(p, t).toFixed(1); }).join(' · ');
@@ -580,7 +587,7 @@ var SEC2 = (function () {
     } else if (b === $('h2-lock')) {
       locked = !locked;
       b.classList.toggle('h2-on', locked);
-      b.textContent = locked ? 'release the screen' : 'lock to standard angles';
+      b.textContent = locked ? 'release' : 'lock angles';
     } else if (b === $('h2-proof')) {
       proofing = !proofing; plateCount = 4;
       b.classList.toggle('h2-on', proofing);

@@ -38,3 +38,40 @@ The object-of-the-month page of an invented museum, The Fenwick. A Poly Haven ph
 
 ## For the edit pass
 - Key: "for webgl we can use the fenwick example, but make the homepage hero the first example." This demo is second (`order: 2`). No other edits were requested yet.
+
+## Slide fit (2026-09-17)
+Designed for the 864 × 444 slide well as a presentation composition. Key's notes: "I don't like the little green thing floating above the head", and "redesigned for the actual presentation in terms of their layout".
+
+**Layout.** The light panel uses a 24 px margin in a three-row grid:
+- **Mast (48 px):** brand, breadcrumb and gallery. The breadcrumb aligns with the right column.
+- **Body:**
+  - a 432 px stage filling the body height, with a "drag to turn" hint
+  - a right column, top to bottom:
+    - eyebrow
+    - a 26 px title, shortened to "Portrait bust of a man"
+    - a one-line blurb
+    - the Light pills (Gallery, Daylight, Raking)
+    - "Look closer" with all three note titles. Only the active note shows its one-line text, and the note texts are shortened.
+    - the CTA pills
+- **Foot (34 px):** accession and credit.
+
+Labels are 11 px or larger, and body text is 13–14 px. The measured `demo-host` scrollHeight is 444, and the column fills exactly (scrollHeight 334 = clientHeight).
+
+**Removed:**
+- the Doto band
+- "The same turn, two ways" comparison, with its second renderer `RC`, the eight prerendered render targets and the blend quad
+- the §1 bench: readouts, the render-area control, the table and the instrument prose
+- the `readPixels` bracket
+- the SVG leader overlay: the 01/02/03 anchor ring, the leader line and the label on the model
+
+**Behaviour changes:**
+- Notes no longer auto-advance every 17 s, since there is no marker to follow. They are click-only.
+- Clicking a note turns the bust to that note's pose (brow 12°/8°, chin −18°/−4°, drapery 55°/6°) over `TURN_S = 1.2 s` with an ease-in-out along the shortest path. The turn is computed from the clock time of the click, so it stays a pure function of t.
+- Without a note or a drag, the bust keeps the sheet's slow turn (360° per 27 s, pitch sway over 11 s).
+- Releasing a drag now leaves the bust where the hand put it. The sheet snapped it back to the turn on pointerleave.
+- Reduced motion shows the active note's pose.
+- Camera distance went from 2.3 to 2.15, so the bust fills the stage height.
+
+**Kept:** `buildMuseum`'s mesh, maps, room environment and three rigs, unchanged. Observed: at the drapery pose the Raking rig reads only slightly different from Gallery, because its low key comes from +x, behind that side of the face. These are the sheet's rig values. Also kept: the visit/save toggles and full disposal (scene geometries, materials and textures, the PMREM environment, the renderer, `forceContextLoss`).
+
+Screenshots (scratchpad): `gpu-fenwick-museum.png`, `gpu-fenwick-museum-note3.png`.

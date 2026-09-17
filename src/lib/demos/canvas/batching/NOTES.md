@@ -35,3 +35,15 @@ None. The "artwork" is drawn to an offscreen canvas at mount.
 
 ## For the edit pass
 Nothing specific recorded for this demo yet. Consider whether the tables belong on the same slide as the console (they stall it for ~1 s).
+
+
+## Presentation edits (2026-09-17)
+- **Slide layout:** the controls, separations and readouts sit in a left column and the live press sheet sits on the right; tables A and B are hidden on the slide (the benchmark still runs). Long explanations moved to the speaker notes.
+
+## Slide fit (2026-09-17)
+Recomposed to exactly 864 × 444 with the live press sheet as the hero (replaces the earlier left-column layout).
+- **Layout:** a 30px single-row button strip on top (smaller 11px chips, grouped method | plates | toggles with thin separators), the console canvas filling the 864 × 414 below, and the readouts as four small chips floating over the sheet's bottom edge (dots and draw+sync at 18px bottom-left, ruling and screen angles at 12px bottom-right).
+- **Backing store:** `h2-canvas` is now 864×414 CSS × devicePixelRatio (capped at 2), so 1728×828 on a retina screen. A scale factor `K = W / 1200` rescales everything the sheet specified in its 1200-wide units (cell, loupe radius, view mapping into the artwork, ring strokes, trim marks, register target), so the composition and dot count stay as on the sheet. The ruling readout reports the cell in CSS px (about 9).
+- **Labels shortened:** "one path", "sprite", "fillRect", "C 15°" etc., "lock angles"/"release", "proof"; ruling reads e.g. `9 px · 1.4× · plate 1/4`.
+- **Dropped from the slide:** the separations explainer (`h2-explain-stage`, hidden, so its clock stays paused), its caption, the instructions prose, and tables A/B with their guard and notes (the benchmark still runs once, 1 s after mount).
+- Measured: host 864 × 444 at DPR 1 and 2; headless, about 4.5–5.9k dots at about 5 ms draw+sync (arc).

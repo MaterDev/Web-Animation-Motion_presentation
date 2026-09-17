@@ -20,7 +20,11 @@ export function mount(host) {
   dsp.add(tokens.dispose);
   const token = tokens.token;
 
-  var W = 960, H = 420;
+  /* slide fit: the field's backing store is its displayed size in CSS px
+     (832 × 312), drawn at 1× and scaled by whole device pixels with
+     image-rendering: pixelated — the quantised field is pixel material, and
+     a DPR-sized store would quadruple the per-frame quantise pass. */
+  var W = 832, H = 312;
   var cv = $('v1-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
@@ -42,7 +46,9 @@ export function mount(host) {
     hi: token('--v1-hi'), lt: token('--v1-lt'),
     sh: token('--v1-sh'), dk: token('--v1-dk'), face: token('--v1-face')
   };
-  var FRAME = 14, STRIP = 16;                       /* chrome, in backing px */
+  /* the housing is the CSS chassis now; the canvas keeps only the sunken
+     screen bevel and the palette strip */
+  var FRAME = 2, STRIP = 12;                        /* chrome, in backing px */
   var FX = FRAME, FY = FRAME, FW = W - FRAME * 2, FH = H - FRAME * 2 - STRIP - 6;
 
   var DECAY = { analyser: 0.055, scope: 0.042 };
@@ -51,7 +57,7 @@ export function mount(host) {
   var mode = 'analyser', quantise = true, frames = 0, lastT = -1, qCost = [];
   var QCACHE = SKIN_CACHE();
 
-  $('v1-palette').textContent = PALETTE.length + ' entries';
+  $('v1-palette').textContent = PALETTE.length;
   $('v1-instr-pal').textContent = PALETTE.length;
   $('v1-steps').textContent = STEPS;
   $('v1-decay').textContent = (DECAY[mode] * 100).toFixed(1) + '%';
@@ -185,14 +191,14 @@ export function mount(host) {
   }
   function chromeOver() {
     var EDGE = { hi: BEVEL.hi, lt: BEVEL.lt, sh: BEVEL.sh, dk: BEVEL.dk };
-    SKIN_BEVEL(ctx, 0, 0, W, H, false, EDGE);
     SKIN_BEVEL(ctx, FX - 2, FY - 2, FW + 4, FH + 4, true, EDGE);
-    var i, cw = Math.floor((FW - 2) / PALETTE.length);
+    var i, cw = Math.floor((FW + 2) / PALETTE.length);
+    var sx0 = FX - 1 + Math.floor((FW + 4 - cw * PALETTE.length) / 2);
     for (i = 0; i < PALETTE.length; i++) {
       ctx.fillStyle = SKIN_CSS(PALETTE[i]);
-      ctx.fillRect(FX + i * cw, FY + FH + 6, cw - 1, STRIP);
+      ctx.fillRect(sx0 + 1 + i * cw, FY + FH + 6, cw - 1, STRIP);
     }
-    SKIN_BEVEL(ctx, FX - 1, FY + FH + 5, cw * PALETTE.length + 1, STRIP + 2, true, EDGE);
+    SKIN_BEVEL(ctx, sx0, FY + FH + 5, cw * PALETTE.length + 1, STRIP + 2, true, EDGE);
   }
 
   function compose() {
@@ -257,76 +263,70 @@ export function mount(host) {
      palette, with the same bevel, inside the same frame, because an
      explanation of a world belongs to it. */
   (function () {
-    var EW = 960, EH = 172;
+    /* slide fit: a slim 372 × 88 screen beside the controls, backing store at
+       the displayed size × devicePixelRatio so its 11px labels stay crisp.
+       Five generations twelve frames apart (still the true 1.006 scale, so
+       ×1.33 over 48 frames), and the smooth fade over the quantised one. */
+    var EW = 372, EH = 88, DPR = Math.max(1, Math.round(window.devicePixelRatio || 1));
     var ec = $('v1-explain'), ex = ec.getContext('2d');
-    ec.width = EW; ec.height = EH;
-    var GENS = 9;
+    ec.width = EW * DPR; ec.height = EH * DPR;
+    var GENS = 5, GEN_STEP = 12;
 
     WAM.clock('v1-explain-stage', {
       el: $('v1-explain-stage'), dur: 11000, poster: 0.5,
       render: function (t) {
-        ex.fillStyle = BEVEL.face; ex.fillRect(0, 0, EW, EH);
+        ex.setTransform(DPR, 0, 0, DPR, 0, 0);
         var EDGE = { hi: BEVEL.hi, lt: BEVEL.lt, sh: BEVEL.sh, dk: BEVEL.dk };
-        SKIN_BEVEL(ex, 0, 0, EW, EH, false, EDGE);
-
-        var padX = 16, padY = 16, innerW = EW - padX * 2, innerH = EH - padY * 2;
+        ex.fillStyle = BEVEL.face; ex.fillRect(0, 0, EW, EH);
+        var pad = 2, innerW = EW - pad * 2, innerH = EH - pad * 2;
         ex.fillStyle = SKIN_CSS(VOID);
-        ex.fillRect(padX, padY, innerW, innerH);
-        SKIN_BEVEL(ex, padX - 2, padY - 2, innerW + 4, innerH + 4, true, EDGE);
+        ex.fillRect(pad, pad, innerW, innerH);
+        SKIN_BEVEL(ex, 0, 0, EW, EH, true, EDGE);
 
-        var mono = '10px ' + (token('--mono') || 'monospace');
-        ex.font = mono;
+        ex.font = '500 11px ' + (token('--mono') || 'monospace');
+        ex.textBaseline = 'alphabetic';
+        var LABEL = SKIN_CSS(PALETTE[23]), DIM = 'rgb(120,124,134)';
 
-        /* left: one mark, nine generations, six frames apart. The radius is
-           the TRUE feedback scale — 1.006 per frame, so 1.33x over 48 — and
-           not an exaggeration of it. The first version compounded 46 frames
-           per step instead of 6 and drew a final disc nine times the size,
-           which looked more like the idea and was a picture of a number
-           nobody measured. */
-        var i, cy = padY + innerH * 0.44, r, lvl, idx;
-        var GEN_STEP = 6;
-        var pitch = (innerW * 0.60) / GENS;
+        /* left: one mark, five generations. The radius is the TRUE feedback
+           scale, not an exaggeration of it. */
+        var i, r, lvl, idx, cx, cy = 45, x0 = 14;
+        ex.fillStyle = LABEL;
+        ex.fillText('ONE MARK AGEING', x0, 17);
+        var pitch = 34;
         for (i = 0; i < GENS; i++) {
           lvl = Math.pow(1 - DECAY[mode], i * GEN_STEP);
-          r = 13 * Math.pow(FEEDBACK, i * GEN_STEP);
+          r = 9 * Math.pow(FEEDBACK, i * GEN_STEP);
           idx = Math.max(0, Math.min(15, Math.round(lvl * 15)));
-          var cx = padX + 34 + i * pitch;
+          cx = x0 + 11 + i * pitch;
           ex.fillStyle = SKIN_CSS(PALETTE[2 + idx]);
           ex.beginPath(); ex.arc(cx, cy, r, 0, TAU); ex.fill();
-          ex.fillStyle = SKIN_CSS(PALETTE[1]);
-          ex.fillText(i === 0 ? 'NOW' : '\u2212' + (i * GEN_STEP), cx - 9, padY + innerH - 12);
+          ex.fillStyle = DIM;
+          ex.textAlign = 'center';
+          ex.fillText(i === 0 ? 'NOW' : '\u2212' + (i * GEN_STEP), cx, 77);
+          ex.textAlign = 'left';
         }
-        ex.fillStyle = SKIN_CSS(PALETTE[23]);
-        ex.fillText('ONE MARK, EVERY SIXTH FRAME \u2014 DIMMED BY DECAY, GROWN BY FEEDBACK', padX + 14, padY + 18);
-        ex.fillStyle = SKIN_CSS(PALETTE[1]);
-        ex.fillText('\u00d7' + Math.pow(FEEDBACK, 48).toFixed(2) + ' OVER 48 FRAMES', padX + 14, padY + 34);
 
-        /* right: the same fade twice. Smooth on top, and quantised to the
-           palette's sixteen steps below it — so the banding is not asserted,
-           it is the visible difference between two strips. */
-        var gx0 = padX + innerW * 0.66, gw = innerW * 0.30, bh = 22, n = 46, j, u, v2;
-        ex.fillStyle = SKIN_CSS(PALETTE[23]);
-        ex.fillText('SMOOTH', gx0, padY + 18);
+        /* right: the same fade twice, smooth over quantised to sixteen steps,
+           so the banding is the visible difference between two strips. */
+        var gx0 = 196, gw = EW - gx0 - 12, bh = 16, n = 60, j, u, v2, y1 = 22, y2 = 62;
+        ex.fillStyle = LABEL;
+        ex.fillText('SMOOTH', gx0, 17);
+        ex.fillText('16 STEPS, NO DITHER', gx0, 57);
+        ex.fillStyle = DIM;
+        ex.textAlign = 'right';
+        ex.fillText('54 FRAMES', gx0 + gw, 17);
+        ex.textAlign = 'left';
         for (j = 0; j < n; j++) {
           u = j / (n - 1);
           v2 = Math.pow(1 - DECAY[mode], u * 54);
           ex.fillStyle = 'rgb(' + Math.round(PALETTE[17][0] * v2 + PALETTE[0][0] * (1 - v2)) + ',' +
                                   Math.round(PALETTE[17][1] * v2 + PALETTE[0][1] * (1 - v2)) + ',' +
                                   Math.round(PALETTE[17][2] * v2 + PALETTE[0][2] * (1 - v2)) + ')';
-          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26, gw / n + 1, bh);
-        }
-        ex.fillStyle = SKIN_CSS(PALETTE[23]);
-        ex.fillText('QUANTISED \u2014 16 STEPS, NO DITHER', gx0, padY + 26 + bh + 18);
-        for (j = 0; j < n; j++) {
-          u = j / (n - 1);
-          v2 = Math.pow(1 - DECAY[mode], u * 54);
+          ex.fillRect(gx0 + u * (gw - gw / n), y1, gw / n + 0.5, bh);
           idx = Math.max(0, Math.min(15, Math.round(v2 * 15)));
           ex.fillStyle = SKIN_CSS(PALETTE[2 + idx]);
-          ex.fillRect(gx0 + u * (gw - gw / n), padY + 26 + bh + 24, gw / n + 1, bh);
+          ex.fillRect(gx0 + u * (gw - gw / n), y2, gw / n + 0.5, bh);
         }
-        ex.fillStyle = SKIN_CSS(PALETTE[1]);
-        ex.fillText('0', gx0, padY + 26 + bh * 2 + 60);
-        ex.fillText('54 FRAMES', gx0 + gw - 56, padY + 26 + bh * 2 + 60);
       }
     });
   })();

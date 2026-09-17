@@ -55,3 +55,21 @@
 .r4-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--r4-rule); }
 .r4-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--r4-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
 .r4-kv b.r4-anno { color: var(--r4-anno); }
+
+/* ── slide fit (2026-09-17): 864 × 444 ─────────────────────────────────
+   bar 30 + canvas 384 + readouts 30 = 444. The caption and prose move to
+   the speaker notes. */
+.r4-cap, .cv-instr { display: none !important; }
+.cv-dagger { color: var(--r4-rule); }
+.r4-world { --r4-gutter: 16px; height: 444px; overflow: hidden; display: flex; flex-direction: column; }
+.r4-bar { flex: none; height: 30px; box-sizing: border-box; padding: 6px var(--r4-gutter) 0; gap: 4px; flex-wrap: nowrap; }
+.r4-btn { flex: 1 1 auto; font-size: 11px; letter-spacing: 0.06em; line-height: 1; padding: 5px 8px; height: 22px; white-space: nowrap; }
+.r4-stage { flex: none; padding: 0; }
+.r4-stage canvas { width: 864px; height: 384px; }
+.r4-plate {
+  flex: none; height: 30px; box-sizing: border-box; padding: 0 var(--r4-gutter);
+  flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 12px;
+  border-top: 1px solid var(--r4-frame);
+}
+.r4-kv { font-size: 11px; letter-spacing: 0.06em; color: oklch(0.600 0 0); white-space: nowrap; display: flex; align-items: baseline; gap: 6px; }
+.r4-kv b { display: inline; font-size: 13px; margin-top: 0; }

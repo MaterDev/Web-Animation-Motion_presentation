@@ -1,60 +1,54 @@
-/* extraction: copied from design/techniques/webgpu.html <style>, only the rules this demo uses; :root → :host */
-/* ─────────────────────────────────────────────────────────────────────────
-   SL-14 · webgpu
-
-   `gp-`  the sheet: the frame around the cards, in the deck's own harness
-          language — section labels, prose, captions, the instrument strip.
-   Every card is a fragment of a different fictional product and carries its
-   own identity under its own prefix. Nothing about a card's chrome is
-   shared with its neighbours except the caption below it, which names the
-   mechanism. All motion on this page is WebGPU; the DOM holds the words.
-   ───────────────────────────────────────────────────────────────────────── */
+/* webgpu/pipeline · the frame inspector, composed for the slide well (864 × 444).
+   One dark chassis: the particle field is the focal plate on the left and fills
+   the height; the pass panel on the right reads top-down as passes → the frame
+   total → what crossed the bus. Type is sized for projection. */
 :host { --tint: var(--tint-webgpu); }
-.wrap { max-width: 1120px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
-.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
-.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
-.crumb a:hover { color: var(--tint); }
-.crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
-.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
-.head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*3); }
-p.dek b { color: var(--hz-600); font-weight: 600; }
-.gp-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; max-width: 80ch; }
-.gp-instr b { color: var(--hz-500); font-weight: 500; }
-.gp-instr code { color: var(--hz-500); }
-.gp-sec { margin: calc(var(--u)*10) 0 0; }
-.gp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); margin-bottom: 6px; }
-.gp-sec h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0 0 10px; }
-.gp-sec > p { color: var(--hz-500); font-size: 13.5px; max-width: 74ch; margin: 0 0 calc(var(--u)*3); }
-.gp-sec > p b { color: var(--hz-600); font-weight: 600; }
-.gp-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.55; letter-spacing: 0.04em; color: var(--hz-400); padding: 10px 2px 0; max-width: 70ch; }
-.gp-cap b { color: var(--hz-500); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
-.gp-cap i { font-style: normal; color: var(--tint); }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
-.notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
-.notes ol { padding-left: 1.1em; } .notes li { margin-bottom: 8px; }
+.demo-root { width: 100%; }
+
 .gp-stage { position: relative; overflow: hidden; touch-action: none; }
 .gp-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.gp-status { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; pointer-events: none; }
+.gp-status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: oklch(0.80 0.006 260); pointer-events: none; }
 .gp-status[hidden] { display: none !important; }
 
-/* ─── §1 · the frame inspector ─────────────────────────────────────────── */
-.ck { --ck-bg: oklch(0.14 0.008 260); --ck-ink: oklch(0.92 0.004 260); --ck-dim: oklch(0.60 0.006 260); --ck-rule: oklch(0.28 0.008 260); --ck-acc: var(--tint);
-  background: var(--ck-bg); color: var(--ck-ink); display: grid; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 720px) { .ck { grid-template-columns: minmax(0, 1fr) 300px; } }
-.ck .gp-stage { aspect-ratio: 16 / 9; background: oklch(0.10 0.008 260); }
-.ck-panel { padding: 14px 16px; border-left: var(--hair) solid var(--ck-rule); display: flex; flex-direction: column; gap: 10px; font-family: var(--mono); }
-.ck-k { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ck-dim); }
-.ck-pass { display: grid; grid-template-columns: 22px 92px minmax(0, 1fr) 64px; gap: 8px; align-items: center; font-size: 10px; }
-.ck-pass input { accent-color: var(--ck-acc); margin: 0; }
-.ck-pass label { color: var(--ck-ink); letter-spacing: 0.04em; }
-.ck-bar { height: 8px; background: var(--ck-rule); position: relative; }
-.ck-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ck-acc); width: 0; }
-.ck-ms { text-align: right; color: var(--ck-ink); font-variant-numeric: tabular-nums; }
-.ck-total { border-top: var(--hair) solid var(--ck-rule); padding-top: 8px; font-size: 10px; color: var(--ck-dim); display: flex; justify-content: space-between; }
-.ck-total b { color: var(--ck-ink); font-weight: 500; }
-.ck-note { font-size: 9px; line-height: 1.5; color: var(--ck-dim); }
+/* ─── the chassis ─────────────────────────────────────────────────────── */
+.ck { --ck-bg: oklch(0.15 0.010 300); --ck-well: oklch(0.10 0.010 300); --ck-ink: oklch(0.90 0.006 300); --ck-dim: oklch(0.64 0.012 300); --ck-rule: oklch(0.27 0.012 300);
+  --ck-acc: oklch(0.74 0.11 320); --ck-acc-dim: oklch(0.50 0.07 320);
+  box-sizing: border-box; width: 100%; height: 444px; padding: 16px;
+  background: var(--ck-bg); color: var(--ck-ink); border-radius: 10px;
+  display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 20px; font-family: var(--mono); }
+.ck .gp-stage { height: 100%; min-height: 0; background: var(--ck-well); border-radius: 6px; box-shadow: inset 0 0 0 1px var(--ck-rule); }
+.ck-chip { position: absolute; left: 12px; top: 12px; padding: 5px 9px; border-radius: 4px; font-size: 11px; letter-spacing: 0.06em; color: var(--ck-dim);
+  background: color-mix(in oklch, var(--ck-well) 78%, transparent); backdrop-filter: blur(6px); pointer-events: none; }
+.ck-chip b { color: var(--ck-ink); font-weight: 600; }
 
-@media (max-width: 560px) { .ck-panel { border-left: 0; } }
+/* ─── the pass panel ──────────────────────────────────────────────────── */
+.ck-panel { min-height: 0; padding: 4px 0 0; display: flex; flex-direction: column; }
+.ck-k { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ck-dim); }
+.ck-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 10px; border-bottom: 1px solid var(--ck-rule); }
+.ck-unit { font-size: 11px; letter-spacing: 0.12em; color: var(--ck-dim); }
+
+.ck-passes { display: flex; flex-direction: column; gap: 13px; padding: 14px 0 14px; }
+.ck-pass { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; grid-template-rows: auto 6px; column-gap: 10px; row-gap: 7px; align-items: center; cursor: pointer; }
+.ck-pass.is-fixed { cursor: default; }
+.ck-pass input { margin: 0; width: 15px; height: 15px; cursor: inherit; }
+.ck-name { font-size: 13px; color: var(--ck-ink); white-space: nowrap; }
+.ck-ms { font-size: 14px; font-weight: 700; text-align: right; color: var(--ck-ink); font-variant-numeric: tabular-nums; }
+.ck-bar { grid-column: 2 / 4; height: 6px; border-radius: 3px; background: var(--ck-rule); position: relative; display: block; overflow: hidden; }
+.ck-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); width: 0; border-radius: 3px; }
+.ck-pass:has(input:not(:checked)) .ck-name, .ck-pass:has(input:not(:checked)) .ck-ms { color: var(--ck-dim); }
+
+.ck-sum { display: grid; gap: 6px; padding: 12px 0 12px; border-top: 1px solid var(--ck-rule); margin-top: auto; }
+.ck-big { font-size: 30px; line-height: 1.05; font-weight: 700; color: var(--ck-acc); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ck-stack { display: flex; height: 6px; gap: 2px; margin-top: 4px; }
+.ck-stack i { display: block; height: 100%; width: 0; background: var(--c); border-radius: 2px; transition: width 0.3s; }
+/* one colour per pass, shared by its row bar, its checkbox and its stack segment */
+.ck-passes > :nth-child(1), .ck-stack i:nth-child(1) { --c: oklch(0.82 0.10 330); }
+.ck-passes > :nth-child(2), .ck-stack i:nth-child(2) { --c: oklch(0.72 0.11 290); }
+.ck-passes > :nth-child(3), .ck-stack i:nth-child(3) { --c: oklch(0.76 0.09 205); }
+.ck-passes > :nth-child(4), .ck-stack i:nth-child(4) { --c: oklch(0.70 0.12 350); }
+.ck-pass input { accent-color: var(--c); }
+
+.ck-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--ck-rule); }
+.ck-val b { font-size: 14px; font-weight: 700; color: var(--ck-ink); font-variant-numeric: tabular-nums; }
+.ck-kind { font-size: 11px; color: var(--ck-dim); }
+.ck-note { font-size: 11px; line-height: 1.4; color: var(--ck-dim); padding-top: 8px; border-top: 1px solid var(--ck-rule); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

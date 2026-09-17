@@ -40,3 +40,12 @@ Key (2026-09-17): "the lineage radar map needs to be more dramatic so the animat
 - Visualise something that uses the geography more. The current view is a whole-world frame in which most activity clusters in two small regions (the US coasts and western Europe).
 - Stay on topic: SVG filter pipeline and AI lineage.
 - The data subset in `data/map.js` may need widening, for example more layers or borders, if the new visual uses more of the map.
+
+
+## Presentation edits (2026-09-17)
+- **2:1 window:** the 960×540 stage is cropped 24px top and bottom to fit the slide field; the chrome, year, key and bar move in by the crop.
+- **Meld and radiate** (Key: "the blobs should meld together and radiate"):
+  - a screen-blended glow layer (blur 22) under each site;
+  - the goo filter widened (blur 14, threshold 16/-6), with each drawn mass at 1.9× the counted radius, so neighbours weld;
+  - three expanding radar rings per live site on a 2.4s pulse, computed from t.
+- The counted radius still drives the readouts and the mass union.

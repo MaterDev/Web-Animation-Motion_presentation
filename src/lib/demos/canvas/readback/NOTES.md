@@ -34,3 +34,16 @@ None. The phantom is generated.
 
 ## For the edit pass
 Nothing specific recorded for this demo yet.
+
+
+## Presentation edits (2026-09-17)
+- **Slide layout:** the caption and prose are hidden. Long explanations moved to the speaker notes.
+
+## Slide fit (2026-09-17)
+- **World is exactly 864 × 444:** button bar 30 px + canvas 384 px + readout row 30 px (flex column, fixed heights).
+- **Canvas** backing 1728 × 768 (2× of 864 × 384 CSS); all drawing is in CSS px under `setTransform(2,…)`. Was 1240 × 640 scaled down to ~0.66, which put canvas labels at ~7 px.
+- **Composition:** scan viewport square 368 × 368 at left (16, 8). Right column 440 px wide: histogram (92 px tall), LUT bar with the fusion ramp beneath it (LUT and fusion labels share one line), stack ladder on one row with its label inline, then region magnifier (fills to the bottom, aspect of the ROI) beside the profile. Canvas labels 11 px, overlay annotation 12 px. Labels shortened ("REGION — STUDY ONLY", "PROFILE — MIDDLE ROW", "LUT — GSDF GREY · 256").
+- **Rendering:** the display image is now mapped 1:1 with the read (520 × 520 ImageData in an offscreen canvas) and drawn scaled onto the viewport, instead of resampling to the viewport size per pixel; fusion coverage is a percentage of the read. The magnified region is a 140 × 110 ImageData drawn with smoothing off (was 70 000 per-pixel `fillRect`s). Measured ~47 rAF/s in headless Chrome during verification.
+- **Button bar:** one row, 11 px chips that flex to fill the width; labels shortened (auto W/L, rotate map, reconstruct). `data-testid`s unchanged.
+- **Readouts:** one thin row, label and value inline (11 px label, 13 px value), labels shortened (W / L, region, fusion, px read, readback); fusion reads "spectral 5.5%".
+- Caption and `cv-instr` prose stay hidden (speaker notes).

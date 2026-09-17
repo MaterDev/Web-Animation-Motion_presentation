@@ -529,7 +529,7 @@ This section answers [the question to carry](#the-question-to-carry).
 **Three things need solving:**
 
 1. **Technical constraints that engineering owns.** They are real, and engineering's to hold.
-2. **Shared vocabulary**, so design and engineering can tune a vision together.
+2. **Shared vocabulary**, so design and engineering can tune a vision together. The [Glossary](/paper/glossary) collects the terms worth sharing.
 3. **Naming precisely.** When AI does the building, speed stops tracking how complex the code is and starts tracking **how precisely you can name what you want**. A vague vision in imprecise language is the new bottleneck, especially for abstract motion you may not know the name for.
 
 **Where vocabulary has to do the work.** CSS, layout and SVG are shaped like the page. A design tool can show two stills, and the motion between them can be inferred. WebGL and WebGPU are not shaped like the page: you cannot hand someone two keyframes of a fluid simulation. So vocabulary has to fill **exactly the gap the tool can no longer show**: words like *volumetric*, the difference between simulation and interaction, how variables influence each other, a feel for physics. This is not jargon for its own sake. It is the only remaining way to point at the thing.
@@ -707,4 +707,4 @@ Accessed 17 September 2026 unless stated. Numbers match the citation markers in 
 
 This paper, the talk and every example on the site were made for [`Folklore Digital`](https://folklore.digital/), where I work. The projects, experiments and conversations it reports on happened there, and it is written for the people I build with.
 
-Thank you to Sean Van Dyk, Irene Polo, Aayush Joshi and Tyler Knight, and to the Design team, for the feedback and collaboration over the last nine months that shaped this work.
+Thank you to Sean Van Dyk, Irene Polo, Aayush Joshi, Tyler Knight, Kyle Johnson, Kayla Long and Mike Matheny for the feedback and collaboration over the last nine months that shaped this work.

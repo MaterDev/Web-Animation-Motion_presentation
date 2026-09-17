@@ -1,0 +1,15 @@
+- **CSS as a drawing instrument**
+  - Not layout at all: CSS making images
+- **Goo (metaballs)**
+  - Four circles under `blur(11px)` + `contrast(26)`
+  - The blur makes them bleed; the contrast snaps the edges back, so they merge like liquid
+- **Moiré**
+  - Two concentric rulings rotating against each other
+  - `mix-blend-mode: difference` makes the interference pattern
+- **Aperture: a scroll-driven mask**
+  - Scrolling opens a hole in an opaque plate over a drifting colour field
+  - The field is **revealed**, not moved
+- **How**
+  - The mask radius rides a `scroll()` timeline
+  - It can animate smoothly only because it's a registered `@property`
+  - A few lines of JavaScript ease the scrollbar, standing in for a finger; the animation itself is all CSS

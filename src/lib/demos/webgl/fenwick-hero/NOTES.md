@@ -38,3 +38,34 @@ The homepage of an invented museum, The Fenwick: a dark 16:9 hero with a headlin
 
 ## For the edit pass
 - Key: "for webgl we can use the fenwick example, but make the homepage hero the first example." Done through `order: 1`. No other edits were requested yet.
+
+## Slide fit (2026-09-17)
+Designed for the 864 × 444 slide well as a presentation composition, not a trimmed sheet page. Key's notes: "make the homepage hero the first example"; "I dislike the home screen … it's ugly and it progresses too slow — can we make them more fine particles and have the animation resolve more quickly"; and "redesigned for the actual presentation in terms of their layout".
+
+**Layout.** The stage is the whole 444 px panel, and the WebGL canvas is full-bleed behind every DOM layer. All layers sit on a 28 px margin:
+- mast (56 px): brand, centred nav buttons, opening hours
+- copy column (330 px): eyebrow, 34 px headline, 14.5 px body, pill CTA
+- foot (44 px): credit and "pointer = wind"
+
+The ground is a dark ink panel with a blue radial glow behind the bust and a faint warm corner. The bust sits right of centre through `camera.setViewOffset` (`SHIFT = 0.16`, camera distance 2.85), so it clears the copy and is never cut. Labels are 11 px or larger. The measured `demo-host` scrollHeight is 444.
+
+**Removed:**
+- the Doto band, which showed the point count
+- the §1 bench: readouts, the point-count control, the control table and the instrument prose
+- the `readPixels` frame bracket
+- the SVG overlay, which the hero never used
+
+The long explanations belong in speaker notes.
+
+**Particles:**
+- The count went from 120 000 to `COUNT = 320 000`. Only that many are sampled; the sheet sampled 1 200 000 for the control rows, so load is lighter. The copy's count is written from `COUNT`.
+- Point size is set in device pixels (`PX = 1.0`, scaled by depth), so the points stay fine at 2× DPR.
+- Depth cues: points near the front are larger and brighter, and those at the back dim to 35%.
+- Lighting is a warm key that rides with the camera, a cool under-fill and a blue rim, plus ±28% per-point brightness grain.
+- The scattered state is a flattened, turning nebula in which only about 22% of the points show (dust, not a sheet). Formed points are opaque with depth-write on.
+
+**Timing.** The cycle is `CYCLE = 16 s`: gather over 2.2 s with a per-point stagger and a cubic ease-out and a quarter-turn curl, hold until 13 s, let go over 2 s (the same curve read as an ease-in), then drift for 1 s. When the scan finishes loading, the clock seeks to 0 and plays, so the slide always opens on the gather. Camera sway is ±32° over 29 s. Reduced motion shows the formed bust at yaw 18°.
+
+**Kept:** pointer wind (ray push, now 0.12 within 0.16 units), CTA toggle, full disposal (points geometry, material, glTF geometries and textures, renderer, `forceContextLoss`). Verified: the hero's WebGL context reports lost after switching demos in the viewer.
+
+Screenshots (scratchpad): `gpu-fenwick-hero-scattered.png`, `gpu-fenwick-hero-mid.png`, `gpu-fenwick-hero-resolved.png`, `gpu-fenwick-hero-reduced.png`.

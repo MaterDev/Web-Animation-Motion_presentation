@@ -74,3 +74,32 @@
 .h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
 .h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
 .h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+
+/* ── slide fit (2026-09-17) ─────────────────────────────────────────────
+   Exactly 864 × 444 on the slide. The live press sheet is the hero: a
+   30px button strip on top, the console canvas filling the 414px below
+   (backing = 864×414 × DPR, set in index.js), and the readouts as a thin
+   plate floating over the sheet's lower-left corner. The separations
+   explainer, the captions and the benchmark tables are off the slide
+   (their prose lives in the speaker notes; the tables still measure). */
+[data-testid="h2-explain-stage"], [data-testid="h2-explain-cap"], .cv-instr, .cv-scroll,
+[data-testid="table-a"], [data-testid="table-a-guard"], [data-testid="table-b"], [data-testid="table-notes"] { display: none !important; }
+.demo-root { width: 864px; height: 444px; overflow: hidden; }
+.h2 { position: relative; width: 864px; height: 444px; display: grid; grid-template-rows: 30px 414px; background: var(--h2-stock); }
+.h2-bar { flex-wrap: nowrap; gap: 4px; padding: 0 8px; height: 30px; box-sizing: border-box; border-bottom: 1px solid color-mix(in oklch, var(--h2-rule) 45%, transparent); }
+.h2-btn { font-size: 11px; letter-spacing: 0.03em; padding: 3px 7px; line-height: 1.2; white-space: nowrap; }
+.h2-sep { width: 1px; height: 16px; margin: 0 5px; background: var(--h2-rule); opacity: 0.5; flex: none; }
+.h2-stage[data-testid="h2-stage"] { padding: 0; width: 864px; height: 414px; }
+.h2-stage[data-testid="h2-stage"] canvas { width: 864px; height: 414px; }
+.h2-plate {
+  position: absolute; left: 10px; right: 10px; bottom: 10px; padding: 0; gap: 6px; flex-wrap: nowrap; align-items: flex-end;
+  background: none; pointer-events: none;
+}
+.h2-kv {
+  font-size: 11px; letter-spacing: 0.06em; line-height: 1.2; white-space: nowrap; padding: 5px 10px 6px;
+  background: color-mix(in oklch, var(--h2-stock) 92%, transparent);
+  border: 1px solid color-mix(in oklch, var(--h2-rule) 55%, transparent);
+}
+.h2-kv b { font-size: 12px; margin-top: 2px; }
+.h2-kv.h2-hero b { font-size: 18px; min-width: 7ch; }
+.h2-kv.h2-hero + .h2-kv:not(.h2-hero) { margin-left: auto; }

@@ -1,0 +1,14 @@
+- **NOVA-7: a fictional handheld**
+  - Baked by a custom software renderer: depth buffer, per-pixel Fresnel, 3× supersampling, a loop with no seam
+- **The decoded frame is a buffer**
+  - Once video is decoded, every frame is pixels you can read and rewrite
+  - The rack runs one effect at a time over the playing video
+- **The rack**
+  - **Buffer:** slit-scan, ripple, datamosh, mosaic drift, feedback, kaleidoscope, drawn from a frame history
+  - **Filters:** edge detect, chroma split, bloom
+  - **Composite:** mirror, echo, difference, using a second decoder offset in time
+  - **Time:** drive playback from an easing curve
+  - **Camera:** the same rack on a live camera feed
+- **Why it matters**
+  - Filters on captured video: a different product from playback, same technique family
+  - ***The video is not the content, it's a material***

@@ -42,3 +42,23 @@ The 16:9 NOVA-7 exploded-view loop in a native-controls `<video>`, with the shee
 
 ## For the edit pass
 - Key: "for video we will use the large horizontal player and then have a buffer rack to manipulate it that overlays the video." That overlay is done here structurally. Its docking side, width, translucency, and the covered or hidden native controls are still open.
+
+## Presentation edits (2026-09-17)
+- **Slide copy:** the scene label and note are hidden, because the slide carries the label.
+
+- **Rack beside the video** (Key): the controls moved to a 290px column left of the 16:9 picture (656 × 369) instead of overlaying it. The effect canvas and echo layer are pinned exactly over the picture. The rack is compact: names only, two across, no footnote, no scrolling. The curve editor opens as a small panel over the picture's lower-left corner. The stage is 960 × 400.
+
+
+## People detection on the live camera (deck-only, 2026-09-17)
+- **What it does** (Key): with the camera on, "detect people" draws animated marks over the feed.
+  - **Faces:** BlazeFace short-range. Corner brackets settle onto each face, with a scan line while locking on and a confidence tag.
+  - **Bodies:** Pose Landmarker lite, up to 3 people. A 33-point skeleton whose limbs sweep in; the joints pulse.
+  - **Smoothing:** marks ease between detections and fade out when lost.
+- **Library:** `@mediapipe/tasks-vision` 1.0.1 (Apache-2.0), imported dynamically on first use.
+- **Local files:** the WebAssembly runtime (`vision_wasm_internal.js` and `.wasm`, about 12 MB) and both models live in `assets/vision/`, so nothing is fetched from the network on stage.
+  - `blaze_face_short_range.tflite` (230 KB)
+  - `pose_landmarker_lite.task` (5.8 MB)
+  - Both models are from `storage.googleapis.com/mediapipe-models`.
+- **Running:** GPU delegate, with a CPU fallback. It runs only while the camera is live and the switch is on. The rack signals camera state with a `wam-cam` event on the shadow root. Dispose closes both tasks.
+- **Reduced motion:** no sweep, scan or pulse; the marks still draw.
+- **Untested here:** the headless test browser has no camera, so live detection hasn't been verified against a real face. Model loading is verified separately (see the report).

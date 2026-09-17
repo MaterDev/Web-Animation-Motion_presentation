@@ -19,7 +19,10 @@ export function mount(host) {
   dsp.add(tokens.dispose);
   const token = tokens.token;
 
-  var W = 1240, H = 640;
+  /* Slide fit: the canvas fills an 864 × 384 CSS region of the 864 × 444
+     slide well, with a 2× backing store so text and rules stay crisp.
+     Everything below is drawn in CSS px under a scale(S) transform. */
+  var S = 2, CW = 864, CH = 384, W = CW * S, H = CH * S;
   var cv = $('r4-canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
   cv.width = W; cv.height = H;
 
@@ -122,16 +125,31 @@ export function mount(host) {
   var lut = 'gsdf', cine = true, roiOn = true, recon = false, autoWin = true;
   var fusion = true, fusionRamp = 'spectral', fusionGain = 1, rotate = true;
   var ww = 0.62, wl = 0.46, dragging = false, lastXY = null;
-  var readCosts = [], out = null, o32 = null;
-  var VX = 20, VY = 18, VW = 560, VH = 560;             /* the viewport */
-  var RX = VX + VW + 26, RW = W - RX - 20;
+  var readCosts = [];
+  var MONO = token('--mono') || 'monospace';
 
-  function ensureOut() {
-    if (!out || out.width !== VW) { out = ctx.createImageData(VW, VH); o32 = new Uint32Array(out.data.buffer); }
-  }
+  /* ── slide layout, CSS px ────────────────────────────────────────────
+     Left: the scan, square, full height. Right: one 440 px column with
+     histogram, LUT + fusion ramp, stack, then region + profile side by
+     side. */
+  var VX = 16, VY = 8, VW = 368, VH = 368;               /* the viewport */
+  var RX = VX + VW + 24, RW = CW - RX - 16;
+  var BOTTOM = VY + VH;
+
+  /* The display image is mapped 1:1 with the read (SW × SH), then scaled
+     onto the viewport — every read pixel reaches the screen, and the
+     per-pixel loop stays at the source's size rather than the backing's. */
+  var outCv = document.createElement('canvas');
+  outCv.width = SW; outCv.height = SH;
+  var outCtx = outCv.getContext('2d');
+  var out = outCtx.createImageData(SW, SH), o32 = new Uint32Array(out.data.buffer);
 
   /* ROI, in source coordinates */
   var roi = { x: 190, y: 150, w: 140, h: 110 };
+  var regCv = document.createElement('canvas');
+  regCv.width = roi.w; regCv.height = roi.h;
+  var regCtx = regCv.getContext('2d');
+  var regImg = regCtx.createImageData(roi.w, roi.h);
 
   var demo = WAM.clock('r4-stage', {
     /* 17 400 rather than 20 000 — 15% faster. The cine loop, the window
@@ -140,16 +158,13 @@ export function mount(host) {
        factor and none of them comes into phase with any other as a result. */
     el: $('r4-world'), dur: 17400, poster: 0.4,
     render: function (t) {
-      ensureOut();
       var z = cine ? t : 0.3;
       drawSlice(z);
 
       /* The window BREATHES. A radiographer's hands are on these two numbers
-         constantly — widening to find an edge, narrowing to separate two
-         tissues that sit a few levels apart, sliding the centre to follow a
-         structure through the stack. A still window is a screenshot of a
-         workstation; a moving one is somebody using it. Touch the image and
-         it hands control over and stays handed over. */
+         constantly; a still window is a screenshot of a workstation, a
+         moving one is somebody using it. Touch the image and it hands
+         control over and stays handed over. */
       if (autoWin) {
         ww = 0.46 + 0.30 * Math.sin(t * TAU * 3);
         wl = 0.46 + 0.17 * Math.sin(t * TAU * 2 + 1.1);
@@ -170,41 +185,30 @@ export function mount(host) {
       var x, y, sxi, syi, v, n, o;
       var roiSum = 0, roiSq = 0, roiN = 0;
 
-      /* the overlay's own clock: 0.41 and 0.63 against the cine loop's 1
-         and the window's 1.3 and 0.7 — no small common multiple, so the
-         three never come into phase */
+      /* the overlay's own clock, on periods that share no small common
+         multiple with the cine loop or the window sweep */
       var ft = t * 5, fs = t * 7;
       var fTab = FUSION[fusionRamp];
       var fCover = 0;
-      /* the field's own rotation and the ramp's own phase, both on periods
-         that share no small multiple with the cine loop or the window */
       var rot = t * TAU * 2, cosR = Math.cos(rot), sinR = Math.sin(rot);
       var rampPhase = rotate ? (t * 3) % 1 : 0;
 
-      for (y = 0; y < VH; y++) {
-        syi = ((y / VH) * SH) | 0;
-        for (x = 0; x < VW; x++) {
-          sxi = ((x / VW) * SW) | 0;
-          v = s[(syi * SW + sxi) * 4] / 255;
+      for (y = 0; y < SH; y++) {
+        for (x = 0; x < SW; x++) {
+          o = y * SW + x;
+          v = s[o * 4] / 255;
           hist[Math.min(63, (v * 64) | 0)]++;
           n = (v - lo) / (hi - lo);
           n = n < 0 ? 0 : n > 1 ? 1 : n;
-          o = y * VW + x;
           var idx = (n * 255) | 0;
           var rr = table[idx * 3], gg = table[idx * 3 + 1], bb = table[idx * 3 + 2];
 
           if (fusion) {
-            /* The functional value is DERIVED FROM THE READ, not from the
-               function that drew the slice — it is uptake-shaped: high where
-               the tissue is dense and where a slow travelling field says it
-               is active. The field is the second dimension and it is why
-               this needs colour: two quantities cannot share one grey. */
-            var u2 = x / VW - 0.5, v2b = y / VH - 0.5;
-            /* Three spatial terms rather than two, one of them ROTATING —
-               a field built only from axis-aligned sines drifts, and a
-               drifting field reads as a pattern sliding behind a window
-               rather than as something happening inside the subject. The
-               rotation is what makes it turn. */
+            /* The functional value is DERIVED FROM THE READ: uptake-shaped,
+               high where the tissue is dense and where a slow rotating
+               field says it is active. Two quantities cannot share one
+               grey, which is why this needs colour. */
+            var u2 = x / SW - 0.5, v2b = y / SH - 0.5;
             var ru = u2 * cosR - v2b * sinR, rv = u2 * sinR + v2b * cosR;
             var rad = Math.sqrt(u2 * u2 + v2b * v2b);
             var f = v
@@ -216,10 +220,8 @@ export function mount(host) {
             f *= fusionGain;
             if (f > 0.03) {
               fCover++;
-              /* the ramp ROTATES under the value, which is a real control on
-                 a real workstation — a rotating colour map makes a plateau
-                 that a static one flattens into one tone show its shape as
-                 a moving band. */
+              /* the ramp ROTATES under the value, so a plateau shows its
+                 shape as a moving band */
               var fv = rotate ? (f + rampPhase) % 1 : f;
               var fi = ((fv * 255) | 0) * 3;
               var al = 0.22 + f * 0.72;
@@ -237,14 +239,17 @@ export function mount(host) {
           roiSum += v; roiSq += v * v; roiN++;
         }
       }
+      outCtx.putImageData(out, 0, 0);
 
+      ctx.setTransform(S, 0, 0, S, 0, 0);
       ctx.fillStyle = SKIN_CSS(VOID);
-      ctx.fillRect(0, 0, W, H);
-      ctx.putImageData(out, VX, VY);
+      ctx.fillRect(0, 0, CW, CH);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(outCv, VX, VY, VW, VH);
 
       /* viewport furniture — thin rules, nothing decorative */
       ctx.strokeStyle = RULE; ctx.lineWidth = 1;
-      ctx.strokeRect(VX - 0.5, VY - 0.5, VW + 1, VH + 1);
+      ctx.strokeRect(VX - 1, VY - 1, VW + 2, VH + 2);
 
       if (recon) {
         /* the mark, assembled out of pixels above threshold. No path data
@@ -254,50 +259,46 @@ export function mount(host) {
         for (y = 0; y < SH; y += step) {
           for (x = 0; x < SW; x += step) {
             if (s[(y * SW + x) * 4] > 190) {
-              ctx.fillRect(VX + (x / SW) * VW, VY + (y / SH) * VH, 2, 2);
+              ctx.fillRect(VX + (x / SW) * VW, VY + (y / SH) * VH, 1.5, 1.5);
               cnt++;
             }
           }
         }
-        ctx.font = '11px ' + (token('--mono') || 'monospace');
-        ctx.fillText(cnt.toLocaleString() + ' PIXELS OVER THRESHOLD, READ BACK', VX + 10, VY + VH - 12);
+        ctx.font = '11px ' + MONO;
+        ctx.fillText(cnt.toLocaleString() + ' PIXELS OVER THRESHOLD', VX + 8, BOTTOM - 10);
       }
 
       if (roiOn) {
         ctx.strokeStyle = ROI; ctx.lineWidth = 1;
-        ctx.strokeRect(VX + (roi.x / SW) * VW + 0.5, VY + (roi.y / SH) * VH + 0.5,
+        ctx.strokeRect(VX + (roi.x / SW) * VW, VY + (roi.y / SH) * VH,
                        (roi.w / SW) * VW, (roi.h / SH) * VH);
       }
 
-      /* the acquisition sweep — one bright row travelling the viewport, the
-         way a detector reads a frame out. Two fillRects, and the cheapest
-         possible way to say "this is live". */
+      /* the acquisition sweep — one bright row travelling the viewport */
       var sweepY = Math.round(((t * 3) % 1) * VH);
       ctx.fillStyle = 'rgba(255,255,255,0.035)';
-      ctx.fillRect(VX, VY + Math.max(0, sweepY - 26), VW, Math.min(26, sweepY));
+      ctx.fillRect(VX, VY + Math.max(0, sweepY - 14), VW, Math.min(14, sweepY));
       ctx.fillStyle = 'rgba(255,255,255,0.10)';
-      ctx.fillRect(VX, VY + sweepY, VW, 2);
+      ctx.fillRect(VX, VY + sweepY, VW, 1);
 
       /* overlay annotation, the one colour allowed in */
       ctx.fillStyle = ANNO;
-      ctx.font = '12px ' + (token('--mono') || 'monospace');
-      ctx.fillText('SYNTHETIC PHANTOM — NOT A PATIENT', VX + 10, VY + 22);
-      ctx.fillText('W ' + Math.round(ww * 1000) + '  L ' + Math.round(wl * 1000), VX + 10, VY + 40);
+      ctx.font = '12px ' + MONO;
+      ctx.textAlign = 'left';
+      ctx.fillText('SYNTHETIC PHANTOM — NOT A PATIENT', VX + 8, VY + 18);
+      ctx.fillText('W ' + Math.round(ww * 1000) + '  L ' + Math.round(wl * 1000), VX + 8, VY + 34);
 
       /* ── the right-hand column, all of it derived ────────────────── */
-      var hy = VY + 14;
-      ctx.fillStyle = INK; ctx.font = '11px ' + (token('--mono') || 'monospace');
-      ctx.fillText('HISTOGRAM — COUNTED FROM THE PIXELS, EVERY FRAME', RX, hy);
-      var hh = 150, hmax = 1;
+      ctx.font = '11px ' + MONO;
+      ctx.fillStyle = INK;
+      ctx.fillText('HISTOGRAM — COUNTED FROM THE PIXELS, EVERY FRAME', RX, VY + 10);
+      var ht = VY + 18, hh = 92, hmax = 1, bw = RW / 64;
       for (x = 0; x < 64; x++) if (hist[x] > hmax) hmax = hist[x];
       for (x = 0; x < 64; x++) {
-        var bw = RW / 64, bh = Math.round((hist[x] / hmax) * hh);
+        var bh = Math.round((hist[x] / hmax) * hh);
         var inWin = (x / 64) >= lo && (x / 64) <= hi;
-        /* Each bar is painted in the colour that value will actually
-           receive — through the display LUT, and through the fusion ramp
-           where the overlay reaches it. The histogram stops being a chart
-           beside the image and becomes a legend for it: the bar you are
-           looking at is the grey, or the colour, it will turn into. */
+        /* each bar is painted in the colour that value will actually
+           receive, so the histogram is a legend for the image */
         var bi = Math.round(Math.max(0, Math.min(1, ((x / 64) - lo) / (hi - lo))) * 255) * 3;
         if (inWin) {
           var hr = table[bi], hg = table[bi + 1], hb = table[bi + 2];
@@ -312,124 +313,108 @@ export function mount(host) {
         } else {
           ctx.fillStyle = RULE;
         }
-        ctx.fillRect(RX + x * bw, hy + 12 + hh - bh, bw - 1, bh);
+        ctx.fillRect(RX + x * bw, ht + hh - bh, bw - 1, bh);
       }
-      /* the window, drawn over the histogram it selects, clamped to the
-         histogram's own range — an unclamped box ran off both ends and
-         stopped reading as a selection */
+      /* the window, drawn over the histogram it selects, clamped to its range */
       var wLo = Math.max(0, Math.min(1, lo)), wHi = Math.max(0, Math.min(1, hi));
       ctx.strokeStyle = ANNO; ctx.lineWidth = 1;
-      ctx.strokeRect(RX + wLo * RW + 0.5, hy + 12.5, Math.max(2, (wHi - wLo) * RW), hh);
+      ctx.strokeRect(RX + wLo * RW, ht, Math.max(2, (wHi - wLo) * RW), hh);
 
-      /* the LUT it maps through */
-      var ly = hy + 12 + hh + 34;
+      /* the LUT it maps through, and the overlay's own ramp under it */
+      var ly = ht + hh + 22;
       ctx.fillStyle = INK;
-      ctx.fillText(lut === 'gsdf' ? 'LUT — DICOM GSDF GREY, 256 ENTRIES' : 'LUT — HEAT, 256 ENTRIES, MONOTONE IN L', RX, ly - 10);
+      ctx.fillText(lut === 'gsdf' ? 'LUT — GSDF GREY · 256' : 'LUT — HEAT · MONOTONE IN L', RX, ly - 6);
       for (x = 0; x < RW; x++) {
         var li = ((x / RW) * 255) | 0;
         ctx.fillStyle = 'rgb(' + table[li * 3] + ',' + table[li * 3 + 1] + ',' + table[li * 3 + 2] + ')';
-        ctx.fillRect(RX + x, ly, 1, 26);
+        ctx.fillRect(RX + x, ly, 1, 14);
       }
-      ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly - 0.5, RW + 1, 27);
-      /* the overlay's own ramp, under the study's, so the two scales the
-         image is carrying are both legible as scales */
+      ctx.strokeStyle = RULE; ctx.strokeRect(RX, ly, RW, 14);
       if (fusion) {
         for (x = 0; x < RW; x++) {
-          /* the legend rotates with the map. A static swatch beside a
-             rotating overlay is a legend that lies, and a legend that lies
-             is worse than none. */
+          /* the legend rotates with the map; a static swatch beside a
+             rotating overlay is a legend that lies */
           var fi2 = ((((x / RW + rampPhase) % 1) * 255) | 0) * 3;
           ctx.fillStyle = 'rgb(' + fTab[fi2] + ',' + fTab[fi2 + 1] + ',' + fTab[fi2 + 2] + ')';
-          ctx.fillRect(RX + x, ly + 31, 1, 14);
+          ctx.fillRect(RX + x, ly + 18, 1, 8);
         }
-        ctx.strokeStyle = RULE; ctx.strokeRect(RX - 0.5, ly + 30.5, RW + 1, 15);
-        ctx.fillStyle = INK;
-        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase() + (rotate ? ' · ROTATING' : ''), RX, ly + 58);
+        ctx.fillStyle = ANNO;
+        ctx.textAlign = 'right';
+        ctx.fillText('FUSION — ' + fusionRamp.toUpperCase() + (rotate ? ' · ROTATING' : ''), RX + RW, ly - 6);
+        ctx.textAlign = 'left';
       }
 
-      /* the slice ladder — where in the stack we are */
-      /* the stack sits below whatever the LUT column actually occupies —
-         one bar or two. Hardcoding the offset put the fusion legend
-         straight through the STACK label the moment the second ramp
-         appeared. */
-      var sy2 = ly + (fusion ? 92 : 62);
+      /* the slice ladder — where in the stack we are, tinted by what the
+         overlay is doing at each slice */
+      var sy2 = ly + 44, lx = RX + 52, lw = RW - 52;
       ctx.fillStyle = INK;
-      ctx.fillText('STACK', RX, sy2 - 10);
+      ctx.fillText('STACK', RX, sy2 + 9);
       for (x = 0; x < 48; x++) {
         var at = Math.abs(x / 48 - z) < 0.02;
-        /* the ladder is tinted by what the overlay is doing at that slice,
-           so the stack shows where the activity is rather than only where
-           the reader is */
         var act = fusion ? Math.max(0, Math.sin((x / 48) * TAU * 2 + ft * TAU)) : 0;
         var ai = ((act * 255) | 0) * 3;
         ctx.fillStyle = at ? ANNO
           : (fusion && act > 0.25 ? 'rgb(' + fTab[ai] + ',' + fTab[ai + 1] + ',' + fTab[ai + 2] + ')' : RULE);
-        ctx.fillRect(RX + x * (RW / 48), sy2, RW / 48 - 2, at ? 18 : 10);
+        ctx.fillRect(lx + x * (lw / 48), at ? sy2 - 4 : sy2, lw / 48 - 2, at ? 16 : 8);
       }
 
       /* ── the region, read back and magnified ─────────────────────
-         A fourth thing derived from the same read. Nearest-neighbour on
-         purpose: a workstation magnifies by showing you the pixels, not by
-         inventing smoother ones between them, and the blocks are the
-         honest statement of how much data is actually there. */
-      var dy = sy2 + 58;
+         Nearest-neighbour on purpose: a workstation magnifies by showing
+         you the pixels. It shows the STUDY, not the fusion, which is a
+         display layer that only exists at the viewport's scale. */
+      var dy = sy2 + 40;
+      var dh = BOTTOM - dy, dw = Math.round(dh * (roi.w / roi.h));
       ctx.fillStyle = INK;
-      /* The region shows the STUDY, not the fusion. That is not an
-         oversight: the overlay is a display layer computed from the
-         viewport's own geometry, and magnifying it would mean magnifying a
-         thing that only exists at one scale. The label says so rather than
-         leaving the difference to be noticed. */
-      ctx.fillText('REGION — THE STUDY ALONE, MAGNIFIED', RX, dy - 10);
-      var dw = Math.min(RW, 300), dh = Math.round(dw * (roi.h / roi.w));
+      ctx.fillText('REGION — STUDY ONLY', RX, dy - 6);
       if (roiOn) {
-        for (y = 0; y < dh; y++) {
-          syi = roi.y + ((y / dh) * roi.h) | 0;
-          for (x = 0; x < dw; x++) {
-            sxi = roi.x + ((x / dw) * roi.w) | 0;
-            v = s[(syi * SW + sxi) * 4] / 255;
+        var rd = regImg.data, ro;
+        for (y = 0; y < roi.h; y++) {
+          for (x = 0; x < roi.w; x++) {
+            v = s[((roi.y + y) * SW + roi.x + x) * 4] / 255;
             n = (v - lo) / (hi - lo);
             n = n < 0 ? 0 : n > 1 ? 1 : n;
-            var di = (n * 255) | 0;
-            ctx.fillStyle = 'rgb(' + table[di * 3] + ',' + table[di * 3 + 1] + ',' + table[di * 3 + 2] + ')';
-            ctx.fillRect(RX + x, dy + y, 1, 1);
+            var di = ((n * 255) | 0) * 3;
+            ro = (y * roi.w + x) * 4;
+            rd[ro] = table[di]; rd[ro + 1] = table[di + 1]; rd[ro + 2] = table[di + 2]; rd[ro + 3] = 255;
           }
         }
-        ctx.strokeStyle = ROI; ctx.strokeRect(RX - 0.5, dy - 0.5, dw + 1, dh + 1);
-      } else {
-        ctx.fillStyle = RULE;
-        ctx.fillText('REGION OFF', RX, dy + 16);
-      }
+        regCtx.putImageData(regImg, 0, 0);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(regCv, RX, dy, dw, dh);
+        ctx.imageSmoothingEnabled = true;
+        ctx.strokeStyle = ROI; ctx.strokeRect(RX, dy, dw, dh);
 
-      /* the profile through the region's middle row, also from the read */
-      if (roiOn) {
-        var px2 = RX + dw + 24, pw2 = RW - dw - 24, ph2 = dh;
+        /* the profile through the region's middle row, also from the read */
+        var px2 = RX + dw + 20, pw2 = RW - dw - 20, ph2 = dh;
         ctx.fillStyle = INK;
-        ctx.fillText('PROFILE THROUGH ITS MIDDLE ROW', px2, dy - 10);
+        ctx.fillText('PROFILE — MIDDLE ROW', px2, dy - 6);
         ctx.fillStyle = RULE;
-        ctx.fillRect(px2, dy + ph2, pw2, 1);
+        ctx.fillRect(px2, dy + ph2 - 1, pw2, 1);
+        syi = roi.y + (roi.h >> 1);
         for (x = 0; x < pw2; x++) {
           sxi = roi.x + ((x / pw2) * roi.w) | 0;
-          syi = roi.y + (roi.h >> 1);
           v = s[(syi * SW + sxi) * 4] / 255;
-          /* the trace is painted in the colour the value maps to, so the
-             profile is readable against the image without a key */
+          /* painted in the colour the value maps to */
           var pi2 = Math.round(Math.max(0, Math.min(1, (v - lo) / (hi - lo))) * 255) * 3;
           ctx.fillStyle = fusion && v > 0.5
             ? 'rgb(' + fTab[pi2] + ',' + fTab[pi2 + 1] + ',' + fTab[pi2 + 2] + ')'
             : ANNO;
-          ctx.fillRect(px2 + x, dy + ph2 - v * ph2, 1, 3);
+          ctx.fillRect(px2 + x, dy + (ph2 - 3) * (1 - v), 1, 2);
         }
+      } else {
+        ctx.fillStyle = RULE;
+        ctx.fillText('REGION OFF', RX, dy + 14);
       }
 
       var mean = roiN ? roiSum / roiN : 0;
       var sd = roiN ? Math.sqrt(Math.max(0, roiSq / roiN - mean * mean)) : 0;
-      $('r4-slice').textContent = Math.round(z * 48) + ' of 48';
+      $('r4-slice').textContent = Math.round(z * 48) + ' / 48';
       $('r4-wwwl').textContent = Math.round(ww * 1000) + ' / ' + Math.round(wl * 1000);
       $('r4-roistat').textContent = roiOn ? (mean.toFixed(1) + ' ± ' + sd.toFixed(1)) : 'off';
       $('r4-read').textContent = (SW * SH).toLocaleString();
       $('r4-readcost').innerHTML = ms(median(readCosts)) + ' ms' + atFloor(median(readCosts));
       $('r4-fusion-stat').textContent = fusion
-        ? fusionRamp.toUpperCase() + ' — ' + (fCover / (VW * VH) * 100).toFixed(1) + '% of frame'
+        ? fusionRamp + ' ' + (fCover / (SW * SH) * 100).toFixed(1) + '%'
         : 'off';
     }
   });
