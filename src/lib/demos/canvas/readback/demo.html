@@ -1,0 +1,41 @@
+    <div class="r4 r4-world" data-testid="r4-world">
+      <div class="r4-bar" data-testid="r4-bar">
+        <button class="r4-btn r4-on" data-lut="gsdf" data-testid="r4-lut-gsdf">GSDF grey</button>
+        <button class="r4-btn" data-lut="iron" data-testid="r4-lut-iron">heat</button>
+        <button class="r4-btn r4-on" data-testid="r4-cine">cine</button>
+        <button class="r4-btn r4-on" data-testid="r4-roi">region</button>
+        <button class="r4-btn r4-on" data-testid="r4-auto">auto window</button>
+        <button class="r4-btn r4-on" data-testid="r4-fusion">fusion</button>
+        <button class="r4-btn" data-testid="r4-ramp">ramp: spectral</button>
+        <button class="r4-btn r4-on" data-testid="r4-rotate">rotate the map</button>
+        <button class="r4-btn" data-testid="r4-recon">reconstruct from readback</button>
+      </div>
+      <div class="r4-stage" data-testid="r4-stage">
+        <canvas data-testid="r4-canvas"></canvas>
+      </div>
+      <p class="r4-cap" data-testid="r4-cap">Drag on the image to set window and
+        level — the two numbers every reading room argues about. They do not change
+        the scan; they change which slice of its range the display spends its greys
+        on, which is why the same pixels can show bone or soft tissue and never both
+        at once. Left alone they sweep on their own, widening and sliding the way a
+        pair of hands does while reading; the first drag takes them off it.</p>
+      <div class="r4-plate" data-testid="r4-readouts">
+        <div class="r4-kv">slice<b data-testid="r4-slice">—</b></div>
+        <div class="r4-kv">window / level<b class="r4-anno" data-testid="r4-wwwl">—</b></div>
+        <div class="r4-kv">region mean ± sd<b data-testid="r4-roistat">—</b></div>
+        <div class="r4-kv">fusion overlay<b class="r4-anno" data-testid="r4-fusion-stat">—</b></div>
+        <div class="r4-kv">pixels read this frame<b data-testid="r4-read">—</b></div>
+        <div class="r4-kv">readback cost<b data-testid="r4-readcost">—</b></div>
+      </div>
+    </div>
+
+    <p class="cv-instr" data-testid="r4-instr">
+      <b>Nothing on the right is stored, and that is the point of the section.</b>
+      The histogram is counted out of the pixels every frame; the region statistics
+      are computed from the pixels inside the box; the mark is assembled from the
+      pixels above a threshold. Change the slice, the window, the level or the LUT
+      and all of them follow, because none of them is a copy of the image — they are
+      all questions asked of it. A retained-mode surface can tell you where its
+      objects are and it cannot answer any of these, because the answer is not in
+      the objects. It is in the pixels the objects turned into.
+    </p>

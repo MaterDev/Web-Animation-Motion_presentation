@@ -1,0 +1,80 @@
+<!-- Copied from design/techniques/webgl.html §1: band 413–417, world 419, stage
+     template 428–438, hero panel 550–562, bench 580–616.
+     Dropped: the tab bar, the <template> wrapper, the museum/auction/studio panels and
+     the comparison block (the sheet hides it while the hero is open). The stage sits at
+     the start of the hero slot, where openVariant('hero') prepends it; the panel carries
+     rl-open, which the tab click adds on the sheet. -->
+<div class="wg-band" data-testid="rl-band">
+  <b class="wg-dot" data-testid="rl-azimuth-dot">—</b>
+  <span class="wg-band-l" data-testid="rl-band-l"><b>light azimuth</b> · degrees,
+    anticlockwise from east · the one number this page turns on</span>
+</div>
+
+<div class="rl" data-testid="rl-world">
+  <!-- ── 4 · homepage hero ───────────────────────────────────── -->
+  <div class="rl-p rl-p-hero rl-open" data-v="hero" data-testid="rl-p-hero">
+    <div class="rlp-mast">
+      <span class="rlp-brand">The Fenwick<span>visit · collection · what's on</span></span>
+      <span class="rlp-nav">Open today <b>10:00 – 18:00</b> · free</span>
+    </div>
+    <div class="rlp-grid rlp-wide">
+      <div class="rlp-slot" data-slot="hero">
+        <div class="rl-stage" data-testid="rl-stage">
+          <canvas data-testid="rl-canvas"></canvas>
+          <svg data-testid="rl-overlay" aria-hidden="true">
+            <circle class="rl-lamp-mark" data-testid="rl-lamp-mark" cx="0" cy="0" r="3.5"></circle>
+            <polyline class="rl-lead" data-testid="rl-lead" points=""></polyline>
+            <circle class="rl-anchor" data-testid="rl-anchor" cx="0" cy="0" r="5"></circle>
+            <text class="rl-lead-n" data-testid="rl-lead-n" x="0" y="0"></text>
+          </svg>
+          <span class="rl-status" data-testid="rl-status">loading…</span>
+          <span class="rl-hint" data-testid="rl-hint">pointer = light</span>
+        </div>
+        <div class="rlp-hero-copy" data-testid="rl-hero-copy">
+          <h3>The collection, in the round</h3>
+          <p>Three hundred objects, scanned. The bust you are looking at is a hundred and twenty thousand points, and your pointer moves them.</p>
+          <button class="rlp-cta" data-testid="rl-hero-cta">Explore the collection</button>
+        </div>
+      </div>
+    </div>
+    <div class="rlp-foot"><span>Points: sampled on the scan's surface, area-weighted</span><span data-testid="rl-hero-attrib">Marble Bust 01 · Poly Haven · CC0</span></div>
+  </div>
+</div>
+
+<div class="wg-bench" data-testid="rl-bench">
+  <div class="wg-bench-k"><b>§1 measured here</b> · instrument, sync point, control</div>
+  <div class="wg-kvs" data-testid="rl-readouts">
+    <div class="wg-kv">frame, to readPixels<b data-testid="rl-ms">—</b></div>
+    <div class="wg-kv">clock floor<b data-testid="rl-floor">—</b></div>
+    <div class="wg-kv">this program<b data-testid="rl-prog">—</b></div>
+    <div class="wg-kv">its asset<b data-testid="rl-asset">—</b></div>
+  </div>
+  <div class="wg-controls">
+    <button class="wg-btn" data-testid="rl-run-control">run the control</button>
+    <span class="wg-guard wg-wait" data-testid="rl-guard">not yet run</span>
+  </div>
+  <div class="wg-scroll">
+    <table class="wg-table" data-testid="rl-table">
+      <thead><tr><th data-testid="rl-th">knob</th><th>ms / frame, to readPixels</th><th>× first row</th><th>what changed</th></tr></thead>
+      <tbody data-testid="rl-table-body">
+        <tr><td data-testid="rl-k-0">—</td><td class="wg-num" data-testid="rl-t-0">—</td><td>1.00</td><td data-testid="rl-w-0">—</td></tr>
+        <tr><td data-testid="rl-k-1">—</td><td class="wg-num" data-testid="rl-t-1">—</td><td data-testid="rl-r-1">—</td><td data-testid="rl-w-1">—</td></tr>
+        <tr><td data-testid="rl-k-2">—</td><td class="wg-num" data-testid="rl-t-2">—</td><td data-testid="rl-r-2">—</td><td data-testid="rl-w-2">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="wg-instr" data-testid="rl-bench-instr">
+    <b>Instrument:</b> <code>performance.now()</code> around one draw of the open
+    experience, closed by <code>gl.readPixels(0,0,1,1)</code>, which cannot return
+    until the GPU has finished the frame. Median of 9 brackets after 3 warm
+    frames; floor <b data-testid="rl-bench-floor">…</b>; a reading under twice the
+    floor is marked <span class="wg-dagger">†</span> and is a bound.
+    <b>Controls vary the thing each program might be hiding.</b> The relief's
+    lights multiply per-pixel shading and the shadow march and nothing else. The
+    bust's and the loupe's <i>area</i> sweep multiplies raster and nothing else —
+    the control the canvas track proved a blind clock cannot fake. The hero's
+    <i>point count</i> multiplies vertex work with no upload at all, because the
+    points never leave the GPU; that row is the mirror image of §3's transfer
+    bench.
+  </p>
+</div>

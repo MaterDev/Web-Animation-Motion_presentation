@@ -8,6 +8,7 @@
   const NAV = [
     { href: '/paper', code: 'PA', label: 'Full Paper' },
     { href: '/presentation', code: 'PR', label: 'Presentation' },
+    { href: '/techniques', code: 'TE', label: 'Techniques' },
   ];
 
   /** @param {string} href */

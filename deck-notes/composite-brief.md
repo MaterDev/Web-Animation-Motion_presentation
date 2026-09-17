@@ -1,0 +1,13 @@
+- ***Don't be a purist***
+  - Purism forces one surface to do work it's bad at
+- **For a brief**
+  - Not "which technique is this project"
+  - ***Which technique carries which part?***
+  - The failure mode: a brief that assumes one answer before anyone has looked
+- **Reading the picture** *(illustrative launch page; one part lights at a time)*
+  - Nav, headline, buy button → page elements (DOM · CSS)
+  - Line icons → SVG
+  - Hover and state changes → CSS, **transform and opacity** skip layout and paint **[7]**
+  - Ambient loop → video, until it has to respond
+  - The product under the cursor → WebGL; a field of interacting particles → WebGPU
+  - No GPU → a still, with the same page elements on top

@@ -1,6 +1,6 @@
 <script>
   import { page } from '$app/state';
-  import { PAGES, SHEETS, TREATMENTS, sheetHref } from '$lib/sheets.js';
+  import { PAGES, SHEETS, TREATMENTS, PROCESS_PAGES, sheetHref } from '$lib/sheets.js';
 
   /* A disclosure, not a custom "menu" widget. The panel contains
      links, so it stays links — real anchors, real focus order, real
@@ -20,10 +20,9 @@
   /* both shapes normalised through mappers so the list isn't a union
      type with half its fields optional at every use site */
   const sections = $derived([
-    { label: null, items: PAGES.map(toPage) },
-    { label: 'Reference', items: SHEETS.filter((s) => s.group === 'Reference').map(toSheet) },
-    { label: 'Techniques', items: SHEETS.filter((s) => s.group === 'Techniques').map(toSheet) },
-    { label: 'Treatments', items: TREATMENTS.map(toSheet) },
+    { label: 'Design system', items: PAGES.map(toPage) },
+    { label: 'Reference', items: SHEETS.map(toSheet) },
+    { label: 'Treatments', items: [...PROCESS_PAGES.map(toPage), ...TREATMENTS.map(toSheet)] },
   ]);
 
   /** @param {any} p */

@@ -1,0 +1,103 @@
+:host { --tint: var(--tint-css); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
+
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+/* ── the pipeline rig ───────────────────────────────────────
+   Property chips on the left, the four-stage pipeline and a live
+   specimen on the right. Picking a property lights the stages that
+   actually re-run for it and animates the specimen with that same
+   property, so the diagram and the motion can't disagree. */
+.pipe { display: grid; grid-template-columns: 232px 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .pipe { grid-template-columns: 1fr; } }
+
+.pl-rail { border: var(--hair) solid var(--hz-300); border-radius: 8px; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.pl-rail-head { padding: 10px 12px; border-bottom: var(--hair) solid var(--hz-300); background: var(--hz-100); }
+.pl-rail-head b { display: block; font-size: 12.5px; font-weight: 500; color: var(--hz-800); text-transform: lowercase; }
+.pl-rail-head span { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); margin-top: 2px; }
+.pl-props { padding: 9px; display: flex; flex-direction: column; gap: 5px; }
+.pl-prop {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px; border-radius: 5px; cursor: pointer; font: inherit; text-align: left;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+}
+.pl-prop:hover { background: var(--hz-200); }
+.pl-prop:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.pl-prop code { font-family: var(--mono); font-size: 11px; background: none; border: 0; padding: 0; color: var(--hz-700); }
+.pl-prop .n { font-family: var(--mono); font-size: 9px; color: var(--hz-500); font-variant-numeric: tabular-nums; }
+.pl-prop.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); }
+.pl-prop.is-on code, .pl-prop.is-on .n { color: var(--hz-900); }
+
+.pl-main { display: flex; flex-direction: column; gap: 16px; }
+.pl-stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pl-stage {
+  position: relative; overflow: hidden; border-radius: 8px; padding: 14px 12px 12px;
+  background: var(--hz-050); border: var(--hair) solid var(--hz-300);
+  transition: opacity var(--dur-base) var(--ease-standard), border-color var(--dur-base) var(--ease-standard);
+}
+.pl-stage[data-run="0"] { opacity: 0.34; }
+.pl-stage[data-run="1"] { border-color: color-mix(in oklch, var(--tint) 45%, var(--hz-300)); }
+.pl-stage .ix { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; color: var(--hz-400); }
+.pl-stage .nm { display: block; font-size: 15px; color: var(--hz-800); margin-top: 4px; text-transform: lowercase; }
+.pl-stage .ds { display: block; font-family: var(--mono); font-size: 8.5px; line-height: 1.5; color: var(--hz-500); margin-top: 5px; }
+.pl-stage .skip { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-500); background: oklch(0 0 0 / 0.55); }
+.pl-stage[data-run="1"] .skip { display: none; }
+/* the pulse is the point: it re-fires every cycle, so an expensive
+   property visibly re-runs these stages on every single frame */
+.pl-stage .pulse { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--tint); transform: scaleX(0); transform-origin: left; }
+.pl-stage[data-run="1"] .pulse { animation: plsweep 1.5s linear infinite; }
+@keyframes plsweep { 0% { transform: scaleX(0); } 55% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: 0; } }
+.pl-stage:nth-child(1) .pulse { animation-delay: 0ms; }
+.pl-stage:nth-child(2) .pulse { animation-delay: 110ms; }
+.pl-stage:nth-child(3) .pulse { animation-delay: 220ms; }
+.pl-stage:nth-child(4) .pulse { animation-delay: 330ms; }
+@media (prefers-reduced-motion: reduce) { .pl-stage .pulse { animation: none !important; transform: scaleX(1); } }
+
+.pl-readout { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 11px 14px; border-radius: 8px; background: var(--hz-050); border: var(--hair) solid var(--hz-300); }
+.pl-cost { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
+.pl-cost b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.pl-why { font-family: var(--mono); font-size: 9.5px; line-height: 1.6; color: var(--hz-500); flex: 1; min-width: 200px; }
+
+.pl-stageview { position: relative; height: 190px; border-radius: 8px; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; }
+.pl-track { position: absolute; left: 22px; right: 22px; top: 50%; height: 64px; transform: translateY(-50%); border-radius: 6px; background: var(--well-floor); box-shadow: var(--recess); }
+/* the specimen animates with whichever property is selected — the
+   motion looks near-identical, which is exactly the lesson: cost is
+   invisible until you measure it (SL-07 does the measuring) */
+.pl-box {
+  position: absolute; left: 34px; top: 50%; margin-top: -22px; width: 44px; height: 44px; border-radius: 6px;
+  background: linear-gradient(160deg, color-mix(in oklch, var(--tint) 72%, white), var(--tint));
+  box-shadow: 0 6px 14px color-mix(in oklch, var(--tint) 35%, transparent);
+}
+.pl-box[data-p="transform"] { animation: pbTransform 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="opacity"]   { animation: pbOpacity 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="left"]      { animation: pbLeft 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="width"]     { animation: pbWidth 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="background-color"] { background: color-mix(in oklch, var(--tint) 78%, white); animation: pbBg 1.5s var(--ease-standard) infinite alternate; }
+.pl-box[data-p="box-shadow"]{ animation: pbShadow 1.5s var(--ease-standard) infinite alternate; }
+@keyframes pbTransform { to { transform: translateX(var(--travel, 300px)); } }
+@keyframes pbOpacity   { to { opacity: 0.15; } }
+@keyframes pbLeft      { to { left: calc(10px + var(--travel, 300px)); } }
+@keyframes pbWidth     { to { width: calc(40px + var(--travel, 300px)); } }
+@keyframes pbBg        { to { background-color: oklch(0.78 0.19 35); } }
+@keyframes pbShadow    { to { box-shadow: 0 6px 44px 16px color-mix(in oklch, var(--tint) 60%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .pl-box { animation: none !important; } }
+
+.pl-caption { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 68ch; color: var(--hz-500); font-size: 13.5px; }

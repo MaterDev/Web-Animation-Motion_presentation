@@ -1,13 +1,13 @@
 <script>
   import { page } from '$app/state';
   import { browser } from '$app/environment';
-  import { PAGES, SHEETS, TREATMENTS, sheetHref } from '$lib/sheets.js';
+  import { PAGES, SHEETS, TREATMENTS, PROCESS_PAGES, sheetHref } from '$lib/sheets.js';
 
   let { children } = $props();
 
-  /* One sidebar for the whole section, so the methodology, the
-     treatments write-up and every live sheet are siblings in the same
-     place. The methodology used to be the section's landing page;
+  /* One sidebar for the whole section: its own pages (overview,
+     methodology), the reference sheets, and the treatments with their
+     write-up. The technique sheets are a separate top-level section. The methodology used to be the section's landing page;
      moving it here makes it a page you navigate to like any other,
      and leaves the landing page free to be short. */
 
@@ -26,10 +26,10 @@
        sidebar a union type where half the fields only exist on one
        branch, and every access has to be guarded. Normalising once
        here is cheaper than guarding at every use site. */
-    { label: 'Section', items: PAGES.map(toPage) },
-    { label: 'Reference', items: SHEETS.filter((s) => s.group === 'Reference').map(toItem) },
-    { label: 'Techniques', items: SHEETS.filter((s) => s.group === 'Techniques').map(toItem) },
-    { label: 'Treatments', items: TREATMENTS.map(toItem) },
+    { label: 'Design system', items: PAGES.map(toPage) },
+    { label: 'Reference', items: SHEETS.map(toItem) },
+    /* methodology and the write-up head the group: they narrate the treatments below them */
+    { label: 'Treatments', items: [...PROCESS_PAGES.map(toPage), ...TREATMENTS.map(toItem)] },
   ]);
 
   /** @param {any} p */

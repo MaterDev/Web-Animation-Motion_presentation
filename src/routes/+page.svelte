@@ -1,6 +1,6 @@
 <script>
   import { SLIDES } from '$lib/deck/slides.js';
-  import { SHEETS } from '$lib/sheets.js';
+  import { SHEETS, TECHNIQUES, TREATMENTS } from '$lib/sheets.js';
 
   let { data } = $props();
 
@@ -33,12 +33,21 @@
       status: 'in build',
     },
     {
+      href: '/techniques',
+      code: 'TE',
+      tint: 'var(--tint-svg)',
+      title: 'techniques',
+      note: 'One live sheet per rendering technique, in the order the talk climbs them.',
+      meta: `${TECHNIQUES.length} sheets`,
+      status: 'live',
+    },
+    {
       href: '/design',
       code: 'DS',
       tint: 'var(--tint-css)',
       title: 'design system',
-      note: 'Methodology, the six treatments, and the live reference: materials, motion, graphic language, layouts.',
-      meta: `${SHEETS.length} sheets`,
+      note: 'Overview, methodology, the reference sheets and the six treatments.',
+      meta: `${SHEETS.length + TREATMENTS.length} sheets`,
       status: 'live',
     },
   ]);
@@ -206,7 +215,7 @@
     display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
     gap: calc(var(--u) * 2);
   }
-  .ix-feature { grid-row: span 2; }
+  .ix-feature { grid-row: span 3; }
 
   /* a region of the display: flat, emissive, framed in ink. Screen
      content follows the screen's rules — no lift, no shadow, no

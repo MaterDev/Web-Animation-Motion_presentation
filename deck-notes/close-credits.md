@@ -1,0 +1,7 @@
+- **With thanks**
+  - Sean Van Dyk
+  - Irene Polo
+  - Aayush Joshi
+  - Tyler Knight
+  - The Design team
+- **For feedback and collaboration over the last nine months**

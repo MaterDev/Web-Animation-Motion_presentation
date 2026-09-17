@@ -1,0 +1,130 @@
+<div class="wrap">
+  <div class="crumb" id="crumb"><a href="../../index.html">← WAM-2026</a><span class="sep">/</span><a href="../../index.html#sl-05">Techniques</a></div>
+  <div class="head"><span class="code">SL-05</span><h1>gif</h1></div>
+  <p class="dek">
+    Pre-baked pixels in an <code>&lt;img&gt;</code>. No player, no controls, no autoplay
+    policy to fight — and no way to stop it either. What that trade buys, and where it
+    stops being the right trade.
+  </p>
+
+  <!-- ═══ GIF ═══════════════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-gif">
+    <div class="fmt-head"><span class="fmt-tag">GIF</span><h2>the sticker</h2></div>
+    <p class="fmt-case">
+      <b>A GIF is an <code>&lt;img&gt;</code>.</b> That single fact is most of its value: it
+      drops into a chat bubble, an email, a markdown README — anywhere an image already goes —
+      and it plays the instant it is visible, with no controls, no pause button and nothing to
+      configure. That is also its whole liability: you cannot script it to respect
+      <code>prefers-reduced-motion</code> short of swapping the file, and a 256-colour palette
+      makes it a poor fit for anything photographic. It earns its place as a <b>short, iconic,
+      looping mark</b> — a reaction, a status, a mascot. The four below are one character,
+      baked once, staged in four real contexts to show what that is good for.
+    </p>
+
+    <div class="card-grid gif-row" data-testid="demo-canvas">
+      <div class="scene-card" data-testid="gif-scene-sticker">
+        <div class="scene-stage">
+          <div class="mock-chat">
+            <div class="mock-bubble">omg no way 😭</div>
+            <img class="mock-sticker-pop" src="assets/slime-happy.gif" alt="animated slime sticker, excited hop">
+            <div class="mock-bubble me">sent a sticker</div>
+          </div>
+        </div>
+        <span class="scene-label">chat reaction</span>
+        <span class="scene-note">Oversized, self-contained, no chrome — the format chat apps standardised on for exactly this.</span>
+      </div>
+
+      <div class="scene-card" data-testid="gif-scene-loading">
+        <div class="scene-stage">
+          <div class="mock-upload">
+            <img src="assets/slime-eat.gif" alt="slime eating, standing in for a processing indicator">
+            <div class="bar-track"><div class="bar-fill"></div></div>
+            <span class="pct">processing — 64%</span>
+          </div>
+        </div>
+        <span class="scene-label">processing indicator</span>
+        <span class="scene-note">A loop with a legible beginning and end reads as "working," the way a spinner alone doesn't.</span>
+      </div>
+
+      <div class="scene-card" data-testid="gif-scene-away">
+        <div class="scene-stage">
+          <div class="mock-away">
+            <img src="assets/slime-sleep.gif" alt="sleeping slime, an away state illustration">
+            <span class="away-tag">away · back in 20m</span>
+          </div>
+        </div>
+        <span class="scene-label">empty / away state</span>
+        <span class="scene-note">Low-motion, high-charm — a register a static illustration cannot hold and a spinner gets wrong.</span>
+      </div>
+    </div>
+
+    <div class="card-grid gif-player-row" data-testid="gif-player-row">
+      <div class="scene-card" data-testid="gif-scene-ai-chat">
+        <div class="scene-stage tama-stage">
+          <div class="tama-full">
+            <div class="tama-screen" id="tamaScreen" data-mood="idle">
+              <div class="tama-statusbar">
+                <span class="tama-sig"><i></i><i></i><i></i><i></i></span>
+                <span class="tama-batt"><i></i></span>
+              </div>
+              <div class="tama-sun"></div>
+              <div class="tama-moon"></div>
+              <div class="tama-star s1"></div><div class="tama-star s2"></div><div class="tama-star s3"></div>
+              <div class="tama-cloud c1"></div><div class="tama-cloud c2"></div>
+              <div class="tama-spark p1"></div><div class="tama-spark p2"></div><div class="tama-spark p3"></div>
+              <div class="tama-ground"></div>
+              <div class="tama-pet-shadow"></div>
+              <span class="gif-frame tama-pet-frame"><img class="tama-pet" id="tamaPet" src="assets/slime-idle.gif" alt="companion, current mood"></span>
+              <div class="tama-stats">
+                <div class="stat-row hp"><span class="lbl">hp</span><span class="trk"><span class="fill" id="statHp" style="width:74%"></span></span></div>
+                <div class="stat-row nrg"><span class="lbl">nrg</span><span class="trk"><span class="fill" id="statNrg" style="width:78%"></span></span></div>
+                <div class="stat-row soc"><span class="lbl">soc</span><span class="trk"><span class="fill" id="statSoc" style="width:55%"></span></span></div>
+              </div>
+              <div class="tama-vitals">
+                <svg viewBox="0 0 60 20" preserveAspectRatio="none"><polyline points="0,11 14,11 18,3 22,18 26,11 60,11"/></svg>
+              </div>
+              <div class="tama-scan"></div>
+            </div>
+            <div class="tama-plate">
+              <span class="tama-name">companion — the device</span>
+              <span class="tama-mood" id="tamaMood">checking</span>
+            </div>
+          </div>
+
+          <div class="chat-app">
+            <div class="chat-header">
+              <span class="gif-frame"><div class="chat-header-avatar"><img id="headerAvatar" src="assets/slime-idle.gif" alt=""></div></span>
+              <div class="chat-header-meta">
+                <span class="chat-header-name">companion</span>
+                <span class="chat-header-status"><span class="dot"></span>active now</span>
+              </div>
+              <div class="chat-header-icons"><span class="chat-icon phone"></span><span class="chat-icon"></span></div>
+            </div>
+
+            <div class="ai-log" id="aiChatLog" aria-live="polite"></div>
+
+            <div class="chat-input-row">
+              <span class="chat-plus"></span>
+              <div class="chat-input-pill"><span id="chatTypedText"></span><span class="chat-caret" id="chatCaret"></span></div>
+              <span class="chat-send" id="chatSend"></span>
+            </div>
+          </div>
+        </div>
+        <span class="scene-label">ai companion chat</span>
+        <span class="scene-note">The device up top is the actual product idea: an always-on tamagotchi-style companion whose screen mirrors whatever's happening in the conversation below it, not a static logo. Everything under it is ordinary messaging-app chrome — header, avatars, a typing input — so the device is what's novel, not the chat itself.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 05</h3>
+    <p>"Baseline: Video &amp; GIF — pre-baked pixels, no interactivity; visual: thread demo
+      as GIF and video side by side with file sizes labeled."</p>
+    <p>SCOPE.md's old slide 4 covered two formats at once; it was split into 4 (video) and
+      5 (GIF) so each could make its case on its own terms. This page is the GIF half — the sticker, the companion widget and
+      the agent roster, all real baked assets from <code>gen/</code>. The thread-demo
+      brandmark resolve is still blocked on the vector-path dependency; the slime and the
+      icon set are stand-ins built for this page so the argument has something real to
+      look at meanwhile.</p>
+  </div>
+</div>

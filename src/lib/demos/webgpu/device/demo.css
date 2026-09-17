@@ -1,0 +1,65 @@
+/* extraction: copied from design/techniques/webgpu.html <style>, only the rules this demo uses; :root → :host */
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-14 · webgpu
+
+   `gp-`  the sheet: the frame around the cards, in the deck's own harness
+          language — section labels, prose, captions, the instrument strip.
+   Every card is a fragment of a different fictional product and carries its
+   own identity under its own prefix. Nothing about a card's chrome is
+   shared with its neighbours except the caption below it, which names the
+   mechanism. All motion on this page is WebGPU; the DOM holds the words.
+   ───────────────────────────────────────────────────────────────────────── */
+:host { --tint: var(--tint-webgpu); }
+.wrap { max-width: 1120px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 66ch; margin-bottom: calc(var(--u)*3); }
+p.dek b { color: var(--hz-600); font-weight: 600; }
+.gp-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; max-width: 80ch; }
+.gp-instr b { color: var(--hz-500); font-weight: 500; }
+.gp-instr code { color: var(--hz-500); }
+.gp-sec { margin: calc(var(--u)*10) 0 0; }
+.gp-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tint); margin-bottom: 6px; }
+.gp-sec h2 { font-size: clamp(22px, 3.4vw, 30px); margin: 0 0 10px; }
+.gp-sec > p { color: var(--hz-500); font-size: 13.5px; max-width: 74ch; margin: 0 0 calc(var(--u)*3); }
+.gp-sec > p b { color: var(--hz-600); font-weight: 600; }
+.gp-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.55; letter-spacing: 0.04em; color: var(--hz-400); padding: 10px 2px 0; max-width: 70ch; }
+.gp-cap b { color: var(--hz-500); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+.gp-cap i { font-style: normal; color: var(--tint); }
+.gp-strip { display: flex; gap: 10px 26px; flex-wrap: wrap; align-items: baseline; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); margin-top: 8px; }
+.gp-strip b { color: var(--hz-600); font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; font-variant-numeric: tabular-nums; }
+.gp-strip b.gp-zero { color: var(--tint); }
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*12); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; } .notes li { margin-bottom: 8px; }
+.gp-stage { position: relative; overflow: hidden; touch-action: none; }
+.gp-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.gp-status { position: absolute; left: 12px; bottom: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; pointer-events: none; }
+.gp-status[hidden] { display: none !important; }
+
+/* ─── §2 · one device, eight apps ─────────────────────────────────────── */
+.dv { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 80vw; margin-left: calc(50% - 40vw); }
+/* the plate the phone sits on: very light grey, 24 px of air all round, the frame scaled to the room inside it */
+.dv-plate { width: 100%; box-sizing: border-box; padding: 24px; border-radius: 68px; background: oklch(0.955 0.003 260); }
+/* the Duo's inner display as a shell: 890 × 626 at 1 CSS px = 1 pt, scaled as a whole to the room it has (up to 1.6×), never re-laid */
+.dd-fit { width: 100%; height: 664px; position: relative; overflow: visible; }
+.dd-frame { position: absolute; left: 50%; top: 0; width: 928px; height: 664px; transform: translateX(-50%) scale(var(--dd-scale, 1)); transform-origin: top center; border-radius: 44px; background: oklch(0.22 0.006 260); border: var(--hair) solid oklch(0.36 0.01 260); box-sizing: border-box; box-shadow: inset 0 0 0 2px oklch(0.09 0.005 260), 0 30px 80px oklch(0 0 0 / 0.35); }
+.dd-display { position: absolute; left: 19px; top: 19px; width: 890px; height: 626px; border-radius: 25px; background: oklch(0.09 0.006 260); overflow: hidden; }
+.dd-display canvas { position: absolute; inset: 0; width: 890px; height: 626px; display: block; touch-action: none; }
+.dd-crease { position: absolute; left: 445px; top: 0; width: 1px; height: 100%; background: oklch(0 0 0 / 0.14); mix-blend-mode: multiply; pointer-events: none; z-index: 5; }
+/* iOS 27's furniture on this device: the time over the radios disc, top-right; the Dock down the right edge */
+.dd-status { position: absolute; top: 10px; right: 20px; z-index: 6; font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.01em; color: oklch(1 0 0 / 0.95); text-shadow: 0 1px 2px oklch(0 0 0 / 0.35); pointer-events: none; mix-blend-mode: difference; }
+.dd-radios { position: absolute; top: 28px; right: 14px; z-index: 6; width: 30px; height: 30px; border-radius: 50%; background: oklch(1 0 0 / 0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: grid; place-items: center; pointer-events: none; box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6); } .dd-radios svg { width: 22px; height: 22px; }
+.dd-dock { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 6; width: 44px; padding: 8px 0; border-radius: 22px; background: oklch(1 0 0 / 0.42); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); box-shadow: inset 0 0 0 var(--hair) oklch(1 0 0 / 0.6), 0 6px 20px oklch(0 0 0 / 0.18); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dd-dock button { width: 32px; height: 32px; border-radius: 9px; border: 0; padding: 0; cursor: pointer; background: linear-gradient(145deg, color-mix(in oklch, var(--c) 100%, white 28%), var(--c)); box-shadow: 0 1px 2px oklch(0 0 0 / 0.3); display: grid; place-items: center; font-family: var(--sans); font-size: 13px; font-weight: 800; color: white; letter-spacing: -0.02em; transition: transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
+.dd-dock button:hover { transform: scale(1.08); } .dd-dock button.dd-dock-on { outline: 2px solid oklch(1 0 0 / 0.85); outline-offset: 2px; }
+.dd-dock button svg { width: 19px; height: 19px; filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.3)); }
+.dv-loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 4; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: oklch(0.85 0.006 260); background: oklch(0.12 0.01 260 / 0.7); padding: 8px 14px; border-radius: 999px; pointer-events: none; }
+.dv-loading[hidden] { display: none; }
+.dv-caps { width: 100%; max-width: 100ch; } .dv-caps .gp-cap { max-width: none; } .dv-caps .gp-cap[hidden] { display: none; }

@@ -1,0 +1,177 @@
+:host { --tint: var(--tint-css); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
+
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+.scene-card { display: flex; flex-direction: column; gap: 8px; }
+.scene-stage {
+  aspect-ratio: 4/5; border-radius: 8px; position: relative; overflow: hidden;
+  background: var(--stage-bg); box-shadow: var(--recess); display: grid; place-items: center;
+}
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+
+/* ── BEYOND LAYOUT ───────────────────────────────────────────
+   The magazine section shows CSS animating an interface. This one
+   shows it as a drawing instrument: compositing, interference and
+   gradient geometry, where the animation IS the artwork rather than
+   a transition between two states of a document. Bigger canvases,
+   two up, because these are meant to be looked at. */
+.art-grid { display: grid; grid-template-columns: 1fr 1fr; gap: calc(var(--u)*3); }
+.art-grid .vf-card { grid-column: 1 / -1; }
+.art-grid .vf-card .scene-stage { aspect-ratio: 92/29; }
+@media (max-width: 760px) { .art-grid { grid-template-columns: 1fr; } }
+.art-grid .scene-stage { aspect-ratio: 1/1; background: oklch(0.14 0.006 265); container-type: inline-size; }
+
+/* 1 · GOO — the blur+contrast threshold trick. Blur smears the blobs
+   into each other, then a huge contrast snaps the midtones back to a
+   hard edge, so overlapping circles fuse and separate like liquid.
+   No SVG, no canvas: two filter functions doing metaballs. */
+.goo { position: absolute; inset: 0; background: oklch(0.14 0.006 265); filter: blur(11px) contrast(26); }
+.goo i { position: absolute; display: block; border-radius: 50%; background: oklch(0.72 0.19 25); }
+.goo i:nth-child(1) { width: 92px; height: 92px; left: 34%; top: 36%; animation: gooA 7s var(--ease-standard) infinite; }
+.goo i:nth-child(2) { width: 66px; height: 66px; left: 20%; top: 24%; background: oklch(0.70 0.17 40); animation: gooB 9s var(--ease-standard) infinite; }
+.goo i:nth-child(3) { width: 54px; height: 54px; left: 56%; top: 54%; background: oklch(0.74 0.16 15); animation: gooC 6.4s var(--ease-standard) infinite; }
+.goo i:nth-child(4) { width: 44px; height: 44px; left: 46%; top: 18%; background: oklch(0.76 0.15 50); animation: gooD 8.2s var(--ease-standard) infinite; }
+@keyframes gooA { 0%,100% { transform: translate(0,0) } 50% { transform: translate(26px, 34px) } }
+@keyframes gooB { 0%,100% { transform: translate(0,0) } 50% { transform: translate(74px, 52px) } }
+@keyframes gooC { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-58px,-40px) } }
+@keyframes gooD { 0%,100% { transform: translate(0,0) } 50% { transform: translate(-34px, 76px) } }
+
+/* 2 · MOIRÉ — two identical rulings, one rotating against the other.
+   The pattern on screen is in neither layer; it is the interference
+   between them, which is why it moves far faster than the rotation
+   that causes it. Op-art, drawn by the compositor. */
+.moire { position: absolute; inset: 0; overflow: hidden; background: oklch(0.13 0.006 265); }
+.moire span { position: absolute; inset: -46%;
+  background: repeating-radial-gradient(circle at 50% 50%, oklch(0.92 0.03 250) 0 1.6px, transparent 1.6px 7px); }
+.moire span:nth-child(1) { animation: moireA 34s linear infinite; }
+.moire span:nth-child(2) { mix-blend-mode: difference; animation: moireB 21s linear infinite; }
+@keyframes moireA { to { transform: rotate(360deg); } }
+@keyframes moireB { 0% { transform: rotate(0) translateX(9px) scale(1.03); } 100% { transform: rotate(-360deg) translateX(9px) scale(1.03); } }
+
+/* 3 · TIMELESS — an abstract type poster, not a word on a screen.
+   Swiss-poster construction: one asymmetric grid, a small set of
+   sizes, flush-left ragged-right, a lot of deliberate air. Every
+   element is type — display word, vertical spine, ghosted numeral,
+   mono metadata, a dot-matrix rule — and every one carries its own
+   motion at its own period, so the composition is always in flux
+   without any single thing dominating.
+
+   The display word is the only chromatic element: a conic gradient
+   painted through the letterforms with background-clip, turning
+   because the angle is a registered @property. Unregistered, an
+   angle is a keyword and cannot interpolate. */
+@property --holo { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+.holo { position: absolute; inset: 0; overflow: hidden; padding: 22px;
+  background: oklch(0.105 0.008 268); color: oklch(0.72 0.01 265);
+  --hi: oklch(0.94 0.01 265); --dim: oklch(0.46 0.012 265);
+  font-synthesis: none; }
+
+/* top register — mono metadata over a rule that wipes */
+.holo .ho-reg { position: absolute; left: 22px; right: 22px; top: 20px; display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim); }
+.holo .ho-reg + hr { position: absolute; left: 22px; right: 22px; top: 36px; height: 1px; border: 0; margin: 0;
+  background: oklch(0.55 0.01 265 / 0.55); transform-origin: left; animation: pWipe 6s var(--ease-standard) infinite; }
+@keyframes pWipe { 0% { transform: scaleX(0); } 40%, 60% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: .35; } }
+
+/* the ghosted numeral, set enormous and hollow so it reads as
+   texture and structure rather than as information */
+.holo .ho-num { position: absolute; right: -20px; bottom: -9%; margin: 0; line-height: .78;
+  font-family: var(--sans); font-weight: 900; font-size: 40cqw; letter-spacing: -0.06em;
+  color: transparent; -webkit-text-stroke: 1.5px oklch(0.62 0.012 265 / 0.26);
+  animation: pNum 14s var(--ease-standard) infinite; }
+@keyframes pNum { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-14px,-10px) scale(1.06); } }
+
+/* the vertical spine, running bottom-to-top up the left margin */
+.holo .ho-spine { position: absolute; left: 22px; top: 52px; bottom: 74px; writing-mode: vertical-rl; transform: rotate(180deg);
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--dim);
+  animation: pSpine 9s var(--ease-standard) infinite; }
+@keyframes pSpine { 0%,100% { transform: rotate(180deg) translateY(0); opacity: .75; } 50% { transform: rotate(180deg) translateY(14px); opacity: 1; } }
+
+/* the display word */
+.holo .ho-blk { position: absolute; left: 52px; right: 22px; top: 30%; }
+.holo .ho-word { position: relative; display: flex; animation: holoBreathe 9s var(--ease-standard) infinite; transform-origin: left center; }
+.holo .ho-word > s {
+  text-decoration: none; display: inline-block;
+  font-family: var(--sans); font-weight: 800; font-size: 15cqw;
+  letter-spacing: -0.045em; line-height: .92; text-transform: uppercase;
+  background: conic-gradient(from var(--holo),
+    oklch(0.80 0.20 20), oklch(0.86 0.18 90), oklch(0.83 0.19 165),
+    oklch(0.78 0.21 250), oklch(0.83 0.20 320), oklch(0.80 0.20 20));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: holoSpin 6s linear infinite, holoFloat 3.6s var(--ease-standard) infinite;
+}
+.holo .ho-word > s:nth-child(1) { animation-delay: 0s, 0s; }
+.holo .ho-word > s:nth-child(2) { animation-delay: 0s, .09s; }
+.holo .ho-word > s:nth-child(3) { animation-delay: 0s, .18s; }
+.holo .ho-word > s:nth-child(4) { animation-delay: 0s, .27s; }
+.holo .ho-word > s:nth-child(5) { animation-delay: 0s, .36s; }
+.holo .ho-word > s:nth-child(6) { animation-delay: 0s, .45s; }
+.holo .ho-word > s:nth-child(7) { animation-delay: 0s, .54s; }
+.holo .ho-word > s:nth-child(8) { animation-delay: 0s, .63s; }
+@keyframes holoSpin { to { --holo: 360deg; } }
+@keyframes holoFloat { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-9px) rotate(-3deg); } }
+@keyframes holoBreathe { 0%, 100% { transform: scale(1) skewX(0deg); } 50% { transform: scale(1.035) skewX(-2deg); } }
+
+/* chromatic ghost, offset under a screen blend */
+.holo .ho-ghost { position: absolute; left: 0; top: 0; pointer-events: none; mix-blend-mode: screen; filter: blur(1.4px); opacity: .45;
+  font-family: var(--sans); font-weight: 800; font-size: 15cqw; letter-spacing: -0.045em; line-height: .92;
+  text-transform: uppercase; color: oklch(0.62 0.24 320); animation: holoGhost 5.2s var(--ease-standard) infinite; }
+@keyframes holoGhost { 0%, 100% { transform: translate(-6px, 3px); } 50% { transform: translate(6px, -3px); } }
+
+/* the kicker under the word: a rule that draws, then a tracked line */
+.holo .ho-kick { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.holo .ho-kick i { display: block; height: 1px; background: oklch(0.60 0.012 265 / .7); transform-origin: left; animation: pWipe 6s var(--ease-standard) infinite .4s; }
+.holo .ho-kick b { font-family: var(--mono); font-weight: 400; font-size: 8.5px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--hi); }
+
+/* mono body block, flush left, ragged right */
+.holo .ho-body { position: absolute; left: 52px; bottom: 44px; width: 46%; white-space: nowrap;
+  font-family: var(--mono); font-size: 8.5px; line-height: 1.9; letter-spacing: 0.04em; color: var(--dim); }
+.holo .ho-body span { display: block; animation: pLine 7s var(--ease-standard) infinite; }
+.holo .ho-body span:nth-child(2) { animation-delay: .5s; }
+.holo .ho-body span:nth-child(3) { animation-delay: 1s; }
+@keyframes pLine { 0%, 70%, 100% { opacity: .55; } 12%, 58% { opacity: 1; } }
+
+/* dot-matrix rule along the foot — Doto, the deck's third voice */
+.holo .ho-dots { position: absolute; left: 22px; right: 22px; bottom: 20px; display: flex; justify-content: space-between;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-size: 13px; color: oklch(0.58 0.012 265); }
+.holo .ho-dots u { text-decoration: none; animation: pDot 2.4s steps(1) infinite; }
+.holo .ho-dots u:nth-child(3n+2) { animation-delay: .3s; }
+.holo .ho-dots u:nth-child(3n+3) { animation-delay: .6s; }
+@keyframes pDot { 0%, 49% { opacity: .28; } 50%, 100% { opacity: 1; } }
+
+/* the two surface passes that tie it together */
+.holo em { position: absolute; inset: -20%; pointer-events: none; mix-blend-mode: overlay;
+  background: linear-gradient(105deg, transparent 40%, oklch(1 0 0 / 0.5) 50%, transparent 60%);
+  animation: holoSheen 4.4s var(--ease-standard) infinite; }
+@keyframes holoSheen { 0% { transform: translateX(-115%); } 55%, 100% { transform: translateX(115%); } }
+.holo .ho-scan { position: absolute; inset: 0; pointer-events: none; opacity: 0.16;
+  background: repeating-linear-gradient(0deg, oklch(1 0 0 / 0.5) 0 1px, transparent 1px 4px);
+  animation: holoScan 7s linear infinite; }
+@keyframes holoScan { to { transform: translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .goo i, .moire span, .holo .ho-word, .holo .ho-word > s, .holo .ho-ghost, .holo em, .holo .ho-scan,
+  .holo .ho-num, .holo .ho-spine, .holo hr, .holo .ho-kick i, .holo .ho-body span, .holo .ho-dots u,
+  .depth .ap-rail, .depth .ap-field i, .depth .ap-plate, .depth .ap-word, .depth .ap-ticks em,
+  .vf .vf-dot s, .vf .vf-ink s { animation: none !important; }
+}
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 68ch; color: var(--hz-500); font-size: 13.5px; }

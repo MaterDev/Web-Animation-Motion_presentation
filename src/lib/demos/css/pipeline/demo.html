@@ -1,0 +1,85 @@
+<div class="wrap">
+  <div class="crumb" id="crumb">
+    <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
+    <a href="../index.html#sl-06">Techniques</a>
+  </div>
+
+  <div class="head"><span class="code">SL-06</span><h1>layout / css</h1></div>
+  <p class="dek">
+    Motion the browser runs for you. Two quite different jobs share one engine, and this
+    slide keeps them apart. First <b>CSS for layout</b> — animating a page's own structure,
+    driven by scroll position and by the selectors already describing state. Then <b>CSS as
+    a drawing instrument</b> — the same declarations pointed at elements that aren't
+    structure at all, where what comes out is a picture rather than an interface. You
+    declare the start and the end; the engine works out the frames either way.
+  </p>
+
+  <!-- ═══ THE PIPELINE ══════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-pipeline">
+    <div class="fmt-head"><span class="fmt-tag">PIPELINE</span><h2>what a frame costs</h2></div>
+    <p class="fmt-case">
+      Every frame the browser paints runs the same four stages, in order. The saving is that
+      <b>a change doesn't always have to start at the beginning.</b> Change something
+      geometric and the engine must re-run layout, then repaint, then recomposite. Change
+      only a colour and layout is skipped. Change <code>transform</code> or
+      <code>opacity</code> and both layout and paint are skipped — the work is handed to the
+      compositor, which is a different thread with a copy of the layer already on the GPU.
+      Pick a property and watch which stages re-run. <b>The same four stages price both
+      halves of this slide</b> — laying a page out and drawing a picture are the same
+      pipeline, just entered at different points.
+    </p>
+
+    <div class="pipe">
+      <div class="pl-rail">
+        <div class="pl-rail-head"><b>animate this</b><span>stages it re-runs</span></div>
+        <div class="pl-props" id="plProps" data-testid="pipeline-props"></div>
+      </div>
+
+      <div class="pl-main">
+        <div class="pl-stages" id="plStages" data-testid="pipeline-stages"></div>
+        <div class="pl-readout">
+          <span class="pl-cost">cost · <b id="plCost">—</b></span>
+          <span class="pl-why" id="plWhy">—</span>
+        </div>
+        <div class="pl-stageview">
+          <div class="pl-track"></div>
+          <div class="pl-box" id="plBox" data-p="transform"></div>
+        </div>
+        <p class="pl-caption">
+          The specimen animates with the selected property. Note how little the
+          <i>motion</i> differs — the cost is invisible from the outside, which is exactly
+          why SL-07 measures it instead of describing it.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 06</h3>
+    <p>"CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
+      Layout → Paint → Composite; visual: animated pipeline diagram + simple live
+      hover/transition demo (generic, not the thread demo — keep this one legible)."</p>
+    <p>Both halves are real. The pipeline diagram is interactive rather than a static
+      graphic: the stage map, the cost readout and the moving specimen are driven from one
+      property table, so the diagram cannot drift out of step with what the specimen is
+      animating. Kept generic per the scope note — no thread demo here.</p>
+    <p>The examples were rebuilt around <b>Timeless</b>, a fictional newsweekly, after the
+      first pass proved that a technique demonstrated on a coloured square teaches nothing
+      about when to reach for it. The masthead, the section tabs and the contents flyout are
+      page fragments; the CSS is the point but the context is what makes it legible. The
+      identity is deliberately its own — the reusable part of the genre is its grammar, not
+      any real title's trade dress.</p>
+    <p><b>Every card runs itself.</b> A demo that has to be poked is a dead demo from the
+      back of a room, so each fragment loops its own technique unprompted. On the three
+      state-driven cards the loop is a default rather than a cage: the moment you click a
+      tab, focus the contents button or open a story, the animation is dropped and the real
+      selector — <code>:checked</code>, <code>:focus-within</code>, <code>:has()</code> —
+      takes over. The two scroll-linked cards run from the clock instead, using the same
+      keyframes you would bind to <code>scroll()</code> or <code>view()</code> in
+      production; only the timeline differs, which is the actual lesson.</p>
+    <p>Two boundaries are held on purpose. <b>SL-07</b> measures what this sheet only
+      models: cost. <b>SL-08</b> owns animating between two arbitrary measured layouts —
+      which is why the expand example stops at <code>0fr → 1fr</code>, the one layout
+      animation CSS manages unaided, rather than reflowing the whole grid.</p>
+  </div>
+</div>

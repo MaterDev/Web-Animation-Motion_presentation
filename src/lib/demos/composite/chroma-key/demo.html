@@ -1,0 +1,79 @@
+<!-- chroma-key · markup from design/techniques/video/index.html lines 677–754, unchanged apart from the asset path -->
+    <div class="ck">
+      <div class="ck-bar" data-testid="ck-rail">
+        <div class="ck-bar-head"><b>composite</b><span>one decode · seven scenes</span></div>
+        <div class="ck-scenes" data-testid="ck-scenes">
+          <button class="ck-scene is-on" data-scene="float" data-testid="ck-scene-float"><b>keyed</b><i>alpha + cast shadow</i></button>
+          <button class="ck-scene" data-scene="type" data-testid="ck-scene-type"><b>inside type</b><i>echo, fading to a clean cut</i></button>
+          <button class="ck-scene" data-scene="card" data-testid="ck-scene-card"><b>inside a card</b><i>legs behind the content</i></button>
+          <button class="ck-scene" data-scene="duo" data-testid="ck-scene-duo"><b>duotone</b><i>two inks · smeared plates</i></button>
+          <button class="ck-scene" data-scene="knock" data-testid="ck-scene-knock"><b>knockout</b><i>stencil · torn slices</i></button>
+          <button class="ck-scene" data-scene="snow" data-testid="ck-scene-snow"><b>winter night</b><i>snow + lights, both planes</i></button>
+          <button class="ck-scene" data-scene="tick" data-testid="ck-scene-tick"><b>ticker</b><i>bands crossing both ways</i></button>
+        </div>
+        <div class="ck-ctls">
+          <div class="ck-swatch"><i></i><span>key rgb 48 192 54</span></div>
+          <div class="ck-ctl">
+            <label for="ckSim">similarity <var id="ckSimV">0.21</var></label>
+            <input type="range" id="ckSim" data-testid="ck-similarity" min="0.005" max="0.40" step="0.005" value="0.21">
+          </div>
+          <div class="ck-ctl">
+            <label for="ckSoft">softness <var id="ckSoftV">0.20</var></label>
+            <input type="range" id="ckSoft" data-testid="ck-softness" min="0.005" max="0.35" step="0.005" value="0.20">
+          </div>
+          <div class="ck-ctl">
+            <label for="ckSpill">spill removal <var id="ckSpillV">0.80</var></label>
+            <input type="range" id="ckSpill" data-testid="ck-spill" min="0" max="1" step="0.05" value="0.80">
+          </div>
+        </div>
+      </div>
+
+      <div class="ck-pair">
+        <figure class="ck-cell">
+          <div class="ck-stage" id="ckStage" data-scene="float" data-testid="ck-stage">
+            <div class="ck-layer">
+              <div class="ck-g ck-g-ground"></div>
+              <div class="ck-g ck-g-paper"></div>
+              <div class="ck-g ck-g-appbg"></div>
+              <div class="ck-g ck-g-field"></div>
+              <span class="ck-g ck-g-kicker">Field Notes</span>
+              <h4 class="ck-g ck-g-hed">North</h4>
+              <div class="ck-g ck-g-ring ck-g-ring-b"></div>
+              <div class="ck-g ck-g-card"></div>
+              <div class="ck-g ck-g-behind"></div>
+              <div class="ck-g ck-g-glitch"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+              <div class="ck-g ck-g-weather"></div>
+              <div class="ck-g ck-g-tickbg"></div>
+              <div class="ck-g ck-bokeh-b" id="ckBokehB"></div>
+              <div class="ck-g ck-snow-b" id="ckSnowB"></div>
+              <div class="ck-g ck-band is-back"><span>Northern Range · Field Notes · </span><span>Northern Range · Field Notes · </span></div>
+            </div>
+            <canvas id="ckCanvas" class="ck-canvas" data-testid="ck-canvas"></canvas>
+            <div class="ck-layer ck-front">
+              <div class="ck-g ck-g-chips"><span>live</span><span>alpha: computed</span></div>
+              <span class="ck-g ck-g-hedfront">Range</span>
+              <span class="ck-g ck-g-folio">no. 01 — winter</span>
+              <div class="ck-g ck-g-cardfront"><b>Chapter One · The Stag</b><em>12 min · illustrated</em><u>Read the chapter</u></div>
+              <div class="ck-g ck-g-tabbar"><i></i><i></i><i></i><i></i></div>
+              <div class="ck-g ck-g-ring ck-g-ring-f"></div>
+              <div class="ck-g ck-g-halftone"></div>
+              <div class="ck-g ck-bokeh-f" id="ckBokehF"></div>
+              <div class="ck-g ck-snow-f" id="ckSnowF"></div>
+              <div class="ck-g ck-band is-fore"><span>No. 01 · Winter · </span><span>No. 01 · Winter · </span></div>
+            </div>
+          </div>
+          <figcaption class="ck-cap"><b>composite</b><span id="ckCap" data-testid="ck-caption">alpha computed per frame</span></figcaption>
+        </figure>
+
+        <figure class="ck-cell">
+          <!-- the same element the keyer decodes from, shown rather than
+               hidden: the before and the after run off one decode -->
+          <div class="ck-stage ck-stage-raw" data-testid="ck-stage-raw">
+            <video id="ckSrc" class="ck-src" loop muted playsinline autoplay preload="auto" data-testid="ck-source">
+              <source src="%MP4%" type="video/mp4">
+            </video>
+          </div>
+          <figcaption class="ck-cap"><b>source</b><span>720×1280 · key rgb 48 192 54</span></figcaption>
+        </figure>
+      </div>
+    </div>

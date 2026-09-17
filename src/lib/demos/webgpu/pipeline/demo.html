@@ -1,0 +1,60 @@
+<div class="wrap" data-testid="technique-webgpu">
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14" data-testid="crumb-techniques">Techniques</a></div>
+
+  <div class="head"><span class="code">SL-14</span><h1>webgpu</h1></div>
+  <p class="dek" data-testid="dek">
+    The GPU stops being a place you send pictures to and becomes a place things
+    <b>happen</b>. Compute passes read and write storage buffers that never come back;
+    a hundred thousand grains can be an interface, a flock can be a game, a world can be
+    grown and flown over, a product shot can be lit without a product — and the app
+    around each of those can be the GPU's work too. One device, eight apps, one canvas,
+    each a fragment of a product that could ship — because a technique on a coloured
+    square teaches nothing about where you would reach for it.
+  </p>
+  <p class="gp-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> The GPU
+    writes its own clock at the start and end of each pass (<code>timestamp-query</code>),
+    so cards print passes, not frames. A counter on the device queue records every
+    byte the CPU sends per frame. Adapter <b data-testid="instrument-adapter">…</b> ·
+    <code>timestamp-query</code> <b data-testid="instrument-ts">…</b> · state uploaded this
+    frame <b data-testid="instrument-bytes">…</b> · uniforms <b data-testid="instrument-uni">…</b>
+    · backing store <b data-testid="instrument-dpr">…</b>
+  </p>
+
+  <!-- ═══ §1 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-1">
+    <div class="gp-label">Pipeline</div>
+    <h2>what a frame costs on the GPU</h2>
+    <p>A frame here is a list of <b>passes</b>. Each compute pass runs one program across
+      a grid of workgroups; the render pass draws. Validation happens once, when the
+      pipeline is created, so a pass costs what its work costs and nothing else — and
+      because the GPU timestamps the start and end of every pass, the cost is a
+      measurement rather than a guess. Switch passes off and watch the bars: the
+      scene loses the pass's effect and the frame loses exactly its time.</p>
+    <div class="ck" data-testid="ck-card">
+      <div class="gp-stage" data-testid="ck-stage"><canvas data-testid="ck-canvas"></canvas><span class="gp-status" data-testid="ck-status">requesting a device…</span></div>
+      <div class="ck-panel">
+        <div class="ck-k">frame · four passes · 200 000 particles</div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="0" data-testid="ck-p0"><label>flow field</label><div class="ck-bar"><i data-testid="ck-bar-0"></i></div><span class="ck-ms" data-testid="ck-ms-0">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="1" data-testid="ck-p1"><label>integrate</label><div class="ck-bar"><i data-testid="ck-bar-1"></i></div><span class="ck-ms" data-testid="ck-ms-1">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked data-pass="2" data-testid="ck-p2"><label>density · atomics</label><div class="ck-bar"><i data-testid="ck-bar-2"></i></div><span class="ck-ms" data-testid="ck-ms-2">—</span></div>
+        <div class="ck-pass"><input type="checkbox" checked disabled data-pass="3" data-testid="ck-p3"><label>render</label><div class="ck-bar"><i data-testid="ck-bar-3"></i></div><span class="ck-ms" data-testid="ck-ms-3">—</span></div>
+        <div class="ck-total"><span>GPU time, this frame</span><b data-testid="ck-total">—</b></div>
+        <div class="ck-total"><span>bytes uploaded</span><b data-testid="ck-bytes">—</b></div>
+        <div class="ck-note" data-testid="ck-note">Compute passes cost per workgroup; the render pass per pixel. Neither costs a byte of transfer once the state is up.</div>
+      </div>
+    </div>
+    <div class="gp-cap"><b>inspector</b> · a curl-noise flow, an integrate step, a density histogram by atomic add, one instanced draw · the medians of the last eight readings, each pass between two GPU timestamps</div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
+      <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
+      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
+      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument — and so is the interface: the text atlas, the signed-distance panels and the frosted glass in every app are a hundred lines of WGSL, not a framework.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Roost, Tessera, Halcyon and Supercell do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
+    </ol>
+  </div>
+</div>

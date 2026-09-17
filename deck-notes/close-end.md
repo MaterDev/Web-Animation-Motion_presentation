@@ -1,4 +1,5 @@
 - **Thank you**
+  - Made for Folklore Digital
 - **The paper**
   - Full argument and every source
   - Slide numbers match its bibliography

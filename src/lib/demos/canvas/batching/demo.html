@@ -1,0 +1,87 @@
+    <div class="h2" data-testid="h2-world">
+      <div class="h2-bar" data-testid="h2-bar">
+        <button class="h2-btn h2-on" data-m="arc" data-testid="h2-method-arc">arc per dot</button>
+        <button class="h2-btn" data-m="batched" data-testid="h2-method-batched">one batched path</button>
+        <button class="h2-btn" data-m="sprite" data-testid="h2-method-sprite">drawImage sprite</button>
+        <button class="h2-btn" data-m="rect" data-testid="h2-method-rect">fillRect square</button>
+        <span style="flex:1"></span>
+        <button class="h2-btn h2-c h2-on" data-ch="c" data-testid="h2-plate-c">cyan 15°</button>
+        <button class="h2-btn h2-m h2-on" data-ch="m" data-testid="h2-plate-m">magenta 75°</button>
+        <button class="h2-btn h2-y h2-on" data-ch="y" data-testid="h2-plate-y">yellow 0°</button>
+        <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">black 45°</button>
+        <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
+        <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
+        <button class="h2-btn h2-on" data-testid="h2-proof">proof sequence</button>
+        <button class="h2-btn h2-on" data-testid="h2-loupe">loupe</button>
+      </div>
+      <div class="h2-stage" data-testid="h2-explain-stage">
+        <canvas data-testid="h2-explain"></canvas>
+      </div>
+      <p class="h2-cap" data-testid="h2-explain-cap">The four separations, each at
+        its own angle, and what they make together. Below: coverage from 0 to 100%,
+        and the dot that carries it — area, not width, which is why a 50% tone is a
+        dot of radius 0.40 of the cell rather than half of it.</p>
+      <div class="h2-stage" data-testid="h2-stage">
+        <canvas data-testid="h2-canvas"></canvas>
+      </div>
+      <div class="h2-plate" data-testid="h2-readouts">
+        <div class="h2-kv">dots this frame<b data-testid="h2-dots">—</b></div>
+        <div class="h2-kv">draw + sync<b data-testid="h2-cost">—</b></div>
+        <div class="h2-kv">ruling<b data-testid="h2-ruling">—</b></div>
+        <div class="h2-kv">screen angles<b data-testid="h2-angles">Y 0 · C 15 · K 45 · M 75</b></div>
+      </div>
+    </div>
+    <p class="cv-instr" data-testid="h2-instr">
+      <b>Three facts hold this picture together and all three are printable.</b>
+      Only three screens can sit at mutual 30° separation, so yellow takes the 15°
+      collision — because it is the faintest of the four — and yellow runs at 108%
+      of the others' frequency to suppress the residual beat. What comes out is a
+      <b>rosette</b>: a controlled, least-objectionable moiré, which is what a press
+      does on purpose where this deck's other sheets avoid moiré on purpose.
+      <b>The plates above are drifting</b>, so you can watch the rosette break
+      into a coarse beat as they leave their separation and re-form as they
+      return: the angle is not a setting on a still picture, it is the variable,
+      moving. <i>Lock to standard angles</i> stops it dead, which is why the
+      standard set is standard.
+      <b>Dot gain</b> is the other one: ink spreads into paper, so coverage is
+      pushed by <code>c + 0.12·sin(πc)</code> — 12% at the midtone, nothing at
+      either end. Turn it off and the whole page goes pale, which is what a plate
+      looks like before the press has had it.
+    </p>
+
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-a">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table A — the same picture, four ways.</b> The console above changes
+          method live; this is the same question asked rigorously. One mark
+          specification for every row: a 4×4 axis-aligned opaque square at integer
+          coordinates, in one resolved ink, at seeded positions. A method is
+          admitted only if its output is pixel-identical to the
+          <code>fillRect</code> reference.
+        </caption>
+        <thead><tr><th>method</th><th>ms / frame</th><th>× fastest</th><th>pixels differing</th></tr></thead>
+        <tbody data-testid="table-a-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="cv-guard" data-testid="table-a-guard">verifying…</div>
+
+    <div class="cv-scroll">
+      <table class="cv-table" data-testid="table-b">
+        <caption class="cv-cap" style="text-align:left;caption-side:top">
+          <b>Table B — and what the mark itself costs.</b> Here the pictures are
+          <i>different</i> and that is the subject: an antialiased disc of equal
+          area against the hard square, and integer against fractional coordinates.
+        </caption>
+        <thead><tr><th>mark</th><th>ms / frame</th><th>× square</th><th>area drawn</th></tr></thead>
+        <tbody data-testid="table-b-body"><tr><td colspan="4">measuring…</td></tr></tbody>
+      </table>
+    </div>
+    <p class="cv-instr" data-testid="table-notes">
+      <b>Integer snapping is deliberate and is a small lie about real drawing</b> —
+      nobody snaps a halftone to integers, and the console above does not. Table B
+      is where the truth of that gets its own number. Floor:
+      <b data-testid="table-floor">…</b> · marks per frame:
+      <b data-testid="table-n">…</b> · sync point:
+      <code>getImageData(0,0,1,1)</code>, measured at
+      <b data-testid="table-synccost">…</b> on its own.
+    </p>

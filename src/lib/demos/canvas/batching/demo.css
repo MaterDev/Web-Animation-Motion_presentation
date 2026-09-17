@@ -1,0 +1,76 @@
+/* The page context a world sat in on the sheet: `:root { --tint }` becomes
+   :host, and the sheet's `body` rule from tokens.css (which does not reach
+   into a shadow root) is restated on the demo's own root. */
+:host { --tint: var(--tint-canvas); }
+.demo-root {
+  background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── sheet furniture the demo renders (canvas.html) ─────────────────── */
+.cv-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.5; letter-spacing: 0.06em; color: var(--hz-400); padding: 8px 4px 2px; }
+.cv-cap b { color: var(--hz-500); font-weight: 500; }
+.cv-scroll { overflow-x: auto; }
+.cv-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: calc(var(--u)*2); min-width: 460px; }
+.cv-table th, .cv-table td { text-align: left; padding: 6px 10px 6px 0; border-bottom: var(--hair) solid var(--hz-200); white-space: nowrap; }
+.cv-table th { color: var(--hz-400); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+.cv-table td { color: var(--hz-600); font-variant-numeric: tabular-nums; }
+.cv-table td.cv-num { color: var(--tint); }
+.cv-table tr.cv-best td { color: var(--ok, var(--tint)); }
+.cv-dagger { color: var(--hz-400); }
+.cv-guard { font-family: var(--mono); font-size: 10px; padding: 7px 10px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+.cv-guard.cv-ok { color: var(--ok, #7bd88f); background: color-mix(in oklch, var(--ok, #7bd88f) 12%, transparent); }
+.cv-guard.cv-bad { color: var(--signal, #e5484d); background: color-mix(in oklch, var(--signal, #e5484d) 14%, transparent); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §2 · SCREEN — a prepress screening console, at 20×
+
+   A light world on paper, which is the inverse of every other world on this
+   sheet. Nothing here is a gradient: continuous tone is reproduced the way
+   a press reproduces it, by putting down dots of four inks at four angles
+   and letting the eye do the mixing. That is a clustered-dot ordered dither
+   with a stated ruling, and it is the sharpest form of this sheet's medium
+   argument — CSS renders a smooth gradient effortlessly and cannot render a
+   screened one at all.
+
+   Process cyan at hue 225 is a STATED EXCEPTION: it sits 10° from
+   --tint-css 235, and you cannot rotate process cyan and have it still be
+   cyan. CMYK is what makes this world legible without a legend, which is
+   the same reason the precipitation ramp on the SVG sheet breaks its own
+   chroma ceiling. Declared, not overlooked.
+   ───────────────────────────────────────────────────────────────────────── */
+.h2 {
+  --h2-stock:  oklch(0.885 0.022  88);   /* newsprint                        */
+  --h2-ink-k:  oklch(0.215 0.008 250);   /* process black, faintly cool      */
+  --h2-ink-c:  oklch(0.660 0.130 225);   /* process cyan — stated exception  */
+  --h2-ink-m:  oklch(0.620 0.230 350);   /* process magenta                  */
+  --h2-ink-y:  oklch(0.900 0.175 100);   /* process yellow                   */
+  --h2-rule:   oklch(0.560 0.014  88);   /* trim marks, plate type           */
+  --h2-sub:    oklch(0.700 0.012  88);
+}
+/* Every world carries an interior gutter. Controls and type sitting hard
+   against a world's own edge is the single most consistent way this sheet
+   has looked unfinished, and it is a padding value, not a design problem. */
+.h2 { --h2-gutter: 22px; }
+.h2-stage { position: relative; line-height: 0; background: var(--h2-stock); padding: 10px var(--h2-gutter); }
+.h2-stage canvas { display: block; width: 100%; }
+.h2-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 16px var(--h2-gutter) 2px; background: var(--h2-stock); }
+.h2-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--h2-ink-k); background: transparent;
+  border: 1px solid var(--h2-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.h2-btn.h2-on { color: var(--h2-stock); background: var(--h2-ink-k); border-color: var(--h2-ink-k); }
+.h2-btn.h2-c.h2-on { background: var(--h2-ink-c); border-color: var(--h2-ink-c); }
+.h2-btn.h2-m.h2-on { background: var(--h2-ink-m); border-color: var(--h2-ink-m); }
+.h2-btn.h2-y.h2-on { background: var(--h2-ink-y); border-color: var(--h2-ink-y); color: var(--h2-ink-k); }
+.h2-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--h2-ink-k);
+  max-width: 74ch; padding: 4px var(--h2-gutter) 10px; background: var(--h2-stock); opacity: 0.8;
+}
+.h2-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 10px var(--h2-gutter) 18px; background: var(--h2-stock); }
+.h2-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--h2-sub); }
+.h2-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--h2-ink-k); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }

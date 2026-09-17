@@ -1,0 +1,71 @@
+/* The page context a world sat in on the sheet: `:root { --tint }` becomes
+   :host, and the sheet's `body` rule from tokens.css (which does not reach
+   into a shadow root) is restated on the demo's own root. */
+:host { --tint: var(--tint-canvas); }
+.demo-root {
+  background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── sheet furniture the demo renders (canvas.html) ─────────────────── */
+.cv-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.5; letter-spacing: 0.06em; color: var(--hz-400); padding: 8px 4px 2px; }
+.cv-cap b { color: var(--hz-500); font-weight: 500; }
+.cv-dagger { color: var(--hz-400); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §1 · TRAILS — a full-screen visualizer
+
+   The field is a framebuffer that is never cleared. Everything you see is
+   the previous frame, faded and fed back — which is what persistence means
+   and what this section is for.
+
+   There is almost no CSS here and there is nothing to style: the world is
+   one canvas and a strip showing the palette it was quantised to. The
+   palette below is 24 entries and the field is frozen to it every frame, so
+   the analyser bands across sixteen steps. The banding is the material, not
+   an artefact of it — and it is the sharpest medium argument the sheet has,
+   because CSS renders a smooth gradient effortlessly and cannot render an
+   index-limited one at all.
+   ───────────────────────────────────────────────────────────────────────── */
+.v1 {
+  --v1-void: oklch(0.060 0.008 265);   /* the never-cleared field           */
+  --v1-grid: oklch(0.180 0.010 265);   /* dotted graticule behind it        */
+  --v1-a0:   oklch(0.520 0.150 125);   /* analyser ramp floor               */
+  --v1-a1:   oklch(0.700 0.165 100);
+  --v1-a2:   oklch(0.800 0.170  85);
+  --v1-a3:   oklch(0.740 0.185  62);   /* the sheet's one declared exception */
+  --v1-a4:   oklch(0.600 0.215  28);   /* ceiling                           */
+  --v1-peak: oklch(0.860 0.008 265);   /* peak cap — grey, as it was        */
+  --v1-o0:   oklch(0.900 0.020 265);   /* oscilloscope, achromatic-cool so   */
+  --v1-o4:   oklch(0.550 0.030 265);   /* it never merges with the ramp     */
+  --v1-hi:   oklch(0.300 0.012 265);   /* bevel HI                          */
+  --v1-lt:   oklch(0.230 0.012 265);   /* bevel LT                          */
+  --v1-sh:   oklch(0.120 0.010 265);   /* bevel SH                          */
+  --v1-dk:   oklch(0.085 0.010 265);   /* bevel DK                          */
+  --v1-face: oklch(0.155 0.010 265);   /* frame face                        */
+  --v1-ink:  oklch(0.780 0.010 265);   /* legend                            */
+}
+.v1-stage { position: relative; line-height: 0; }
+.v1-stage canvas { display: block; width: 100%; }
+.v1-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--v1-ink);
+  max-width: 74ch; padding: 8px 2px 2px; opacity: 0.72;
+}
+.v1-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*2); }
+.v1-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--v1-ink); background: var(--v1-face);
+  border: 1px solid var(--v1-dk); border-top-color: var(--v1-hi); border-left-color: var(--v1-hi);
+  border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.v1-btn.v1-on { color: var(--v1-void); background: var(--v1-a2); border-color: var(--v1-a4); }
+.v1-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.v1-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.v1-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world, stating that world's one canonical number.
+   A visualizer has exactly one: the frame it is on. */
+.v1-kv b.v1-dot { font-size: 30px; line-height: 34px; color: var(--v1-a2); letter-spacing: 0.04em; }
+@media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 24px; line-height: 28px; } }

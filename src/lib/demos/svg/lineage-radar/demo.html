@@ -1,0 +1,37 @@
+<div class="wx" id="wxPaper" data-testid="lineage-radar">
+  <div class="wx-screen" id="wxSlide" data-testid="pipeline-stage">
+    <svg id="wxSvg" aria-label="Research activity as a radar-style density field over a world map, 1943 to 2024">
+      <defs>
+        <!-- The stage needs a filter of its own: the bench's chain is
+             assembled and peeled back by whoever is reading it, and a stage
+             sharing that id would change with it. Same three primitives,
+             fixed. -->
+        <filter id="wx-goo" x="-30%" y="-30%" width="160%" height="160%"
+                color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+          <feColorMatrix in="b" type="matrix" result="g"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
+          <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+        </filter>
+      </defs>
+      <g id="wxGrat"></g>
+      <g id="wxMap"></g>
+      <g id="wxField" filter="url(#wx-goo)"></g>
+      <g id="wxSites"></g>
+    </svg>
+    <div class="wx-chrome" id="wxChrome" data-testid="pipeline-stage-chrome">lineage radar · composite reflectivity · activity per site</div>
+    <div class="wx-year" id="wxYear" data-testid="pipeline-stage-year">1943</div>
+    <div class="wx-key" id="wxKeyEl" data-testid="pipeline-stage-key">
+      <span class="cap" style="margin-right:8px">light</span>
+      <i style="background:var(--wx-1)"></i><i style="background:var(--wx-2)"></i>
+      <i style="background:var(--wx-3)"></i><i style="background:var(--wx-4)"></i>
+      <i style="background:var(--wx-5)"></i>
+      <span class="cap" style="margin-left:8px">heavy</span>
+    </div>
+    <div class="wx-bar" data-testid="pipeline-stage-bar">
+      <span class="wx-hot"><span class="k">strongest</span> <b id="wxHot">—</b></span>
+      <span><span class="k">cells</span> <span id="wxCells">0</span></span>
+      <span><span class="k">masses</span> <span id="wxMass">0</span></span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,125 @@
+<!-- player-rack · markup from design/techniques/video/index.html:
+     509–518 (16:9 player), 548–632 (rack), 640–643 (fx canvas + echo),
+     772–790 (filter defs). The canvas, echo and rack now live INSIDE the
+     16:9 stage, layered over the video. -->
+<div class="card-grid">
+  <div class="scene-card" data-testid="video-scene-16x9" style="grid-column: 1 / -1;">
+    <div class="scene-stage stage-16x9 pr-stage">
+      <video controls autoplay loop muted playsinline id="prVideo"
+             data-testid="video-player-16x9" poster="%POSTER%">
+        <source src="%MP4%" type="video/mp4">
+      </video>
+      <canvas id="fxCanvas" class="fx-canvas" data-testid="fx-canvas"></canvas>
+      <video id="fxEcho" class="fx-echo" loop muted playsinline aria-hidden="true">
+        <source src="%MP4%" type="video/mp4">
+      </video>
+        <aside class="fx-panel" data-testid="fx-panel">
+          <div class="fx-head">
+            <div class="fx-head-txt">
+              <span class="fx-title">buffer rack</span>
+              <span class="fx-sub">one at a time · live on the decoded frame</span>
+            </div>
+            <div class="fx-head-acts">
+              <button class="fx-reset is-on" id="fxReset" data-testid="fx-reset">as encoded</button>
+              <button class="fx-toggle" id="fxCam" role="switch" aria-checked="false" data-testid="fx-cam">
+                <span class="fx-toggle-label" id="fxCamLabel">camera</span>
+                <span class="fx-toggle-track" aria-hidden="true"><i></i></span>
+              </button>
+            </div>
+          </div>
+          <div class="fx-scroll">
+            <div class="fx-group">
+              <span class="fx-legend">buffer · frame data</span>
+              <div class="fx-cards">
+                <button class="fx-card" data-fx="slitscan" data-testid="fx-slitscan"><b>slit-scan</b><i>each band a different <em>time</em></i></button>
+                <button class="fx-card" data-fx="ripple" data-testid="fx-ripple"><b>ripple</b><i>per-band displacement</i></button>
+                <button class="fx-card" data-fx="mosh" data-testid="fx-mosh"><b>datamosh</b><i>blocks held from prior frames</i></button>
+                <button class="fx-card" data-fx="pixels" data-testid="fx-pixels"><b>mosaic drift</b><i>pixelation that wanders</i></button>
+                <button class="fx-card" data-fx="feedback" data-testid="fx-feedback"><b>feedback</b><i>canvas fed back into itself</i></button>
+                <button class="fx-card" data-fx="kaleido" data-testid="fx-kaleido"><b>kaleidoscope</b><i>mirrored wedges</i></button>
+              </div>
+            </div>
+            <div class="fx-group">
+              <span class="fx-legend">filter · declarative</span>
+              <div class="fx-cards">
+                <button class="fx-card" data-fx="edge" data-testid="fx-edge"><b>edge detect</b><i>3×3 convolve</i></button>
+                <button class="fx-card" data-fx="split" data-testid="fx-split"><b>chroma split</b><i>offset R / B</i></button>
+                <button class="fx-card" data-fx="bloom" data-testid="fx-bloom"><b>bloom</b><i>blur + gain</i></button>
+              </div>
+            </div>
+            <div class="fx-group">
+              <span class="fx-legend">composite · layers</span>
+              <div class="fx-cards">
+                <button class="fx-card" data-fx="mirror" data-testid="fx-mirror"><b>mirror</b><i>flip on X</i></button>
+                <button class="fx-card" data-fx="echo" data-testid="fx-echo"><b>echo</b><i>delayed copy, screen</i></button>
+                <button class="fx-card" data-fx="diff" data-testid="fx-diff"><b>difference</b><i>delayed copy, diff</i></button>
+              </div>
+            </div>
+            <div class="fx-group">
+              <span class="fx-legend">temporal · the curve</span>
+              <div class="fx-temporal">
+              <div class="fx-cards fx-cards-1">
+                  <button class="fx-card" data-fx="curve" data-testid="fx-curve"><b>drive from curve</b><i>loop time → video time</i></button>
+                </div>
+                <div class="fx-curve" id="fxCurve" data-testid="fx-curve-editor">
+                  <div class="cv-side">
+                    <span class="cv-label">presets</span>
+                    <div class="cv-presets">
+                      <button class="cv-chip" data-cv=".25,.1,.25,1">smooth</button>
+                      <button class="cv-chip" data-cv="0,0,1,1">linear</button>
+                      <button class="cv-chip" data-cv=".7,0,.9,.35">ease in</button>
+                      <button class="cv-chip" data-cv=".1,.65,.3,1">ease out</button>
+                      <button class="cv-chip" data-cv=".9,.05,.1,.95">snap</button>
+                      <button class="cv-chip" data-cv=".6,1.5,.4,-.5">back</button>
+                      <button class="cv-chip" data-cv=".5,-.4,.5,1.4">ping-pong</button>
+                      <button class="cv-chip" data-cv="1,0,1,0">hold</button>
+                    </div>
+                    <code id="cvReadout">cubic-bezier(.25, .1, .25, 1)</code>
+                  </div>
+                  <div class="cv-graph">
+                    <svg id="curveSvg" viewBox="-14 -14 128 128" role="img" aria-label="Editable timing curve">
+                      <rect class="cv-bg" x="0" y="0" width="100" height="100"/>
+                      <g class="cv-grid">
+                        <line x1="25" y1="0" x2="25" y2="100"/><line x1="50" y1="0" x2="50" y2="100"/><line x1="75" y1="0" x2="75" y2="100"/>
+                        <line x1="0" y1="25" x2="100" y2="25"/><line x1="0" y1="50" x2="100" y2="50"/><line x1="0" y1="75" x2="100" y2="75"/>
+                      </g>
+                      <line class="cv-diag" x1="0" y1="100" x2="100" y2="0"/>
+                      <line class="cv-arm" id="cvArm1"/><line class="cv-arm" id="cvArm2"/>
+                      <path class="cv-path" id="cvPath"/>
+                      <circle class="cv-head" id="cvHead" r="3.4"/>
+                      <circle class="cv-h" id="cvH1" r="5"/><circle class="cv-h" id="cvH2" r="5"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="fx-foot">None of this touches the <code>.mp4</code>. The file on disk is
+            identical in every state — what changes is the decoded frame on its way to the
+            screen, and when that frame is asked for.</p>
+        </aside>
+    </div>
+    <span class="scene-label" id="vcutLabel" data-file="16:9 · broadcast / embed · 1280×720">16:9 · broadcast / embed · 1280×720</span>
+    <span class="scene-note">Native <code>controls</code> — scrub, volume, speed, picture-in-picture, fullscreen — all of it free with the element.</span>
+  </div>
+</div>
+
+<svg class="fx-defs" aria-hidden="true"><defs>
+  <filter id="fx-edge" color-interpolation-filters="sRGB">
+    <feColorMatrix type="saturate" values="0.15"/>
+    <feConvolveMatrix order="3" preserveAlpha="true"
+      kernelMatrix="-1 -1 -1  -1 8 -1  -1 -1 -1"/>
+  </filter>
+  <filter id="fx-split" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix" result="R"
+      values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+    <feOffset in="R" dx="-7" dy="0" result="Ro"/>
+    <feColorMatrix in="SourceGraphic" type="matrix" result="G"
+      values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0"/>
+    <feColorMatrix in="SourceGraphic" type="matrix" result="B"
+      values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+    <feOffset in="B" dx="7" dy="0" result="Bo"/>
+    <feBlend in="Ro" in2="G" mode="screen" result="RG"/>
+    <feBlend in="RG" in2="Bo" mode="screen"/>
+  </filter>
+</defs></svg>

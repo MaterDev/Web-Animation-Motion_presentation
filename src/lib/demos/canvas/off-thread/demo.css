@@ -1,0 +1,110 @@
+/* The page context a world sat in on the sheet: `:root { --tint }` becomes
+   :host, and the sheet's `body` rule from tokens.css (which does not reach
+   into a shadow root) is restated on the demo's own root. */
+:host { --tint: var(--tint-canvas); }
+.demo-root {
+  background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── sheet furniture the demo renders (canvas.html) ─────────────────── */
+.cv-dagger { color: var(--hz-400); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §5 · TRANSPORT — two classic players
+
+   The register this replaced painted a photoreal machine panel and it looked
+   fake, which is what a simulated material does on an emissive surface. What
+   is here now is a blitter: flat colours, integer rectangles, a hand-set
+   bitmap font, and bevels that are four colours and six lines with zero
+   interpolation. Nothing below is a gradient, a shadow or a filter. The
+   entire chassis of both players is drawn.
+
+   --t5-lcd sits at hue 125 rather than the famous display green at 145,
+   which is --tint-svg exactly. Pulled to 125 it clears by 20° and still
+   reads as the same colour class. It is also §1's analyser floor, and that
+   shared value is the one deliberate relation between the two worlds on this
+   sheet that come from the same product family. Nowhere else.
+   ───────────────────────────────────────────────────────────────────────── */
+.t5 {
+  --t5-face:    oklch(0.400 0.006 258);   /* chassis                        */
+  --t5-hi:      oklch(0.560 0.008 258);   /* bevel HI                       */
+  --t5-lt:      oklch(0.470 0.007 258);
+  --t5-sh:      oklch(0.310 0.008 258);
+  --t5-dk:      oklch(0.245 0.008 258);
+  --t5-well:    oklch(0.115 0.010 258);   /* display well                   */
+  --t5-lcd:     oklch(0.840 0.135 125);   /* the display green              */
+  --t5-lcd-dim: oklch(0.520 0.070 125);
+  --t5-sig:     oklch(0.620 0.200  28);   /* over / clip                    */
+
+  /* UNIT 2 IS A DIFFERENT SKIN, and that is the whole reason skins existed:
+     the player was one program and everybody's looked different. Two
+     identical panels would also be a picture of one panel, and what this
+     section proves is about threads rather than about copy-paste.
+
+     Warmer chassis, amber display. Amber at hue 78 clears --tint-canvas 95
+     by 17° and was the other display colour of the period, so unit 2 reads
+     as a sibling rather than as a different product. */
+  --t5b-face:    oklch(0.430 0.012  78);
+  --t5b-hi:      oklch(0.590 0.014  78);
+  --t5b-lt:      oklch(0.500 0.013  78);
+  --t5b-sh:      oklch(0.335 0.014  78);
+  --t5b-dk:      oklch(0.265 0.013  78);
+  --t5b-well:    oklch(0.125 0.012  60);
+  --t5b-lcd:     oklch(0.830 0.150  78);
+  --t5b-lcd-dim: oklch(0.520 0.085  78);
+  --t5b-sig:     oklch(0.640 0.190  22);
+}
+.t5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*3); }
+@media (min-width: 780px) { .t5-rack { grid-template-columns: 1fr 1fr; } }
+.t5-stage { position: relative; line-height: 0; }
+.t5-stage canvas { display: block; width: 100%; image-rendering: pixelated; }
+/* `.t5-stage canvas` is one class plus one type — specificity 0,1,1 — and
+   `.t5-fallback` is one class, 0,1,0. The more specific rule won, the
+   fallback canvas was displayed over a perfectly healthy worker from the
+   first frame, and unit 2 rendered as a black rectangle while every readout
+   beside it said the worker was alive. The bug was not in the worker, the
+   protocol, the transfer or the parity check; it was four points of
+   specificity. Qualified, so the two rules are not arguing. */
+.t5-stage canvas.t5-fallback { position: absolute; inset: 0; display: none; }
+.t5-unit-name {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--hz-400); padding-bottom: 6px;
+}
+.t5-unit-name b { color: var(--hz-600); font-weight: 500; }
+/* The marquee and the clock are blitted from a bitmap font, and a raster is
+   somewhere a screen reader cannot go. The same strings live here, visually
+   hidden but readable, so drawn text is never the only copy. */
+.t5-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.t5-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*3); }
+.t5-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--t5-face);
+  border: 1px solid var(--t5-dk); border-top-color: var(--t5-hi); border-left-color: var(--t5-hi);
+  border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.t5-btn.t5-on { color: var(--t5-well); background: var(--t5-lcd); border-color: var(--t5-lcd-dim); }
+.t5-btn[disabled] { opacity: 0.5; cursor: default; }
+.t5-readouts { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; align-items: flex-end; margin-top: calc(var(--u)*3); }
+.t5-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.t5-kv b { display: block; font-family: var(--mono); font-size: 15px; color: var(--hz-600); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+/* One Doto element per world. Here it is the MAIN-THREAD frame counter, and
+   the asymmetry is the argument: this is the number that stops. */
+/* NO DOTO INSIDE A WORLD. It was here as "one canonical number per world",
+   and it was the deck's own headline face wearing a world's colour — which
+   made each screen read as presentation chrome rather than as its own
+   self-contained thing. That is the exact failure these worlds exist to
+   avoid, arriving through the one typographic token allowed to cross them.
+   The number is still the one that stops; it is now set in the world's own
+   voice. Doto stays outside, in the harness, where it belongs. */
+.t5-kv b.t5-dot { font-size: 30px; line-height: 34px; color: var(--t5-lcd); letter-spacing: 0.04em; }
+.t5-note {
+  font-family: var(--mono); font-size: 10px; line-height: 1.6; color: var(--hz-500);
+  border-left: 2px solid var(--t5-lcd); padding: 7px 10px; margin-top: calc(var(--u)*2); max-width: 78ch;
+}
+.t5-note[hidden] { display: none !important; }
+.t5-note.t5-bad { border-left-color: var(--signal); color: var(--signal); }
+@media (max-width: 560px) { .t5-kv b.t5-dot { font-size: 24px; line-height: 28px; } }

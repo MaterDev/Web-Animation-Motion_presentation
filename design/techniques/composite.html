@@ -4,124 +4,549 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SL-07 · Composite — WAM-2026</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="../system/fonts.css">
 <link rel="stylesheet" href="../system/tokens.css">
 <link rel="stylesheet" href="../system/components.css">
 <style>
-:root { --tint: var(--tint-composite); }
+/* ─────────────────────────────────────────────────────────────────────────
+   SL-07 · composite
 
-.wrap { max-width: 980px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
+   Not a technique — the closing argument. This sheet has no demo and no
+   example of its own: every figure is an explanatory diagram, static SVG or
+   CSS. The one moving thing (§1's layers assembling and coming apart) is a
+   CSS animation on `transform` only and is switched off under
+   prefers-reduced-motion. There is no JavaScript motion on the sheet.
+
+   Wording and claims follow SCOPE.md › Composite and › Composite mechanics.
+   No figure prints a number, because nothing here was measured.
+
+   Every class is `cp-` because components.css leaks unscoped classes.
+   `.wrap`, `.crumb`, `.head`, `.dek` and `.notes` are the shared sheet
+   chrome and are deliberately bare, as on the sibling sheets.
+
+   Surface colours reuse the section tints so a layer reads as the technique
+   that carries it: DOM = --tint-css, GPU canvas = --tint-webgpu,
+   video = --tint-video. The composite tint marks what ties them together.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --tint: var(--tint-composite);
+  --cp-dom: color-mix(in oklch, var(--tint-css) 62%, var(--hz-800));
+  --cp-gpu: color-mix(in oklch, var(--tint-webgpu) 70%, var(--hz-800));
+  --cp-vid: color-mix(in oklch, var(--tint-video) 55%, var(--hz-800));
+  --cp-src: color-mix(in oklch, var(--tint-composite) 72%, var(--hz-800));
+  --cp-bad: color-mix(in oklch, var(--signal) 60%, var(--hz-600));
+}
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*14); }
 .crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
 .crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
 .crumb a:hover { color: var(--tint); }
 .crumb .sep { color: var(--hz-400); }
-.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
 .head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
-.head h1 { font-size: clamp(36px, 6vw, 60px); }
-p.dek { color: var(--hz-500); font-size: 14px; max-width: 62ch; margin-bottom: calc(var(--u)*5); }
+.head h1 { font-size: clamp(36px, 6vw, 60px); color: var(--hz-700); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*7); }
+p.dek b { color: var(--hz-700); font-weight: 500; }
 
-.canvas-frame { aspect-ratio: 16/9; width: 100%; border-radius: 8px; position: relative; background: var(--hz-050); box-shadow: var(--recess); overflow: hidden; margin-bottom: calc(var(--u)*3); padding: calc(var(--u)*4); display: flex; flex-direction: column; justify-content: center; gap: calc(var(--u)*3); }
-.controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: calc(var(--u)*6); align-items: center; }
-.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); }
+/* ── sections ───────────────────────────────────────────────────────── */
+.cp-sec { margin-bottom: calc(var(--u)*10); }
+.cp-sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+.cp-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.cp-sec-head h2 { font-size: 30px; }
+.cp-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.cp-case b { color: var(--hz-700); font-weight: 500; }
+
+.cp-fig { margin: 0; background: var(--hz-050); border-radius: 8px; box-shadow: var(--recess); padding: 14px; }
+.cp-fig svg { display: block; width: 100%; height: auto; }
+.cp-cap { font-family: var(--mono); font-size: 9.5px; line-height: 1.55; letter-spacing: 0.05em; color: var(--hz-400); padding: 10px 2px 0; }
+.cp-cap b { color: var(--hz-600); font-weight: 500; }
+
+/* ── SVG vocabulary ─────────────────────────────────────────────────── */
+.cp-t   { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; fill: var(--hz-500); }
+.cp-ts  { font-family: var(--mono); font-size: 9px; letter-spacing: 0.04em; fill: var(--hz-400); }
+.cp-th  { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.14em; fill: var(--hz-600); text-transform: uppercase; }
+.cp-ln  { stroke: var(--hz-400); stroke-width: 1; fill: none; }
+.cp-dash { stroke-dasharray: 3 3; }
+.cp-dom-s { stroke: var(--cp-dom); fill: color-mix(in oklch, var(--cp-dom) 12%, transparent); }
+.cp-gpu-s { stroke: var(--cp-gpu); fill: color-mix(in oklch, var(--cp-gpu) 14%, transparent); }
+.cp-src-s { stroke: var(--cp-src); fill: color-mix(in oklch, var(--cp-src) 16%, transparent); }
+.cp-dom-f { fill: var(--cp-dom); }
+.cp-gpu-f { fill: var(--cp-gpu); }
+.cp-src-f { fill: var(--cp-src); }
+.cp-dom-t { fill: var(--cp-dom); }
+.cp-gpu-t { fill: var(--cp-gpu); }
+.cp-src-t { fill: var(--cp-src); }
+.cp-ring { fill: none; stroke: var(--cp-dom); stroke-width: 1.6; stroke-dasharray: 4 3; }
+.cp-arrow { stroke: var(--cp-src); stroke-width: 1.4; fill: none; }
+.cp-bad-s { stroke: var(--cp-bad); stroke-width: 1.4; fill: none; }
+.cp-bad-t { fill: var(--cp-bad); }
+
+/* ── §1 the exploded page ───────────────────────────────────────────── */
+.cp-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*3); align-items: stretch; }
+@media (min-width: 860px) { .cp-hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); } }
+
+.cp-stage { position: relative; height: 520px; display: grid; place-items: center; overflow: hidden; padding: 0; }
+.cp-iso { position: relative; width: 330px; height: 214px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-38deg); }
+.cp-plane { position: absolute; inset: 0; border-radius: 6px; border: 1px solid; transform: translateZ(var(--cp-z)); animation: cp-explode 11s var(--ease-mechanical, ease-in-out) infinite; overflow: hidden; }
+@keyframes cp-explode {
+  0%, 34%   { transform: translateZ(var(--cp-z)); }
+  50%, 66%  { transform: translateZ(calc(var(--cp-z) * 0.06)); }
+  84%, 100% { transform: translateZ(var(--cp-z)); }
+}
+@media (prefers-reduced-motion: reduce) { .cp-plane { animation: none; } }
+
+.cp-plane-tag { position: absolute; top: 8px; right: 10px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
+
+/* video — the pre-rendered loop at the back */
+.cp-p-vid { --cp-z: -140px; border-color: var(--cp-vid);
+  background:
+    repeating-linear-gradient(90deg, var(--well-floor) 0 8px, transparent 8px 20px) 0 5px / 100% 7px no-repeat,
+    repeating-linear-gradient(90deg, var(--well-floor) 0 8px, transparent 8px 20px) 0 calc(100% - 5px) / 100% 7px no-repeat,
+    linear-gradient(160deg, color-mix(in oklch, var(--tint-video) 45%, var(--hz-100)), color-mix(in oklch, var(--tint-composite) 22%, var(--hz-050)) 70%);
+}
+.cp-p-vid .cp-plane-tag { color: var(--cp-vid); top: 18px; }
+.cp-p-vid .cp-scrub { position: absolute; left: 14px; right: 14px; bottom: 22px; height: 3px; border-radius: 2px; background: color-mix(in oklch, var(--cp-vid) 30%, transparent); }
+.cp-p-vid .cp-scrub::before { content: ""; position: absolute; inset: 0 58% 0 0; border-radius: 2px; background: var(--cp-vid); }
+
+/* canvas — pixels: the product, its light, a particle field */
+.cp-p-gpu { --cp-z: 0px; border-color: var(--cp-gpu);
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in oklch, var(--cp-gpu) 80%, white) 0 1px, transparent 1.6px) 0 0 / 17px 13px,
+    radial-gradient(ellipse 60% 70% at 40% 72%, color-mix(in oklch, var(--tint-webgpu) 28%, transparent), transparent 70%),
+    color-mix(in oklch, var(--well-floor) 88%, transparent);
+}
+.cp-p-gpu .cp-plane-tag { color: var(--cp-gpu); }
+.cp-p-gpu .cp-product { position: absolute; left: 84px; top: 104px; width: 100px; height: 100px; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, oklch(0.93 0.03 320), var(--cp-gpu) 38%, color-mix(in oklch, var(--tint-webgpu) 55%, black) 78%);
+  box-shadow: 0 0 40px color-mix(in oklch, var(--tint-webgpu) 45%, transparent); }
+
+/* DOM — the real elements, on top */
+.cp-p-dom { --cp-z: 140px; border-color: var(--cp-dom); background: color-mix(in oklch, var(--hz-050) 55%, color-mix(in oklch, var(--cp-dom) 10%, transparent)); overflow: visible; }
+.cp-p-dom .cp-plane-tag { color: var(--cp-dom); }
+.cp-p-dom i { position: absolute; display: block; border-radius: 2px; background: color-mix(in oklch, var(--cp-dom) 55%, transparent); }
+.cp-p-dom .cp-nav   { left: 14px; top: 12px; width: 22px; height: 8px; background: var(--cp-dom); }
+.cp-p-dom .cp-nav2  { left: 48px; top: 14px; width: 26px; height: 4px; }
+.cp-p-dom .cp-nav3  { left: 82px; top: 14px; width: 26px; height: 4px; }
+.cp-p-dom .cp-rule  { left: 14px; right: 14px; top: 30px; height: 1px; background: color-mix(in oklch, var(--cp-dom) 35%, transparent); }
+.cp-p-dom .cp-h1    { left: 14px; top: 54px; width: 136px; height: 12px; background: var(--cp-dom); }
+.cp-p-dom .cp-h2    { left: 14px; top: 72px; width: 96px; height: 12px; background: var(--cp-dom); }
+.cp-p-dom .cp-copy  { left: 14px; top: 96px; width: 120px; height: 4px; }
+.cp-p-dom .cp-copy2 { left: 14px; top: 105px; width: 104px; height: 4px; }
+.cp-p-dom .cp-price { left: 14px; top: 126px; width: 40px; height: 8px; background: var(--cp-dom); }
+.cp-p-dom .cp-btn   { left: 14px; top: 150px; width: 86px; height: 26px; border-radius: 4px; background: var(--cp-dom);
+  outline: 1.5px dashed var(--cp-dom); outline-offset: 4px; }
+
+.cp-legend { list-style: none; margin: 0; padding: 18px 18px 14px; display: grid; gap: 14px; align-content: start; }
+.cp-legend-lede { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); line-height: 1.7; margin-bottom: 2px; }
+.cp-legend-lede b { color: var(--cp-src); font-weight: 500; }
+.cp-li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 12px; border-top: var(--hair) solid var(--hz-200); padding-top: 12px; }
+.cp-sw { width: 14px; height: 14px; border-radius: 3px; margin-top: 2px; border: 1px solid var(--cp-c); background: color-mix(in oklch, var(--cp-c) 60%, transparent); }
+.cp-sw.cp-sw-alt { background: repeating-linear-gradient(45deg, var(--cp-c) 0 1px, transparent 1px 4px); }
+.cp-li-name { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cp-c); }
+.cp-li-name span { color: var(--hz-400); letter-spacing: 0.06em; text-transform: none; }
+.cp-li p { margin: 3px 0 0; font-size: 13px; line-height: 1.5; color: var(--hz-500); }
+.cp-li p b { color: var(--hz-700); font-weight: 500; }
+
+/* ── §2 the brief ───────────────────────────────────────────────────── */
+.cp-asks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: calc(var(--u)*3); }
+@media (min-width: 720px) { .cp-asks { grid-template-columns: 1fr 1fr; } }
+.cp-ask { border-radius: 8px; padding: 14px 16px; border: var(--hair) solid var(--hz-300); background: var(--hz-050); }
+.cp-ask-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-400); }
+.cp-ask-q { font-size: 19px; font-weight: 300; letter-spacing: -0.01em; color: var(--hz-600); margin: 6px 0 4px; }
+.cp-ask p { margin: 0; font-size: 12.5px; color: var(--hz-400); line-height: 1.5; }
+.cp-ask-no .cp-ask-q { text-decoration: line-through; text-decoration-color: var(--cp-bad); text-decoration-thickness: 1px; color: var(--hz-500); }
+.cp-ask-no .cp-ask-k { color: var(--cp-bad); }
+.cp-ask-yes { border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); background: color-mix(in oklch, var(--tint) 8%, var(--hz-050)); }
+.cp-ask-yes .cp-ask-k { color: var(--cp-src); }
+.cp-ask-yes .cp-ask-q { color: var(--hz-700); }
+
+.cp-brief { padding: 0; overflow: hidden; }
+.cp-brief-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: var(--hair) solid var(--hz-200); font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); }
+.cp-brief-head b { color: var(--hz-600); font-weight: 500; }
+.cp-scroll { overflow-x: auto; }
+.cp-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+.cp-table th, .cp-table td { text-align: left; vertical-align: top; padding: 10px 16px; border-bottom: var(--hair) solid var(--hz-200); }
+.cp-table tr:last-child td { border-bottom: 0; }
+.cp-table th { font-family: var(--mono); font-size: 9px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-400); }
+.cp-table td { font-size: 13px; line-height: 1.45; color: var(--hz-500); }
+.cp-table td:first-child { color: var(--hz-700); width: 32%; }
+.cp-table td:nth-child(2) { width: 22%; white-space: nowrap; }
+.cp-chip { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--cp-c); }
+.cp-chip::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--cp-c); }
+.cp-chip.cp-chip-alt::before { background: repeating-linear-gradient(45deg, var(--cp-c) 0 1px, transparent 1px 3px); outline: 1px solid var(--cp-c); outline-offset: -1px; }
+.cp-table sup { font-family: var(--mono); font-size: 9px; color: var(--hz-400); }
+
+/* ── §3 mechanics ───────────────────────────────────────────────────── */
+.cp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--u)*3); }
+@media (min-width: 820px) { .cp-grid { grid-template-columns: 1fr 1fr; } }
+.cp-mech-h { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-600); margin: 0 0 10px; display: flex; gap: 10px; align-items: baseline; }
+.cp-mech-h span { color: var(--tint); }
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
-.notes p { max-width: 62ch; color: var(--hz-500); font-size: 13.5px; }
-
-/* ── the demo: two identical boxes, one animated via transform
-   (compositor-only), one via left/width (forces layout every frame).
-   Both run the same duration/easing so the ONLY variable is which
-   CSS property is moving. */
-.lane { display: flex; align-items: center; gap: 16px; }
-.lane .lbl { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); width: 96px; flex: none; }
-.track { position: relative; flex: 1; height: 56px; background: var(--well-floor); border-radius: 6px; box-shadow: var(--recess); overflow: hidden; }
-.mover { position: absolute; top: 8px; left: 8px; width: 40px; height: 40px; border-radius: 6px; background: var(--tint); box-shadow: 0 4px 10px color-mix(in oklch, var(--tint) 40%, transparent); }
-
-.fps { font-family: var(--mono); font-size: 10px; color: var(--hz-500); }
-.fps b { color: var(--tint); font-variant-numeric: tabular-nums; }
+.notes p, .notes li { max-width: 72ch; color: var(--hz-500); font-size: 13.5px; }
+.notes ol { padding-left: 1.1em; margin: 0 0 22px; }
+.notes li { margin-bottom: 8px; }
+.notes b { color: var(--hz-700); font-weight: 500; }
+.notes a { color: var(--tint); }
 </style>
 </head>
 <body data-testid="technique-composite">
 
 <div class="wrap">
-  <div class="crumb" id="crumb"><a href="../index.html">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-07">Techniques</a></div>
-  <script>if (window.top !== window.self) document.getElementById('crumb').style.display = 'none';</script>
+  <div class="crumb" data-testid="composite-crumb">
+    <a href="../index.html" data-testid="composite-crumb-home">← WAM-2026</a><span class="sep">/</span>
+    <a href="../index.html#sl-07" data-testid="composite-crumb-techniques">Techniques</a>
+  </div>
+  <script>if (window.top !== window.self) document.querySelector('[data-testid="composite-crumb"]').style.display = 'none';</script>
 
-  <div class="head"><span class="code">SL-07</span><h1>composite</h1></div>
-  <p class="dek">
-    CPU vs. GPU. <code>transform</code>/<code>opacity</code> are compositor-only — cheap.
-    <code>left</code>/<code>width</code> force layout every frame — expensive. Same duration,
-    same easing, only the property differs.
+  <div class="head" data-testid="composite-head"><span class="code">SL-07</span><h1 data-testid="composite-title">composite</h1></div>
+  <p class="dek" data-testid="composite-dek">
+    <b>Don't be a purist.</b> Composite is not a technique, so this sheet has no demo. It is
+    the closing argument, made by re-reading what the other sheets already showed: real page
+    elements wherever semantics, interaction and accessibility are needed, a GPU surface
+    wherever they are not, and an alternative for anyone who cannot use the GPU layer.
+    Canvas is a fact about a surface; composite is a way of deciding what goes on which one.
   </p>
 
-  <div class="canvas-frame" data-testid="demo-canvas">
-    <div class="lane">
-      <span class="lbl">transform</span>
-      <div class="track"><div class="mover" id="moverGood"></div></div>
-    </div>
-    <div class="lane">
-      <span class="lbl">left / width</span>
-      <div class="track"><div class="mover" id="moverBad"></div></div>
-    </div>
-  </div>
+  <!-- ═══ 1 · THE ARGUMENT ═══════════════════════════════════════════ -->
+  <section class="cp-sec" data-testid="composite-argument">
+    <div class="cp-sec-head"><span class="cp-tag">The argument</span><h2 data-testid="composite-argument-title">one page, three surfaces</h2></div>
+    <p class="cp-case">
+      <b>Composites are a performance strategy, not only an aesthetic one.</b> Put each part
+      of a scene on the cheapest surface that can carry it: DOM where you need semantics, GPU
+      where you need pixels. Keep the parts that move out of the expensive pipeline stages.
+      Purism is often where performance problems come from, because it forces one surface to
+      do work it is bad at.
+    </p>
 
-  <div class="controls">
-    <button class="ibtn primary" id="run">▶ Run both</button>
-    <span class="fps">Frame time — transform: <b id="fpsGood">—</b> · left/width: <b id="fpsBad">—</b></span>
-  </div>
+    <div class="cp-hero">
+      <figure class="cp-fig cp-stage" data-testid="composite-exploded"
+        role="img" aria-label="Exploded view of one product page in three layers: real DOM elements on top, a GPU canvas drawing the product in the middle, and a background video at the back.">
+        <div class="cp-iso" aria-hidden="true">
+          <div class="cp-plane cp-p-vid"><span class="cp-plane-tag">video</span><span class="cp-scrub"></span></div>
+          <div class="cp-plane cp-p-gpu"><span class="cp-plane-tag">canvas</span><span class="cp-product"></span></div>
+          <div class="cp-plane cp-p-dom"><span class="cp-plane-tag">dom</span>
+            <i class="cp-nav"></i><i class="cp-nav2"></i><i class="cp-nav3"></i><i class="cp-rule"></i>
+            <i class="cp-h1"></i><i class="cp-h2"></i><i class="cp-copy"></i><i class="cp-copy2"></i>
+            <i class="cp-price"></i><i class="cp-btn"></i>
+          </div>
+        </div>
+      </figure>
 
-  <div class="notes">
-    <h3>SCOPE.md · slide 07</h3>
-    <p>"CPU vs. GPU: Compositing — transform/opacity are GPU-cheap, width/top/left force
-      layout ('jank'); visual: live side-by-side janky vs. smooth box animation with a
-      measured FPS readout and an adjustable layout load."</p>
-    <p>This is a working first pass at that: real transform vs. real left/width, run
-      side by side. The frame-time readout above is a rough <code>performance.now()</code>
-      delta between rAF ticks during the run, not a proper FPS meter — a real one (and the
-      "adjustable layout load" control) is the next step here, not built yet.</p>
+      <div class="cp-fig" style="padding:0" data-testid="composite-legend">
+        <ol class="cp-legend">
+          <li class="cp-legend-lede" data-testid="composite-legend-lede">What the user sees: <b>one page.</b><br>What the browser runs: <b>three surfaces.</b></li>
+          <li class="cp-li" style="--cp-c: var(--cp-dom)" data-testid="composite-legend-dom">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-dom-name">DOM <span>· HTML + CSS · on top</span></div>
+              <p>Navigation, headline, price, the buy button and its focus ring. <b>Needs semantics, interaction, accessibility.</b></p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-gpu)" data-testid="composite-legend-canvas">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-canvas-name">Canvas <span>· WebGL / WebGPU</span></div>
+              <p>The product, its light, the particle field. <b>Needs pixels.</b> Nothing inside can be read, so nothing that must be read goes there.</p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-vid)" data-testid="composite-legend-video">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-video-name">Video <span>· at the back</span></div>
+              <p>The ambient loop. <b>Pre-rendered and fixed</b>, which is fine while it never has to respond.</p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-src)" data-testid="composite-legend-alternative">
+            <span class="cp-sw cp-sw-alt"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-alternative-name">Alternative <span>· no GPU layer</span></div>
+              <p>A still in place of the canvas. The DOM layer is unchanged, so <b>switching the GPU layer off loses nothing a keyboard or screen reader needs.</b></p></div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 2 · THE BRIEF ══════════════════════════════════════════════ -->
+  <section class="cp-sec" data-testid="composite-brief">
+    <div class="cp-sec-head"><span class="cp-tag">For a brief</span><h2 data-testid="composite-brief-title">which technique carries which part?</h2></div>
+    <p class="cp-case">
+      Make it a question, not a philosophy. <b>The failure mode is a brief that assumes one
+      answer</b> and rules out combining techniques before anyone has looked.
+    </p>
+
+    <div class="cp-asks">
+      <div class="cp-ask cp-ask-no" data-testid="composite-ask-purist">
+        <div class="cp-ask-k">Don't ask</div>
+        <div class="cp-ask-q">Which technique is this project?</div>
+        <p>One surface is chosen first and then made to carry everything, including the work it is bad at.</p>
+      </div>
+      <div class="cp-ask cp-ask-yes" data-testid="composite-ask-composite">
+        <div class="cp-ask-k">Ask</div>
+        <div class="cp-ask-q">Which technique carries which part?</div>
+        <p>Each part goes to the cheapest surface that can carry it, and the parts are coordinated so the whole feels seamless.</p>
+      </div>
+    </div>
+
+    <div class="cp-fig cp-brief" data-testid="composite-brief-table">
+      <div class="cp-brief-head"><span><b>Brief</b> · a product launch page</span><span>illustrative · parts → surfaces</span></div>
+      <div class="cp-scroll">
+        <table class="cp-table">
+          <thead><tr><th>Part</th><th>Carried by</th><th>Because</th></tr></thead>
+          <tbody>
+            <tr data-testid="composite-brief-row-copy"><td>Navigation, headline, copy, price</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">DOM</span></td><td>Text that has to be read, selected, translated and found.</td></tr>
+            <tr data-testid="composite-brief-row-controls"><td>Buy button, form, focus</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">DOM</span></td><td>Interaction and accessibility live in real elements. A canvas has nothing to focus.</td></tr>
+            <tr data-testid="composite-brief-row-states"><td>Hover and state changes on those</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">CSS · transform, opacity</span></td><td>The browser runs it, and these two properties skip layout and paint.<sup>[7]</sup></td></tr>
+            <tr data-testid="composite-brief-row-icons"><td>Line icons that draw themselves on</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">SVG</span></td><td>Vector, styleable, and still part of the page.</td></tr>
+            <tr data-testid="composite-brief-row-ambient"><td>Ambient background loop</td><td><span class="cp-chip" style="--cp-c: var(--cp-vid)">Video</span></td><td>Pre-rendered and fixed. It stops being an option the moment it has to respond.</td></tr>
+            <tr data-testid="composite-brief-row-product"><td>The product, lit, turning under the cursor</td><td><span class="cp-chip" style="--cp-c: var(--cp-gpu)">WebGL canvas</span></td><td>Pixels that respond. Runs basically everywhere, with the larger ecosystem.</td></tr>
+            <tr data-testid="composite-brief-row-particles"><td>A field where every particle reads its neighbours</td><td><span class="cp-chip" style="--cp-c: var(--cp-gpu)">WebGPU canvas</span></td><td>Shared state stays in GPU memory instead of uploading from the CPU every frame.</td></tr>
+            <tr data-testid="composite-brief-row-alternative"><td>Anyone who can't use the GPU layer</td><td><span class="cp-chip cp-chip-alt" style="--cp-c: var(--cp-src)">Still + same DOM</span></td><td>The alternative experience. The accessible layer never depended on the canvas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ 3 · MECHANICS ══════════════════════════════════════════════ -->
+  <section class="cp-sec" data-testid="composite-mechanics">
+    <div class="cp-sec-head"><span class="cp-tag">Mechanics</span><h2 data-testid="composite-mechanics-title">how the layers hold together</h2></div>
+    <p class="cp-case">
+      <b>You cannot put page elements inside a canvas.</b> So the composite is built the
+      other way round, and the rest of this section is what that inversion costs and where it
+      breaks.
+    </p>
+
+    <div class="cp-grid">
+
+      <!-- A · inversion -->
+      <figure class="cp-fig" data-testid="composite-mech-inversion">
+        <div class="cp-mech-h"><span>A</span>The pattern is inversion</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="One state object drives two layers: it sets a transform on the real element on top and calls draw on the canvas behind, so both stay aligned.">
+          <text class="cp-ts" x="445" y="16" text-anchor="end">keyboard · focus · screen reader</text>
+          <path class="cp-ln" d="M400 22 V36"/><polygon class="cp-dom-f" points="400,40 396,32 404,32" style="fill:var(--hz-400)"/>
+
+          <text class="cp-th" x="200" y="36" style="fill:var(--cp-dom)">dom · on top</text>
+          <polygon class="cp-dom-s" points="200,44 410,44 445,92 235,92"/>
+          <polygon class="cp-dom-f" points="296,60 338,60 345,76 303,76"/>
+          <polygon class="cp-ring" points="289,54 344,54 354,82 299,82"/>
+
+          <polygon class="cp-gpu-s" points="200,160 410,160 445,208 235,208"/>
+          <ellipse class="cp-gpu-f" cx="322" cy="184" rx="28" ry="12"/>
+          <ellipse cx="314" cy="180" rx="9" ry="4" style="fill:oklch(0.93 0.03 320 / 0.7)"/>
+          <text class="cp-th" x="200" y="228" style="fill:var(--cp-gpu)">canvas · behind</text>
+
+          <path class="cp-ln cp-dash" d="M322 84 V170"/>
+          <text class="cp-ts" x="332" y="124">same place,</text><text class="cp-ts" x="332" y="137">every frame</text>
+
+          <rect class="cp-src-s" x="16" y="100" width="130" height="54" rx="6"/>
+          <text class="cp-t cp-src-t" x="28" y="122">state</text>
+          <text class="cp-ts" x="28" y="140">one source of truth</text>
+
+          <path class="cp-arrow" d="M146 114 C 196 114, 208 68, 252 68"/>
+          <polygon class="cp-src-f" points="258,68 249,64 249,72"/>
+          <text class="cp-ts cp-src-t" x="154" y="86">transform</text>
+
+          <path class="cp-arrow" d="M146 140 C 196 140, 208 184, 252 184"/>
+          <polygon class="cp-src-f" points="258,184 249,180 249,188"/>
+          <text class="cp-ts cp-src-t" x="162" y="178">draw()</text>
+        </svg>
+        <figcaption class="cp-cap">The real element sits on top, absolutely positioned over the canvas. The canvas draws the visuals behind it. <b>The same code drives both; the semantic layer never enters the canvas.</b></figcaption>
+      </figure>
+
+      <!-- B · opaque rectangle -->
+      <figure class="cp-fig" data-testid="composite-mech-opaque">
+        <div class="cp-mech-h"><span>B</span>A canvas is one opaque rectangle</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="Left: a canvas with a drawn heading and button appears in the accessibility tree as a single canvas node. Right: the same visuals with real elements on top expose a heading and a focusable button.">
+          <text class="cp-th" x="16" y="16">canvas only</text>
+          <rect class="cp-gpu-s" x="16" y="26" width="196" height="92" rx="4"/>
+          <rect x="30" y="42" width="110" height="9" rx="2" style="fill:color-mix(in oklch, var(--cp-gpu) 55%, transparent)"/>
+          <rect x="30" y="57" width="76" height="9" rx="2" style="fill:color-mix(in oklch, var(--cp-gpu) 55%, transparent)"/>
+          <rect x="30" y="86" width="58" height="20" rx="3" style="fill:color-mix(in oklch, var(--cp-gpu) 70%, transparent)"/>
+          <text class="cp-ts" x="59" y="99" text-anchor="middle" style="fill:var(--hz-000)">Buy</text>
+          <circle cx="172" cy="72" r="24" class="cp-gpu-f" style="opacity:.55"/>
+
+          <text class="cp-ts" x="16" y="142">accessibility tree</text>
+          <rect x="16" y="150" width="84" height="22" rx="3" class="cp-gpu-s"/>
+          <text class="cp-t" x="26" y="165" style="fill:var(--hz-600)">canvas</text>
+          <text class="cp-ts" x="16" y="196">nothing inside can be</text>
+          <text class="cp-ts" x="16" y="209">selected, focused or read</text>
+          <path class="cp-bad-s" d="M110 161 l10 0" /><text class="cp-ts cp-bad-t" x="126" y="165">∅</text>
+
+          <path class="cp-ln" d="M230 26 V236" style="stroke:var(--hz-200)"/>
+
+          <text class="cp-th" x="248" y="16">composite</text>
+          <rect class="cp-gpu-s" x="248" y="26" width="196" height="92" rx="4"/>
+          <circle cx="404" cy="72" r="24" class="cp-gpu-f" style="opacity:.55"/>
+          <rect x="262" y="42" width="110" height="9" rx="2" class="cp-dom-f"/>
+          <rect x="262" y="57" width="76" height="9" rx="2" class="cp-dom-f"/>
+          <rect x="262" y="86" width="58" height="20" rx="3" class="cp-dom-f"/>
+          <text class="cp-ts" x="291" y="99" text-anchor="middle" style="fill:var(--hz-000)">Buy</text>
+          <rect x="257" y="81" width="68" height="30" rx="5" class="cp-ring"/>
+
+          <text class="cp-ts" x="248" y="142">accessibility tree</text>
+          <rect x="248" y="150" width="48" height="20" rx="3" style="fill:none;stroke:var(--hz-400)"/>
+          <text class="cp-t" x="257" y="164" style="fill:var(--hz-600)">main</text>
+          <path class="cp-ln" d="M258 170 V232 M258 184 H270 M258 207 H270 M258 230 H270"/>
+          <rect x="270" y="175" width="136" height="18" rx="3" class="cp-gpu-s" style="opacity:.6"/>
+          <text class="cp-ts" x="278" y="188">canvas · decorative</text>
+          <rect x="270" y="198" width="98" height="18" rx="3" class="cp-dom-s"/>
+          <text class="cp-ts" x="278" y="211" style="fill:var(--hz-700)">heading</text>
+          <rect x="270" y="221" width="174" height="18" rx="3" class="cp-dom-s"/>
+          <text class="cp-ts" x="278" y="234" style="fill:var(--hz-700)">button "Buy" · focusable</text>
+        </svg>
+        <figcaption class="cp-cap">To the page, a canvas is one rectangle. <b>The accessible layer is ordinary DOM</b> sitting over it, and it can be focused, read and navigated with a keyboard.</figcaption>
+      </figure>
+
+      <!-- C · camera projection -->
+      <figure class="cp-fig" data-testid="composite-mech-projection">
+        <div class="cp-mech-h"><span>C</span>Placing an element over a 3D object</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="A ray from the camera through the screen plane to a point on a 3D object gives the screen coordinate where the DOM element is placed with a transform. Projecting the bounding box corners gives its footprint.">
+          <path class="cp-ln" d="M52 120 L444 18 M52 120 L444 214" style="stroke:var(--hz-200)"/>
+
+          <rect x="16" y="110" width="24" height="20" rx="3" style="fill:none;stroke:var(--hz-500)"/>
+          <polygon points="40,120 52,111 52,129" style="fill:none;stroke:var(--hz-500)"/>
+          <text class="cp-ts" x="14" y="150">camera</text>
+
+          <polygon points="156,74 188,62 188,176 156,190" style="fill:color-mix(in oklch, var(--hz-400) 10%, transparent);stroke:var(--hz-400)"/>
+          <text class="cp-ts" x="146" y="56">screen</text>
+
+          <polygon class="cp-gpu-s" points="330,100 345,88 395,88 380,100"/>
+          <polygon class="cp-gpu-s" points="380,100 395,88 395,138 380,150"/>
+          <rect class="cp-gpu-s" x="330" y="100" width="50" height="50"/>
+
+          <path class="cp-arrow" d="M52 120 L380 100" style="stroke-dasharray:4 3"/>
+          <circle cx="380" cy="100" r="3.5" class="cp-gpu-f"/>
+          <text class="cp-t cp-gpu-t" x="386" y="80">P (x, y, z)</text>
+
+          <polygon points="166,106 179,101 179,129 166,134" class="cp-ring" style="stroke-width:1.2"/>
+          <circle cx="172" cy="112.5" r="3.5" class="cp-src-f"/>
+          <text class="cp-t cp-src-t" x="198" y="140">p (px, py)</text>
+          <text class="cp-ts" x="198" y="154">corners → fitted box</text>
+
+          <text class="cp-t" x="16" y="214" style="fill:var(--hz-600)">P × view × projection ÷ w → viewport px</text>
+          <text class="cp-t cp-dom-t" x="16" y="232">→ transform: translate(px, py)</text>
+        </svg>
+        <figcaption class="cp-cap">Project the object's position through <b>the same camera matrix the shader uses</b>, once per frame or only when the camera moves. Under perspective, project the bounding-box corners and fit the element to them.</figcaption>
+      </figure>
+
+      <!-- D · transform only -->
+      <figure class="cp-fig" data-testid="composite-mech-transform">
+        <div class="cp-mech-h"><span>D</span>Move the overlay with transform only</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="Pipeline stages re-run per frame. Moving the element with transform skips layout and paint. Moving it with left, top, width or height forces layout, then paint, then composite.">
+          <text class="cp-t cp-dom-t" x="16" y="30">el.style.transform = translate(px, py)</text>
+          <g>
+            <rect x="16"  y="42" width="98" height="34" rx="4" class="cp-src-s"/><text class="cp-t" x="65"  y="63" text-anchor="middle" style="fill:var(--hz-700)">style</text>
+            <rect x="124" y="42" width="98" height="34" rx="4" style="fill:none;stroke:var(--hz-300)" class="cp-dash"/><text class="cp-ts" x="173" y="63" text-anchor="middle">layout · skip</text>
+            <rect x="232" y="42" width="98" height="34" rx="4" style="fill:none;stroke:var(--hz-300)" class="cp-dash"/><text class="cp-ts" x="281" y="63" text-anchor="middle">paint · skip</text>
+            <rect x="340" y="42" width="104" height="34" rx="4" class="cp-src-s"/><text class="cp-t" x="392" y="63" text-anchor="middle" style="fill:var(--hz-700)">composite</text>
+          </g>
+
+          <text class="cp-t cp-bad-t" x="16" y="116">el.style.left / top / width / height = …</text>
+          <g>
+            <rect x="16"  y="128" width="98" height="34" rx="4" style="fill:color-mix(in oklch, var(--cp-bad) 16%, transparent);stroke:var(--cp-bad)"/><text class="cp-t" x="65"  y="149" text-anchor="middle" style="fill:var(--hz-700)">style</text>
+            <rect x="124" y="128" width="98" height="34" rx="4" style="fill:color-mix(in oklch, var(--cp-bad) 16%, transparent);stroke:var(--cp-bad)"/><text class="cp-t" x="173" y="149" text-anchor="middle" style="fill:var(--hz-700)">layout</text>
+            <rect x="232" y="128" width="98" height="34" rx="4" style="fill:color-mix(in oklch, var(--cp-bad) 16%, transparent);stroke:var(--cp-bad)"/><text class="cp-t" x="281" y="149" text-anchor="middle" style="fill:var(--hz-700)">paint</text>
+            <rect x="340" y="128" width="104" height="34" rx="4" style="fill:color-mix(in oklch, var(--cp-bad) 16%, transparent);stroke:var(--cp-bad)"/><text class="cp-t" x="392" y="149" text-anchor="middle" style="fill:var(--hz-700)">composite</text>
+          </g>
+
+          <path class="cp-ln" d="M16 194 H444" style="stroke:var(--hz-200)"/>
+          <text class="cp-ts" x="16" y="216">a stage map, not a benchmark: which stages re-run</text>
+          <text class="cp-ts" x="16" y="232">when the property changes every frame</text>
+        </svg>
+        <figcaption class="cp-cap">Cheaper than it sounds if you only use <code>transform</code>: <b>transforms skip layout and paint; setting left, top, width or height forces layout every frame.</b> Transforms good, geometry bad. [7]</figcaption>
+      </figure>
+
+      <!-- E · hybrid interaction + focus ring -->
+      <figure class="cp-fig" data-testid="composite-mech-hybrid">
+        <div class="cp-mech-h"><span>E</span>Hybrid interaction</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="A timeline: the shader draws the card while idle, the real element is live on hover or focus, and the shader takes over again on blur or when an animation starts. Below, a flat focus ring drawn over a shaded object.">
+          <rect x="16"  y="40" width="120" height="34" rx="4" class="cp-gpu-s"/>
+          <rect x="136" y="40" width="160" height="34" class="cp-dom-s"/>
+          <rect x="296" y="40" width="148" height="34" rx="4" class="cp-gpu-s"/>
+          <text class="cp-ts" x="26"  y="61" style="fill:var(--hz-600)">shader draws it</text>
+          <text class="cp-ts" x="146" y="61" style="fill:var(--hz-700)">real element is live</text>
+          <text class="cp-ts" x="306" y="61" style="fill:var(--hz-600)">shader takes over</text>
+          <path class="cp-ln" d="M136 30 V84 M296 30 V84"/>
+          <text class="cp-ts cp-src-t" x="136" y="22" text-anchor="middle">hover / focus</text>
+          <text class="cp-ts cp-src-t" x="296" y="22" text-anchor="middle">blur · animation start</text>
+          <text class="cp-ts" x="16" y="100">keep the real element live where it matters</text>
+
+          <path class="cp-ln" d="M16 124 H444" style="stroke:var(--hz-200)"/>
+
+          <circle cx="72" cy="186" r="36" class="cp-gpu-f" style="opacity:.35"/>
+          <circle cx="72" cy="186" r="26" class="cp-gpu-f"/>
+          <circle cx="62" cy="176" r="9" style="fill:oklch(0.93 0.03 320 / 0.7)"/>
+          <rect x="34" y="148" width="76" height="76" rx="8" class="cp-ring" style="stroke-width:2"/>
+          <text class="cp-t" x="140" y="166" style="fill:var(--hz-600)">focus ring</text>
+          <text class="cp-ts" x="140" y="184">on the real element, styled by CSS,</text>
+          <text class="cp-ts" x="140" y="198">in the layer above the canvas: flat and</text>
+          <text class="cp-ts" x="140" y="212">unshaded over a spatial scene</text>
+        </svg>
+        <figcaption class="cp-cap">Swap on hover, on blur or when an animation starts. The focus ring looks correct but unshaded, which is <b>arguably fine: focus indicators benefit from being unambiguous.</b></figcaption>
+      </figure>
+
+      <!-- F · drift -->
+      <figure class="cp-fig" data-testid="composite-mech-drift">
+        <div class="cp-mech-h"><span>F</span>The real risk is drift</div>
+        <svg viewBox="0 0 460 250" role="img" aria-label="Left: driven from one source of truth, the focus ring stays around the object. Right: driven separately, the object moves on and the focus ring is left behind.">
+          <text class="cp-th" x="16" y="16" style="fill:var(--cp-src)">one source of truth</text>
+          <rect x="16" y="28" width="200" height="160" rx="4" class="cp-gpu-s" style="fill:color-mix(in oklch, var(--cp-gpu) 6%, transparent)"/>
+          <circle cx="116" cy="108" r="26" class="cp-gpu-f"/>
+          <circle cx="108" cy="100" r="8" style="fill:oklch(0.93 0.03 320 / 0.7)"/>
+          <rect x="82" y="74" width="68" height="68" rx="8" class="cp-ring" style="stroke-width:2"/>
+          <text class="cp-ts" x="16" y="210">ring and object read the same state</text>
+
+          <text class="cp-th cp-bad-t" x="244" y="16">two clocks</text>
+          <rect x="244" y="28" width="200" height="160" rx="4" class="cp-gpu-s" style="fill:color-mix(in oklch, var(--cp-gpu) 6%, transparent)"/>
+          <circle cx="306" cy="124" r="26" class="cp-gpu-f" style="opacity:.12"/>
+          <circle cx="340" cy="110" r="26" class="cp-gpu-f" style="opacity:.28"/>
+          <circle cx="378" cy="94" r="26" class="cp-gpu-f"/>
+          <circle cx="370" cy="86" r="8" style="fill:oklch(0.93 0.03 320 / 0.7)"/>
+          <rect x="272" y="90" width="68" height="68" rx="8" class="cp-ring" style="stroke-width:2"/>
+          <path class="cp-bad-s cp-dash" d="M306 124 L372 97"/>
+          <text class="cp-ts cp-bad-t" x="258" y="176">focus is here</text>
+          <text class="cp-ts" x="244" y="210">the object moved; the ring stayed</text>
+          <text class="cp-ts" x="244" y="226">focus lands somewhere unexpected</text>
+        </svg>
+        <figcaption class="cp-cap">If the canvas object moves and the element does not follow precisely, the focus ring lands somewhere unexpected. <b>Drive both from one source of truth, and keep the moving parts few.</b></figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══ 4 · NOTES ══════════════════════════════════════════════════ -->
+  <div class="notes" data-testid="notes">
+    <h3>Failure modes</h3>
+    <ol>
+      <li data-testid="notes-contexts"><b>Many GPU contexts on one page.</b> A composite is not
+        a license to give every part its own canvas. Many GPU-backed contexts on one page is
+        itself a performance problem: browsers cap live WebGL contexts and silently drop the
+        oldest past the cap, while a WebGPU device can drive many canvases. The paper's
+        context-limits note has the detail; there is no single current number to quote.</li>
+      <li data-testid="notes-drift"><b>Drift.</b> Two layers that each keep their own time
+        will separate, and the first thing to show it is focus (figure F).</li>
+      <li data-testid="notes-shadow-dom"><b>Shadow DOM is not an accessibility feature.</b>
+        It is a way of encapsulating components. It does not make anything accessible on its
+        own; the accessible layer you need is ordinary DOM (figure B).</li>
+      <li data-testid="notes-purism"><b>The purist brief.</b> A brief that decides the
+        technique before the parts rules out the cheapest surface for most of them.</li>
+      <li data-testid="notes-qa"><b>The GPU layer drops out of QA.</b> The DOM layer is
+        testable the usual way; the GPU layer has nothing to select and nothing to assert
+        against.</li>
+    </ol>
+
+    <h3>What this sheet is, and isn't</h3>
+    <p>Composite has no demo and no example of its own by design: the other sheets are the
+      examples, read again through this lens. Every figure here is an explanatory diagram.
+      None prints a number, because nothing on this sheet was measured.</p>
+
+    <h3 style="margin-top:22px">Sources</h3>
+    <p data-testid="notes-sources">Wording and claims follow the paper's <b>Composite</b> and
+      <b>Composite mechanics</b> sections. [7] web.dev (Google), <i>Stick to Compositor-Only
+      Properties and Manage Layer Count</i>, 2015 —
+      <a href="https://web.dev/articles/stick-to-compositor-only-properties-and-manage-layer-count" data-testid="notes-source-7">web.dev</a>.
+      The source dates from 2015; engines have extended compositing since, but
+      <code>transform</code> and <code>opacity</code> are the portable rule. Full
+      bibliography in the paper.</p>
   </div>
 </div>
-
-<script>
-const good = document.getElementById('moverGood');
-const bad  = document.getElementById('moverBad');
-const fpsGoodEl = document.getElementById('fpsGood');
-const fpsBadEl  = document.getElementById('fpsBad');
-
-function measure(el, useLeft, out) {
-  return new Promise(resolve => {
-    const track = el.parentElement;
-    const dist = track.clientWidth - el.clientWidth - 16;
-    let frames = 0, last = performance.now(), total = 0;
-    el.style.transition = 'none';
-    if (useLeft) { el.style.left = '8px'; el.style.transform = 'none'; }
-    else { el.style.left = '8px'; el.style.transform = 'translateX(0)'; }
-    void el.offsetWidth;
-
-    const dur = 900;
-    const start = performance.now();
-    function tick(now) {
-      const t = Math.min(1, (now - start) / dur);
-      const eased = 1 - Math.pow(1 - t, 3);
-      if (useLeft) el.style.left = (8 + eased * dist) + 'px';
-      else el.style.transform = `translateX(${eased * dist}px)`;
-
-      frames++; total += now - last; last = now;
-      if (t < 1) requestAnimationFrame(tick);
-      else {
-        out.textContent = (total / frames).toFixed(2) + 'ms/frame';
-        resolve();
-      }
-    }
-    requestAnimationFrame(tick);
-  });
-}
-
-document.getElementById('run').addEventListener('click', async () => {
-  await Promise.all([
-    measure(good, false, fpsGoodEl),
-    measure(bad, true, fpsBadEl),
-  ]);
-});
-</script>
 
 </body>
 </html>
