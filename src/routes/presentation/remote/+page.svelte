@@ -218,9 +218,9 @@
           onclick={toggleClock} data-testid="remote-timer" aria-label={clock.running ? 'Pause timer' : 'Start timer'}>
           <span class="clock-dot" aria-hidden="true"></span>{fmtClock(clockLeft)}
         </button>
-        {#if !clock.running && clockLeft !== TALK}
-          <button class="clock-reset" onclick={resetClock} data-testid="remote-timer-reset" aria-label="Reset timer">↺</button>
-        {/if}
+        <!-- always in the row, only hidden, so the header never shifts when it shows -->
+        <button class="clock-reset" class:hide={clock.running || clockLeft === TALK} onclick={resetClock}
+          data-testid="remote-timer-reset" aria-label="Reset timer" tabindex={clock.running || clockLeft === TALK ? -1 : 0}>↺</button>
       </span>
       <span class="mid">
         <button class="jump" onclick={() => { jumping = true; }} aria-haspopup="dialog"
@@ -569,21 +569,24 @@
   .clock-wrap { display: flex; align-items: center; gap: 6px; }
   .remote .top { grid-template-columns: auto minmax(0, 1fr) auto; }
   .remote .top .mid { justify-self: center; }
-  .clock { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px 0 10px; border-radius: 18px;
+  .clock { flex: none; box-sizing: border-box; min-width: 104px; justify-content: center; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px 0 10px; border-radius: 18px;
     border: 1.5px solid var(--r-line); background: var(--r-soft); color: var(--r-ink); font-family: var(--mono);
     font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; white-space: nowrap;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-  .clock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--r-dim); flex: none; }
+  .clock-dot { width: 13px; height: 13px; border-radius: 50%; background: var(--r-dim); flex: none; }
   .clock.running .clock-dot { background: oklch(0.62 0.16 150); }
   /* yellow from halfway, red with 5 minutes left and over (Key) */
   .clock.half { border-color: oklch(0.72 0.15 85); background: oklch(0.88 0.13 92); color: oklch(0.2 0.03 80); }
   .clock.half .clock-dot { background: oklch(0.2 0.03 80); }
-  .clock.low { border-color: oklch(0.52 0.15 28); background: oklch(0.55 0.17 28); color: oklch(0.985 0.003 265); }
-  .clock.low .clock-dot { background: #fff; }
+  /* red: a thick red ring drawn as a shadow, so the border box never changes size (no shift) */
+  .clock.low { border-color: oklch(0.52 0.19 28); background: oklch(0.93 0.05 25); color: oklch(0.42 0.16 28);
+    box-shadow: 0 0 0 2.5px oklch(0.52 0.19 28); }
+  .clock.low .clock-dot { background: oklch(0.55 0.2 28); }
   .clock-reset { width: 32px; height: 32px; border-radius: 16px; border: 1.5px solid var(--r-line); background: transparent;
     color: var(--r-dim); font-size: 16px; flex: none; touch-action: manipulation; }
   /* the header holds clock · slides · present · position in a phone's width */
   .remote .top { gap: 8px; }
   .present-mini { width: 40px; padding: 0; font-size: 14px; }
   .clock-reset { width: 30px; height: 30px; }
+  .clock-reset.hide { visibility: hidden; }
 </style>
