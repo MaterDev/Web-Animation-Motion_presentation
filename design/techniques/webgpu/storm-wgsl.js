@@ -18,6 +18,7 @@ struct Storm {
   b0: vec4f, b1: vec4f, b2: vec4f, b3: vec4f,  /* per bolt: x, z, alpha, seed */
   time: f32, storm: f32, flash: f32, wind: f32,
   rain: f32, tspin: f32, base: f32, tflow: f32,
+  glow: vec4f,                                 /* the colour the sky takes on in a bad storm, and how strongly */
 };
 fn h3(p: vec3i) -> f32 {
   var v = vec3u(p + vec3i(8192));
@@ -213,6 +214,7 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
     let wave = 0.5 + 0.5 * sin(gp.z * 14.0 - T * (4.0 + S * 4.0) + gp.x * 2.2 + vnoise(vec3f(gp.xz * 3.0, T * 0.3)) * 3.0);
     g *= 0.82 + 0.34 * wave * (1.0 - smoothstep(0.5, 6.0, tg));
     bg = mix(g, HAZE * (0.9 - S * 0.3), smoothstep(1.5, 14.0, tg));
+    bg += st.glow.rgb * st.glow.a * (0.08 + 0.25 * smoothstep(1.5, 14.0, tg));
   } else {
     /* fast scudding cloud over a slow-turning mesocyclone, darker as the storm builds */
     let q = dp.xz;
@@ -227,6 +229,10 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
     sky = mix(sky, CLOUD_DARK2, smoothstep(0.45, 0.75, meso) * (1.0 - smoothstep(0.5, 3.2, mr)) * (0.3 + S * 0.6));
     sky = mix(sky, CLOUD_DARK2, (1.0 - far01) * (0.3 + S * 0.45));
     sky += GLOW * smoothstep(0.08, 0.0, rd.y) * 0.14;
+    /* the storm glows: green, teal, amber or magenta light soaking the base and pooling at the horizon */
+    let gl = st.glow.rgb * st.glow.a;
+    sky += gl * (0.45 + 0.55 * smoothstep(0.42, 0.72, cl1 * 0.6 + cl2 * 0.4)) * mix(0.8, 1.2, far01);
+    sky += gl * smoothstep(0.14, 0.0, rd.y) * 1.3;
     sky += vec3f(0.5, 0.55, 0.8) * boltLight(dp) * 0.08;
     bg = sky;
   }
@@ -245,30 +251,30 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
   /* ── the march: merged intervals through each tornado's cylinder ── */
   let tEnd = min(min(tg, td), 40.0);
   var I0 = vec2f(1.0, 0.0); var I1 = vec2f(1.0, 0.0); var I2 = vec2f(1.0, 0.0);
-  if (st.t0.w >= 0.02) { let iv = cyl(ro, rd, st.t0.xy, st.t0.z * 1.4 + 0.5, 0.0, st.base); I0 = vec2f(iv.x, min(iv.y, tEnd)); }
-  if (st.t1.w >= 0.02) { let iv = cyl(ro, rd, st.t1.xy, st.t1.z * 1.4 + 0.5, 0.0, st.base); I1 = vec2f(iv.x, min(iv.y, tEnd)); }
-  if (st.t2.w >= 0.02) { let iv = cyl(ro, rd, st.t2.xy, st.t2.z * 1.4 + 0.5, 0.0, st.base); I2 = vec2f(iv.x, min(iv.y, tEnd)); }
+  if (st.t0.w >= 0.02) { let iv = cyl(ro, rd, st.t0.xy, st.t0.z * 1.4 + mix(0.08, 0.5, clamp((length(st.t0.xy - ro.xz) - 0.35) / 0.8, 0.0, 1.0)), 0.0, st.base); I0 = vec2f(iv.x, min(iv.y, tEnd)); }
+  if (st.t1.w >= 0.02) { let iv = cyl(ro, rd, st.t1.xy, st.t1.z * 1.4 + mix(0.08, 0.5, clamp((length(st.t1.xy - ro.xz) - 0.35) / 0.8, 0.0, 1.0)), 0.0, st.base); I1 = vec2f(iv.x, min(iv.y, tEnd)); }
+  if (st.t2.w >= 0.02) { let iv = cyl(ro, rd, st.t2.xy, st.t2.z * 1.4 + mix(0.08, 0.5, clamp((length(st.t2.xy - ro.xz) - 0.35) / 0.8, 0.0, 1.0)), 0.0, st.base); I2 = vec2f(iv.x, min(iv.y, tEnd)); }
   /* empty intervals sort to the end */
   if (I0.x >= I0.y) { I0 = vec2f(1e8, 0.0); } if (I1.x >= I1.y) { I1 = vec2f(1e8, 0.0); } if (I2.x >= I2.y) { I2 = vec2f(1e8, 0.0); }
   var sw = sortSwap(I0, I1); I0 = sw[0]; I1 = sw[1];
   sw = sortSwap(I1, I2); I1 = sw[0]; I2 = sw[1];
   sw = sortSwap(I0, I1); I0 = sw[0]; I1 = sw[1];
-  var total = 0.0;
-  if (I0.x < I0.y) { total += I0.y - I0.x; } if (I1.x < I1.y) { total += I1.y - I1.x; } if (I2.x < I2.y) { total += I2.y - I2.x; }
+  var total = 0.0; var nI = 0.0;
+  if (I0.x < I0.y) { total += I0.y - I0.x; nI += 1.0; } if (I1.x < I1.y) { total += I1.y - I1.x; nI += 1.0; } if (I2.x < I2.y) { total += I2.y - I2.x; nI += 1.0; }
   var Tr = 1.0; var acc = vec3f(0.0);
   let pix = vec2i(fc.xy);
   let dA = textureLoad(debrisAlbedo, pix, 0); let dD = textureLoad(debrisDist, pix, 0).r;
   var debrisDone = dA.a < 0.01;
   let jit = h3(vec3i(i32(fc.x), i32(fc.y), 77));
   if (total > 0.0) {
-    let dt = max(total / max(cam.steps, 1.0), 0.004);
+    var dt = 0.004;
     var k = 0; var t = 0.0; var started = false;
     let maxIter = u32(cam.steps + 8.0);
     for (var it = 0u; it < maxIter; it++) {
       if (k > 2 || Tr < 0.02) { break; }
       let iv = select(select(I2, I1, k == 1), I0, k == 0);
       if (iv.x >= iv.y) { k++; started = false; continue; }
-      if (!started) { t = max(iv.x, t) + dt * (0.35 + 0.3 * jit); started = true; }
+      if (!started) { t = max(iv.x, t); dt = max((iv.y - t) / max(cam.steps / nI, 1.0), 0.0012); t += dt * (0.35 + 0.3 * jit); started = true; }
       if (t >= iv.y) { k++; started = false; continue; }
       if (!debrisDone && dD < t) { acc += Tr * dA.a * dA.rgb * (0.85 + st.flash * 1.2); Tr *= 1.0 - dA.a; debrisDone = true; }
       let p = ro + rd * t;
@@ -290,6 +296,7 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
         let colW = mix(CLOUD_DARK2, mix(T_DARK, T_LITE, 0.55), smoothstep(0.2, 0.9, shadeW));
         let colD = mix(mix(T_DARK, DUST_LITE, shadeD), RED_DIRT, 0.25);
         var c = (colF * fs + colW * w + colD * ds) / sig * lit;
+        c += st.glow.rgb * st.glow.a * 0.35;
         /* lightning lights the cloud it is near, not just the frame */
         c += vec3f(0.55, 0.62, 0.85) * (boltLight(p) * 0.6 + st.flash * 0.35);
         let a = 1.0 - exp(-sig * dt);
@@ -350,7 +357,7 @@ fn channel(ro: vec3f, rd: vec3f, bv: vec4f) -> f32 {
 
 /* ── debris: the stage's wind-influence field, one kernel, three tornadoes ── */
 export const DEBRIS_STRUCTS = /* wgsl */ `
-struct Air { time: f32, wind: f32, storm: f32, flash: f32 };
+struct Air { time: f32, wind: f32, storm: f32, flash: f32, fly: vec4f };   /* fly: x, z, strength, side of a tornado passing close */
 struct D { pos: vec3f, kind: f32, vel: vec3f, ang: f32 };
 struct Sim { dt: f32, time: f32, wind: f32, count: f32, t0: vec4f, t1: vec4f, t2: vec4f, storm: f32, maxH: f32, _p0: f32, _p1: f32 };
 `;
@@ -363,20 +370,32 @@ fn tor(i: u32) -> vec4f { return select(select(sim.t2, sim.t1, i == 1u), sim.t0,
   let i = id.x; if (f32(i) >= sim.count) { return; }
   var d = ds[i];
   if (d.kind >= 20.0) {
-    /* the gale layer: chips and wreckage blown flat across the foreground and middle ground, close to the ground */
+    /* the near storm: chips and wreckage whipping across the foreground and the space between it and the middle
+       ground, at every height the camera can see, tumbling, gusting, and pulled into any funnel that comes close */
     let s2 = u32(sim.time * 60.0) * 7919u + i * 13u;
     let dir = select(-1.0, 1.0, sim.wind >= 0.0);
-    let goal = dir * (0.12 + 0.28 * sim.storm + abs(sim.wind) * 0.12) * (0.7 + 0.6 * h1(i * 7u));
-    d.vel.x += (goal - d.vel.x) * sim.dt * 3.0;
-    d.vel.y = sin(sim.time * (3.0 + h1(i) * 4.0) + f32(i)) * 0.004 * (0.5 + sim.storm);
+    let fly = sim._p0;
+    let gustW = 0.65 + 0.55 * sin(sim.time * 1.7 + d.pos.z * 40.0 + h1(i * 5u) * 6.0);
+    let speed = (0.10 + 0.30 * sim.storm + abs(sim.wind) * 0.12 + fly * 0.5) * (0.55 + 0.9 * h1(i * 7u)) * gustW;
+    var goal = vec3f(dir * speed, sin(sim.time * (2.0 + h1(i) * 3.0) + f32(i)) * 0.01 * (0.4 + sim.storm), (h1(i * 11u) - 0.5) * 0.05);
+    for (var k = 0u; k < 3u; k++) {
+      let t = tor(k); if (t.w < 0.25) { continue; }
+      let dx = t.x - d.pos.x; let dz = t.y - d.pos.z; let dd = sqrt(dx * dx + dz * dz) + 1e-3;
+      let infR = t.z * 2.2 + 0.25;
+      if (dd < infR) { let w = 1.0 - dd / infR; let ww = w * w * t.w; let nx = dx / dd; let nz = dz / dd;
+        goal.x += (nx * 0.6 - nz * 1.8 * (0.4 + w)) * ww; goal.z += (nz * 0.6 + nx * 1.8 * (0.4 + w)) * ww; goal.y += ww * 0.12; }
+    }
+    d.vel += (goal - d.vel) * min(1.0, sim.dt * 2.5);
     d.pos += d.vel * sim.dt;
-    d.pos.y = clamp(d.pos.y, 0.0002, 0.003 + d.pos.z * 0.05);
-    d.ang += (6.0 + h1(i * 3u) * 12.0) * sim.dt * dir;
-    let halfW = 0.02 + d.pos.z * 0.8;
-    if (abs(d.pos.x) > halfW) {
-      let z = 0.004 + pow(h1(s2 + 5u), 1.8) * 0.45;
-      d.pos = vec3f(-dir * (0.02 + z * 0.8), 0.0004 + h1(s2 + 6u) * (0.002 + z * 0.04), z);
-      d.vel = vec3f(goal * 0.8, 0.0, 0.0);
+    let top = 0.002 + d.pos.z * 0.62;
+    if (d.pos.y < 0.0002) { d.pos.y = 0.0002; d.vel.y = abs(d.vel.y) * 0.4; }
+    if (d.pos.y > top) { d.pos.y = top; d.vel.y = -abs(d.vel.y) * 0.5; }
+    d.ang += (6.0 + h1(i * 3u) * 14.0) * sim.dt * dir * (1.0 + fly * 2.0);
+    let halfW = 0.004 + d.pos.z * 0.8;
+    if (abs(d.pos.x) > halfW * 1.1 || d.pos.z < 0.0025 || d.pos.z > 0.5) {
+      let z = 0.003 + pow(h1(s2 + 5u), 1.6) * 0.4;
+      d.pos = vec3f(-dir * (0.004 + z * 0.8), 0.0003 + pow(h1(s2 + 6u), 1.4) * (0.002 + z * 0.6), z);
+      d.vel = vec3f(dir * speed * 0.8, 0.0, 0.0);
     }
     ds[i] = d; return;
   }
@@ -432,7 +451,7 @@ struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col
      horizon buildings; then the middle ground — bush, poplar, pole, fence, hay bale */
   var size = select(select(select(0.0028, 0.0045, kind >= 1.0), 0.0035, kind >= 2.0), select(0.028, 0.03, scenery), !chip);
   if (kind >= 12.0) { size = select(select(select(select(0.0028, 0.0014, kind >= 16.0), 0.0017, kind >= 15.0), 0.0046, kind >= 14.0), 0.0075, kind >= 13.0); if (kind < 13.0) { size = 0.0034; } }
-  if (gale) { size *= select(0.075, 0.12, chip); }
+  if (gale) { size *= select(0.075, 0.07, chip); }
   let pxWorld = z * cam.tanHalf * 2.0 / cam.pxH;
   let rad = max(size, pxWorld * 0.6);
   let ca = cos(d.ang); let sa = sin(d.ang);
@@ -443,12 +462,14 @@ struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) col
     let gust = 0.55 + 0.45 * sin(d.pos.z * 26.0 - air.time * (3.5 + air.storm * 3.0) + d.pos.x * 9.0);
     let bend = (air.wind * 0.22 + sin(air.time * (2.4 + air.storm * 3.0) + d.pos.x * 37.0 + d.pos.z * 11.0) * (0.08 + 0.2 * air.storm)) * gust * select(1.0, 0.25, kind >= 14.0);
     let up01 = corner.y * 0.5 + 0.5;
-    rc.x += bend * up01 * up01 * 2.0;
+    let fd = d.pos.xz - air.fly.xy; let fw = air.fly.z * exp(-dot(fd, fd) / (0.16 * 0.16));
+    let thrash = sign(fd.x + 1e-5) * fw * 1.4 + sin(air.time * 23.0 + d.pos.x * 700.0) * fw * 0.5;
+    rc.x += (bend + thrash) * up01 * up01 * 2.0;
   }
   let lift = select(0.0, size, scenery);
   let x = dot(v, cam.right) + rc.x * rad; let y = dot(v, cam.up) + rc.y * rad + lift;
   /* only what is in the air is drawn; the horizon scenery always is */
-  let ok = z > select(0.02, 0.002, gale) && (d.pos.y > 0.002 || scenery || gale);
+  let ok = z > select(0.02, 0.0015, gale) && (d.pos.y > 0.002 || scenery || gale);
   o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(x / (z * cam.tanHalf * cam.aspect), y / (z * cam.tanHalf), clamp(z / 40.0, 0.0, 1.0), 1.0), ok);
   o.q = corner; o.dist = length(v);
   let t = h3(vec3i(i32(ii), 17, 3));
@@ -497,7 +518,9 @@ struct VO { @builtin(position) p: vec4f, @location(0) col: vec3f, @location(1) d
   let row = f32(vi / 2u); let t = select(row * 0.5, 1.0, vi == 4u);
   let side = select(-1.0, 1.0, (vi & 1u) == 1u);
   let gust = 0.5 + 0.5 * sin(z * 150.0 - air.time * (5.0 + air.storm * 4.0) + x * 40.0);
-  let bend = (air.wind * 0.4 + sin(air.time * (3.0 + air.storm * 5.0) + x * 900.0 + z * 300.0) * (0.2 + 0.5 * air.storm)) * (0.35 + 0.65 * gust) + (e - 0.5) * 0.3;
+  let fd = vec2f(x, cam.pos.z + z) - air.fly.xy; let fw = air.fly.z * exp(-dot(fd, fd) / (0.18 * 0.18));
+  let bend = (air.wind * 0.4 + sin(air.time * (3.0 + air.storm * 5.0) + x * 900.0 + z * 300.0) * (0.2 + 0.5 * air.storm)) * (0.35 + 0.65 * gust) + (e - 0.5) * 0.3
+    + sign(fd.x + 1e-5) * fw * 2.4 + sin(air.time * 26.0 + x * 3000.0) * fw * 0.9;
   let p = root + vec3f(bend * height * t * t + side * halfW * (1.0 - t), height * t * (1.0 - 0.25 * bend * bend * t), 0.0);
   let v = p - cam.pos; let zz = dot(v, cam.fwd);
   o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(dot(v, cam.right) / (zz * cam.tanHalf * cam.aspect), dot(v, cam.up) / (zz * cam.tanHalf), clamp(zz / 40.0, 0.0, 1.0), 1.0), zz > 0.0005);
