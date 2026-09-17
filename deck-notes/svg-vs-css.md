@@ -1,0 +1,9 @@
+- ***CSS animates what's there. SVG lets you define what's there.***
+- **CSS**
+  - Moves elements that already exist: boxes, text, layout
+- **SVG**
+  - The shape itself is what you describe
+  - Arbitrary forms, changed point by point
+- **Why people conflate them**
+  - A simple shape looks identical either way
+  - The difference shows when the shape comes **from data** or **morphs** into something else

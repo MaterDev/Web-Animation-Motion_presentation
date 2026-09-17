@@ -1,0 +1,8 @@
+- **Why I'm up here**
+  - Experienced engineer; enabling the *what* of design is where I add most value
+  - Knew straight away the talk had to be about **opportunity and friction**
+- **The nine months**
+  - Projects, experiments and pit stops on the design ↔ engineering workflow around motion
+  - This talk is a consequence of those; it has taken a lot of work
+- **Everything today is live, running code**
+  - Every source is in the paper on the site

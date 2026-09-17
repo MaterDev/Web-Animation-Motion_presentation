@@ -1,0 +1,18 @@
+- **WebGL**
+  - Older; OpenGL ES in a web coat **[15]**
+  - Runs almost everywhere
+  - Fifteen years of answers — final 1.0 spec in 2011 **[16]**
+  - Not limited to static: models, lighting, effects are comfortable
+- **WebGPU**
+  - Newer; can do more at once — compute on the GPU
+  - Chrome 113, 2023 **[17]** · Safari 26, Sept 2025 **[19]** · Firefox 141 Windows, 147 Apple Silicon Macs, Jan 2026 **[20] [21]**
+  - Thinner ecosystem; less help when you get stuck
+- **Use WebGPU where support allows, WebGL as fallback**
+- **2D vs 3D**
+  - Same machinery either way
+  - 2D on the GPU is the escape from **SVG's quantity ceiling**
+- **Cost**
+  - ***Unpredictable in advance, measurable once built***
+  - **Name the target device first**
+- **Tooling**
+  - Real progress on enablers — e.g. Vercel's `vgpu`, public 27 Aug 2026 **[34]**

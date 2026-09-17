@@ -1,0 +1,10 @@
+- **So why choose it?**
+  - Freedom the layout system can't give
+- **What you get**
+  - Work in the **Z axis** — real depth
+  - Direct access to the **pixels** — what filters and advanced effects need
+- **The trade**
+  - Typical content site: a **huge loss**
+  - Extending graphics capability: the **better option**
+- **Hand-off**
+  - WebGL and WebGPU are ways of drawing onto this same surface

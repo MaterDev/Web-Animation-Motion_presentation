@@ -1,0 +1,11 @@
+- **Most of what you just watched was already a combination**
+  - Real page elements where you need text, clicks, accessibility
+  - The graphics card where you need pixels
+  - An alternative for anyone who can't use the GPU layer
+- **A performance strategy, not just an aesthetic one**
+  - Each part on the cheapest surface that can carry it
+- ***Don't be a purist***
+  - Purism forces one surface to do work it's bad at
+- **For a brief**
+  - Not "which technique is this project"
+  - ***Which technique carries which part?***

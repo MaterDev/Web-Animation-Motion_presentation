@@ -1,0 +1,13 @@
+- ***Try to select the text***
+  - A test anyone can run on any site
+  - Normal page: highlight text, drag an image, tab to a link
+  - Canvas: none of it works — looks like content, nothing to grab
+- **Why: no scene graph**
+  - Nothing drawn is remembered — no element, no node
+  - Just pixels you put there and manage yourself
+- **Costs: everything the platform did stops**
+  - No layout engine, no accessibility tree, no handles for tests
+- **Responsiveness without layout**
+  - Canvas resizes; content doesn't reflow
+  - Think **film framing, not web layout**: compose for the extremes, keep what matters in a safe area
+- ***As you climb the ladder, the platform stops doing things for you***

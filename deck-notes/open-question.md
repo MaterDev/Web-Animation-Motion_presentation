@@ -1,0 +1,4 @@
+- **Could I describe this well enough for someone else to build it?**
+- **Would I need to point, or sketch?**
+- **Carry it through all six stops**
+  - Comes back at the end

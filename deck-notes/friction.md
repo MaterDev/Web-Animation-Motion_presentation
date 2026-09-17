@@ -1,0 +1,17 @@
+- **1 · Technical constraints**
+  - Real, and engineering's to own
+- **2 · Shared vocabulary**
+  - A menu can be shown in two stills; a fluid simulation can't
+  - Words fill **exactly the gap the design tool can no longer show**
+- **3 · Naming what you want**
+  - With AI building, speed tracks how precisely you can name it — not code complexity
+- **4 · No performance budget for motion**
+  - Web vitals work because someone picked a line: main content in **2.5 s** **[43]**
+  - Arbitrary, but **shared** — so actionable
+  - Motion has no equivalent: feel, dropped frames, a hot device
+  - Without a number, every request is argued on vibes
+  - ***Give engineering a number and refusal stops being the safe default***
+  - Naming the target device is a **product** decision
+- **The tooling gap**
+  - Free tools exist, built for a developer alone, after the fact
+  - ***Not access, it's design intent***

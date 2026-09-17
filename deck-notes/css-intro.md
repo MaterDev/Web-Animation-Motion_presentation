@@ -1,0 +1,10 @@
+- **You already know this one**
+  - The most accessible way to add motion to a site
+  - We already do it, or inherit it through frameworks and kits
+- **The print contrast**
+  - A newspaper is fixed by its medium; a web page isn't
+  - CSS is the least expensive way to use that difference
+  - Static content that reads like print → a page that moves
+- **Two jobs, one engine**
+  - **Structure:** *Timeless*, a fictional newsweekly, layout moving with no JavaScript
+  - **Drawing:** liquid blobs, moiré, holographic type — the part people haven't seen

@@ -1,0 +1,14 @@
+- **68% of US Google searches ended without a click**
+  - January–April 2026 **[1]**
+  - SparkToro's analysis of Similarweb's desktop + mobile-web panel
+  - "No click" means no click on anything, ads and Google's own pages included
+- **Searches producing any click fell 9.51 points, 2024 → 2026**
+  - A 22.9% relative decline **[1]**
+- **AI summaries mean fewer clicks**
+  - Pew: a result clicked in **8%** of visits with a summary vs **15%** without **[2]**
+  - Ahrefs: **58%** lower click-through for the top result **[3]**
+  - Size varies by method; one tracker shows the gap narrowing in 2026 **[4]**
+- **Google disputes the aggregate**
+  - Says total clicks to websites are "relatively stable"; no dataset published **[5]**
+  - Studies measure *clicks per search*; Google describes *total volume*
+- **A reading, not a prophecy**

@@ -17,10 +17,32 @@
      a projector. The wrapper is unscaled, so it is safe to promote. */
   import Slide from '$lib/deck/Slide.svelte';
   import Notes from '$lib/deck/Notes.svelte';
-  import { SLIDES } from '$lib/deck/slides.js';
+  import { SLIDES, TINTS } from '$lib/deck/slides.js';
+
+  /* The overview groups slides by the talk's sections. A section is the
+     slide id's prefix (open-, css-, svg-…), so a new slide joins its
+     section by being named for it. */
+  const SECTION_NAMES = /** @type {Record<string, [string, string]>} */ ({
+    open: ['Opening', 'spectrum'], css: ['1 · Layout & CSS', 'css'], svg: ['2 · SVG', 'svg'],
+    gif: ['3 · GIF', 'video'], video: ['4 · Video', 'video'], canvas: ['5 · Canvas', 'canvas'],
+    gpu: ['6 · WebGL & WebGPU', 'webgpu'], friction: ['What gets in the way', 'webgl'], close: ['Close', 'spectrum'],
+  });
+  /* Opening and Close have a neutral base with the other sections'
+     colours as accents, so their swatch is the whole spectrum. */
+  const PRISM = ['css', 'svg', 'video', 'canvas', 'webgl', 'webgpu', 'composite'];
+  const GROUPS = SLIDES.reduce((out, s, n) => {
+    const key = s.id.split('-')[0];
+    let g = out.at(-1);
+    if (!g || g.key !== key) {
+      const [name, tint] = SECTION_NAMES[key] ?? [key, ''];
+      g = { key, name, tint, slides: [] };
+      out.push(g);
+    }
+    g.slides.push({ s, n });
+    return out;
+  }, /** @type {{ key: string, name: string, tint: string, slides: { s: import('$lib/deck/slides.js').Slide, n: number }[] }[]} */ ([]));
   import { getInfo, getNotes, putNote, setState, watchState } from '$lib/deck/control.js';
-  import { replaceState } from '$app/navigation';
-  import { page } from '$app/state';
+  import { replaceState, afterNavigate } from '$app/navigation';
   import { untrack } from 'svelte';
 
   /* EVERY SLIDE HAS ITS OWN URL — /presentation/<slide id>. Key: "i want
@@ -44,6 +66,12 @@
   let stageBox = $state(null);
   let scale = $state(1);
   let ex = $state(0);              // which example a gallery slide is showing
+
+  /* Each grid preview is scaled from its tile's real width, not a fixed
+     third: the grid's columns flex, and a hard-coded 320px scale cropped
+     the right and bottom of every slide whenever a column came out narrower. */
+  /** @type {number[]} */
+  let thumbW = $state([]);
 
   const slide = $derived(SLIDES[i]);
   const showing = $derived(mode !== 'grid');
@@ -116,8 +144,18 @@
      history entries. */
   $effect(() => {
     const want = mode === 'grid' ? '/presentation' : `/presentation/${SLIDES[i].id}`;
-    if (page.url.pathname === want) return;
+    /* location, not page.url: shallow routing does not move page.url, so
+       after one replace it would compare against a stale path and skip. */
+    if (location.pathname === want) return;
     try { replaceState(want, {}); } catch { /* router not ready on the first frame; the next change catches up */ }
+  });
+
+  /* The nav bar's Presentation link means "back to the grid". The URL is
+     rewritten by shallow routing above, so from the router's side a click
+     on /presentation can land on the route it is already on and the deck
+     is never remounted; the mode has to follow the navigation itself. */
+  afterNavigate(({ to, type }) => {
+    if (type !== 'enter' && to?.url.pathname === '/presentation') mode = 'grid';
   });
 
   /* Fit the 960-wide stage to whatever box it is in. */
@@ -137,6 +175,14 @@
   /** @param {number} n */
   const go = (n) => { i = (n + SLIDES.length) % SLIDES.length; ex = 0; };
   const exCount = $derived(slide.examples?.length ?? 0);
+
+  /* Keep the current slide visible in the rail as the deck moves. */
+  /** @type {HTMLElement | null} */
+  let rail = $state(null);
+  $effect(() => {
+    if (!rail || mode !== 'open') return;
+    rail.querySelector(`[data-testid="rail-${SLIDES[i].id}"]`)?.scrollIntoView({ block: 'nearest' });
+  });
   /** @param {number} n */
   const goEx = (n) => { if (exCount) ex = (n + exCount) % exCount; };
   /** @param {number} n */
@@ -200,26 +246,58 @@
         </div>
       </div>
       <p class="lead">
-        Every slide is real HTML at 960 × 540 on the system's own <code>.led-slide</code>.
-        Click one to open it. Content is placeholder — the surface is the thing being built.
+        The talk, slide by slide: opening, six technique stops, friction, close.
+        Open a slide to see it with its speaker notes.
       </p>
 
-      <div class="grid" data-testid="overview">
-        {#each SLIDES as s, n (s.id)}
-          <a class="tile" href="/presentation/{s.id}" onclick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); open(n); }} data-testid="tile-{s.id}">
-            <span class="thumb"><span class="fit"><Slide slide={s} live={false} /></span></span>
-            <span class="cap">
-              <b>{s.code}</b>
-              <em>{s.kicker}</em>
-              {#if notes[s.id]}<i class="dot" title="has notes"></i>{/if}
-            </span>
-          </a>
+      <!-- The grid, in the talk's sections: each group is headed by its
+           name and slide count, with the section tint as a small swatch. -->
+      <div class="sections" data-testid="overview">
+        {#each GROUPS as g (g.key)}
+          <section class="group" data-testid="overview-section-{g.key}">
+            <h2 class="group-h" data-testid="overview-section-{g.key}-title">
+              {#if g.tint === 'spectrum'}<span class="swatch prism" aria-hidden="true">{#each PRISM as t (t)}<i style="background:{TINTS[t]}"></i>{/each}</span>{:else}<span class="swatch" style="background:{TINTS[g.tint] ?? 'var(--hz-400)'}" aria-hidden="true"></span>{/if}
+              <span class="group-name">{g.name}</span>
+              <span class="group-count">{g.slides.length} {g.slides.length === 1 ? 'slide' : 'slides'}</span>
+            </h2>
+            <div class="grid">
+              {#each g.slides as { s, n } (s.id)}
+                <a class="tile" href="/presentation/{s.id}" onclick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; e.preventDefault(); open(n); }} data-testid="tile-{s.id}">
+                  <span class="thumb" bind:clientWidth={thumbW[n]}><span class="fit" style="transform:scale({(thumbW[n] || 320) / 960})"><Slide slide={s} live={false} /></span></span>
+                  <span class="cap">
+                    <b>{n + 1}</b>
+                    <em>{s.kicker}</em>
+                    {#if notes[s.id]}<i class="dot" title="has notes"></i>{/if}
+                  </span>
+                </a>
+              {/each}
+            </div>
+          </section>
         {/each}
       </div>
     </div>
 
   {:else}
     <div class="view" class:full={mode === 'present'}>
+      {#if mode === 'open'}
+        <!-- The rail: every slide, small, by section, so the presenter can
+             scroll and hop without going back to the grid. 160px wide is
+             exactly 1/6 scale, so a 6px LED cell lands on one pixel. -->
+        <nav class="rail" bind:this={rail} aria-label="Slides" data-testid="rail">
+          {#each GROUPS as g (g.key)}
+            <p class="rail-h" data-testid="rail-section-{g.key}">
+              {#if g.tint === 'spectrum'}<span class="swatch prism" aria-hidden="true">{#each PRISM as t (t)}<i style="background:{TINTS[t]}"></i>{/each}</span>{:else}<span class="swatch" style="background:{TINTS[g.tint] ?? 'var(--hz-400)'}" aria-hidden="true"></span>{/if}{g.name}
+            </p>
+            {#each g.slides as { s, n } (s.id)}
+              <button class="rail-tile" class:on={n === i} aria-current={n === i ? 'true' : undefined}
+                onclick={() => go(n)} data-testid="rail-{s.id}">
+                <span class="rail-n">{n + 1}</span>
+                <span class="rail-thumb"><span class="rail-fit"><Slide slide={s} live={false} /></span></span>
+              </button>
+            {/each}
+          {/each}
+        </nav>
+      {/if}
       <div class="stage" bind:this={stageBox} data-testid="stage">
         <div class="fit" style="transform:scale({scale})">
           <Slide {slide} {ex} {guides} live={true} />
@@ -241,7 +319,7 @@
       {#if mode === 'open'}
         <aside class="side" data-testid="sidebar">
           <div class="side-h">
-            <button class="lnk" onclick={() => { mode = 'grid'; }} data-testid="back">← All slides</button>
+            <button class="back" onclick={() => { mode = 'grid'; }} data-testid="back">▦ All slides</button>
             <span class="pos">{i + 1} / {SLIDES.length}</span>
           </div>
           <div class="nav">
@@ -287,15 +365,26 @@
   h1 { font-size: clamp(30px, 5vw, 52px); margin: 0; }
   .lead { max-width: 60ch; color: var(--hz-600); margin: 0 0 calc(var(--u)*6); }
 
+  .sections { display: flex; flex-direction: column; gap: calc(var(--u)*7); }
+  .group-h { display: flex; align-items: center; gap: 10px; margin: 0 0 calc(var(--u)*2.5);
+    padding-bottom: calc(var(--u)*1.5); border-bottom: var(--hair) solid var(--hz-200); }
+  .swatch { width: 18px; height: 10px; border-radius: 1px; flex: none; }
+  .swatch.prism { display: flex; width: 28px; overflow: hidden; }
+  .swatch.prism i { flex: 1; }
+  .group-name { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 500; color: var(--hz-800); }
+  .group-count { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--hz-500); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: calc(var(--u)*3); }
   .tile { display: block; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: inherit; text-decoration: none; }
   /* The thumbnail is the real slide, scaled — not an approximation of
-     one. 1/3 exactly, so the 6px cell lands on 2 whole pixels. */
-  .thumb { display: block; width: 320px; max-width: 100%; aspect-ratio: 16/9; overflow: hidden;
+     one. Scaled to the tile's measured width, so the whole slide fits
+     whatever width the grid column resolves to. */
+  .thumb { display: block; width: 100%; aspect-ratio: 16/9; overflow: hidden;
     border-radius: 5px; box-shadow: var(--edge, 0 0 0 1px oklch(1 0 0 / 0.08)), 0 6px 18px oklch(0 0 0 / 0.35);
     transition: box-shadow var(--dur-fast) var(--ease-standard); }
   .tile:hover .thumb { box-shadow: 0 0 0 1px var(--hz-400), 0 10px 26px oklch(0 0 0 / 0.5); }
-  .thumb .fit { display: block; transform: scale(0.3333); transform-origin: 0 0; }
+  .thumb .fit { display: block; width: 960px; height: 540px; transform-origin: 0 0; }
   .cap { display: flex; align-items: baseline; gap: 8px; padding-top: 9px; }
   .cap b { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--hz-700); font-weight: 400; }
   .cap em { font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--hz-500); }
@@ -309,7 +398,7 @@
      exactly the height under the 52px top bar; the slide takes the largest
      16:9 box that fits it; the sidebar takes a share of the width; and the
      notes editor fills the sidebar to the bottom. */
-  .view { display: grid; grid-template-columns: minmax(0, 1fr) clamp(360px, 28vw, 560px);
+  .view { display: grid; grid-template-columns: 176px minmax(0, 1fr) clamp(360px, 28vw, 560px);
     gap: calc(var(--u)*3); max-width: none; margin: 0;
     padding: calc(var(--u)*3) calc(var(--u)*4);
     height: calc(100dvh - 52px); box-sizing: border-box; align-items: stretch; }
@@ -324,8 +413,28 @@
     width: 100vw; height: 100vh; place-items: center; }
 
   .stage { display: grid; place-items: center; width: 100%; aspect-ratio: 16/9; }
+
+  .rail { height: 100%; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+    padding-right: 6px; scrollbar-width: thin; }
+  .rail-h { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-500); }
+  .rail-h:first-child { margin-top: 0; }
+  .rail-h .swatch { width: 12px; height: 7px; }
+  .rail .rail-tile { position: relative; display: block; padding: 0; border-radius: 3px; background: none;
+    border: 0; box-shadow: 0 0 0 1px oklch(1 0 0 / 0.08); text-transform: none; }
+  .rail .rail-tile:hover { background: none; box-shadow: 0 0 0 1px var(--hz-400); }
+  .rail .rail-tile.on { box-shadow: 0 0 0 2px var(--hz-800); }
+  .rail-thumb { display: block; width: 160px; height: 90px; overflow: hidden; border-radius: 3px; }
+  .rail-fit { display: block; width: 960px; height: 540px; transform: scale(calc(1 / 6)); transform-origin: 0 0; }
+  .rail-n { position: absolute; left: 4px; bottom: 3px; z-index: 2; font-family: var(--mono); font-size: 9px;
+    padding: 1px 4px; border-radius: 2px; background: oklch(0 0 0 / 0.55); color: oklch(1 0 0 / 0.85); }
   .view.full .stage { width: 100vw; height: 100vh; aspect-ratio: auto; }
-  .stage .fit { width: 960px; height: 540px; transform-origin: center; }
+  /* Absolutely centred, so the 960 × 540 layout box never sizes or
+     offsets the stage: in the grid it overflowed a narrower column and
+     start-aligned, pushing the scaled slide right and under the notes. */
+  .stage { position: relative; min-width: 0; min-height: 0; }
+  .stage .fit { position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+    width: 960px; height: 540px; transform-origin: center; }
 
   .exit-zone { position: fixed; top: 0; right: 0; padding: 14px 18px; z-index: 950;
     display: flex; align-items: center; gap: 12px;
@@ -344,9 +453,11 @@
     font-size: 15px; line-height: 1.65; }
   .side-h { display: flex; align-items: center; justify-content: space-between; }
   .pos { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--hz-500); }
-  .lnk { background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--mono);
-    font-size: 10px; letter-spacing: 0.1em; color: var(--hz-500); }
-  .lnk:hover { color: var(--hz-800); }
+  /* The way back to the grid is the first thing in the sidebar and reads
+     as a button, not a footnote. */
+  button.back { font-size: 12px; padding: 10px 16px; color: var(--hz-900);
+    background: var(--hz-200); border-color: var(--hz-400); }
+  button.back:hover { background: var(--hz-300); border-color: var(--hz-500); }
 
   .nav { display: flex; flex-wrap: wrap; gap: 6px; }
   button { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -380,6 +491,7 @@
 
   @media (max-width: 900px) {
     .view { grid-template-columns: 1fr; height: auto; }
+    .rail { display: none; }
     .view:not(.full) .stage { width: 100%; }
     .side { height: auto; overflow: visible; }
   }

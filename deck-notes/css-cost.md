@@ -1,0 +1,17 @@
+- **Good at**
+  - Free, everywhere
+  - The only rung where the platform still does the layout work for you
+- **Costs: the rendering pipeline**
+  - style → layout → paint → composite
+  - Animating size or position redoes layout **and** paint every frame
+- **transform and opacity**
+  - The two properties browsers reliably hand to the compositor **[7]**
+  - Compositor = final assembly: stacks already-painted layers, moves and fades them
+  - Each layer is a photo already taken: sliding it is free; resizing means a new photo, and neighbours shuffle
+- ***The expensive thing is interrupting the machine's flow***
+  - SVG: quantity · Canvas: state switching and overdraw · GPU: asking it a question (readback)
+- **The menu everyone has felt**
+  - Closed mid-opening, it snaps open, then slides away
+  - Reads as **broken, not fast** — "pop-in"
+  - Happens with keyframe-built menus; simple transitions already reverse
+  - Motion can be built to know where it is, so it just turns around

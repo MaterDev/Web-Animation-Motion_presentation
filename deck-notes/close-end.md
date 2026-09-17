@@ -1,0 +1,6 @@
+- **Thank you**
+- **The paper**
+  - Full argument and every source
+  - Slide numbers match its bibliography
+- **The site**
+  - Every example runs there

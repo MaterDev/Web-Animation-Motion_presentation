@@ -1,0 +1,12 @@
+- **The format**
+  - Just works, everywhere, no code — drop in an `<img>`
+  - Pre-baked pixels, **no controls**: can't pause
+  - Can't honour reduced motion without swapping the file
+  - 256-colour palette → gradients band
+- ***The one format that takes the decision away from you***
+- **The pipeline — the part people miss**
+  - Ours come out of a rendering pipeline: change a value, re-bake
+  - Not a file someone made once
+  - Even a GIF can be an **output**, not an artefact
+- **Client angle**
+  - Existing video, 3D or motion can become GIFs used as UI, not memes
