@@ -124,7 +124,7 @@ export function stormApp() {
   if (q.has('scale')) scale = clamp(+q.get('scale'), 0.25, 1); if (q.has('steps')) steps = Math.max(4, +q.get('steps') | 0);
   const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
   /* a handle for verification: pause or seek the storm, change the march's cost, read the timer */
-  const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; }, lensOff(v) { lensOff = v; }, lab(v) { s && s.lensFx.set({ lab: [v ? 1 : 0, 0, 0, 0] }); },
+  const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; }, lensOff(v) { lensOff = v; }, lab(v) { s && s.lensFx.set({ lab: [v ? 1 : 0, 0, 0, 0] }); }, fling() { if (s) s.water.rain.flingNow = true; }, probe(list) { if (s) s.water.rain.probe = list; },
     spans: () => ({ frame: med(spans.frame), cpu: med(spans.cpu), scene: med(spans.scene), debris: med(spans.debris), n: spans.scene.length, scale, steps, water: s ? [s.water.W, s.water.H] : null }), director: (T) => director(T), lightning: (T) => lightning(T), nextFlyby(T) { for (let t = T; t < T + 600; t += 0.25) { const f = flybyAt(t); if (f) return f.t0; } return null; }, get renders() { return renders; }, get ready() { return !!s; } };
   globalThis.__supercell = api;
 
@@ -158,7 +158,7 @@ export function stormApp() {
     const sceneFx = effect(gpu, SCENE, { label: 'supercell-scene', set: { cam, st: stV, debrisAlbedo: debrisT.colors[0], debrisDist: debrisT.colors[1] } });
     /* water on the lens: a thin-film fluid on the GPU (storm-lens.js), and the scene seen through it */
     const lensT = target(gpu, { size: [64, 64], format: 'rgba8unorm', label: 'supercell-lens' });
-    const waterU = uniforms(gpu, { dt: 0.09, g: 0.12, gamma: 0.75, drag: 0.8, hs: 0.03, B: 1.4, pin: 0.15, wind: 0, count: 0, reset: 1, time: 0, maxH: 14, hits: Array.from({ length: MAX_HITS }, () => [0, 0, 0, 0]) });
+    const waterU = uniforms(gpu, { dt: 0.09, g: 0.15, gamma: 0.75, drag: 0.8, hs: 0.03, B: 1.4, pin: 0.15, wind: 0, count: 0, reset: 1, time: 0, maxH: 14, hits: Array.from({ length: MAX_HITS }, () => [0, 0, 0, 0]) });
     const lin = sampler(gpu, { minFilter: 'linear', magFilter: 'linear' });
     const waterTex = (W, H) => [0, 1].map((k) => texture(gpu, { kind: '2d', size: [W, H], format: 'rgba16float', usage: ['storage_binding', 'texture_binding'], label: 'supercell-water-' + k }));
     const [wA, wB] = waterTex(64, 64);
@@ -251,7 +251,7 @@ export function stormApp() {
         const Wt = s.water, frames = reduced.matches ? 420 : 1, sub = 6;
         const gust = D.fly ? D.fly.w : 0;
         for (let f = 0; f < frames; f++) {
-          const hits = Wt.rain(reduced.matches ? 1 / 60 : dt, D.rain, gust, Wt.W, Wt.H);
+          const hits = Wt.rain(reduced.matches ? 1 / 60 : dt, D.rain, gust, Wt.W, Wt.H, D.wind);
           for (let k = 0; k < sub; k++) {
             Wt.U.set({ reset: Wt.fresh ? 1 : 0, count: k === 0 && !Wt.fresh ? MAX_HITS : 0, hits, wind: D.wind * 0.003 + (D.fly ? D.fly.side * D.fly.w * 0.012 : 0), time: T });
             Wt.force.dispatch(Math.ceil(Wt.W / 8), Math.ceil(Wt.H / 8)); Wt.move.dispatch(Math.ceil(Wt.W / 8), Math.ceil(Wt.H / 8));
