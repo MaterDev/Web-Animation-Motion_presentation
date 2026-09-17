@@ -31,3 +31,7 @@ A green-screen stag clip decoded into a canvas, keyed per frame in the Cb/Cr pla
 
 ## For the edit pass
 - Key: "for the composite example we can move that to the composite section of the presentation". The move is done here: technique `composite`. There are no other edits yet.
+
+## Presentation edits (2026-09-17)
+- **Slide layout:** the controls sit in a 330px column on the left, and the composite and source stand side by side at 440px tall. The whole demo is 960 × 480 (2:1).
+- **Moved:** it now appears in the Composite section of the deck, not the Video stop (Key).

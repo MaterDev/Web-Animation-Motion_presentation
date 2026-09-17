@@ -3,5 +3,7 @@
   - Irene Polo
   - Aayush Joshi
   - Tyler Knight
-  - The Design team
+  - Kyle Johnson
+  - Kayla Long
+  - Mike Matheny
 - **For feedback and collaboration over the last nine months**

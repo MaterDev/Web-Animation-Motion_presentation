@@ -1,9 +1,0 @@
-- **A history of AI, from a real dataset**
-  - 30 events, 22 sourced movements between institutions
-  - 1943 to 2024
-- **It honestly fails**
-  - The second AI winter doesn't show — people kept changing institutions straight through it
-  - The page says so: *measured, not claimed*
-- **Camera bench**
-  - Three ways of driving the view: all within noise
-  - Only the hairline stroke strategy moves the number (88 writes per frame)

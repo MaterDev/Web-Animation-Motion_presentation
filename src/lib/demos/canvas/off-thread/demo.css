@@ -57,6 +57,17 @@
   --t5b-lcd:     oklch(0.830 0.150  78);
   --t5b-lcd-dim: oklch(0.520 0.085  78);
   --t5b-sig:     oklch(0.640 0.190  22);
+  /* the visualizer's extra inks (slide fit): a hot LED, the lamp flash,
+     unlit LED ghosts, and six oil-film stops the palette cycles through */
+  --t5b-hot:     oklch(0.900 0.140  92);
+  --t5b-cap:     oklch(0.970 0.050  95);
+  --t5b-ghost:   oklch(0.200 0.028  62);
+  --t5b-oil-0:   oklch(0.200 0.080 285);   /* deep indigo                */
+  --t5b-oil-1:   oklch(0.560 0.220 335);   /* magenta                    */
+  --t5b-oil-2:   oklch(0.830 0.150  80);   /* gold                       */
+  --t5b-oil-3:   oklch(0.720 0.180 145);   /* green                      */
+  --t5b-oil-4:   oklch(0.760 0.130 215);   /* cyan                       */
+  --t5b-oil-5:   oklch(0.420 0.160 280);   /* violet                     */
 }
 .t5-rack { display: grid; grid-template-columns: minmax(0,1fr); gap: calc(var(--u)*3); }
 @media (min-width: 780px) { .t5-rack { grid-template-columns: 1fr 1fr; } }
@@ -108,3 +119,76 @@
 .t5-note[hidden] { display: none !important; }
 .t5-note.t5-bad { border-left-color: var(--signal); color: var(--signal); }
 @media (max-width: 560px) { .t5-kv b.t5-dot { font-size: 24px; line-height: 28px; } }
+
+/* ── slide fit (2026-09-17, housed) ────────────────────────────────────
+   The whole demo is one physical housing that fills the 864 x 444 slide
+   well: a flat dark-grey chassis with a six-line CSS bevel (the canvases'
+   bevel notation, restated as inset shadows), faint horizontal
+   brushing as hard-stop stripes (no blur), four screws, a product plate,
+   and a seam above the controls. Inside: 16 px side padding, 10 px top
+   and bottom. Height: 10 + 18 head + 6 + 342 units + 8 + 48 controls + 10
+   = 442. Width: 16 + 384 player + 12 + 436 visualizer + 16 = 864. */
+.cv-instr, .t5-note { display: none !important; }
+.t5 {
+  --t5h-face:    oklch(0.285 0.006 70);
+  --t5h-stripe:  oklch(0.300 0.006 70);
+  --t5h-hi:      oklch(0.440 0.008 70);
+  --t5h-lt:      oklch(0.350 0.007 70);
+  --t5h-sh:      oklch(0.215 0.006 70);
+  --t5h-dk:      oklch(0.150 0.005 70);
+  --t5h-ink:     oklch(0.800 0.012 78);
+  --t5h-ink-dim: oklch(0.620 0.012 78);
+}
+/* On its own class, not .t5: the token probe (helpers.js) wears .t5, and
+   padding on it added 20 px of phantom scroll height to the host. */
+.t5-housing {
+  position: relative; box-sizing: border-box; width: 864px; height: 444px; padding: 10px 16px;
+  background: repeating-linear-gradient(0deg, var(--t5h-face) 0 2px, var(--t5h-stripe) 2px 3px);
+  box-shadow:
+    inset 1px 1px 0 var(--t5h-hi), inset -1px -1px 0 var(--t5h-dk),
+    inset 2px 2px 0 var(--t5h-lt), inset -2px -2px 0 var(--t5h-sh);
+  color: var(--t5h-ink);
+}
+.t5-screw {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(45deg, var(--t5h-lt) 0 43%, var(--t5h-dk) 43% 57%, var(--t5h-lt) 57%);
+  box-shadow: 0 0 0 1px var(--t5h-dk), 1px 1px 0 1px var(--t5h-hi);
+}
+.t5-screw-tl { top: 6px; left: 5px; } .t5-screw-tr { top: 6px; right: 5px; }
+.t5-screw-bl { bottom: 6px; left: 5px; } .t5-screw-br { bottom: 6px; right: 5px; }
+
+.t5-head { display: flex; align-items: center; justify-content: space-between; height: 18px; margin-bottom: 6px; }
+.t5-plate {
+  display: flex; align-items: center; gap: 7px; height: 18px; padding: 0 9px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; line-height: 1;
+  color: var(--t5h-ink-dim); background: var(--t5h-sh);
+  box-shadow: inset 1px 1px 0 var(--t5h-dk), inset -1px -1px 0 var(--t5h-hi);
+}
+.t5-plate b { color: var(--t5b-lcd); font-weight: 500; }
+.t5-led { width: 6px; height: 6px; background: var(--t5b-lcd); box-shadow: 0 0 0 1px var(--t5h-dk); }
+.t5-drawn { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t5h-ink-dim); }
+.t5-drawn b { color: var(--t5h-ink); font-weight: 500; }
+
+.t5-rack { display: grid; grid-template-columns: 384px 436px; gap: 12px; }
+.t5-stage { box-shadow: 0 0 0 1px var(--t5h-dk); }
+.t5-stage canvas { width: 100%; height: 342px; }
+.t5-stage canvas.t5-fallback { width: 100%; height: 100%; }
+
+.t5-deck { position: relative; display: flex; align-items: center; gap: 24px; margin-top: 8px; height: 48px; }
+/* the seam: a groove across the housing, between the units and the controls */
+.t5-deck::before {
+  content: ''; position: absolute; left: -14px; right: -14px; top: -5px; height: 2px;
+  background: linear-gradient(var(--t5h-dk) 0 1px, var(--t5h-hi) 1px 2px);
+}
+.t5-bar { flex: none; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 4px; margin-top: 0; }
+.t5-btn {
+  font-size: 11px; letter-spacing: 0.08em; padding: 3px 10px; line-height: 14px; text-align: left; white-space: nowrap;
+  color: var(--t5h-ink);
+  background: var(--t5b-face); border-color: var(--t5b-dk); border-top-color: var(--t5b-hi); border-left-color: var(--t5b-hi);
+}
+.t5-btn.t5-on { color: var(--t5b-well); background: var(--t5b-lcd); border-color: var(--t5b-lcd-dim); }
+.t5-readouts { flex: 1; min-width: 0; justify-content: space-between; flex-wrap: nowrap; gap: 16px; margin-top: 0; align-items: flex-end; }
+.t5-kv { font-size: 11px; letter-spacing: 0.08em; line-height: 14px; white-space: nowrap; color: var(--t5h-ink-dim); }
+.t5-kv b { font-size: 16px; line-height: 20px; margin-top: 2px; color: var(--t5h-ink); }
+.t5-kv b.t5-dot { font-size: 30px; line-height: 32px; margin-top: 0; color: var(--t5h-ink); }
+.t5-kv b.t5-dot.t5-amber { color: var(--t5b-lcd); }

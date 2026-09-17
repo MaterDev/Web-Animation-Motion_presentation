@@ -1,0 +1,10 @@
+- **Off-thread: two identical players**
+  - **Unit 1** is drawn on the page's main thread
+  - **Unit 2** is drawn by a worker through `OffscreenCanvas`
+- **Block the main thread for 800 ms**
+  - Unit 1 freezes; its scrolling title stops
+  - Unit 2 keeps running
+- **Same pixels**
+  - A parity check proves both draw byte-identical frames
+- **The point**
+  - Canvas drawing can leave the main thread; the page stays responsive

@@ -4,6 +4,7 @@ import { disposer } from '../../_kit/disposer.js';
 import css from './demo.css?raw';
 import html from './demo.html?raw';
 import { rack } from './rack.js';
+import { vision } from './vision.js';
 
 const MP4 = new URL('./assets/nova7-explode-16x9.mp4', import.meta.url).href;
 const POSTER = new URL('./assets/nova7-explode-16x9-poster.png', import.meta.url).href;
@@ -16,5 +17,6 @@ export function mount(host) {
   });
   const d = disposer();
   rack(root, d);
+  vision(root, d);
   return () => d.run();
 }

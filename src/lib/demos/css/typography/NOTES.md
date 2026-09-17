@@ -1,3 +1,22 @@
+# css/typography — holographic and variable type
+
+Composed 2026-09-17 for the deck (Key: "all the typography ones can go together"): the TIMELESS poster (`art-holo`) and the expanded variable-type card (`art-variable`), from css.html's drawing section. The history of each half is below.
+
+## Holographic type
+
+> Split out of `css/drawing` on 2026-09-17: the TIMELESS type poster on its own slide (goo and moiré hidden in this copy).
+
+
+
+## Variable type
+
+# css/variable-type: Variable type
+
+Split out of `css/aperture-and-type` on 2026-09-17 for its own slide (Key: three group slides plus two typography slides), then expanded as Key asked.
+
+**Deck expansion:** two rows added on the sheet's stagger. JetBrains Mono animates `wght` 100→800, and a monospace keeps its cells. Doto animates `ROND` alone at `wght` 700, as a slower wave across TYPOGRAPHY. The aperture card and its scroll script are removed from this copy.
+
+---
 # Aperture and variable type
 
 ## What it is

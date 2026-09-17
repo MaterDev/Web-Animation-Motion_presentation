@@ -179,8 +179,19 @@ export function mount(host) {
     }
     play();
 
-    /* The sheet's periodic .gif-pulse interval is removed: it reached into
-       the agent roster, which this demo does not carry. See NOTES.md. */
+    /* The periodic reveal (restored, Key): every GIF on the slide gets the
+       red trace together on its own clock, so the actual GIF canvas is
+       findable. The sheet's version also reached into the agent roster;
+       this one is scoped to this demo's root and reads the stickers too. */
+    if (!reduce) {
+      d.interval(() => {
+        root.querySelectorAll('.gif-frame').forEach((el) => {
+          el.classList.remove('gif-pulse');
+          void el.offsetWidth;
+          el.classList.add('gif-pulse');
+        });
+      }, 4200);
+    }
   })();
 
   return () => { d.run(); root.innerHTML = ''; };

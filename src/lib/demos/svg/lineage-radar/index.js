@@ -43,10 +43,12 @@ export function mount(host) {
   svg.setAttribute('viewBox',
     VB.x.toFixed(1) + ' ' + VB.y.toFixed(1) + ' ' + VB.w.toFixed(1) + ' ' + VB.h.toFixed(1));
 
+  /* Presentation edit: shown 2:1, 24px cropped from top and bottom. */
+  const CROP = 24;  /* 960 × 492: the slide well is 864 × 444 */
   function fit() {
     const k = paper.clientWidth / 960;
-    slide.style.transform = 'scale(' + k + ')';
-    paper.style.height = Math.round(540 * k) + 'px';
+    slide.style.transform = 'translateY(' + (-CROP * k) + 'px) scale(' + k + ')';
+    paper.style.height = Math.round((540 - 2 * CROP) * k) + 'px';
   }
   if ('ResizeObserver' in window) bin.observer(new ResizeObserver(fit)).observe(paper);
   fit();
@@ -93,20 +95,37 @@ export function mount(host) {
   const field = root.getElementById('wxField');
   const sitesG = root.getElementById('wxSites');
   const RAMP = ['--wx-1', '--wx-2', '--wx-3', '--wx-4', '--wx-5'];
-  const cells = [...sites.values()].map((st) => ({
+  /* Presentation edit (Key: "the blobs should meld together and radiate").
+     Three layers per site, all driven by render(t):
+       · glow   — a wide, soft halo under a heavy blur, screen-blended, so
+                  neighbouring sites bleed light into each other
+       · blob   — the counted mass, now under a stronger goo threshold with
+                  a radial falloff, so nearby masses weld into one shape
+       · rings  — echoes expanding out of every live site, the radar pulse,
+                  on a fixed period so the field visibly breathes */
+  const glowG = root.getElementById('wxGlow');
+  const ringG = root.getElementById('wxRings');
+  const cells = [...sites.values()].map((st, i) => ({
     ...st,
+    phase: (i * 0.618) % 1,
+    glow: mk('circle', { cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 0 }, glowG),
     blob: mk('circle', { cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 0 }, field),
+    rings: [0, 1, 2].map(() => mk('circle', { class: 'wx-ring', cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 0 }, ringG)),
     dot: mk('circle', { class: 'wx-site', cx: st.x.toFixed(2), cy: st.y.toFixed(2), r: 1.4 }, sitesG),
   }));
+  /* the pulse clock: seconds of the 15s loop, so rings don't depend on
+     frame history and render(t) stays a pure function of t */
+  const DUR = 15000, PULSE = 2.4;
 
   const yearEl = root.getElementById('wxYear');
   const hotEl = root.getElementById('wxHot');
   const cellsEl = root.getElementById('wxCells');
   const massEl = root.getElementById('wxMass');
   const pct = (v, d) => (v / d * 100) + '%';
-  root.getElementById('wxChrome').style.cssText += ';left:' + pct(34, 960) + ';top:' + pct(18, 540);
-  yearEl.style.cssText += ';right:' + pct(34, 960) + ';top:' + pct(14, 540);
-  root.getElementById('wxKeyEl').style.cssText += ';left:' + pct(34, 960) + ';bottom:' + pct(58, 540);
+  root.getElementById('wxChrome').style.cssText += ';left:' + pct(34, 960) + ';top:' + pct(18 + CROP, 540);
+  yearEl.style.cssText += ';right:' + pct(34, 960) + ';top:' + pct(14 + CROP, 540);
+  root.getElementById('wxKeyEl').style.cssText += ';left:' + pct(34, 960) + ';bottom:' + pct(58 + CROP, 540);
+  root.querySelector('.wx-bar').style.bottom = CROP + 'px';
 
   /* Two blobs belong to one mass when they overlap — the same
      condition the threshold uses to weld them, so this count is a
@@ -141,8 +160,21 @@ export function mount(host) {
          nine times the area of one with one — area is what the eye
          reads as quantity, and a linear radius would overstate it. */
       const r = w ? 5.5 + Math.sqrt(w) * 5.2 : 0;
-      c.blob.setAttribute('r', r.toFixed(2));
-      c.blob.style.fill = w ? 'var(' + RAMP[Math.min(RAMP.length - 1, w - 1)] + ')' : 'none';
+      const col = w ? 'var(' + RAMP[Math.min(RAMP.length - 1, w - 1)] + ')' : 'none';
+      /* the drawn mass is larger than the counted radius so the field melds;
+         the count (r) still drives the readouts and the mass union below */
+      c.blob.setAttribute('r', (w ? r * 1.9 : 0).toFixed(2));
+      c.blob.style.fill = col;
+      c.glow.setAttribute('r', (w ? r * 4.2 : 0).toFixed(2));
+      c.glow.style.fill = col;
+      const sec = (t * DUR) / 1000;
+      c.rings.forEach((ring, k) => {
+        if (!w) { ring.setAttribute('r', 0); ring.style.opacity = 0; return; }
+        const p = ((sec / PULSE) + c.phase + k / 3) % 1;
+        ring.setAttribute('r', (r * 1.4 + p * (26 + r * 3.2)).toFixed(2));
+        ring.style.stroke = col;
+        ring.style.opacity = ((1 - p) * (1 - p) * 0.85).toFixed(3);
+      });
       c.dot.style.opacity = w ? 0.85 : 0.18;
       if (w) { live.push({ x: c.x, y: c.y, r, w, org: c.org }); if (!hot || w > hot.w) hot = { w, org: c.org }; }
     }

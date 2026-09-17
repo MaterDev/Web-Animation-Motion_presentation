@@ -6,16 +6,23 @@
              assembled and peeled back by whoever is reading it, and a stage
              sharing that id would change with it. Same three primitives,
              fixed. -->
-        <filter id="wx-goo" x="-30%" y="-30%" width="160%" height="160%"
+        <!-- presentation edit: a wider blur and a softer threshold, so
+             masses weld into continuous shapes instead of touching discs -->
+        <filter id="wx-goo" x="-50%" y="-50%" width="200%" height="200%"
                 color-interpolation-filters="sRGB">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
           <feColorMatrix in="b" type="matrix" result="g"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -8"/>
-          <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 16 -6"/>
+        </filter>
+        <filter id="wx-glow" x="-100%" y="-100%" width="300%" height="300%"
+                color-interpolation-filters="sRGB">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="22"/>
         </filter>
       </defs>
       <g id="wxGrat"></g>
       <g id="wxMap"></g>
+      <g id="wxGlow" class="wx-glow" filter="url(#wx-glow)"></g>
+      <g id="wxRings" class="wx-rings"></g>
       <g id="wxField" filter="url(#wx-goo)"></g>
       <g id="wxSites"></g>
     </svg>

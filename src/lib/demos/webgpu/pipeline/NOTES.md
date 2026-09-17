@@ -33,3 +33,11 @@ None.
 
 ## For the edit pass
 - Key: "i like the pipeline example that can be its own thing." It stays its own demo; nothing specific to change was named yet.
+
+## Slide fit (2026-09-17)
+Recomposed for the slide well (864 × 444, `bare`). Only the inspector is kept; the sheet head (crumb, title, dek, instrument plate), §1 kicker, heading and prose, the caption and "what this sheet is holding itself to" are gone from the markup. The instrument-plate tick in `index.js` went with them.
+- **Layout:** one dark chassis, 864 × 444, 16px padding, radius 10. Grid `1fr | 268px`, gap 20. Left: the particle field fills the column height (544 × 412 CSS px; `attach().fit()` sizes the backing store to that × DPR, capped at 2), with a small frosted chip "200 000 particles · one storage buffer". Right, top to bottom: head "one frame · four passes" with the `ms` unit; four pass rows (checkbox, name 13px, ms 14px bold, full-width bar underneath); GPU time this frame as the prominent number (30px, tint, not white) over a stacked bar showing each pass's share of the frame; bytes uploaded (14px bold) with its kind; a foot line with the adapter name and "median of 8". All text ≥ 11px.
+- **Colour:** each pass has its own hue, shared by its checkbox, row bar and stack segment. The chassis tokens moved toward the webgpu tint (hue 300/320); the particles still read `--ck-dim` and `--ck-acc`, so they follow.
+- **clock.js:** rows print the number without " ms" (the unit is in the head); a stacked-bar update (`ck-stack-N`, v / total) was added; the "uniforms only" label is now read off the counter (`bytes.frameState === 0`), not hard-coded.
+- **index.js:** prints the adapter into `ck-adapter` (plus "no timestamp-query" where it is missing); `fmtB`, `DPR`, `bytes` imports and the instrument rAF tick are gone.
+- **Measured (headless Chrome, apple · metal-3, DPR 1):** demo-host 864 wide, `scrollHeight` 444; panel 412 / 412, no overflow; canvas backing 544 × 412. The readings were flow 0.102, integrate 0.030, density 0.048, render 2.413, total 2.593 ms, 104 B a frame, uniforms only.

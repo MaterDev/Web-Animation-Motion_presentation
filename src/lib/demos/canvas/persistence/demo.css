@@ -69,3 +69,69 @@
    A visualizer has exactly one: the frame it is on. */
 .v1-kv b.v1-dot { font-size: 30px; line-height: 34px; color: var(--v1-a2); letter-spacing: 0.04em; }
 @media (max-width: 560px) { .v1-kv b.v1-dot { font-size: 24px; line-height: 28px; } }
+
+/* ── slide fit (2026-09-17) ────────────────────────────────────────────
+   The slide well is 864 × 444 and gives the demo no container, so the
+   world IS the container: a raised grey chassis, edge to edge, with a 16px
+   inner margin every screen, readout and button keeps from its edge. The
+   live field is the hero screen across the full width; under it the
+   explainer screen on the left, and on the right a readout window over the
+   row of buttons. Long prose lives in the speaker notes.
+
+   The chassis tones replace the sheet's near-black face for this copy only
+   (the tear sheet keeps its own): on a dark ground the old face read as a
+   bare rectangle, not a device. Same four-colour bevel notation, lifted to
+   the off-thread players' chassis range. The canvas chrome reads these same
+   tokens, so the screen bevels match the housing.
+
+   Sizing is on the data-testid, not on .v1: createTokens appends a probe
+   wearing .v1, and a sized .v1 made that probe 32px of overflow. */
+.v1 {
+  --v1-face: oklch(0.350 0.008 265);
+  --v1-hi:   oklch(0.520 0.010 265);
+  --v1-lt:   oklch(0.430 0.009 265);
+  --v1-sh:   oklch(0.270 0.009 265);
+  --v1-dk:   oklch(0.195 0.009 265);
+  --v1-well: oklch(0.085 0.008 265);
+  --v1-ink:  oklch(0.880 0.008 265);
+}
+[data-testid="v1-explain-cap"], .cv-instr { display: none !important; }
+[data-testid="v1-world"] {
+  box-sizing: border-box; width: 864px; height: 444px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--v1-face);
+  box-shadow:
+    inset 1px 1px 0 var(--v1-hi), inset -1px -1px 0 var(--v1-dk),
+    inset 2px 2px 0 var(--v1-lt), inset -2px -2px 0 var(--v1-sh);
+}
+[data-testid="v1-stage"] canvas { width: 832px; height: 312px; image-rendering: pixelated; }
+.v1-panel { display: grid; grid-template-columns: 372px 1fr; gap: 20px; height: 88px; }
+.v1-explain canvas { width: 372px; height: 88px; }
+.v1-controls { display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+.v1-readouts {
+  margin: 0; gap: 18px; flex-wrap: nowrap; align-items: flex-end; justify-content: space-between;
+  height: 52px; box-sizing: border-box; padding: 5px 12px 6px;
+  background: var(--v1-well);
+  box-shadow:
+    inset 1px 1px 0 var(--v1-dk), inset -1px -1px 0 var(--v1-hi),
+    inset 2px 2px 0 var(--v1-sh), inset -2px -2px 0 var(--v1-lt);
+}
+.v1-kv { font-size: 11px; letter-spacing: 0.08em; color: oklch(0.640 0.008 265); line-height: 13px; white-space: nowrap; }
+.v1-kv b { font-size: 18px; line-height: 24px; margin-top: 1px; color: var(--v1-ink); }
+.v1-kv b.v1-dot { font-size: 24px; line-height: 24px; min-width: 5ch; }
+.v1-kv .cv-dagger { font-size: 12px; color: oklch(0.640 0.008 265); }
+.v1-bar { margin: 0; gap: 6px; flex-wrap: nowrap; justify-content: space-between; }
+.v1-btn {
+  flex: 1 1 auto; font-size: 11px; letter-spacing: 0.06em; padding: 7px 8px; white-space: nowrap; line-height: 12px;
+  color: var(--v1-ink); background: var(--v1-face);
+  border: 0;
+  box-shadow:
+    inset 1px 1px 0 var(--v1-hi), inset -1px -1px 0 var(--v1-dk),
+    inset 2px 2px 0 var(--v1-lt), inset -2px -2px 0 var(--v1-sh);
+}
+.v1-btn:active { box-shadow:
+    inset 1px 1px 0 var(--v1-dk), inset -1px -1px 0 var(--v1-hi),
+    inset 2px 2px 0 var(--v1-sh), inset -2px -2px 0 var(--v1-lt); }
+.v1-btn.v1-on { color: var(--v1-void); background: var(--v1-a2);
+  box-shadow: inset 1px 1px 0 oklch(0.900 0.120 90), inset -1px -1px 0 var(--v1-a4); }
+.v1-btn:focus-visible { outline: 2px solid var(--v1-a2); outline-offset: 2px; }

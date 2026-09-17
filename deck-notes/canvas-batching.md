@@ -1,0 +1,8 @@
+- **Batching: a halftone press, drawn live**
+  - A press sheet is read back, split into four inks and screened at 20×
+- **The rosette**
+  - Only three screens can sit at 30° apart, so yellow takes the 15° collision and runs at **108%** frequency
+  - Dot gain: ink spreads into paper; turn it off and the page goes pale
+- **Four ways to draw the same dots**
+  - Arc per dot, one batched path, a sprite, a filled square
+  - Same picture, very different cost: how you batch draw calls is the performance story

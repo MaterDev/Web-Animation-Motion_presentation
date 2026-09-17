@@ -1,42 +1,111 @@
-// @ts-nocheck -- copied from design/techniques/webgpu/; untyped sheet code
-/* §2 · one device, eight apps. The iPhone Duo is CSS — a frame, a display, a
-   status corner and the Dock down the right edge — because the phone is
-   only there to say "this form factor". Everything inside the display is
-   one WebGPU canvas: whichever app is open owns it, draws its own panes,
-   type, glass and controls through ui.js over its own scene, and is torn
-   down when the next app is opened, so only one app's buffers exist at a
-   time. The Dock switches apps; the caption under the device follows. */
-import { $, card, reduced } from './common.js';
-import { makeUI, uiPointer } from './ui.js';
-import { duoShell, DUO } from './shell.js';
+// @ts-nocheck -- rebuilt for the slide from design/techniques/webgpu/device.js; untyped sheet code
+/* One device, one canvas, and the device is WebGPU too. The iPhone Duo is the
+   sphere-traced hardware in duo.js; it starts closed, opens on a press, boots,
+   and lands on a Home Screen drawn with ui.js. An icon opens its app out of the
+   icon; the home indicator on the right edge (or Home, or Escape) takes it
+   back. Only one app's buffers are ever alive: the last is torn down once the
+   Home Screen is back in front.
 
-export function deviceCard(apps) {
-  const el = $('dv-card'), canvas = $('dv-canvas'), loading = $('dv-loading'); const shell = duoShell('dv-fit', 'dv-phone');
-  let ui = null, dev = null, cur = null, curId = null, pending = null, hover = null, press = null, drag = false;
-  /* Under reduced motion the sheet's clock draws its poster once and stops, so nothing would
-     ever open an app or show a change. invalidate() asks for exactly one more frame — a
-     single rAF, not a loop — and is a no-op while the clock is running. */
-  let self = null, queued = 0;
+   The OS layer draws into a texture the size of the open display in device
+   pixels — the Home Screen's, or the app's — and the hardware composites it
+   onto the display plane. Closed or moving, the body is marched every frame;
+   held still, it accumulates jittered samples and then stops marching. */
+import { $, card, reduced, format, DPR } from './common.js';
+import { makeUI } from './ui.js';
+import { makeHardware, ease } from './duo.js';
+import { makeHome, REAL } from './home.js';
+
+const PW = 890, PH = 626;
+const DUR = { open: 1500, boot: 1150, launch: 420, back: 360, sleep: 260, close: 1300 };
+
+export function deviceCard(apps, captions) {
+  const el = $('dv-card'), canvas = $('dv-canvas'), openBtn = $('dv-open'), homeBtn = $('dv-home'), capName = $('dv-cap-name'), capLine = $('dv-cap-line');
+  let dev = null, ctx = null, hw = null, ui = null, home = null, homeT = null, appT = null, target = null;
+  let state = 'closed', t0 = 0, cur = null, curId = null, zoomFrom = null, hover = null, press = null, drag = false, queued = 0, self = null;
+  const surface = { width: 2, height: 2, view: () => target.createView() };
+  const dur = (k) => (reduced.matches ? 0 : DUR[k]);
   const invalidate = () => { if (!reduced.matches || queued || !self) return; queued = requestAnimationFrame(() => { queued = 0; self.frame(0, 1 / 60, performance.now()); }); };
   const host = { canvas, get ui() { return ui; }, pointer: { x: -1, y: -1, down: false }, invalidate };
-  const buttons = apps.map((a) => $('dv-app-' + a.id));
-  const caption = (id) => apps.forEach((a) => { const c = $('dv-cap-' + a.id); if (c) c.hidden = a.id !== id; });
-  const open = (id) => { if (id === curId || !dev) { pending = id === curId ? null : id; return; } pending = id; loading.hidden = false; loading.textContent = 'opening ' + apps.find((a) => a.id === id).name + '…'; invalidate(); };
-  const swap = () => { const id = pending; pending = null; if (cur) { try { cur.destroy(); } catch (e) { console.warn('destroy', curId, e); } cur = null; }
-    const a = apps.find((x) => x.id === id); curId = id; buttons.forEach((b, i) => b.classList.toggle('dd-dock-on', apps[i].id === id)); caption(id);
-    /* extraction: the sheet mirrored the open app into location.hash; a demo inside the deck does not own the URL */
-    cur = a.make(); cur.init(dev, host); };
-  buttons.forEach((b, i) => b.addEventListener('click', () => open(apps[i].id)));
-  return self = card({ name: 'device', el, init() { dev = this.__dev; ui = makeUI(canvas, DUO.w, DUO.h);
-      uiPointer(ui, (p) => { host.pointer.x = p.x; host.pointer.y = p.y; hover = ui.at(p.x, p.y); canvas.style.cursor = hover ? 'pointer' : (cur && cur.cursor) || 'default'; if (cur && cur.move) cur.move(p, hover, drag); },
-        () => { host.pointer.x = -1; host.pointer.y = -1; hover = null; if (cur && cur.leave) cur.leave(); },
-        (p) => { press = ui.at(p.x, p.y); drag = true; host.pointer.down = true; if (cur && cur.down) cur.down(p, press); },
-        (p) => { drag = false; host.pointer.down = false; if (p && cur && cur.up) cur.up(p, press, press && ui.at(p.x, p.y) === press); press = null; invalidate(); });
-      pending = apps[0].id; },
-    frame(t, dt, now) { if (!ui) return; if (pending) { if (loading.hidden) { loading.hidden = false; loading.textContent = 'opening ' + apps.find((a) => a.id === pending).name + '…'; invalidate(); return; } swap(); loading.hidden = true; }
-      if (!cur) return; ui.begin(); cur.frame(t, dt, now, hover); },
-    /* extraction: the sheet never closed the device; a demo tears down the open app, the UI and its own frame requests */
-    dispose() { shell.ro.disconnect(); if (queued) cancelAnimationFrame(queued); queued = 0; self = null;
-      if (cur) { try { cur.destroy(); } catch (e) { console.warn('destroy', curId, e); } cur = null; }
-      if (ui) { try { ui.destroy(); } catch {} ui = null; } } });
+
+  const caption = (id) => { const c = captions[id] || captions.home; capName.textContent = c[0]; capLine.textContent = c[1]; };
+  const controls = () => {
+    const open = state !== 'closed' && state !== 'closing';
+    openBtn.textContent = open ? 'Close' : 'Open'; openBtn.setAttribute('aria-pressed', String(open));
+    homeBtn.hidden = !(state === 'app' || state === 'launch');
+    caption(state === 'closed' || state === 'opening' || state === 'closing' || state === 'sleep' ? 'closed' : (state === 'app' || state === 'launch') ? curId : 'home');
+  };
+  const go = (s) => { state = s; t0 = performance.now(); controls(); invalidate(); };
+  const killApp = () => { if (cur) { try { cur.destroy(); } catch (e) { console.warn('destroy', curId, e); } cur = null; curId = null; } };
+
+  const open = () => { if (!hw) return; if (state === 'closed') go('opening'); };
+  const close = () => { if (state === 'closed' || state === 'closing' || state === 'opening') return; killApp(); go('sleep'); };
+  const goHome = () => { if (state === 'app' || state === 'launch') go('back'); };
+  const launch = (id, r) => { if (state !== 'home' || !REAL[id]) return; killApp();
+    const a = apps.find((x) => x.id === id); curId = id; cur = a.make(); cur.init(dev, host); zoomFrom = r; go('launch'); };
+  openBtn.addEventListener('click', () => (state === 'closed' ? open() : close()));
+  homeBtn.addEventListener('click', goHome);
+  const onKey = (e) => { if (e.key === 'Escape') goHome(); };
+  el.addEventListener('keydown', onKey);
+
+  /* pointer → device pixels → points on the display */
+  const at = (e) => { const r = canvas.getBoundingClientRect(); const px = (e.clientX - r.left) * canvas.width / r.width, py = (e.clientY - r.top) * canvas.height / r.height;
+    const R = hw ? hw.rect : { x: 0, y: 0, w: 1, h: 1 }; return { x: (px - R.x) / R.w * PW, y: (py - R.y) / R.h * PH, inside: px >= R.x && py >= R.y && px <= R.x + R.w && py <= R.y + R.h }; };
+  const onScreen = () => state === 'home' || state === 'app';
+  const indicator = (p) => state === 'app' && p.x > PW - 40 && Math.abs(p.y - PH / 2) < 130;
+  canvas.addEventListener('pointerdown', (e) => { const p = at(e);
+    if (state === 'closed') { open(); return; }
+    if (!onScreen() || !p.inside) return; try { canvas.setPointerCapture(e.pointerId); } catch {}
+    press = indicator(p) ? 'home-indicator' : ui.at(p.x, p.y); drag = true; host.pointer.down = true;
+    if (state === 'app' && cur && cur.down && press !== 'home-indicator') cur.down(p, press); });
+  canvas.addEventListener('pointermove', (e) => { const p = at(e); host.pointer.x = p.x; host.pointer.y = p.y;
+    if (state === 'closed') { canvas.style.cursor = 'pointer'; return; }
+    if (!onScreen() || !ui) { canvas.style.cursor = 'default'; return; }
+    hover = p.inside ? ui.at(p.x, p.y) : null; canvas.style.cursor = indicator(p) || hover ? 'pointer' : (state === 'app' && cur && cur.cursor) || 'default';
+    if (state === 'app' && cur && cur.move) cur.move(p, hover, drag); });
+  canvas.addEventListener('pointerup', (e) => { const p = at(e); drag = false; host.pointer.down = false; const was = press; press = null;
+    if (was === 'home-indicator') { if (indicator(p)) goHome(); return; }
+    const same = was && ui && ui.at(p.x, p.y) === was;
+    if (state === 'home' && same) { const kind = was.slice(0, was.indexOf('-')), [id, x, y, sz] = was.slice(was.indexOf('-') + 1).split(':');
+      if (kind === 'app') launch(id, [+x, +y, +sz]); else if (kind === 'fake') { home.tap(id, performance.now()); invalidate(); } return; }
+    if (state === 'app' && cur && cur.up) cur.up(p, was, same); invalidate(); });
+  canvas.addEventListener('pointerleave', () => { hover = null; if (state === 'app' && cur && cur.leave) cur.leave(); });
+
+  const fitCanvas = () => { const r = canvas.getBoundingClientRect(); const w = Math.max(2, Math.round(r.width * DPR)), h = Math.max(2, Math.round(r.height * DPR)); if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; return true; } return false; };
+  const surfaces = () => { const R = hw.resize(); if (homeT) { homeT.destroy(); appT.destroy(); }
+    const mk = () => dev.createTexture({ size: [R.w, R.h], format, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
+    homeT = mk(); appT = mk(); surface.width = R.w; surface.height = R.h; };
+
+  return self = card({ name: 'device', el,
+    init() { dev = this.__dev; ctx = canvas.getContext('webgpu'); ctx.configure({ device: dev, format, alphaMode: 'premultiplied' });
+      fitCanvas(); hw = makeHardware(dev, canvas, ctx, format); surfaces();
+      target = homeT; ui = makeUI(surface, PW, PH); home = makeHome(dev, ui); openBtn.disabled = false; controls(); },
+    frame(t, dt, now) { if (!hw) return;
+      if (fitCanvas()) surfaces();
+      const k = (d) => (d ? Math.min(1, (now - t0) / d) : 1);
+      /* the state machine: pose 0 closed → 1 open and frontal; fold is the hinge angle */
+      let pose = 1, openness = 1, outer = 0, awake = 1, still = true, zoom = null, appAlpha = 0, pill = 0, homeDim = 0, content = null, bootP = 0, fade = 0;
+      if (state === 'closed') { pose = 0; openness = 0; outer = 1; awake = 0; }
+      else if (state === 'opening') { const p = k(dur('open')); pose = p; openness = ease((p - 0.06) / 0.86); outer = 1 - Math.min(1, p / 0.22); awake = Math.max(0, (p - 0.8) / 0.2); still = false; content = awake > 0 ? 'boot' : null; if (p >= 1) go(reduced.matches ? 'home' : 'boot'); }
+      else if (state === 'boot') { const p = k(dur('boot')); bootP = p; content = p < 0.8 ? 'boot' : 'home'; fade = p < 0.8 ? 0 : 1 - (p - 0.8) / 0.2; bootP = Math.min(1, p / 0.75); if (p >= 1) go('home'); }
+      else if (state === 'home') content = 'home';
+      else if (state === 'launch' || state === 'back') { const back = state === 'back', p = k(dur(back ? 'back' : 'launch')), e = ease(back ? 1 - p : p);
+        const [ix, iy, is] = zoomFrom, sx = surface.width / PW, sy = surface.height / PH, from = [ix * sx, iy * sy, is * sx, is * sy], full = [0, 0, surface.width, surface.height];
+        zoom = from.map((v, i) => v + (full[i] - v) * e); appAlpha = Math.min(1, e * 3); homeDim = 0.3 * e; pill = e; content = back ? 'home' : 'app';
+        if (p >= 1) { if (back) { killApp(); go('home'); } else go('app'); } }
+      else if (state === 'app') { zoom = [0, 0, surface.width, surface.height]; appAlpha = 1; pill = 1; content = 'app'; }
+      else if (state === 'sleep') { const p = k(dur('sleep')); awake = 1 - p; content = 'home'; if (p >= 1) go('closing'); }
+      else if (state === 'closing') { const p = k(dur('close')); pose = 1 - p; openness = 1 - ease((p - 0.02) / 0.86); outer = Math.max(0, (p - 0.78) / 0.22); awake = 0; still = false; if (p >= 1) go('closed'); }
+      /* the display's content, into its texture */
+      if (content === 'boot') { target = homeT; ui.begin(); home.boot(bootP); }
+      else if (content === 'home') { target = homeT; ui.begin(); home.draw(now, fade); }
+      else if (content === 'app' && cur) { target = appT; ui.begin(); cur.frame(t, dt, now, hover); }
+      /* the hardware */
+      const enc = dev.createCommandEncoder();
+      const accumulating = hw.body(enc, pose, Math.PI - openness * Math.PI, outer, still);
+      hw.composite(enc, homeT, appT, { awake, settled: pose >= 1, zoom, zoomRad: zoom ? 18 * (1 - (zoom[2] / surface.width)) * surface.width / PW : 0, appAlpha, pill, homeDim });
+      dev.queue.submit([enc.finish()]);
+      if (accumulating || (state !== 'closed' && state !== 'home' && state !== 'app')) invalidate(); },
+    dispose() { if (queued) cancelAnimationFrame(queued); queued = 0; self = null; el.removeEventListener('keydown', onKey);
+      killApp(); if (home) home.destroy(); if (ui) { try { ui.destroy(); } catch {} ui = null; }
+      if (hw) hw.destroy(); hw = null; if (homeT) { homeT.destroy(); appT.destroy(); } homeT = appT = null; } });
 }

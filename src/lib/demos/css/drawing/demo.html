@@ -45,10 +45,12 @@
         <span class="scene-note">Two identical concentric rulings, one rotating slowly against the other under <code>mix-blend-mode: difference</code>. The pattern you see exists in neither layer — it's the interference between them, which is why it races while the rotation crawls.</span>
       </div>
 
-      <div class="scene-card" data-testid="art-holo">
-        <div class="scene-stage"><div class="holo"><h2 class="ho-num">06</h2><div class="ho-reg"><span>WAM-2026</span><span>Layout / CSS</span></div><hr><div class="ho-spine">Selectors · Scroll · State</div><div class="ho-blk"><div class="ho-word"><s>T</s><s>i</s><s>m</s><s>e</s><s>l</s><s>e</s><s>s</s><s>s</s></div><div class="ho-ghost">Timeless</div><div class="ho-kick"><i></i><b>No Script</b></div></div><div class="ho-body"><span>conic-gradient / clip: text</span><span>@property → animatable angle</span><span>eight glyphs · eight offsets</span></div><div class="ho-dots"><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u><u>■</u></div><em></em><div class="ho-scan"></div></div></div>
-        <span class="scene-label">holographic type · background-clip</span>
-        <span class="scene-note">A conic gradient painted through the letterforms with <code>background-clip: text</code> — the sweep only turns because the angle is registered via <code>@property</code>; unregistered, it would jump. Layered over it: each glyph floats and tilts on its own stagger, a chromatic ghost drifts behind under a screen blend, and a sheen rakes across. Five cycles at different periods, so the loop never visibly repeats.</span>
+      <div class="scene-card" data-testid="art-depth">
+        <div class="scene-stage">
+          <div class="depth"><div class="ap-rail"></div><div class="ap-pin"><div class="ap-field"><i></i><i></i><i></i><i></i></div><div class="ap-grain"></div><div class="ap-word">Aperture</div><div class="ap-plate"></div><div class="ap-hud"><i></i><i></i><i></i><i></i><b>Aperture</b><u>f/1.4</u><s>Mask · scroll()</s></div><div class="ap-ticks"><em></em></div><div class="ap-hint" id="depthHint">auto · scroll anytime</div></div><div class="ap-spacer"></div></div>
+        </div>
+        <span class="scene-label">aperture · scroll() mask</span>
+        <span class="scene-note">Genuinely scroll-driven — a script eases the scrollbar, standing in for your finger; scroll it yourself and the loop steps aside, then picks up from wherever you left it. Scroll widens a hole in an opaque plate, so the colour field is <b>revealed</b> rather than moved: the mask radius rides a <code>scroll()</code> timeline, and it can interpolate at all only because it is a registered <code>@property</code>. Closed it reads as a titled plate, open it reads as the field — never a blank frame at either end, and the field drifts on its own clock regardless.</span>
       </div>
     </div>
   </div>

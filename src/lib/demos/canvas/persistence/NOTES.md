@@ -33,3 +33,17 @@ None. Everything is drawn.
 
 ## For the edit pass
 Nothing specific recorded for this demo yet. Key: "canvas we can take all of these except the metro map".
+
+
+## Presentation edits (2026-09-17)
+- **Slide layout:** the explainer, controls and readouts sit in a left column and the live field fills the right, making the demo 2:1. Long explanations moved to the speaker notes.
+
+## Slide fit (2026-09-17)
+Recomposed for the 864 × 444 slide well at 1:1 (measured `.demo-root` 444px tall, 864 wide, no overflow). Replaces the two-column layout above.
+- **Chassis.** The world is now a raised grey housing (CSS four-colour bevel, the off-thread players' chassis range) filling the box edge to edge, with a 16px inner margin for every screen, readout and button. `--v1-face/hi/lt/sh/dk` are lifted in this copy only (the tear sheet keeps its near-black face); the canvas chrome reads the same tokens, so screen bevels match the housing. `--v1-well` and a brighter `--v1-ink` added.
+- **Field (hero).** Full width, 832 × 312 backing store = displayed CSS size, drawn at 1× and scaled by whole device pixels with `image-rendering: pixelated` (a DPR-sized store would quadruple the per-frame quantise pass). The canvas no longer draws its own outer raised bevel; `FRAME` 14 → 2 (sunken screen bevel only), `STRIP` 16 → 12, palette strip centred under the field.
+- **Panel row (88px).** Left: explainer screen 372 × 88, backing × devicePixelRatio, 11px labels. Cut to five generations twelve frames apart (true 1.006 scale) and the smooth-over-quantised fade strips. Right: a recessed readout window (frame 24px hero, palette, decay / frame, quantise cost; labels 11px) above the four bevelled buttons.
+- **Readout text.** Palette shows `24` (was `24 entries`); label `decay per frame` → `decay / frame`.
+- **Hidden:** the explainer caption and both `.cv-instr` paragraphs (prose is in `deck-notes/canvas-persistence.md`). Their test ids are kept.
+- **Gotcha:** sizing rules target `[data-testid="v1-world"]`, not `.v1` — `createTokens` appends a probe wearing `.v1`, and a sized `.v1` added 32px of overflow below the world.
+- Added test ids: `v1-panel`, `v1-controls`, `v1-kv-frame`, `v1-kv-palette`, `v1-kv-decay`, `v1-kv-qcost`.

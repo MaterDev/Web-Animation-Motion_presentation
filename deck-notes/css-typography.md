@@ -1,0 +1,16 @@
+- **Holographic type**
+  - The word TIMELESS filled with a turning conic gradient
+  - `background-clip: text` clips the gradient to the letters
+- **Layers**
+  - A ghost layer, a sheen, scanlines, a hollow numeral
+- **Still just CSS**
+  - The type stays real text: selectable, searchable, readable
+- **Variable fonts: the one effect that lives inside the font file**
+  - `font-variation-settings` interpolates the letter **outlines** between axis values
+- **Four rows**
+  - **Doto · wght + ROND:** square pixel to round dot; advance widths never change, so no reflow
+  - **Inter · wght:** widths grow as it swells, so neighbours shove and layout re-runs
+  - **JetBrains Mono · wght:** a monospace keeps every cell the same width
+  - **Doto · ROND only:** one axis, a wave across the word
+- **Same declaration, different cost**
+  - Fixed metrics are cheap; changing metrics re-run layout every frame

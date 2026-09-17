@@ -113,6 +113,17 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: c
 .tama-pet { display: block; width: 100%; filter: drop-shadow(0 4px 6px oklch(0 0 0 / 0.25)); }
 
 .gif-frame { position: relative; display: inline-block; line-height: 0; }
+.gif-frame::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 3px;
+  border: 1.5px solid transparent; box-shadow: 0 0 0 0 transparent; pointer-events: none;
+}
+.gif-frame.gif-pulse::after { animation: gifTrace 1100ms ease-out; }
+@keyframes gifTrace {
+  0%   { border-color: oklch(0.62 0.24 27 / 0); box-shadow: 0 0 0 0 oklch(0.62 0.24 27 / 0); }
+  20%  { border-color: oklch(0.62 0.24 27 / 0.95); box-shadow: 0 0 7px 1px oklch(0.62 0.24 27 / 0.7); }
+  100% { border-color: oklch(0.62 0.24 27 / 0); box-shadow: 0 0 0 0 oklch(0.62 0.24 27 / 0); }
+}
+@media (prefers-reduced-motion: reduce) { .gif-frame.gif-pulse::after { animation: none; } }
 
 .tama-sun, .tama-moon { position: absolute; top: 22%; right: 8%; width: 22px; height: 22px; border-radius: 50%; opacity: 0; transition: opacity 500ms var(--ease-standard); }
 .tama-sun { background: oklch(0.92 0.15 95); box-shadow: 0 0 16px oklch(0.92 0.15 95 / 0.7); }
@@ -260,3 +271,69 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: c
 @media (max-width: 860px) {
   .gif-player-row > [data-testid="gif-scene-ai-chat"] { grid-column: 1 / -1; }
 }
+
+/* deck fit (presentation edit): on a slide the demo is the content; sheet
+   chrome and long captions are hidden, the notes carry them */
+.crumb, .head, .dek, .fmt-head, .fmt-case, .notes, .scene-note { display: none !important; }
+.wrap { max-width: none !important; margin: 0 !important; padding: 12px !important; }
+.fmt-section { margin: 0 !important; padding: 0 !important; border: 0 !important; }
+
+/* deck fit (presentation edit, Key): the app is the main feature — large,
+   on the right, in a device chassis, its character screen on top and the
+   chat below, using the slide's full height. The four sprite contexts sit
+   in a smaller 2 × 2 on the left. The demo lays out at 900px so the slide
+   scales it close to 1:1 and the UI stays readable. */
+.wrap { padding: 4px !important; }
+.fmt-section { display: grid !important; grid-template-columns: 1fr 1.75fr; gap: 20px; align-items: stretch; height: 500px; }
+.gif-row { grid-template-columns: 1fr 1fr !important; grid-template-rows: 1fr 1fr; gap: 10px 10px !important; margin: 0 !important; height: 500px; }
+.gif-row .scene-card { display: flex; flex-direction: column; min-height: 0; }
+.gif-row .scene-stage { aspect-ratio: auto !important; flex: 1 1 auto; min-height: 0; overflow: visible; }
+.gif-row .mock-chat, .gif-row .mock-upload, .gif-row .mock-away { justify-content: center; gap: 6px; padding: 10px; }
+.gif-row .mock-chat .mock-bubble { display: none; }
+.gif-row .sticker-frame { display: block; height: 62%; }
+.gif-row .sticker-frame img { height: 100% !important; width: auto !important; max-width: none; display: block; margin: 0 auto; }
+.gif-row .mock-upload .bar-track { width: 70%; }
+.gif-row .scene-label { font-size: 11px; }
+
+/* the app, in a chassis: a dark moulded housing with a bezel, a speaker
+   slot and a home pill, so it reads as a device and not a card */
+.gif-player-row { grid-template-columns: 1fr !important; margin: 0 !important; height: 500px; }
+.gif-player-row > [data-testid="gif-scene-ai-chat"] { grid-column: 1 / -1 !important; display: flex; flex-direction: column; min-height: 0; }
+.gif-player-row > [data-testid="gif-scene-ai-chat"] > .scene-label { display: none; }
+.tama-stage {
+  max-height: none !important; display: flex !important; flex-direction: column; flex: 1 1 auto; min-height: 0; height: auto !important;
+  position: relative; padding: 26px 14px 30px !important; border-radius: 30px !important; overflow: hidden;
+  background: linear-gradient(160deg, oklch(0.30 0.012 250), oklch(0.18 0.010 250)) !important;
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.14), inset 0 -2px 6px oklch(0 0 0 / 0.5), 0 10px 24px oklch(0 0 0 / 0.35), 0 0 0 1px oklch(0 0 0 / 0.6) !important;
+}
+.tama-stage::before { content: ''; position: absolute; top: 11px; left: 50%; width: 56px; height: 5px; margin-left: -28px; border-radius: 3px; background: oklch(0.10 0.01 250); box-shadow: inset 0 1px 1px oklch(0 0 0 / 0.8); }
+.tama-stage::after { content: ''; position: absolute; bottom: 11px; left: 50%; width: 90px; height: 5px; margin-left: -45px; border-radius: 3px; background: oklch(0.45 0.01 250); }
+.tama-full { flex: 0 0 42%; display: flex !important; flex-direction: column; min-height: 0; border-radius: 14px 14px 0 0; overflow: hidden; }
+.tama-full .tama-screen { flex: 1 1 auto; height: auto !important; border-radius: 0; }
+.tama-stage .chat-app { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin: 0 !important; border-radius: 0 0 14px 14px !important; }
+.tama-stage .ai-log { flex: 1 1 auto; min-height: 0; height: auto !important; overflow: hidden; justify-content: flex-end; padding: 12px 14px; gap: 9px; }
+/* readable at slide scale */
+.tama-stage .ai-log .mock-bubble { font-size: 16px !important; padding: 8px 12px; }
+.tama-stage .chat-header { padding: 10px 14px; }
+.tama-stage .chat-header-name { font-size: 16px; }
+.tama-stage .chat-header-status { font-size: 12px; }
+.tama-stage .chat-header-avatar { width: 32px; height: 32px; }
+.tama-stats { transform: scale(1.35); transform-origin: 0 100%; }
+.scene-label { color: var(--lcd-ink) !important; opacity: 0.75; }
+.online-tag { display: inline-flex; align-items: center; gap: 6px; }
+.online-tag i { width: 7px; height: 7px; border-radius: 50%; background: oklch(0.72 0.17 145); box-shadow: 0 0 6px oklch(0.72 0.17 145 / 0.6); }
+
+/* long chats fade under the header rather than cutting a line in half */
+.tama-stage .ai-log { -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 36px); mask-image: linear-gradient(180deg, transparent 0, #000 36px); }
+
+/* sprite cards are square (Key), even though the 2 × 2 is then shorter
+   than the device; the grid centres vertically beside it */
+.gif-row { height: auto !important; grid-template-rows: auto auto !important; align-self: center; }
+.gif-row .scene-stage { flex: none !important; aspect-ratio: 1 / 1 !important; height: auto !important; }
+
+/* stickers top-aligned with the device, with more air between them (Key) */
+.gif-row { align-self: start !important; }
+.fmt-section { gap: 44px !important; }
+
+/* top of the stickers lines up with the top of the app screen inside the chassis (Key), not the chassis edge */
+.gif-row { margin-top: 26px !important; }

@@ -1,17 +1,18 @@
     <div class="h2" data-testid="h2-world">
       <div class="h2-bar" data-testid="h2-bar">
         <button class="h2-btn h2-on" data-m="arc" data-testid="h2-method-arc">arc per dot</button>
-        <button class="h2-btn" data-m="batched" data-testid="h2-method-batched">one batched path</button>
-        <button class="h2-btn" data-m="sprite" data-testid="h2-method-sprite">drawImage sprite</button>
-        <button class="h2-btn" data-m="rect" data-testid="h2-method-rect">fillRect square</button>
-        <span style="flex:1"></span>
-        <button class="h2-btn h2-c h2-on" data-ch="c" data-testid="h2-plate-c">cyan 15°</button>
-        <button class="h2-btn h2-m h2-on" data-ch="m" data-testid="h2-plate-m">magenta 75°</button>
-        <button class="h2-btn h2-y h2-on" data-ch="y" data-testid="h2-plate-y">yellow 0°</button>
-        <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">black 45°</button>
+        <button class="h2-btn" data-m="batched" data-testid="h2-method-batched">one path</button>
+        <button class="h2-btn" data-m="sprite" data-testid="h2-method-sprite">sprite</button>
+        <button class="h2-btn" data-m="rect" data-testid="h2-method-rect">fillRect</button>
+        <span class="h2-sep" aria-hidden="true"></span>
+        <button class="h2-btn h2-c h2-on" data-ch="c" data-testid="h2-plate-c">C 15°</button>
+        <button class="h2-btn h2-m h2-on" data-ch="m" data-testid="h2-plate-m">M 75°</button>
+        <button class="h2-btn h2-y h2-on" data-ch="y" data-testid="h2-plate-y">Y 0°</button>
+        <button class="h2-btn h2-on" data-ch="k" data-testid="h2-plate-k">K 45°</button>
+        <span class="h2-sep" aria-hidden="true"></span>
         <button class="h2-btn h2-on" data-testid="h2-gain">dot gain</button>
-        <button class="h2-btn" data-testid="h2-lock">lock to standard angles</button>
-        <button class="h2-btn h2-on" data-testid="h2-proof">proof sequence</button>
+        <button class="h2-btn" data-testid="h2-lock">lock angles</button>
+        <button class="h2-btn h2-on" data-testid="h2-proof">proof</button>
         <button class="h2-btn h2-on" data-testid="h2-loupe">loupe</button>
       </div>
       <div class="h2-stage" data-testid="h2-explain-stage">
@@ -25,8 +26,8 @@
         <canvas data-testid="h2-canvas"></canvas>
       </div>
       <div class="h2-plate" data-testid="h2-readouts">
-        <div class="h2-kv">dots this frame<b data-testid="h2-dots">—</b></div>
-        <div class="h2-kv">draw + sync<b data-testid="h2-cost">—</b></div>
+        <div class="h2-kv h2-hero">dots / frame<b data-testid="h2-dots">—</b></div>
+        <div class="h2-kv h2-hero">draw + sync<b data-testid="h2-cost">—</b></div>
         <div class="h2-kv">ruling<b data-testid="h2-ruling">—</b></div>
         <div class="h2-kv">screen angles<b data-testid="h2-angles">Y 0 · C 15 · K 45 · M 75</b></div>
       </div>

@@ -41,6 +41,23 @@
     g.slides.push({ s, n });
     return out;
   }, /** @type {{ key: string, name: string, tint: string, slides: { s: import('$lib/deck/slides.js').Slide, n: number }[] }[]} */ ([]));
+
+  /* The grid filter. Techniques = the six technique stops; demos = slides
+     that mount a live demo from the collection, wherever they sit. */
+  const TECH_KEYS = ['css', 'svg', 'gif', 'video', 'canvas', 'gpu'];
+  /** @type {(s: import('$lib/deck/slides.js').Slide) => boolean} */
+  const isDemo = (s) => Boolean(s.demoId);
+  let filter = $state('all');
+  const FILTERS = [
+    { key: 'all', label: 'All', count: SLIDES.length },
+    { key: 'techniques', label: 'Technique sections', count: GROUPS.filter((g) => TECH_KEYS.includes(g.key)).reduce((a, g) => a + g.slides.length, 0) },
+    { key: 'demos', label: 'Demos', count: SLIDES.filter(isDemo).length },
+  ];
+  const VISIBLE = $derived(
+    filter === 'techniques' ? GROUPS.filter((g) => TECH_KEYS.includes(g.key))
+    : filter === 'demos' ? GROUPS.map((g) => ({ ...g, slides: g.slides.filter(({ s }) => isDemo(s)) })).filter((g) => g.slides.length)
+    : GROUPS
+  );
   import { getInfo, getNotes, putNote, setState, watchState } from '$lib/deck/control.js';
   import { replaceState, afterNavigate } from '$app/navigation';
   import { untrack } from 'svelte';
@@ -108,6 +125,15 @@
      both — the laptop pushes on every change, and listens for the
      phone doing the same. */
   let remoteUrl = $state('');
+  /* Sync bookkeeping, deliberately not $state: the highest revision this
+     deck has written, and the last position it agreed with the server on. */
+  let ownRev = 0;
+  let synced = { i: -1, ex: -1, mode: '' };
+  /** @param {{ i: number, ex: number, mode: string }} next */
+  const push = async (next) => {
+    const r = await setState(next);
+    if (r && Number.isInteger(r.rev)) ownRev = Math.max(ownRev, r.rev);
+  };
   $effect(() => {
     /* A deck opened at a slide's URL LEADS on its first contact: the shared
        position the server still holds is from before, and adopting it would
@@ -115,9 +141,14 @@
        is instead, then follows like any other client. */
     let first = opened !== null;
     const stop = watchState((/** @type {any} */ st) => {
+      /* A poll that left before our own push can land after it carrying
+         the old position; adopting it snapped a rail click straight back.
+         Anything at or below the revision this deck last wrote is stale. */
+      if (st.rev <= ownRev) return;
+      synced = { i: st.i, ex: st.ex ?? 0, mode: st.mode };
       if (first) {
         first = false;
-        if (st.i !== i || st.ex !== ex) setState({ i, ex, mode });
+        if (st.i !== i || st.ex !== ex) push({ i, ex, mode });
         return;
       }
       if (st.i !== i) { i = st.i; ex = st.ex ?? 0; }
@@ -135,7 +166,15 @@
     })();
     return stop;
   });
-  $effect(() => { setState({ i, ex, mode }); });
+  /* Push only what this deck changed. Re-pushing a position it just
+     adopted from the phone bumped the revision again, and two open decks
+     ping-ponged, each undoing the other's click. */
+  $effect(() => {
+    const next = { i, ex, mode };
+    if (next.i === synced.i && next.ex === synced.ex && next.mode === synced.mode) return;
+    synced = next;
+    push(next);
+  });
 
   /* The address bar follows the deck. Shallow routing, so moving slides —
      by key, button, or the phone — rewrites the URL without a navigation:
@@ -252,8 +291,19 @@
 
       <!-- The grid, in the talk's sections: each group is headed by its
            name and slide count, with the section tint as a small swatch. -->
+      <!-- Filter: every slide, only the six technique stops, or only the
+           slides that run a live demo. -->
+      <div class="filter" role="radiogroup" aria-label="Show" data-testid="overview-filter">
+        {#each FILTERS as f (f.key)}
+          <button type="button" role="radio" class="filter-btn" class:on={filter === f.key} aria-checked={filter === f.key}
+            onclick={() => { filter = f.key; }} data-testid="overview-filter-{f.key}">
+            {f.label}<span class="filter-n">{f.count}</span>
+          </button>
+        {/each}
+      </div>
+
       <div class="sections" data-testid="overview">
-        {#each GROUPS as g (g.key)}
+        {#each VISIBLE as g (g.key)}
           <section class="group" data-testid="overview-section-{g.key}">
             <h2 class="group-h" data-testid="overview-section-{g.key}-title">
               {#if g.tint === 'spectrum'}<span class="swatch prism" aria-hidden="true">{#each PRISM as t (t)}<i style="background:{TINTS[t]}"></i>{/each}</span>{:else}<span class="swatch" style="background:{TINTS[g.tint] ?? 'var(--hz-400)'}" aria-hidden="true"></span>{/if}
@@ -365,6 +415,11 @@
   h1 { font-size: clamp(30px, 5vw, 52px); margin: 0; }
   .lead { max-width: 60ch; color: var(--hz-600); margin: 0 0 calc(var(--u)*6); }
 
+  .filter { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 calc(var(--u)*4); }
+  button.filter-btn { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; padding: 8px 12px; }
+  button.filter-btn.on { background: var(--hz-300); border-color: var(--hz-500); color: var(--hz-900); }
+  .filter-n { font-size: 10px; color: var(--hz-500); letter-spacing: 0; }
+  button.filter-btn.on .filter-n { color: var(--hz-700); }
   .sections { display: flex; flex-direction: column; gap: calc(var(--u)*7); }
   .group-h { display: flex; align-items: center; gap: 10px; margin: 0 0 calc(var(--u)*2.5);
     padding-bottom: calc(var(--u)*1.5); border-bottom: var(--hair) solid var(--hz-200); }

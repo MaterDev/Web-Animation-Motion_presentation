@@ -200,3 +200,14 @@ p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: c
 .notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
 .notes h3 { margin-bottom: calc(var(--u)*1.5); }
 .notes p { max-width: 68ch; color: var(--hz-500); font-size: 13.5px; }
+
+/* ── deck fit (presentation edit): on a slide the demo is the content, so
+   the sheet's page chrome (breadcrumb, title, intro, section prose, notes)
+   is hidden and the cards fill the column. ── */
+.crumb, .head, .dek, .fmt-head, .fmt-case, .notes { display: none !important; }
+.wrap { max-width: none !important; margin: 0 !important; padding: 24px !important; }
+.fmt-section { margin: 0 !important; padding: 0 !important; border: 0 !important; }
+
+/* deck fit: the long sheet caption lives in the speaker notes on a slide */
+.scene-note { display: none !important; }
+.wrap { padding: 12px !important; }

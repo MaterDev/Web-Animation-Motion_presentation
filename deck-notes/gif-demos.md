@@ -1,7 +1,0 @@
-- **One sticker, four contexts**
-  - The same GIF staged in four real product settings
-- **Eight-agent roster**
-  - Animated identity cards
-  - Measured: **6 frames** each, **~42–84 KB** per file
-- **Generated, not hand-made**
-  - Six generator modules behind the sheet

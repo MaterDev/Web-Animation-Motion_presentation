@@ -41,7 +41,7 @@
             css/svg or webgl/webgpu comparison is coloured by what each side IS.
    `graphic` a figure drawn from a number already stated in `body`. */
 
-/** @typedef {'demo'|'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'|'screen'|'datum'|'mirror'|'low'|'framed'|'ledger'|'pair'|'weighted'} Layout */
+/** @typedef {'stage'|'demo'|'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'|'screen'|'datum'|'mirror'|'low'|'framed'|'ledger'|'pair'|'weighted'} Layout */
 /** @typedef {'composite'|'css'|'svg'|'gif'|'video'|'canvas'|'webgl'|'webgpu'} Motif */
 /** @typedef {{ label: string, demo: string }} Example */
 /**
@@ -61,6 +61,10 @@
  * @property {[string, string][]} [readout]
  * @property {string} [qr]  a URL shown as a QR code with the address under it
  * @property {string} [demoId]  a demo from the collection (src/lib/demos), mounted live
+ * @property {boolean} [bare]  no LED well: the demo sits directly on the slide's screen
+ * @property {boolean} [even]  demo well with equal screen margins on all four sides (864 × 444)
+ * @property {'16/9'} [ratio]  the demo's own shape; a 16:9 demo fills the field width into the bottom margin
+ * @property {number} [demoWidth]  px the demo lays out at before `stage` scales it to the slide (default 1100)
  * @property {boolean} [wide]  demo region spans the width under the heading
  * @property {number[]} [cite]  bibliography numbers in the paper (SCOPE.md), shown as markers
  * @property {[string, string][]} [strip]  key/value readout along the foot of a `screen` slide
@@ -131,10 +135,19 @@ export const SLIDES = [
       { h: 'costs', body: 'Animate size or position and the browser redoes layout and paint every frame. Stick to moving and fading — transform and opacity — and it stays smooth.' },
     ],
   },
+  /* ── Layout & CSS demos, one slide per group (Key): timeless; drawing
+     (goo, moiré, aperture); typography (holographic, variable) ── */
   {
-    id: 'css-demos', code: 'SL-06', layout: 'index', tint: 'css', placeholder: true,
-    kicker: '1 · Layout & CSS · demos', h: 'demos',
-    items: ['timeless — a magazine whose layout moves', 'drawing with css — blobs, moiré, holographic type'],
+    id: 'css-timeless', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/timeless',
+    kicker: '1 · Layout & CSS · Timeless', h: 'timeless, a magazine animated',
+  },
+  {
+    id: 'css-drawing', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/drawing',
+    kicker: '1 · Layout & CSS · Drawing', h: 'css as a drawing instrument',
+  },
+  {
+    id: 'css-typography', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/typography',
+    kicker: '1 · Layout & CSS · Typography', h: 'holographic and variable type',
   },
 
   /* ── Stop 2 · SVG ── */
@@ -152,10 +165,14 @@ export const SLIDES = [
       { h: 'svg', body: 'Draws the shapes themselves, so they can come from data or turn into something else.' },
     ],
   },
+  /* ── SVG demos, each the whole slide ── */
   {
-    id: 'svg-demos', code: 'SL-10', layout: 'index', tint: 'svg', alt: true, placeholder: true,
-    kicker: '2 · SVG · demos', h: 'demos',
-    items: ['a history of ai, drawn from real data', 'the camera bench'],
+    id: 'svg-zoom-map', code: 'SL-10', layout: 'stage', tint: 'svg', demoId: 'svg/zoom-map', demoWidth: 1600, even: true,
+    kicker: '2 · SVG · The camera', h: 'a survey-sheet zoom map',
+  },
+  {
+    id: 'svg-lineage-radar', code: 'SL-10', layout: 'stage', tint: 'svg', demoId: 'svg/lineage-radar', demoWidth: 1600, even: true,
+    kicker: '2 · SVG · Real data', h: 'lineage radar',
   },
 
   /* ── Stop 3 · GIF — the shortest stop ── */
@@ -164,10 +181,10 @@ export const SLIDES = [
     kicker: '3 · GIF', h: 'no off switch',
     body: 'Works anywhere with no code, but you can’t pause it or slow it down. Ours are made by a script, so changing one is an edit, not a redo.',
   },
+  /* ── GIF demos: the three stickers and the companion device, one slide ── */
   {
-    id: 'gif-demos', code: 'SL-05', layout: 'index', tint: 'video', motif: 'gif', placeholder: true,
-    kicker: '3 · GIF · demos', h: 'demos',
-    items: ['one sticker, four places', 'eight tiny animated id cards'],
+    id: 'gif-stickers', code: 'SL-05', layout: 'stage', tint: 'video', motif: 'gif', demoId: 'gif/stickers', even: true, bare: true, demoWidth: 900,
+    kicker: '3 · GIF · Stickers', h: 'one character, four places',
   },
 
   /* ── Stop 4 · Video ── */
@@ -181,11 +198,12 @@ export const SLIDES = [
     kicker: '4 · Video', h: 'motion you can edit',
     body: 'Built in code, motion can be changed like any other part of the site, even by a client in their content system. We’re not making a video. We’re making the thing that makes them.',
   },
+  /* ── Video demos, each the whole slide ── */
   {
-    id: 'video-demos', code: 'SL-04', layout: 'index', tint: 'video', alt: true, placeholder: true,
-    kicker: '4 · Video · demos', h: 'demos',
-    items: ['nova-7 — a gadget rendered to video', 'live filters on a camera', 'green-screen footage placed into the page', 'the vertical social cut, made not cropped'],
+    id: 'video-player-rack', code: 'SL-04', layout: 'stage', tint: 'video', demoId: 'video/player-rack', even: true, bare: true, demoWidth: 960,
+    kicker: '4 · Video · The buffer rack', h: 'the decoded frame is a buffer',
   },
+
 
   /* ── Stop 5 · Canvas — the setup for the graphics card; can run short ── */
   {
@@ -201,10 +219,18 @@ export const SLIDES = [
       { h: 'for richer graphics', body: 'Freedom a normal page can’t give: real depth, and control of every pixel.' },
     ],
   },
+  /* ── 2D Canvas demos, each the whole slide ── */
   {
-    id: 'canvas-demos', code: 'SL-11', layout: 'index', tint: 'canvas', placeholder: true,
-    kicker: '5 · Canvas · demos', h: 'demos',
-    items: ['acetate — a print-shop desk', 'halftone printing', 'a clickable transit map'],
+    id: 'canvas-batching', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/batching', even: true, bare: true, demoWidth: 864,
+    kicker: '5 · 2D Canvas · Batching', h: 'batching',
+  },
+  {
+    id: 'canvas-readback', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/readback', even: true, bare: true, demoWidth: 864,
+    kicker: '5 · 2D Canvas · Readback', h: 'readback',
+  },
+  {
+    id: 'canvas-off-thread', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/off-thread', even: true, bare: true, demoWidth: 864,
+    kicker: '5 · 2D Canvas · Off-thread', h: 'off-thread',
   },
 
   /* ── Stop 6 · WebGL and WebGPU, as one: the graphics card. Punchy — no buffers, no shaders. ── */
@@ -222,10 +248,22 @@ export const SLIDES = [
       { h: 'webgpu', body: 'Newer: in every major browser for about a year. Can do far more at once. Less help when you get stuck.' },
     ],
   },
+  /* ── WebGL & WebGPU demos, each the whole slide ── */
   {
-    id: 'gpu-demos', code: 'SL-12 · SL-14', layout: 'index', tint: 'webgpu', alt: true, placeholder: true, cite: [29],
-    kicker: '6 · WebGL & WebGPU · demos', h: 'demos',
-    items: ['roost — 131,072 birds, each reacting', 'a vermeer under a magnifying glass', 'the marble bust', 'supercell — a storm'],
+    id: 'gpu-fenwick-hero', code: 'SL-12', layout: 'stage', tint: 'webgl', demoId: 'webgl/fenwick-hero', even: true, bare: true, demoWidth: 864,
+    kicker: '6 · WebGL · Homepage hero', h: 'the fenwick · homepage hero',
+  },
+  {
+    id: 'gpu-fenwick-museum', code: 'SL-12', layout: 'stage', tint: 'webgl', demoId: 'webgl/fenwick-museum', even: true, bare: true, demoWidth: 864,
+    kicker: '6 · WebGL · Object in the round', h: 'the fenwick · object in the round',
+  },
+  {
+    id: 'gpu-pipeline', code: 'SL-14', layout: 'stage', tint: 'webgpu', demoId: 'webgpu/pipeline', even: true, bare: true, demoWidth: 864,
+    kicker: '6 · WebGPU · The pipeline', h: 'what a frame costs on the gpu',
+  },
+  {
+    id: 'gpu-device', code: 'SL-14', layout: 'stage', tint: 'webgpu', demoId: 'webgpu/device', even: true, bare: true, demoWidth: 864, cite: [29],
+    kicker: '6 · WebGPU · One device', h: 'one device, four apps',
   },
 
   /* ── Composite: the argument, re-reading the six stops. Not a technique;
@@ -234,6 +272,11 @@ export const SLIDES = [
     id: 'composite-layers', code: 'SL-07', layout: 'demo', tint: 'composite', demoId: 'composite/layers', wide: false,
     kicker: 'Composite', h: 'one page, three surfaces',
     body: 'Most of what you just saw was already a combination: real page elements where you need text and clicks, the graphics card where you need pixels, video where nothing has to respond.',
+  },
+  /* the chroma key composite: moved here from the video stop (Key) */
+  {
+    id: 'composite-chroma-key', code: 'SL-07', layout: 'stage', tint: 'composite', demoId: 'composite/chroma-key', even: true, bare: true, demoWidth: 960,
+    kicker: 'Composite · Video as a material', h: 'an alpha channel the file never had',
   },
   {
     id: 'composite-brief', code: 'SL-07', layout: 'demo', tint: 'composite', demoId: 'composite/carries',
@@ -273,7 +316,7 @@ export const SLIDES = [
     id: 'close-credits', code: 'CLOSE', layout: 'index', tint: 'composite', prism: true,
     kicker: 'With thanks', h: 'with thanks',
     body: 'For feedback and collaboration over the last nine months.',
-    items: ['Sean Van Dyk', 'Irene Polo', 'Aayush Joshi', 'Tyler Knight', 'the Design team'],
+    items: ['Sean Van Dyk', 'Irene Polo', 'Aayush Joshi', 'Tyler Knight', 'Kyle Johnson', 'Kayla Long', 'Mike Matheny'],
   },
   {
     id: 'close-end', code: 'WAM-2026', layout: 'screen', tint: 'composite', prism: true, showStrip: true, shape: 'card',

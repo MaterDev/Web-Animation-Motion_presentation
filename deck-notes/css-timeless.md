@@ -1,0 +1,13 @@
+- **Timeless: a fictional newsweekly, animated with CSS alone**
+  - No JavaScript anywhere on these six cards
+  - The layout itself moves: this is the "page that moves" from the opening
+- **The six cards**
+  - **Cover:** the masthead packs down as the page scrolls past
+  - **Feed:** story cards fade in on staggered delays
+  - **Ticker:** a news crawl moved by transform only
+  - **Sections:** tabs recolour the page through a registered custom property
+  - **Contents:** the list cascades open, and holds open when focused
+  - **Drawers:** accordion rows animate open with grid rows
+- **Why it's cheap**
+  - The browser does the layout work
+  - Motion on **transform and opacity** skips layout and paint **[7]**

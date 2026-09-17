@@ -472,6 +472,7 @@ export function rack(root, d) {
     V.loop = false;
     V.play().catch(() => {});
     setLive(true);
+    root.dispatchEvent(new CustomEvent('wam-cam', { detail: { on: true } }));
   }
 
   function camOff() {
@@ -485,6 +486,7 @@ export function rack(root, d) {
     V.loop = true;
     V.play().catch(() => {});
     setLive(false);
+    root.dispatchEvent(new CustomEvent('wam-cam', { detail: { on: false } }));
   }
 
   d.on(camBtn, 'click', () => {

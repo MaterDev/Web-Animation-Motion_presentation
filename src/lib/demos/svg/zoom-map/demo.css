@@ -111,3 +111,6 @@
   margin: 10px 0 6px; }
 .sv-record .meta { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.05em;
   color: var(--sv-sub); line-height: 1.7; }
+
+/* presentation edit: the paper is the 2:1 window onto the sheet */
+.sv { overflow: hidden; }

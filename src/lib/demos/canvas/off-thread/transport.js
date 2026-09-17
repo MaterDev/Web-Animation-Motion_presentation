@@ -14,7 +14,7 @@
    the worker wrapper does not assume the name `self`: it reads the name
    back out of nsName()'s own source — see index.js — and uses that as its
    parameter. The function bodies are otherwise the sheet's, unchanged. */
-/* ── §5 · TRANSPORT — two classic players ───────────────────────────────
+/* ── §5 · TRANSPORT — a classic player and its visualizer, off-thread ──
    A classic script, loaded by canvas.html with <script src>. It syncs to
    static/sheets/ unchanged: scripts/sync-design.js copies the tree with no
    extension filter.
@@ -172,12 +172,15 @@ self.T5_CHROME = function (ctx, W, H, ink) {
      graphic equalizer whose faders never move is a picture of one. */
   var eqY = bY + bH + 12, eqH = 74;
   self.SKIN_BEVEL(ctx, 0, eqY, W, eqH, false, B);
-  var eqWX = 10, eqWY = eqY + 8, eqWW = 132, eqWH = eqH - 16;
+  /* slide fit: the eq well takes whatever width the eleven faders leave,
+     so the faders end 12 px from the right edge at any W (192 at W = 420) */
+  var fW = 12, fGap = 6, fSpan = 11 * (fW + fGap) - fGap;
+  var eqWX = 10, eqWY = eqY + 8, eqWW = W - 12 - fSpan - 14 - eqWX, eqWH = eqH - 16;
   ctx.fillStyle = ink.well;
   ctx.fillRect(eqWX, eqWY, eqWW, eqWH);
   self.SKIN_BEVEL(ctx, eqWX - 2, eqWY - 2, eqWW + 4, eqWH + 4, true, EDGE);
 
-  var fX = eqWX + eqWW + 14, fW = 12, fGap = 6, fY = eqY + 8, fH = eqH - 16;
+  var fX = eqWX + eqWW + 14, fY = eqY + 8, fH = eqH - 16;
   for (i = 0; i < 11; i++) {
     ctx.fillStyle = ink.dk;
     ctx.fillRect(fX + i * (fW + fGap) + fW / 2 - 1, fY, 2, fH);
@@ -257,9 +260,11 @@ self.T5_VIS = {
   scope: function (ctx, x, y, w, h, ink, t, band) {
     var i, v, yy, mid = y + h / 2, prev = null;
     for (i = 0; i < w - 4; i++) {
-      v = Math.sin(i * 0.42 + t * 6.2831853 * 2) * 0.5
-        + Math.sin(i * 0.13 + t * 6.2831853 * 3) * 0.32
-        + Math.sin(i * 0.71 + t * 6.2831853) * 0.18;
+      /* slide fit: rates are integer counts per 240 s loop (x20 the old
+         12 s loop), so the trace moves at the same natural speed */
+      v = Math.sin(i * 0.42 + t * 6.2831853 * 40) * 0.5
+        + Math.sin(i * 0.13 + t * 6.2831853 * 60) * 0.32
+        + Math.sin(i * 0.71 + t * 6.2831853 * 20) * 0.18;
       v *= 0.45 + 0.55 * band(i % 19, 19, t);
       yy = Math.round(mid + v * (h / 2 - 2));
       ctx.fillStyle = Math.abs(v) > 0.88 ? ink.sig : ink.lcd;
@@ -283,7 +288,10 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
     ctx.fillRect(g.aX, g.aY, g.aW, g.aH);
 
     /* time, at 2× — a pixel becomes a 2 × 2 block, never interpolated */
-    var total = t * 214, mm = (total / 60) | 0, ss = (total | 0) % 60;
+    /* slide fit: REAL TIME. The loop is one 4:00 track (T5_LOOP_S), so the
+       clock advances one second per second; it used to run 214 s in 12. */
+    var LOOP = 240;
+    var total = t * LOOP, mm = (total / 60) | 0, ss = (total | 0) % 60;
     var cs = ((total % 1) * 100) | 0;
     var pad = function (n) { return (n < 10 ? '0' : '') + n; };
     self.T5_TEXT(ctx, pad(mm) + ':' + pad(ss), g.wX + 6, g.wY + 6, 3, ink.lcd);
@@ -295,7 +303,9 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
        be readable at a glance and ignorable the rest of the time, and a
        ticker moving faster than reading speed is neither. */
     var span = self.T5_WIDTH(title, 2) + 40;
-    var off = Math.round((t * span) % span);
+    /* about 28 px/s, rounded to whole passes per loop so the loop is seamless */
+    var passes = Math.max(1, Math.round(LOOP * 28 / span));
+    var off = Math.round((t * passes * span) % span);
     self.T5_TEXT(ctx, title, g.wX + 6 + span - off, g.wY + 34, 2, ink.lcd, g.wX + 4, g.wW - 8);
     self.T5_TEXT(ctx, title, g.wX + 6 - off, g.wY + 34, 2, ink.lcd, g.wX + 4, g.wW - 8);
 
@@ -307,10 +317,10 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
        slow envelope. Nothing on this sheet decodes or plays audio. */
     function band(i, n, tt) {
       var vv = 0.5
-        + 0.32 * Math.sin(tt * 6.2831853 * 2 + i * 0.51)
-        + 0.18 * Math.sin(tt * 6.2831853 * 7 + i * 1.13)
-        + 0.11 * Math.sin(tt * 6.2831853 * 13 + i * 0.27);
-      vv *= 0.55 + 0.45 * Math.sin(tt * 6.2831853 + 0.9);
+        + 0.32 * Math.sin(tt * 6.2831853 * 40 + i * 0.51)
+        + 0.18 * Math.sin(tt * 6.2831853 * 140 + i * 1.13)
+        + 0.11 * Math.sin(tt * 6.2831853 * 260 + i * 0.27);
+      vv *= 0.55 + 0.45 * Math.sin(tt * 6.2831853 * 20 + 0.9);
       return vv < 0.04 ? 0.04 : vv > 1 ? 1 : vv;
     }
     self.T5_VIS[vis || 'bars'](ctx, g.aX, g.aY, g.aW, g.aH, ink, t, band);
@@ -325,8 +335,8 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
        every frame rather than stored, so the two are never out of step. */
     var BANDS = 11, gains = [];
     for (i = 0; i < BANDS; i++) {
-      v = 0.5 + 0.34 * Math.sin(t * 6.2831853 * 0.7 + i * 0.62)
-              + 0.14 * Math.sin(t * 6.2831853 * 1.9 + i * 1.7);
+      v = 0.5 + 0.34 * Math.sin(t * 6.2831853 * 14 + i * 0.62)
+              + 0.14 * Math.sin(t * 6.2831853 * 38 + i * 1.7);
       if (v < 0.05) v = 0.05;
       if (v > 0.95) v = 0.95;
       gains.push(v);
@@ -361,9 +371,13 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
        Twelve rows of a much longer list, scrolling, with one row current.
        The numbers on the right are real: each row's length is derived
        from its index, so the list is a list rather than a texture. */
-    var ROWS = 12, rowH = Math.floor(g.plWH / ROWS);
-    var top = Math.floor(t * 48) % 48;
-    var cur = (Math.floor(t * 6) % ROWS);
+    /* slide fit: rows at 2× (a 12 px glyph in a 16 px row), as many as the
+       well holds, so the list reads at 1:1 instead of as a 6 px texture */
+    var rowH = 16, ROWS = Math.floor(g.plWH / rowH);
+    /* slide fit: one track plays for the whole loop. The list does not
+       scroll and the highlight does not move; the current row is the track
+       in the marquee, and its length is the loop's 4:00. */
+    var top = 0, cur = 2;
     for (i = 0; i < ROWS; i++) {
       var idx = (top + i) % 48;
       var isCur = i === cur;
@@ -372,11 +386,11 @@ self.T5_LIVE = function (ctx, W, H, ink, g, title, vis) {
         ctx.fillRect(g.plWX + 1, g.plWY + i * rowH, g.plWW - 2, rowH);
       }
       var n = (idx + 1);
-      var lbl = (n < 10 ? '0' : '') + n + '. ' + self.T5_ROW(idx);
-      self.T5_TEXT(ctx, lbl, g.plWX + 5, g.plWY + i * rowH + 2, 1, isCur ? ink.well : ink.lcd);
-      var secs = 121 + ((idx * 37) % 190);
+      var lbl = (n < 10 ? '0' : '') + n + '. ' + (isCur ? 'UNTITLED / A-SIDE' : self.T5_ROW(idx));
+      self.T5_TEXT(ctx, lbl, g.plWX + 6, g.plWY + i * rowH + 2, 2, isCur ? ink.well : ink.lcd);
+      var secs = isCur ? LOOP : 121 + ((idx * 37) % 190);
       var dur = Math.floor(secs / 60) + ':' + ((secs % 60) < 10 ? '0' : '') + (secs % 60);
-      self.T5_TEXT(ctx, dur, g.plWX + g.plWW - 5 - self.T5_WIDTH(dur, 1), g.plWY + i * rowH + 2, 1, isCur ? ink.well : ink.lcdDim);
+      self.T5_TEXT(ctx, dur, g.plWX + g.plWW - 6 - self.T5_WIDTH(dur, 2), g.plWY + i * rowH + 2, 2, isCur ? ink.well : ink.lcdDim);
     }
   };
 };
@@ -390,22 +404,211 @@ self.T5_ROW = function (i) {
   return A[i % A.length] + ' ' + B[(i * 3) % B.length] + ' ' + (((i * 7) % 24) + 1);
 };
 
-/* ── the worker ─────────────────────────────────────────────────────────
-   Paints its own chassis. That is §5: when the main thread stops, the left
-   player's marquee freezes mid-scroll and its clock stops, while this one
-   carries on. */
-self.T5_WORKER = function () {
-  var ctx = null, chrome = null, live = null, W = 0, H = 0, ink = null;
-  var raf = 0, frames = 0, t0 = 0, dur = 12000, lastPost = 0;
+/* ── the visualizer window (slide fit, 2026-09-17) ──────────────────────
+   A 90s desktop visualizer docked to the right of the player: a bevelled
+   chassis in the player's skin around a dark screen, and in the screen an
+   abstract oil slick — a domain-warped noise field mapped through a
+   thin-film palette (indigo base, magenta → gold → green → cyan sheens)
+   that drifts slowly on its own — hypnotic, not reactive. Mode chips and
+   calm L/R meters along the bottom, a mode label over the screen.
 
+   It ships to the worker the same way as the player (Function.toString),
+   so the same rule holds: closure-free. Everything is a function of t alone
+   (0..1 over the 12 s cycle, every rate an integer count per cycle so the
+   loop is seamless), which is what lets reduced motion freeze it on a
+   poster and lets the boot parity check draw it cold on the main thread.
+
+   The field is computed at a quarter of the screen's size into ImageData
+   and drawn up with smoothing ON. That breaks the player's blitter rule on
+   purpose — the blur is what makes it read as liquid — so parity hashes
+   the field's BYTES (pure JS maths, identical on both threads) rather than
+   the scaled raster, which two rasterisers may round differently. */
+
+/* A cyclic 256-entry palette from the oil stops (each [r, g, b]), eased
+   between stops so the bands have no hard seams. */
+self.T5_OIL_LUT = function (stops) {
+  var lut = new Uint8Array(256 * 3), n = stops.length, i, k, a, b, f, e;
+  for (i = 0; i < 256; i++) {
+    f = (i / 256) * n; k = Math.floor(f); e = f - k; e = e * e * (3 - 2 * e);
+    a = stops[k % n]; b = stops[(k + 1) % n];
+    lut[i * 3] = Math.round(a[0] + (b[0] - a[0]) * e);
+    lut[i * 3 + 1] = Math.round(a[1] + (b[1] - a[1]) * e);
+    lut[i * 3 + 2] = Math.round(a[2] + (b[2] - a[2]) * e);
+  }
+  return lut;
+};
+
+/* The oil field. Value noise from an integer hash (no Math.random, no
+   table), two octaves, warped twice: q = fbm(p + a(t)), v = fbm(p + k·q +
+   c(t)). The warp offsets travel on circles, so t = 1 lands where t = 0
+   began. Film thickness picks the palette band; the field value decides how
+   much sheen shows over the dark base. Not reactive: it drifts on its own
+   (warp circles of 60 s and 40 s, palette bands turning once every 15 s
+   over the 240 s loop). Writes RGBA into d. */
+self.T5_OIL_FIELD = function (d, IW, IH, t, lut) {
+  var TAU = 6.2831853;
+  function hash(x, y) {
+    var h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) & 0xffff) / 65535;
+  }
+  function noise(x, y) {
+    var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    var a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), e = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + e) * u * v;
+  }
+  function fbm(x, y) { return 0.64 * noise(x, y) + 0.36 * noise(x * 2.07 + 17.3, y * 2.07 - 9.1); }
+  var c1 = Math.cos(TAU * t * 4), s1 = Math.sin(TAU * t * 4), c2 = Math.cos(TAU * t * 6), s2 = Math.sin(TAU * t * 6);
+  var ax = 1.1 * c1, ay = 1.1 * s1, bx = 5.2 - 0.9 * s2, by = 1.3 + 0.9 * c2;
+  var cx = 8.3 + 1.3 * c2, cy = 2.8 - 1.3 * s1;
+  var warp = 2.8, k = 4.2 / IW, lift = 0.95;
+  var x, y, px, py, qx, qy, v, th, idx, s, o = 0, br, bg, bb;
+  for (y = 0; y < IH; y++) {
+    py = y * k;
+    for (x = 0; x < IW; x++) {
+      px = x * k;
+      qx = fbm(px + ax, py + ay);
+      qy = fbm(px + bx, py + by);
+      v = fbm(px + warp * qx + cx, py + warp * qy + cy);
+      th = v * 3.2 + qx * 1.4 - qy * 0.6 - t * 16;
+      th = th - Math.floor(th);
+      idx = ((th * 255) | 0) * 3;
+      s = (v - 0.30) / 0.42; s = s < 0 ? 0 : s > 1 ? 1 : s; s = s * s * (3 - 2 * s) * lift; if (s > 1) s = 1;
+      br = 6 + 14 * qy; bg = 4 + 6 * qx; bb = 14 + 26 * qy;
+      d[o] = br + (lut[idx] - br) * s;
+      d[o + 1] = bg + (lut[idx + 1] - bg) * s;
+      d[o + 2] = bb + (lut[idx + 2] - bb) * s;
+      d[o + 3] = 255;
+      o += 4;
+    }
+  }
+};
+
+self.T5_VIS_CHROME = function (ctx, W, H, ink) {
+  var B = { hi: ink.hi, lt: ink.lt, sh: ink.sh, dk: ink.dk, face: ink.face };
+  var EDGE = { hi: ink.hi, lt: ink.lt, sh: ink.sh, dk: ink.dk };
+  var i, x;
+
+  ctx.fillStyle = ink.face;
+  ctx.fillRect(0, 0, W, H);
+  self.SKIN_BEVEL(ctx, 0, 0, W, H, false, B);
+
+  var tbY = 6, tbH = 14;
+  self.SKIN_BEVEL(ctx, 6, tbY, W - 12, tbH, false, EDGE);
+  self.T5_TEXT(ctx, 'VIS / OIL SLICK', 12, tbY + 4, 1, ink.hi);
+
+  /* the screen — a quarter-size field is scaled into exactly this box */
+  var cH = 20, cY = H - 10 - cH;
+  var wX = 10, wY = tbY + tbH + 6, wW = W - 20, wH = cY - 10 - wY;
+  ctx.fillStyle = ink.well;
+  ctx.fillRect(wX, wY, wW, wH);
+  self.SKIN_BEVEL(ctx, wX - 2, wY - 2, wW + 4, wH + 4, true, EDGE);
+
+  /* mode chips: OIL lit, the other two modes a player always had, dark */
+  var CAPS = ['OIL', 'SPEC', 'SCOPE'], capW = 86;
+  for (i = 0; i < CAPS.length; i++) {
+    x = 12 + i * (capW + 4);
+    self.SKIN_BEVEL(ctx, x, cY, capW, cH, false, B);
+    ctx.fillStyle = ink.dk; ctx.fillRect(x + 7, cY + 6, 8, 8);
+    ctx.fillStyle = i === 0 ? ink.hot : ink.ghost; ctx.fillRect(x + 8, cY + 7, 6, 6);
+    self.T5_TEXT(ctx, CAPS[i], x + 21, cY + 4, 2, i === 0 ? ink.lcd : ink.lcdDim);
+  }
+
+  /* L/R level meters in their own small well */
+  var mX = 12 + CAPS.length * (capW + 4) + 8, mW = W - 12 - mX;
+  ctx.fillStyle = ink.well;
+  ctx.fillRect(mX, cY, mW, cH);
+  self.SKIN_BEVEL(ctx, mX - 2, cY - 2, mW + 4, cH + 4, true, EDGE);
+  self.T5_TEXT(ctx, 'L', mX + 4, cY + 3, 1, ink.lcdDim);
+  self.T5_TEXT(ctx, 'R', mX + 4, cY + 11, 1, ink.lcdDim);
+  var mSegX = mX + 14, mSegs = Math.floor((mW - 18 + 2) / 6);
+  ctx.fillStyle = ink.ghost;
+  for (i = 0; i < mSegs; i++) { ctx.fillRect(mSegX + i * 6, cY + 3, 4, 6); ctx.fillRect(mSegX + i * 6, cY + 11, 4, 6); }
+
+  return {
+    tbY: tbY, wX: wX, wY: wY, wW: wW, wH: wH,
+    fW: Math.ceil(wW / 4), fH: Math.ceil(wH / 4),
+    cY: cY, mSegX: mSegX, mSegs: mSegs
+  };
+};
+
+/* `field` is a canvas of g.fW × g.fH the caller made (OffscreenCanvas in
+   the worker, a <canvas> on the main thread). The returned function draws
+   one frame; `live.data` is the field's bytes, for the parity hash. */
+self.T5_VIS_LIVE = function (ctx, W, H, ink, g, field) {
+  var fctx = field.getContext('2d');
+  var img = fctx.createImageData(g.fW, g.fH);
+  var lut = self.T5_OIL_LUT(ink.oil);
+  function live(t, frames) {
+    var i, TAU = 6.2831853;
+
+    self.T5_OIL_FIELD(img.data, g.fW, g.fH, t, lut);
+    fctx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(field, 0, 0, g.fW, g.fH, g.wX, g.wY, g.wW, g.wH);
+
+    /* faint scanlines, the screen's only texture */
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = ink.well;
+    for (i = g.wY + 2; i < g.wY + g.wH; i += 3) ctx.fillRect(g.wX, i, g.wW, 1);
+    ctx.globalAlpha = 1;
+
+    /* overlay chip: the mode label, top-left */
+    ctx.fillStyle = ink.well;
+    ctx.fillRect(g.wX + 8, g.wY + 8, self.T5_WIDTH('OIL', 2) + 8, 20);
+    self.T5_TEXT(ctx, 'OIL', g.wX + 13, g.wY + 12, 2, ink.lcd);
+
+    /* level meters: decorative and calm, slow integer-rate swells */
+    var L = 0.50 + 0.10 * Math.sin(t * TAU * 90 + 0.3) + 0.05 * Math.sin(t * TAU * 233 + 1.1);
+    var R = 0.48 + 0.10 * Math.sin(t * TAU * 97 + 2.0) + 0.05 * Math.sin(t * TAU * 211 + 0.4);
+    L = Math.round(L * g.mSegs); R = Math.round(R * g.mSegs);
+    for (i = 0; i < g.mSegs; i++) {
+      ctx.fillStyle = i >= g.mSegs - 3 ? ink.sig : i >= g.mSegs * 0.62 ? ink.hot : ink.lcd;
+      if (i < L) ctx.fillRect(g.mSegX + i * 6, g.cY + 3, 4, 6);
+      if (i < R) ctx.fillRect(g.mSegX + i * 6, g.cY + 11, 4, 6);
+    }
+
+    /* the frame counter, in the title bar, like the player's */
+    self.T5_TEXT(ctx, String(frames), W - 14 - self.T5_WIDTH(String(frames), 1), g.tbY + 4, 1, ink.hi);
+  }
+  live.data = img.data;
+  return live;
+};
+
+/* ── the worker ─────────────────────────────────────────────────────────
+   Owns both transferred canvases, player and visualizer, and paints both
+   chassis itself. When the main thread stops, this carries on — provided
+   it is driving itself ('run'); in clock mode it only draws when the main
+   thread posts a 'render', which is exactly the dependency free-run cuts. */
+self.T5_WORKER = function () {
+  var ctx = null, vctx = null, chrome = null, vchrome = null, live = null, vlive = null;
+  var W = 0, H = 0, VW = 0, VH = 0;
+  var raf = 0, frames = 0, t0 = 0, dur = 240000, lastPost = 0, costs = [], paintMs = -1;
+
+  /* Paint cost, sampled every 15th frame and closed with a 1 px readback on
+     each canvas: 2D commands are recorded and rasterised later, so a bracket
+     without a sync point measures submission, not drawing. Not every frame,
+     because the readback is itself a stall. */
   function paint(t) {
+    var sample = frames % 15 === 0, a = sample ? performance.now() : 0, s;
     ctx.drawImage(chrome, 0, 0);
     live(t, frames);
+    vctx.drawImage(vchrome, 0, 0);
+    vlive(t, frames);
+    if (sample) {
+      ctx.getImageData(0, 0, 1, 1); vctx.getImageData(0, 0, 1, 1);
+      costs.push(performance.now() - a);
+      if (costs.length > 9) costs.shift();
+      s = costs.slice().sort(function (x, y) { return x - y; });
+      paintMs = s[(s.length - 1) >> 1];
+    }
   }
-  function hash() {
-    var d = ctx.getImageData(0, 0, W, H).data, h = 0x811c9dc5, i;
-    for (i = 0; i < d.length; i += 997) { h ^= d[i]; h = (h * 0x01000193) >>> 0; }
-    return h >>> 0;
+  function hashOf(d, stride, seed) {
+    var hh = seed, i;
+    for (i = 0; i < d.length; i += stride) { hh ^= d[i]; hh = (hh * 0x01000193) >>> 0; }
+    return hh >>> 0;
   }
 
   self.onmessage = function (e) {
@@ -413,32 +616,38 @@ self.T5_WORKER = function () {
     if (m.type === 'ping') {
       self.postMessage({ type: 'pong' });
     } else if (m.type === 'init') {
-      W = m.w; H = m.h; ink = m.ink;
+      W = m.w; H = m.h; VW = m.vw; VH = m.vh; dur = m.dur || dur;
       ctx = m.canvas.getContext('2d');
+      vctx = m.visCanvas.getContext('2d');
       chrome = new OffscreenCanvas(W, H);
-      var cx = chrome.getContext('2d');
-      var t1 = performance.now();
-      var g = self.T5_CHROME(cx, W, H, ink);
-      self.T5_CAPS(cx, ink, g);
-      var chromeMs = performance.now() - t1;
-      live = self.T5_LIVE(ctx, W, H, ink, g, m.title, m.vis);
-      self.postMessage({ type: 'ready', chromeMs: chromeMs });
+      vchrome = new OffscreenCanvas(VW, VH);
+      var cx = chrome.getContext('2d'), vcx = vchrome.getContext('2d');
+      var g = self.T5_CHROME(cx, W, H, m.ink);
+      self.T5_CAPS(cx, m.ink, g);
+      var vg = self.T5_VIS_CHROME(vcx, VW, VH, m.ink);
+      live = self.T5_LIVE(ctx, W, H, m.ink, g, m.title, m.vis);
+      vlive = self.T5_VIS_LIVE(vctx, VW, VH, m.ink, vg, new OffscreenCanvas(vg.fW, vg.fH));
+      self.postMessage({ type: 'ready' });
     } else if (m.type === 'render') {
+      var drawnWith = frames;
       paint(m.t);
       frames++;
-      self.postMessage({ type: 'rendered', t: m.t, hash: hash(), n: frames });
+      self.postMessage({
+        type: 'rendered', t: m.t, n: frames, drawnWith: drawnWith, paintMs: paintMs,
+        hash: m.parity ? hashOf(vlive.data, 7, hashOf(ctx.getImageData(0, 0, W, H).data, 997, 0x811c9dc5)) : 0
+      });
     } else if (m.type === 'run') {
       if (raf) return;
-      t0 = performance.now(); frames = 0;
+      t0 = performance.now() - (m.t || 0) * dur; frames = 0;
       (function tick(now) {
         frames++;
-        paint(((now - t0) % dur) / dur);
-        if (now - lastPost > 100) { lastPost = now; self.postMessage({ type: 'frame', n: frames }); }
+        paint((((now - t0) % dur) + dur) % dur / dur);
+        if (now - lastPost > 100) { lastPost = now; self.postMessage({ type: 'frame', n: frames, paintMs: paintMs }); }
         raf = self.requestAnimationFrame(tick);
       })(performance.now());
     } else if (m.type === 'stop') {
       self.cancelAnimationFrame(raf); raf = 0;
-      self.postMessage({ type: 'frame', n: frames });
+      self.postMessage({ type: 'frame', n: frames, paintMs: paintMs });
     }
   };
 };
