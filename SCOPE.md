@@ -332,7 +332,7 @@ So WebGPU has been in every major engine for about a year, and the ecosystem is 
   - **Tessera**, a ray-marched terrain;
   - **Halcyon**, a campaign diorama;
   - **Supercell**, a storm that runs itself;
-  - **iPhone Duo**, sphere-traced signed-distance hardware.
+  - **fPhone Duo**, sphere-traced signed-distance hardware (an invented device).
 
   Seven of the apps are written in raw WGSL with no library. Supercell is the exception, written with `vgpu` (below).
 

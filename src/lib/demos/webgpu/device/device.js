@@ -1,5 +1,5 @@
 // @ts-nocheck -- rebuilt for the slide from design/techniques/webgpu/device.js; untyped sheet code
-/* One device, one canvas, and the device is WebGPU too. The iPhone Duo is the
+/* One device, one canvas, and the device is WebGPU too. The fPhone Duo is the
    sphere-traced hardware in duo.js; it starts closed, opens on a press, boots,
    and lands on a Home Screen drawn with ui.js. An icon opens its app out of the
    icon; the home indicator on the right edge (or Home, or Escape) takes it
@@ -12,14 +12,16 @@
    held still, it accumulates jittered samples and then stops marching. */
 import { $, card, reduced, format, DPR } from './common.js';
 import { makeUI } from './ui.js';
-import { makeHardware, ease } from './duo.js';
+import { makeHardware, ease, SPECS } from './duo.js';
 import { makeHome, REAL } from './home.js';
 
 const PW = 890, PH = 626;
-const DUR = { open: 1500, boot: 1150, launch: 420, back: 360, sleep: 260, close: 1300 };
+/* the inner display's corner radius in points, so apps can follow it: (cornerR − bezel) of a display 2 (leafW − bezel) wide = 890 pt */
+const SCREEN_RADIUS = (SPECS.cornerR.v - SPECS.bezel.v) * PW / (2 * (SPECS.leafW.v - SPECS.bezel.v));
+const DUR = { open: 1500, boot: 1150, launch: 483, back: 414, sleep: 260, close: 1300 }; /* app zoom in and out: 420 and 360 ms × 1.15 */
 
 export function deviceCard(apps, captions) {
-  const el = $('dv-card'), canvas = $('dv-canvas'), openBtn = $('dv-open'), homeBtn = $('dv-home'), capName = $('dv-cap-name'), capLine = $('dv-cap-line');
+  const el = $('dv-card'), canvas = $('dv-canvas'), openBtn = $('dv-open'), exitBtn = $('dv-app-exit'), capName = $('dv-cap-name'), capLine = $('dv-cap-line');
   let dev = null, ctx = null, hw = null, ui = null, home = null, homeT = null, appT = null, target = null;
   let state = 'closed', t0 = 0, cur = null, curId = null, zoomFrom = null, hover = null, press = null, drag = false, queued = 0, self = null;
   const surface = { width: 2, height: 2, view: () => target.createView() };
@@ -31,7 +33,7 @@ export function deviceCard(apps, captions) {
   const controls = () => {
     const open = state !== 'closed' && state !== 'closing';
     openBtn.textContent = open ? 'Close' : 'Open'; openBtn.setAttribute('aria-pressed', String(open));
-    homeBtn.hidden = !(state === 'app' || state === 'launch');
+    exitBtn.hidden = !(state === 'app' || state === 'launch');
     caption(state === 'closed' || state === 'opening' || state === 'closing' || state === 'sleep' ? 'closed' : (state === 'app' || state === 'launch') ? curId : 'home');
   };
   const go = (s) => { state = s; t0 = performance.now(); controls(); invalidate(); };
@@ -43,7 +45,10 @@ export function deviceCard(apps, captions) {
   const launch = (id, r) => { if (state !== 'home' || !REAL[id]) return; killApp();
     const a = apps.find((x) => x.id === id); curId = id; cur = a.make(); cur.init(dev, host); zoomFrom = r; go('launch'); };
   openBtn.addEventListener('click', () => (state === 'closed' ? open() : close()));
-  homeBtn.addEventListener('click', goHome);
+  exitBtn.addEventListener('click', goHome);
+  /* the exit button sits just outside the open device's top-right corner */
+  const placeExit = () => { if (!hw) return; const B = hw.bounds, k = canvas.clientWidth / canvas.width;
+    exitBtn.style.left = ((B.x + B.w) * k + 12) + 'px'; exitBtn.style.top = (B.y * k) + 'px'; };
   const onKey = (e) => { if (e.key === 'Escape') goHome(); };
   el.addEventListener('keydown', onKey);
 
@@ -66,7 +71,7 @@ export function deviceCard(apps, captions) {
     if (was === 'home-indicator') { if (indicator(p)) goHome(); return; }
     const same = was && ui && ui.at(p.x, p.y) === was;
     if (state === 'home' && same) { const kind = was.slice(0, was.indexOf('-')), [id, x, y, sz] = was.slice(was.indexOf('-') + 1).split(':');
-      if (kind === 'app') launch(id, [+x, +y, +sz]); else if (kind === 'fake') { home.tap(id, performance.now()); invalidate(); } return; }
+      if (kind === 'app') launch(id, [+x, +y, +sz]); return; }
     if (state === 'app' && cur && cur.up) cur.up(p, was, same); invalidate(); });
   canvas.addEventListener('pointerleave', () => { hover = null; if (state === 'app' && cur && cur.leave) cur.leave(); });
 
@@ -78,9 +83,12 @@ export function deviceCard(apps, captions) {
   return self = card({ name: 'device', el,
     init() { dev = this.__dev; ctx = canvas.getContext('webgpu'); ctx.configure({ device: dev, format, alphaMode: 'premultiplied' });
       fitCanvas(); hw = makeHardware(dev, canvas, ctx, format); surfaces();
-      target = homeT; ui = makeUI(surface, PW, PH); home = makeHome(dev, ui); openBtn.disabled = false; controls(); },
+      /* a verification handle on the element, not the window: the display rect in device pixels and the OS state */
+      canvas.__duo = { rect: hw.rect, bounds: hw.bounds, state: () => state };
+      target = homeT; ui = makeUI(surface, PW, PH); ui.screenRadius = SCREEN_RADIUS; home = makeHome(dev, ui); openBtn.disabled = false; placeExit(); controls(); },
     frame(t, dt, now) { if (!hw) return;
       if (fitCanvas()) surfaces();
+      placeExit();
       const k = (d) => (d ? Math.min(1, (now - t0) / d) : 1);
       /* the state machine: pose 0 closed → 1 open and frontal; fold is the hinge angle */
       let pose = 1, openness = 1, outer = 0, awake = 1, still = true, zoom = null, appAlpha = 0, pill = 0, homeDim = 0, content = null, bootP = 0, fade = 0;

@@ -5,7 +5,7 @@
    shadow, water, height fog, per-biome air. The map is the same march from
    high up; a click flies the camera down into a place and a field guide
    slides over it. Going somewhere on this site is travelling. */
-import { storage, uniform, readback, compute, render, bind, timer, FSQ_VS } from './common.js';
+import { storage, uniform, readback, compute, render, bind, timer, FSQ_VS, DPR } from './common.js';
 import { MONO } from './ui.js';
 
 const W = 1024, H = 640, HS = 210;
@@ -100,7 +100,10 @@ fn hgt(p: vec2f) -> f32 { let f = floor(p); let t = p - f; let x = i32(f.x); let
   return mix(mix(H2(x, y), H2(x + 1, y), t.x), mix(H2(x, y + 1), H2(x + 1, y + 1), t.x), t.y) * HS; }
 /* a tent-filtered height: four bilinear taps half a cell apart, so shading does not show the bilinear creases */
 fn hgtS(p: vec2f) -> f32 { return 0.25 * (hgt(p + vec2f(0.5, 0.5)) + hgt(p + vec2f(-0.5, 0.5)) + hgt(p + vec2f(0.5, -0.5)) + hgt(p + vec2f(-0.5, -0.5))); }
-fn flw(p: vec2f) -> f32 { let x = clamp(i32(p.x), 0, ${W - 1}); let y = clamp(i32(p.y), 0, ${H - 1}); return flow[u32(y) * ${W}u + u32(x)]; }
+fn F2(x: i32, y: i32) -> f32 { return flow[u32(clamp(y, 0, ${H - 1})) * ${W}u + u32(clamp(x, 0, ${W - 1}))]; }
+/* flow, bilinear, so rivers are lines up close rather than stairs of cells */
+fn flw(p: vec2f) -> f32 { let q = p; let f = floor(q); let t = q - f; let x = i32(f.x); let y = i32(f.y);
+  return mix(mix(F2(x, y), F2(x + 1, y), t.x), mix(F2(x, y + 1), F2(x + 1, y + 1), t.x), t.y); }
 fn hash(p: vec2f) -> f32 { return fract(sin(dot(p, vec2f(127.1, 311.7))) * 43758.5453); }
 fn vn(p: vec2f) -> f32 { let i = floor(p); var f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hash(i), hash(i + vec2f(1, 0)), f.x), mix(hash(i + vec2f(0, 1)), hash(i + vec2f(1, 1)), f.x), f.y); }
 fn fbm3(p0: vec2f) -> f32 { var p = p0; var a = 0.5; var s = 0.0; for (var i = 0; i < 4; i++) { s += a * vn(p); a *= 0.5; p = p * 2.1 + 1.7; } return s; }
@@ -187,7 +190,7 @@ fn aces(x: vec3f) -> vec3f { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 *
     var jung = mix(vec3f(0.16, 0.36, 0.14), vec3f(0.36, 0.58, 0.22), gr); jung = mix(jung, vec3f(0.42, 0.40, 0.34), smoothstep(0.55, 0.85, steep)); jung = mix(jung, vec3f(0.92, 0.94, 0.96), smoothstep(0.80, 0.94, hh));
     var alb = arch * w[0] + cany * w[1] + ice * w[2] + volc * w[3] + jung * w[4]; alb = alb * alb; /* display → linear */
     var wetS = w[2] * 0.5 + w[3] * 0.3;
-    if (f > 26.0) { let rv = clamp((f - 26.0) / 60.0, 0.0, 0.8) * (1.0 - w[2]) * (1.0 - w[1] * 0.7); alb = mix(alb, r.seaC * 2.5, rv); wetS += rv; }
+    if (f > 26.0) { let rv = smoothstep(26.0, 110.0, f) * 0.7 * (1.0 - w[2]) * (1.0 - w[1] * 0.7) * smoothstep(0.0, 0.06, a); alb = mix(alb, mix(alb * 0.5, r.seaC * 3.0, 0.6), rv); wetS += rv; }
     let sh = shadow(p + n * 1.2, r.sun, 9.0); let nd = max(dot(n, r.sun), 0.0);
     /* cloud shadow drifting over everything */
     let cl = smoothstep(0.45, 0.7, fbm3(p.xz * 0.012 + r.time * 0.015));
@@ -251,13 +254,11 @@ export function tesseraApp() {
     /* the field guide, at a place: bottom-left, sized to what it says */
     if (at >= 0) { const p = PLACES[at]; const kk = Math.min(1, flightT * 1.6), op = kk; const gw = P(232), gx = P(10), pad = P(11), L = gx + pad, Rr = gx + gw - pad;
       const g = panel(); let y = pad; let gy = 0;
-      g.add(() => ui.text(L, gy + pad, `${at + 1} / 5`, P(10), C.dim, { weight: 600, family: MONO, op })); g.add(() => ui.text(Rr, gy + pad, 'FIELD GUIDE', P(10), C.dim, { weight: 600, track: 0.12, align: 'right', op })); y += P(15);
-      { const yy = y; g.add(() => ui.text(L, gy + yy, p.name, P(16), C.ink, { weight: 750, track: -0.01, op })); } y += P(21);
+            { const yy = y; g.add(() => { ui.text(L, gy + yy, p.name, P(16), C.ink, { weight: 750, track: -0.01, op }); ui.text(Rr, gy + yy + P(4), `${at + 1} / 5`, P(10), C.dim, { family: MONO, align: 'right', op }); }); } y += P(21);
       { const yy = y; g.add(() => ui.text(L, gy + yy, p.kind.toUpperCase(), P(10), C.acc, { weight: 600, track: 0.1, op })); } y += P(13);
-      { const yy = y; g.add(() => ui.text(L, gy + yy, p.clim, P(10), C.dim, { family: MONO, op })); } y += P(18);
+      wrap(ui, p.clim, P(10), gw - 2 * pad, { family: MONO }).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(10), C.dim, { family: MONO, op })); y += P(13); }); y += P(5);
       wrap(ui, p.text, P(11), gw - 2 * pad, {}).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(11), C.ink, { op })); y += P(14.5); }); y += P(5);
-      let x = L; p.species.forEach((sp) => { const cw = ui.measure(sp, P(10), { weight: 500 }) + P(12); if (x + cw > Rr) { x = L; y += P(20); } const xx = x, yy = y;
-        g.add(() => { ui.stroke(xx, gy + yy, cw, P(16), [1, 1, 1, 0.28], P(8), P(1), op); ui.text(xx + P(6), gy + yy + P(1.6), sp, P(10), C.ink, { weight: 500, op }); }); x += cw + P(4); }); y += P(24);
+      wrap(ui, p.species.join(' · '), P(10), gw - 2 * pad, {}).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(10), C.acc, { op })); y += P(13); }); y += P(8);
       { const yy = y, bw = (gw - 2 * pad - P(6)) / 2, bh = P(20);
         g.add(() => { const by = gy + yy;
           ui.rect(L, by, bw, bh, hover === 'back' ? C.cellHi : C.cell, bh / 2, op); ui.text(L + bw / 2, by + (bh - P(10.5) * 1.25) / 2, '← Map', P(10.5), C.ink, { align: 'center', weight: 600, op }); ui.hit('back', L, by, bw, bh);
@@ -268,7 +269,7 @@ export function tesseraApp() {
     /* the panel: top-right, clear of the Dock — one header row, two sliders, two measured lines */
     { const pw = P(152), px = ui.W - P(50) - pw, py = P(10), pad = P(9), L = px + pad, Rr = px + pw - pad, g = panel(); let y = py + pad;
       { const bh = P(16), bt = 'New world', bw = ui.measure(bt, P(10), { weight: 650 }) + P(14), bx = Rr - bw, by = y - P(1.5);
-        g.add(() => { ui.text(L, py + pad, 'TESSERA', P(11), C.ink, { weight: 800, track: 0.2 });
+        g.add(() => { ui.text(L, py + pad, 'TESSERA', P(11), C.ink, { weight: 800, track: 0.14 });
           ui.rect(bx, by, bw, bh, [...C.acc.slice(0, 3), hover === 'grow' ? 0.36 : 0.16], bh / 2); ui.stroke(bx, by, bw, bh, [...C.acc.slice(0, 3), 0.6], bh / 2, P(1));
           ui.text(bx + bw / 2, by + (bh - P(10) * 1.25) / 2, bt, P(10), [0.82, 0.97, 0.94, 1], { align: 'center', weight: 650 }); ui.hit('grow', bx - P(4), by - P(4), bw + P(8), bh + P(8)); }); }
       y += P(16);
@@ -280,7 +281,7 @@ export function tesseraApp() {
       slider('SEA LEVEL', (sea - 0.2) / 0.45, 'sea', sea.toFixed(2)); slider('EROSION', erosion / 64, 'ero', erosion + ' passes');
       { const yy = y; g.add(() => ui.rect(L, yy, pw - 2 * pad, P(1), C.line)); } y += P(6);
       const grow = ['noise', 'flow', 'carve'].every((k) => rd[k] !== undefined) ? (rd.noise + rd.flow + rd.carve).toFixed(2) : '—';
-      [['grow · on change', grow, C.ink], [`march · ${Math.round(scale * 100)}% res`, ms('march'), C.acc]].forEach(([lab, v, c]) => { const yy = y;
+      [['grow', grow, C.ink], [`march ${Math.round(scale * 100)}%`, ms('march'), C.acc]].forEach(([lab, v, c]) => { const yy = y;
         g.add(() => { ui.text(L, yy, lab, P(10), C.dim, { family: MONO }); ui.text(Rr, yy, v + ' ms', P(10), c, { align: 'right', family: MONO }); }); y += P(13); });
       ui.glass(px, py, pw, y - py + pad - P(3), C.glass, P(11), 0.07); g.run(); } };
   const setSlider = (id, px) => { const v = Math.max(0, Math.min(1, (px - trk[0]) / trk[1])); if (id === 'sea') sea = 0.2 + v * 0.45; else erosion = Math.round(v * 64); dirty = true; lastTouch = performance.now(); };
@@ -296,7 +297,9 @@ export function tesseraApp() {
     move(p, hov) { hover = hov; if (sliding) setSlider(sliding, p.x); }, up(p, id, same) { sliding = null; if (same) act(id); }, leave() { sliding = null; hover = null; },
     destroy() { s.height.destroy(); s.flow.forEach((b) => b.destroy()); s.u.destroy(); s.ru.destroy(); s.hRead.destroy(); s = null; },
     frame(t, dt, now, hov) { if (!s) return; hover = hov; const T = now / 1000, gx = Math.ceil(W / 16), gy = Math.ceil(H / 16);
-      if (frames++ % 30 === 0) { const bw = ui.canvas.getBoundingClientRect().width; sc = bw > 0 ? bw / ui.W : 1; }
+      /* CSS px per display point: the UI surface is either a canvas on the page or a texture the size
+         of the display in device pixels (the sphere-traced Duo), so measure whichever it is */
+      if (frames++ % 30 === 0) { const c = ui.canvas, bw = c.getBoundingClientRect ? c.getBoundingClientRect().width : c.width / DPR; sc = bw > 0 ? Math.max(0.35, bw / ui.W) : 1; }
       /* follow the measured march: coarser when it runs long, sharper when there is room */
       if (s.tm.available && rd.march !== undefined && now - scaleAt > 1200) { if (rd.march > SCALE.slow && scale > SCALE.min) { scale = Math.max(SCALE.min, scale - 0.1); scaleAt = now; } else if (rd.march < SCALE.fast && scale < SCALE.max) { scale = Math.min(SCALE.max, scale + 0.1); scaleAt = now; } }
       const tgt = ui.prepare(scale);

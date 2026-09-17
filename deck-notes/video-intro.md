@@ -9,3 +9,23 @@
   2. **Computer vision** on video or live streams — adjacent, not shown
   3. **Video as a component** — keyed footage layered so it reads as part of the page
 - ***The video is not the content, it's a material***
+- **Cost per change**
+  - Static asset: every revision = open source, re-render, re-export, re-upload
+  - Each round costs roughly what the first did
+  - Living system: the same request is a value edit and a reload
+- ***The cost is payroll, not invoice***
+  - Designer hours + coordination × rounds, hidden in salaried time
+  - Scotty Cameron's 3D club animation: every revision round was a redo
+  - One-off asset, or a system that generates assets?
+- **Portability**
+  - The render target is a detail, not the project
+  - Live page · HD video · YouTube cut · vertical social spot · broadcast overlay **[14]** · native
+- **The After Effects contrast**
+  - A rendered file is inert; the intelligence is gone at export
+  - Shader and canvas work stays live
+  - ***You're not producing videos, you're producing something that emits them***
+- **CMS-driven motion**
+  - Code motion is values → values can be CMS fields
+  - Client changes a colour, headline or speed → animation updates; no re-render, no ticket
+  - A video in a CMS is just a file
+  - ***Motion becomes a component like any other***

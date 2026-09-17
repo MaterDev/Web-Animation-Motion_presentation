@@ -192,3 +192,14 @@
 .cp-deck-layers [data-testid="composite-legend"] { display: none; }
 .cp-deck-layers .cp-stage { height: 100%; border-radius: 0; box-shadow: none; background: transparent; }
 .demo-root { height: 100%; }
+
+/* deck: start moving right away (Key: "takes too long to start"). The sheet
+   loop held exploded for 34% of 11s before moving; this one begins its
+   assembly almost at once and cycles a little faster. */
+.cp-plane { animation-name: cp-explode-deck !important; animation-duration: 8s !important; }
+@keyframes cp-explode-deck {
+  0%        { transform: translateZ(var(--cp-z)); }
+  25%, 55%  { transform: translateZ(calc(var(--cp-z) * 0.06)); }
+  80%, 100% { transform: translateZ(var(--cp-z)); }
+}
+@media (prefers-reduced-motion: reduce) { .cp-plane { animation: none !important; } }

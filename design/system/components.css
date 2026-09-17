@@ -223,6 +223,8 @@ code { font-family: var(--mono); font-size: 0.87em; background: var(--hz-200); b
 .lcd::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4;
   background: linear-gradient(118deg, oklch(1 0 0 / 0.28) 0 20%, oklch(1 0 0 / 0.07) 20% 38%, transparent 62%);
+  /* the glare, 30% more transparent everywhere (Key, 2026-09-17) */
+  opacity: 0.7;
 }
 .lcd .chars, .lcd .ghost {
   font-family: var(--dot); font-weight: 700; letter-spacing: 0.06em;

@@ -1,14 +1,14 @@
 <div class="dv" data-testid="dv-card">
-  <canvas class="dv-canvas" data-testid="dv-canvas" aria-label="iPhone Duo, drawn with WebGPU"></canvas>
+  <canvas class="dv-canvas" data-testid="dv-canvas" aria-label="fPhone Duo, drawn with WebGPU"></canvas>
   <div class="dv-side" data-testid="dv-side">
-    <b class="dv-cap-name" data-testid="dv-cap-name">iPhone Duo</b>
+    <b class="dv-cap-name" data-testid="dv-cap-name">fPhone Duo</b>
     <span class="dv-cap-line" data-testid="dv-cap-line">the hardware is sphere-traced too — press Open</span>
-    <span class="dv-bytes" data-testid="loop-strip"><b data-testid="loop-bytes">—</b> state / frame</span>
+    <span class="dv-bytes" data-testid="loop-strip"><b data-testid="loop-bytes">—</b><i>state uploaded per frame</i></span>
   </div>
   <div class="dv-ctl" data-testid="dv-controls">
-    <button class="dv-btn dv-btn-quiet" data-testid="dv-home" type="button" hidden>Home</button>
     <button class="dv-btn" data-testid="dv-open" type="button" aria-pressed="false" disabled>Open</button>
   </div>
+  <button class="dv-exit" data-testid="dv-app-exit" type="button" aria-label="Close app" hidden><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
   <span class="dv-loading" data-testid="dv-loading" hidden>opening…</span>
   <span class="gp-status" data-testid="dv-status">requesting a device…</span>
 </div>

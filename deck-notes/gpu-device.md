@@ -1,0 +1,8 @@
+- **One device, one canvas, all WebGPU**
+  - The fPhone Duo itself is rendered on the GPU; the home screen, widgets and apps are drawn inside it
+- **The apps**
+  - **Roost:** 131,072 starlings, each reading its six or seven nearest neighbours **[29]**
+  - **Tessera:** a world grown from noise and erosion, ray-marched with light, shadow, water and fog
+  - **Supercell:** a storm that runs itself
+- **One app alive at a time**
+  - Opening an app tears down the last one; a single set of buffers is ever alive

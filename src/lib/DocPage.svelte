@@ -39,10 +39,14 @@
             </dl>
             {#if heroLink}
               <!-- a sub-page, called out on the front panel, bottom right -->
-              <a class="front-link" href={heroLink.href} data-testid="{testid}-front-link">
-                <span class="front-link-k">{heroLink.kicker}</span>
-                <span class="front-link-t">{heroLink.title} →</span>
-              </a>
+              <!-- built from the system's own parts: an .lcd-kv readout whose
+                   value is an .lcd-chip on the amber (caution) LCD -->
+              <div class="lcd-kv front-link-kv">
+                <span class="k">{heroLink.kicker}</span>
+                <a class="lcd-chip front-link" href={heroLink.href} data-testid="{testid}-front-link">
+                  <span class="lcd amber"><span class="v">{heroLink.title} <span class="front-link-arrow" aria-hidden="true">→</span></span></span>
+                </a>
+              </div>
             {/if}
           </div>
         </div>
@@ -147,14 +151,23 @@
      take the dot face's heavier weight so they hold on the green. */
   .front-top .lcd-label { font-size: 13px; letter-spacing: 0.14em; color: var(--lcd-ink); }
   .front-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: calc(var(--u) * 4); flex-wrap: wrap; }
-  .front-link { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding: 10px 14px; border-radius: 4px;
-    text-decoration: none; color: var(--lcd-ink);
-    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 45%, transparent);
-    background: color-mix(in oklch, var(--lcd-ink) 8%, transparent);
-    transition: background var(--dur-fast) var(--ease-standard); }
-  .front-link:hover { background: color-mix(in oklch, var(--lcd-ink) 16%, transparent); }
-  .front-link-k { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
-  .front-link-t { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 22px; text-transform: lowercase; }
+  /* Glossary link: the system's .lcd-chip holding an .lcd.amber screen,
+     labelled like the strip's other readouts; sized to match them. */
+  .front-link-kv { gap: 6px; align-items: flex-end; }
+  .front-link-kv .k { font-size: 13px; font-weight: 900; letter-spacing: 0.12em; color: var(--lcd-ink); }
+  .front-link { text-decoration: none; }
+  .front-link .lcd { padding: 6px 12px; }
+  .front-link .v { font-size: 22px; font-weight: 900; letter-spacing: 0.02em; text-transform: lowercase; color: oklch(0.280 0.060 70); }
+  .front-link:hover .lcd { filter: brightness(1.06); }
+  /* micro-animation that says "this goes somewhere": the arrow nudges
+     forward on the system's detent ease every few seconds, and steps
+     further on hover. Off under reduced motion. */
+  .front-link-arrow { display: inline-block; animation: front-nudge 3.2s var(--ease-detent) infinite; }
+  .front-link:hover .front-link-arrow, .front-link:focus-visible .front-link-arrow { animation: none; transform: translateX(6px);
+    transition: transform var(--dur-fast) var(--ease-detent); }
+  @keyframes front-nudge { 0%, 70%, 100% { transform: translateX(0); } 80% { transform: translateX(5px); } 90% { transform: translateX(0); } }
+  @media (prefers-reduced-motion: reduce) { .front-link-arrow { animation: none; } }
+  .front-link:focus-visible { outline: 2px solid var(--lcd-ink); outline-offset: 3px; }
   .front-strip { margin: calc(var(--u) * 1) 0 0; gap: calc(var(--u) * 6); }
   .front-strip .lcd-kv { gap: 6px; }
   .front-strip .k { font-size: 13px; font-weight: 900; letter-spacing: 0.12em; color: var(--lcd-ink); }

@@ -1,0 +1,10 @@
+- **A survey sheet, zooming from the world to Dartmouth College, 1956**
+  - Where the Dartmouth workshop named "artificial intelligence"
+- **The camera is SVG**
+  - One nested group transform moves the whole map; the browser redraws the vector at every scale
+  - Coastlines swap to finer data as you zoom; borders and labels crossfade in
+- **Why SVG suits it**
+  - Shapes from data, not pixels: sharp at any zoom
+  - Labels are real text, placed and culled so they never collide
+- **The cost**
+  - Every path and label is a tracked element; that's the ceiling

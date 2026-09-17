@@ -151,13 +151,6 @@ export function makeUI(canvas, W, H) {
   return ui;
 }
 
-/* pointer → points on the display, through whatever CSS scale the shell applies */
-export function uiPointer(ui, onMove, onLeave, onDown, onUp) {
-  const c = ui.canvas, pt = (e) => { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * ui.W, y: (e.clientY - r.top) / r.height * ui.H }; };
-  c.addEventListener('pointermove', (e) => onMove(pt(e), e)); c.addEventListener('pointerleave', () => onLeave && onLeave());
-  c.addEventListener('pointerdown', (e) => { c.setPointerCapture(e.pointerId); onDown && onDown(pt(e), e); }); c.addEventListener('pointerup', (e) => onUp && onUp(pt(e), e)); c.addEventListener('pointercancel', () => onUp && onUp(null));
-}
-
 /* the iOS 27 furniture on the Duo: the time over the radios disc, top-right */
 export function statusCorner(ui, dark = false) {
   const ink = dark ? [0.08, 0.08, 0.09, 1] : [1, 1, 1, 1], glass = dark ? [1, 1, 1, 0.55] : [1, 1, 1, 0.42];
