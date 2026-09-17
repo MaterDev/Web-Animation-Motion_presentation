@@ -1,207 +1,257 @@
-/* SUPERCELL · water on the lens, simulated as a fluid. Deliberately real against a stylised storm.
+/* SUPERCELL · water on the lens. Deliberately real against a stylised storm.
 
-   The water is a thin film on the glass, stepped on the GPU as depth-averaged flow, the model
-   used for rivulets and drops on a window. Per cell: h (how thick the water is) and a velocity.
-   The forces are the ones that decide how water moves on glass:
+   Built from how water on glass behaves, and from the two effects known to read as real:
+   Lucas Bebber's Codrops RainEffect (2015) and Martijn Steinrucken's "Heartfelt" (2017).
 
-   · Surface tension. Pressure is -γ∇²h: water is pushed out of bulges and into hollows, so
-     drops round up, necks pull tight, and two drops that touch pull into one pool and ring.
-   · Disjoining pressure, Π(h). Glass is covered in a film only molecules thick; below a
-     certain thickness water is pushed off rather than drawn in. That is what gives a drop its
-     contact angle and why a trail left by a running drop breaks up into beads on its own
-     (a thin film on glass is unstable) instead of fading away.
-   · Gravity, down the glass, and the wind pushing across it.
-   · Viscous drag against the glass. The thinner the water the harder the glass holds it back
-     (lubrication: drag ∝ 1/h²), so a fat drop runs and a thin film barely creeps.
-   · Contact-line pinning. Glass is never clean. Near the water's edge a static friction holds
-     the drop until the push beats it, and the hold varies across the glass, so drops sit, then
-     release at different sizes, slide in fits and starts, and take the wet paths others left.
+   What is on real wet glass, and what this does about each:
+   · A dense scatter of tiny droplets, well under a millimetre, and only a sparse set of larger drops.
+     → Two layers. A micro-droplet layer lives in a texture at full resolution; splats accumulate in it
+       and slowly dry. Larger drops are particles (Codrops: droplets 2–4 px against drops 10–40 px).
+   · A drop stays put until its weight beats the hold of its contact line (contact-angle hysteresis);
+     the critical size on vertical glass is a few millimetres, near water's capillary length of 2.7 mm.
+     → Each drop has a hold that varies across the glass and from drop to drop, lower where the glass is
+       already wet. Past it, the unheld share of its weight drives it, against drag.
+   · A sliding drop is a teardrop and sheds smaller droplets from its tail, losing water as it goes; the thread it leaves breaks
+     into elongated beads (the Rayleigh–Plateau instability), so a trail is dashes, not a smear. On dry
+     glass the path wanders; on wet glass it runs nearly straight.
+     → Runners stretch with speed, shed beads at 0.18–0.53 of their radius at irregular spacing (1.2 radii plus an
+       exponential tail) until they fall below their hold and stop,
+       steer toward wetter glass, and wander on dry glass.
+   · A running drop sweeps up the droplets in its path, leaving a clean channel.
+     → Runners erase the micro layer along their path and gain a little area for it.
+   · Drops that touch merge, and the volume is kept.
+     → Area-conserving merges; the merged drop is lopsided, then rings back round.
+   · Where water comes from on a camera in a storm: gusts fling spray onto the glass, and water gathers
+     at the top of the hood and drips.
+     → Flings: a streak of fine spray along the wind with a few small drops at its head. Drips: beads
+       released from a few slowly wandering places along the top edge.
 
-   The grid is staggered (height at cell centres, velocity on faces), fluxes are upwinded and
-   limited so no cell goes below the molecular film, and the whole thing runs a few substeps a
-   frame in two compute kernels. Rain lands as caps of water. The lens pass then reads the height
-   field through a smooth cubic filter: its level set is the water's edge, its slope the surface
-   normal, and the scene is refracted, darkened at the rims and lit with highlights through it. */
+   Units: x across 0–aspect, y down 0–1 (the screen's height is 1). Radius is the visible radius. */
 
-export const MAX_HITS = 16;
+export const MAX_DROPS = 400, MAX_DEW = 1536, MAX_WIPE = 400;
+const R_CRIT = 0.0065;          /* typical release radius: about 8 px on a 1200 px tall screen */
+const G = 3.0, DRAG = 4.2;
 
-const STRUCT = /* wgsl */ `
-struct Water {
-  dt: f32, g: f32, gamma: f32, drag: f32,
-  hs: f32, B: f32, pin: f32, wind: f32,
-  count: f32, reset: f32, time: f32, maxH: f32,
-  hits: array<vec4f, ${MAX_HITS}>,
-};
-@group(0) @binding(0) var<uniform> w: Water;
-@group(0) @binding(1) var src: texture_2d<f32>;
-@group(0) @binding(2) var dst: texture_storage_2d<rgba16float, write>;
-fn at(p: vec2i) -> vec4f { let s = vec2i(textureDimensions(src)); return textureLoad(src, clamp(p, vec2i(0), s - vec2i(1)), 0); }
-fn hh(p: vec2i) -> f32 { return max(at(p).r, w.hs); }
-fn h2(p: vec2i) -> f32 { var v = vec2u(p + vec2i(4096)); v = v * 1664525u + 1013904223u; v.x += v.y * 747796405u; v = v ^ (v >> vec2u(15u)); v = v * 2891336453u; return f32((v.x ^ v.y) & 0xffffu) / 65535.0; }
-/* how hard the glass holds water here: smooth patches, with specks that grip harder */
-fn grip(p: vec2i) -> f32 {
-  let q = vec2f(p) * 0.06; let i = vec2i(floor(q)); let f = fract(q); let u = f * f * (3.0 - 2.0 * f);
-  let n = mix(mix(h2(i), h2(i + vec2i(1, 0)), u.x), mix(h2(i + vec2i(0, 1)), h2(i + vec2i(1, 1)), u.x), u.y);
-  let speck = step(0.985, h2(p * 3 + vec2i(17, 5)));
-  return 0.45 + 1.1 * n + speck * 1.5;
-}
-`;
+export function lensSim() {
+  let rng = 7; const rnd = () => { rng = (rng * 1664525 + 1013904223) >>> 0; return rng / 4294967296; };
+  let drops = [], aspect = 1.42, time = 0, flingIn = 1.5, dripCarry = 0;
+  const GW = 72, GH = 48, wet = new Float32Array(GW * GH);
+  const dropBuf = new Float32Array(MAX_DROPS * 8), dewBuf = new Float32Array(MAX_DEW * 8), wipeBuf = new Float32Array(MAX_WIPE * 8);
+  let nDew = 0, nWipe = 0;
+  const spouts = Array.from({ length: 7 }, () => ({ x: rnd(), drift: (rnd() - 0.5) * 0.012 }));
+  const hn = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+  /* how hard the glass holds water here: smooth patches at about a drop's scale */
+  const holdAt = (x, y) => { const gx = x * 45, gy = y * 45, ix = Math.floor(gx), iy = Math.floor(gy), fx = gx - ix, fy = gy - iy, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const a = hn(ix, iy), b = hn(ix + 1, iy), c = hn(ix, iy + 1), d = hn(ix + 1, iy + 1); return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy; };
+  const cell = (x, y) => Math.min(GH - 1, Math.max(0, Math.floor(y * GH))) * GW + Math.min(GW - 1, Math.max(0, Math.floor(x / aspect * GW)));
+  const wetAt = (x, y) => (x < 0 || x > aspect || y < 0 || y > 1 ? 0 : wet[cell(x, y)]);
+  const add = (x, y, r, vy = 0) => { if (drops.length < MAX_DROPS) drops.push({ x, y, r, vx: 0, vy, hold: 0.75 + rnd() * 0.5, seed: rnd() * 100, wob: 0, wobPh: 0, shed: r * (1.5 + rnd() * 3), px: x, py: y }); };
+  /* a micro droplet, or a dash of trail: position, radius, stretch along a direction */
+  const dew = (x, y, r, stretch = 1, dx = 0, dy = 1) => { if (nDew >= MAX_DEW) return; const o = nDew * 8; dewBuf[o] = x; dewBuf[o + 1] = y; dewBuf[o + 2] = r; dewBuf[o + 3] = stretch; dewBuf[o + 4] = dx; dewBuf[o + 5] = dy; dewBuf[o + 6] = rnd() * 100; dewBuf[o + 7] = 0; nDew++; };
+  const wipe = (x0, y0, x1, y1, r) => { if (nWipe >= MAX_WIPE) return; const o = nWipe * 8; wipeBuf[o] = x0; wipeBuf[o + 1] = y0; wipeBuf[o + 2] = x1; wipeBuf[o + 3] = y1; wipeBuf[o + 4] = r; nWipe++; };
 
-/* substep, part one: velocities on the faces from pressure, gravity, wind, drag and pinning */
-export const WATER_FORCE = STRUCT + /* wgsl */ `
-fn pressure(p: vec2i) -> f32 {
-  let h = hh(p);
-  let lap = hh(p + vec2i(1, 0)) + hh(p - vec2i(1, 0)) + hh(p + vec2i(0, 1)) + hh(p - vec2i(0, 1)) - 4.0 * h;
-  let r = w.hs / h;
-  return -w.gamma * lap - w.B * (r * r * r - r * r);
-}
-@compute @workgroup_size(8, 8) fn cs_main(@builtin(global_invocation_id) id: vec3u) {
-  let size = vec2u(textureDimensions(src)); if (id.x >= size.x || id.y >= size.y) { return; }
-  let c = vec2i(id.xy);
-  if (w.reset > 0.5) { textureStore(dst, c, vec4f(w.hs, 0.0, 0.0, 0.0)); return; }
-  let s = at(c); let h = max(s.r, w.hs);
-  var u = s.gb;                                      /* x on the right face, y on the bottom face */
-  let pc = pressure(c);
-  let hx = 0.5 * (h + hh(c + vec2i(1, 0))); let hy = 0.5 * (h + hh(c + vec2i(0, 1)));
-  u.x += w.dt * (-(pressure(c + vec2i(1, 0)) - pc) + w.wind);
-  u.y += w.dt * (-(pressure(c + vec2i(0, 1)) - pc) + w.g);
-  /* drag against the glass, taken implicitly so thin water is held without blowing up */
-  u.x /= 1.0 + w.dt * w.drag / (hx * hx + 0.02);
-  u.y /= 1.0 + w.dt * w.drag / (hy * hy + 0.02);
-  /* pinning: near the edge of the water static friction takes a fixed bite out of the speed */
-  let edge = 1.0 - smoothstep(0.15, 0.9, min(min(hh(c + vec2i(1, 0)), hh(c - vec2i(1, 0))), min(hh(c + vec2i(0, 1)), hh(c - vec2i(0, 1)))));
-  let bite = w.pin * grip(c) * (0.7 + 0.3 * edge) * w.dt;
-  let sp = length(u);
-  u *= max(sp - bite, 0.0) / max(sp, 1e-6);
-  let lim = 0.5 / w.dt; let sp2 = length(u); if (sp2 > lim) { u *= lim / sp2; }
-  textureStore(dst, c, vec4f(h, u, 0.0));
-}
-`;
-
-/* substep, part two: move the water through the faces, conserving it, and let rain land */
-export const WATER_MOVE = STRUCT + /* wgsl */ `
-fn ux(p: vec2i) -> f32 { return at(p).g; }
-fn uy(p: vec2i) -> f32 { return at(p).b; }
-fn outflow(p: vec2i) -> f32 {
-  let h = hh(p) - w.hs;
-  return w.dt * h * (max(ux(p), 0.0) + max(-ux(p - vec2i(1, 0)), 0.0) + max(uy(p), 0.0) + max(-uy(p - vec2i(0, 1)), 0.0));
-}
-/* a cell cannot give away more water than it has above the molecular film */
-fn share(p: vec2i) -> f32 { let out = outflow(p); let h = hh(p) - w.hs; return select(1.0, clamp(h / out, 0.0, 1.0), out > h); }
-fn faceX(p: vec2i) -> f32 { let u = ux(p); if (u > 0.0) { return u * (hh(p) - w.hs) * share(p); } let q = p + vec2i(1, 0); return u * (hh(q) - w.hs) * share(q); }
-fn faceY(p: vec2i) -> f32 { let u = uy(p); if (u > 0.0) { return u * (hh(p) - w.hs) * share(p); } let q = p + vec2i(0, 1); return u * (hh(q) - w.hs) * share(q); }
-@compute @workgroup_size(8, 8) fn cs_main(@builtin(global_invocation_id) id: vec3u) {
-  let size = vec2u(textureDimensions(src)); if (id.x >= size.x || id.y >= size.y) { return; }
-  let c = vec2i(id.xy);
-  if (w.reset > 0.5) { textureStore(dst, c, vec4f(w.hs, 0.0, 0.0, 0.0)); return; }
-  let s = at(c);
-  var h = max(s.r, w.hs) - w.dt * (faceX(c) - faceX(c - vec2i(1, 0)) + faceY(c) - faceY(c - vec2i(0, 1)));
-  for (var k = 0; k < i32(w.count); k++) {
-    let hit = w.hits[k]; let d = length(vec2f(c) + 0.5 - hit.xy);
-    if (d < hit.z) { h += hit.w * (1.0 - d * d / (hit.z * hit.z)); }
+  function fling(rain, wind) {
+    const dir = wind >= 0 ? 1 : -1, ang = (rnd() - 0.5) * 0.8, dx = Math.cos(ang) * dir, dy = Math.sin(ang);
+    const len = 0.06 + rnd() * 0.22, x0 = rnd() * aspect, y0 = 0.08 + rnd() * 0.84;
+    const spray = 50 + (rnd() * (60 + rain * 60)) | 0;
+    for (let k = 0; k < spray; k++) {
+      /* dense at the head, thinning along the streak, spreading as it goes */
+      const f = Math.pow(rnd(), 1.6), spread = (rnd() - 0.5) * (0.012 + f * len * 0.5) * (0.4 + rnd());
+      dew(x0 + dx * f * len - dy * spread, y0 + dy * f * len + dx * spread, 0.0007 + Math.pow(rnd(), 2.5) * 0.0022 * (1.2 - f), 1 + rnd() * 0.6 * (1 - f), dx, dy);
+    }
+    for (let k = 0, n = 1 + (rnd() * 3) | 0; k < n; k++) { const f = rnd() * 0.25; add(x0 + dx * f * len + (rnd() - 0.5) * 0.01, y0 + dy * f * len + (rnd() - 0.5) * 0.01, 0.0025 + rnd() * 0.0035); }
   }
-  if (c.y >= i32(size.y) - 2) { h = mix(h, w.hs, 0.35); }   /* water runs off the bottom of the lens */
-  /* small beads and thin films slowly dry; drops big enough to matter do not */
-  h -= w.dt * 0.0012 * (1.0 - smoothstep(0.06, 0.2, h));
-  h = clamp(h, w.hs, w.maxH);
-  textureStore(dst, c, vec4f(h, s.g, s.b, 0.0));
+
+  const api = {
+    dropBuf, dewBuf, wipeBuf, get drops() { return drops.length; }, get dews() { return nDew; }, get wipes() { return nWipe; },
+    get running() { return drops.filter((d) => d.vy > 0.03).length; },
+    flingNow: false, probe: null,
+    step(dt, rain, wind, asp, gust) {
+      aspect = asp; dt = Math.min(dt, 1 / 30); time += dt; nDew = 0; nWipe = 0;
+      for (let k = 0; k < wet.length; k++) wet[k] *= Math.exp(-dt * 0.08);
+      /* flings: every few seconds, sooner in heavy rain and much sooner when a tornado passes */
+      flingIn -= dt * (0.35 + rain * 0.7 + gust * 5);
+      if (api.flingNow || flingIn <= 0) { api.flingNow = false; flingIn = 1.2 + rnd() * 2.8; fling(rain, wind); }
+      /* drips from the top edge */
+      dripCarry += (0.15 + rain) * 0.7 * dt;
+      while (dripCarry >= 1) { dripCarry -= 1; const sp = spouts[(rnd() * spouts.length) | 0]; const x = (rnd() < 0.7 ? sp.x + (rnd() - 0.5) * 0.015 : rnd()) * aspect; add(x, 0.004, R_CRIT * (1.1 + rnd() * 0.5), 0.05); }
+      for (const sp of spouts) { sp.x += sp.drift * dt; if (sp.x < 0.02 || sp.x > 0.98) sp.drift = -sp.drift; }
+      if (api.probe) { for (const p of api.probe) add(p[0] * aspect, p[1], p[2]); api.probe = null; }
+
+      for (const d of drops) {
+        d.px = d.x; d.py = d.y;
+        const hold = R_CRIT * d.hold * (0.7 + 0.6 * holdAt(d.x, d.y)) * (1 - 0.45 * Math.min(1, wetAt(d.x, d.y)));
+        if (d.r > hold) {
+          d.vy += (G * (d.r - hold) / d.r - d.vy * DRAG) * dt;
+          /* steer toward wet glass just below; wander on dry glass; the wind leans it */
+          const look = d.r * 3 + 0.004, wl = wetAt(d.x - look, d.y + look), wr = wetAt(d.x + look, d.y + look), wetHere = Math.min(1, wetAt(d.x, d.y));
+          d.vx += ((wr - wl) * 1.2 + (holdAt(d.x * 1.6 + 3, d.y * 1.6 + d.seed) - 0.5) * 5.0 * (1 - 0.7 * wetHere) + wind * 0.15) * d.vy * dt * 3;
+          d.vx *= Math.exp(-dt * 6);
+        } else {
+          /* pinned; a moving drop that meets a stronger hold stops hard */
+          d.vy *= Math.exp(-dt * 22); d.vx *= Math.exp(-dt * 22);
+        }
+        d.x += d.vx * dt; d.y += d.vy * dt;
+        const moved = Math.hypot(d.x - d.px, d.y - d.py);
+        if (moved > 1e-6 && d.vy > 0.01) {
+          wipe(d.px, d.py, d.x, d.y, d.r * 1.05);
+          const c = cell(d.x, d.y); wet[c] = Math.min(1.5, wet[c] + moved * 90);
+          d.r = Math.sqrt(d.r * d.r + moved * d.r * 0.004);              /* swept-up droplets */
+          d.shed -= moved;
+          if (d.shed <= 0) {
+            /* the thread breaks at irregular spacing, and each bead costs the runner water */
+            d.shed = d.r * (1.2 - Math.log(1 - rnd() * 0.95) * 3.2);
+            const sr = d.r * (0.18 + Math.pow(rnd(), 1.5) * 0.35), sp = Math.max(d.vy, 1e-3), ux = d.vx / sp, uy = d.vy / sp, ul = Math.hypot(ux, uy) || 1;
+            d.r = Math.sqrt(Math.max(1e-8, d.r * d.r - sr * sr * 0.8));
+            if (sr > 0.0028) add(d.x - ux / ul * d.r * 1.8, d.y - uy / ul * d.r * 1.8, sr);
+            else dew(d.x + (rnd() - 0.5) * d.r * 0.3, d.y - d.r * (1.6 + rnd()), sr, 1.6 + rnd(), ux / ul, uy / ul);
+          }
+        }
+        d.wob *= Math.exp(-dt * 4); d.wobPh += dt * (12 + 0.04 / Math.max(d.r, 0.002));
+      }
+      /* merges */
+      const cs = 0.03, grid = new Map();
+      drops.forEach((d, i) => { const k = Math.floor(d.x / cs) * 4096 + Math.floor(d.y / cs); let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(i); });
+      const dead = new Uint8Array(drops.length);
+      for (let i = 0; i < drops.length; i++) {
+        if (dead[i]) continue; const d = drops[i], cx = Math.floor(d.x / cs), cy = Math.floor(d.y / cs);
+        for (let gx = cx - 1; gx <= cx + 1; gx++) for (let gy = cy - 1; gy <= cy + 1; gy++) {
+          const a = grid.get(gx * 4096 + gy); if (!a) continue;
+          for (const j of a) {
+            if (j <= i || dead[j]) continue; const e = drops[j], dx = d.x - e.x, dy = d.y - e.y, rr = d.r + e.r;
+            if (dx * dx + dy * dy < rr * rr * 0.6) {
+              const A = d.r * d.r + e.r * e.r, big = Math.max(d.r, e.r), small = Math.min(d.r, e.r);
+              d.x = (d.x * d.r * d.r + e.x * e.r * e.r) / A; d.y = (d.y * d.r * d.r + e.y * e.r * e.r) / A;
+              d.vy = Math.max(d.vy, e.vy); d.vx = (d.vx + e.vx) * 0.5; d.r = Math.sqrt(A);
+              d.wob = Math.min(0.45, d.wob + 0.7 * (small * small) / (big * big)); d.wobPh = 0; dead[j] = 1;
+            }
+          }
+        }
+      }
+      drops = drops.filter((d, i) => !dead[i] && d.y - d.r < 1.02 && d.x > -0.05 && d.x < aspect + 0.05);
+      drops.forEach((d, i) => {
+        const o = i * 8, sp = Math.hypot(d.vx, d.vy);
+        dropBuf[o] = d.x; dropBuf[o + 1] = d.y; dropBuf[o + 2] = d.r; dropBuf[o + 3] = d.seed;
+        dropBuf[o + 4] = sp > 1e-4 ? d.vx / sp : 0; dropBuf[o + 5] = sp > 1e-4 ? d.vy / sp : 1;
+        dropBuf[o + 6] = Math.min(1.4, sp / 0.25); dropBuf[o + 7] = d.wob * Math.sin(d.wobPh);
+      });
+    },
+  };
+  return api;
+}
+
+const LENS_STRUCT = /* wgsl */ `
+struct Lens { aspect: f32, drops: f32, dews: f32, wipes: f32 };
+struct Item { a: vec4f, b: vec4f };
+@group(0) @binding(0) var<uniform> lens: Lens;
+@group(0) @binding(1) var<storage, read> items: array<Item>;
+fn clip(xy: vec2f) -> vec2f { return vec2f(xy.x / lens.aspect * 2.0 - 1.0, 1.0 - xy.y * 2.0); }
+struct VO { @builtin(position) p: vec4f, @location(0) q: vec2f, @location(1) xy: vec2f, @location(2) @interpolate(flat) i: u32 };
+/* a drop on glass: coverage whose 0.3 level is the visible edge at |p| = 1, and a parabolic dome for thickness */
+fn dome(p: vec2f, r: f32) -> vec4f {
+  let rr = length(p); if (rr >= 1.6) { discard; }
+  let k = max(0.0, 1.0 - rr * rr * 0.331);
+  return vec4f(k * k * k, r * max(0.0, 1.0 - rr * rr), 0.0, 1.0);
 }
 `;
 
-/* where water comes from, in sim cells. Nothing lands at random: a lens under a hood gets water two ways.
-   · Drips from the top edge. Water gathers along the hood and lets go in beads at a few places, which wander
-     slowly, so the same channels run again and again.
-   · Flings. Every few seconds a gust (harder in a flyby) throws a spatter onto the glass: a streak of fine
-     droplets along the wind, thinning out, with one or two larger ones where it hit first. */
-export function rainOnLens() {
-  let rng = 11; const rnd = () => { rng = (rng * 1664525 + 1013904223) >>> 0; return rng / 4294967296; };
-  const queue = []; let dripCarry = 0, flingIn = 2, time = 0;
-  const spouts = Array.from({ length: 9 }, () => ({ x: rnd(), drift: (rnd() - 0.5) * 0.01 }));
-  const fn = (dt, rain, gust, W, H, wind) => {
-    time += dt;
-    if (fn.flingNow) { fn.flingNow = false; flingIn = 0; }
-    if (fn.probe) { for (const p of fn.probe) queue.push([p[0] * W, p[1] * H, p[2], p[3]]); fn.probe = null; }
-    /* drips: slow, and mostly from the spouts */
-    dripCarry += (0.2 + rain) * 0.6 * dt;
-    while (dripCarry >= 1) {
-      dripCarry -= 1;
-      const sp = spouts[(rnd() * spouts.length) | 0];
-      const x = rnd() < 0.6 ? (sp.x + (rnd() - 0.5) * 0.02) * W : rnd() * W;
-      queue.push([x, 3 + rnd() * 2, 6 + rnd() * 2, 4.4 + rnd() * 1.2]);
-    }
-    for (const sp of spouts) { sp.x += sp.drift * dt; if (sp.x < 0.02 || sp.x > 0.98) sp.drift = -sp.drift; }
-    /* flings: a spatter along the wind */
-    flingIn -= dt * (0.4 + rain * 0.8 + gust * 4);
-    if (flingIn <= 0) {
-      flingIn = 2.5 + rnd() * 4;
-      const dir = wind >= 0 ? 1 : -1, ang = (rnd() - 0.5) * 0.9, dx = Math.cos(ang) * dir, dy = Math.sin(ang);
-      const len = W * (0.1 + rnd() * 0.2), x0 = rnd() * W, y0 = H * (0.1 + rnd() * 0.8), n = 7 + (rnd() * 10) | 0;
-      for (let k = 0; k < n; k++) {
-        const f = Math.pow(rnd(), 0.7), spread = (rnd() - 0.5) * len * 0.12 * (0.3 + f);
-        const r = k < 2 ? 6 + rnd() * 1.5 : 3.6 + (1 - f) * 2 * rnd();
-        queue.push([x0 + dx * f * len - dy * spread, y0 + dy * f * len + dx * spread, r, r * (0.7 + 0.1 * rnd())]);
-      }
-    }
-    const hits = queue.splice(0, MAX_HITS);
-    if (queue.length > 120) queue.length = 120;
-    while (hits.length < MAX_HITS) hits.push([0, 0, 0, 0]);
-    return hits;
-  };
-  return fn;
+/* the larger drops: summed, so neighbours neck into each other before they merge */
+export const DROPS = LENS_STRUCT + /* wgsl */ `
+@vertex fn vs_main(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
+  var o: VO; let d = items[ii];
+  let corner = vec2f(f32(vi & 1u), f32((vi >> 1u) & 1u)) * 2.0 - 1.0;
+  let reach = d.a.z * (1.7 + d.b.z * 2.2);
+  o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(clip(d.a.xy + corner * reach), 0.0, 1.0), f32(ii) < lens.drops);
+  o.q = corner * reach / d.a.z; o.xy = vec2f(0.0); o.i = ii; return o;
 }
+@fragment fn fs_main(v: VO) -> @location(0) vec4f {
+  let d = items[v.i]; let dir = d.b.xy; let stretch = d.b.z; let wob = d.b.w; let seed = d.a.w;
+  var p = vec2f(dot(v.q, vec2f(dir.y, -dir.x)), dot(v.q, dir));
+  p *= vec2f(1.0 + wob, 1.0 - wob);
+  /* a teardrop: the head leads round, the tail tapers behind it, longer the faster it runs */
+  let behind = max(-p.y, 0.0);
+  if (p.y < 0.0) { p.y /= 1.0 + stretch * 1.8; }
+  p.x /= mix(1.0, max(0.25, 1.0 - 0.6 * smoothstep(0.0, 2.4, behind)), min(stretch, 1.0));
+  let ang = atan2(p.y, p.x);
+  p *= 1.0 + 0.05 * sin(ang * 3.0 + seed) + 0.035 * sin(ang * 5.0 + seed * 1.7);
+  return dome(p, d.a.z);
+}
+`;
+
+/* micro droplets and trail dashes, written into the persistent layer with a max, so they stay separate beads */
+export const DEW = LENS_STRUCT + /* wgsl */ `
+@vertex fn vs_main(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
+  var o: VO; let d = items[ii];
+  let corner = vec2f(f32(vi & 1u), f32((vi >> 1u) & 1u)) * 2.0 - 1.0;
+  let dir = d.b.xy; let side = vec2f(dir.y, -dir.x); let r = d.a.z; let s = d.a.w;
+  let off = side * corner.x * r * 1.6 + dir * corner.y * r * 1.6 * s;
+  o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(clip(d.a.xy + off), 0.0, 1.0), f32(ii) < lens.dews);
+  o.q = corner * 1.6; o.xy = vec2f(0.0); o.i = ii; return o;
+}
+@fragment fn fs_main(v: VO) -> @location(0) vec4f {
+  let d = items[v.i]; let seed = d.b.z;
+  let ang = atan2(v.q.y, v.q.x);
+  let p = v.q * (1.0 + 0.08 * sin(ang * 2.0 + seed) + 0.05 * sin(ang * 3.0 + seed * 2.3));
+  return dome(p, d.a.z);
+}
+`;
+
+/* a runner clears its path through the micro layer */
+export const WIPE = LENS_STRUCT + /* wgsl */ `
+@vertex fn vs_main(@builtin(vertex_index) vi: u32, @builtin(instance_index) ii: u32) -> VO {
+  var o: VO; let s = items[ii];
+  let corner = vec2f(f32(vi & 1u), f32((vi >> 1u) & 1u));
+  let lo = min(s.a.xy, s.a.zw) - vec2f(s.b.x); let hi = max(s.a.xy, s.a.zw) + vec2f(s.b.x);
+  let xy = mix(lo, hi, corner);
+  o.p = select(vec4f(0.0, 0.0, -2.0, 1.0), vec4f(clip(xy), 0.0, 1.0), f32(ii) < lens.wipes);
+  o.q = vec2f(0.0); o.xy = xy; o.i = ii; return o;
+}
+@fragment fn fs_main(v: VO) -> @location(0) vec4f {
+  let s = items[v.i]; let a = s.a.xy; let ab = s.a.zw - a;
+  let h = clamp(dot(v.xy - a, ab) / max(dot(ab, ab), 1e-12), 0.0, 1.0);
+  let dd = length(v.xy - a - ab * h) / s.b.x;
+  if (dd >= 1.0) { discard; }
+  return vec4f(0.0, 0.0, 0.0, 1.0 - smoothstep(0.7, 1.0, dd));
+}
+`;
+
+/* the micro layer slowly dries: every frame it keeps a fraction of itself */
+export const DRY = /* wgsl */ `
+@group(0) @binding(0) var<uniform> dry: vec4f;
+@fragment fn fs_main() -> @location(0) vec4f { return vec4f(0.0, 0.0, 0.0, dry.x); }
+`;
 
 /* ── the glass: the scene seen through the water ── */
 export const LENS = /* wgsl */ `
 @group(0) @binding(0) var scene: texture_2d<f32>;
-@group(0) @binding(1) var water: texture_2d<f32>;
-@group(0) @binding(2) var smp: sampler;
-@group(0) @binding(3) var<uniform> look: vec4f;   /* flash, thickness at the water's edge, sim width, sim height */
-@group(0) @binding(4) var<uniform> lab: vec4f;    /* x > 0.5: show the water against a grid, for judging the physics */
+@group(0) @binding(1) var drops: texture_2d<f32>;
+@group(0) @binding(2) var dew: texture_2d<f32>;
+@group(0) @binding(3) var smp: sampler;
+@group(0) @binding(4) var<uniform> look: vec4f;   /* flash, aspect, canvas width, canvas height */
+@group(0) @binding(5) var<uniform> lab: vec4f;    /* x > 0.5: show the water against a grid, for judging it */
 fn backdrop(uv: vec2f) -> vec3f { if (lab.x < 0.5) { return textureSampleLevel(scene, smp, uv, 0.0).rgb; } let g = abs(fract(uv * vec2f(24.0, 17.0)) - 0.5); let line = 1.0 - smoothstep(0.44, 0.48, max(g.x, g.y)); return mix(vec3f(0.85, 0.5, 0.2), vec3f(0.12, 0.2, 0.4), uv.y) * (0.75 + 0.25 * line); }
-fn bw(v: f32) -> vec4f { let n = vec4f(1.0, 2.0, 3.0, 4.0) - v; let s = n * n * n; let x = s.x; let y = s.y - 4.0 * s.x; let z = s.z - 4.0 * s.y + 6.0 * s.x; return vec4f(x, y, z, 6.0 - x - y - z) / 6.0; }
-/* a smooth cubic read of the height field in four bilinear taps */
-fn H(uv: vec2f) -> f32 {
-  let size = look.zw; var tc = uv * size - 0.5; let f = fract(tc); tc -= f;
-  let xw = bw(f.x); let yw = bw(f.y);
-  let cc = tc.xxyy + vec4f(-0.5, 1.5, -0.5, 1.5);
-  let sw = vec4f(xw.x + xw.y, xw.z + xw.w, yw.x + yw.y, yw.z + yw.w);
-  let o = (cc + vec4f(xw.y / sw.x, xw.w / sw.y, yw.y / sw.z, yw.w / sw.w)) / size.xxyy;
-  let s0 = textureSampleLevel(water, smp, o.xz, 0.0).r; let s1 = textureSampleLevel(water, smp, o.yz, 0.0).r;
-  let s2 = textureSampleLevel(water, smp, o.xw, 0.0).r; let s3 = textureSampleLevel(water, smp, o.yw, 0.0).r;
-  let sx = sw.x / (sw.x + sw.y); let sy = sw.z / (sw.z + sw.w);
-  return mix(mix(s3, s2, sx), mix(s1, s0, sx), sy);
-}
+fn water(uv: vec2f) -> vec2f { return textureSampleLevel(drops, smp, uv, 0.0).rg + textureSampleLevel(dew, smp, uv, 0.0).rg; }
 @fragment fn fs_main(@location(0) uv: vec2f) -> @location(0) vec4f {
-  let texel = 1.0 / look.zw;
-  let h = H(uv);
-  /* the slope from plain filtered taps: the cubic read sets the edge, the normal needs no more than this */
-  let gx = (textureSampleLevel(water, smp, uv + vec2f(texel.x, 0.0), 0.0).r - textureSampleLevel(water, smp, uv - vec2f(texel.x, 0.0), 0.0).r) * 0.5;
-  let gy = (textureSampleLevel(water, smp, uv + vec2f(0.0, texel.y), 0.0).r - textureSampleLevel(water, smp, uv - vec2f(0.0, texel.y), 0.0).r) * 0.5;
-  let n = normalize(vec3f(-gx * 3.5, -gy * 3.5, 1.0));
-  let base = backdrop(uv);
-  let T = look.y;
-  let wEdge = max(fwidth(h), 1e-4);
-  let inside = smoothstep(T - wEdge, T + wEdge, h);
-  var col = base;
-  /* a wet film too thin to bead still smears the view a little */
-  let film = smoothstep(T * 0.25, T, h) * (1.0 - inside);
-  col = mix(col, backdrop(uv - n.xy * 0.01) * 1.06, film * 0.7);
-  /* refraction: a drop is a small lens that turns what is behind it over and shrinks it */
-  /* a drop is a small lens: the view through it is flipped and shrunk, displaced by about the drop's own size */
-  let bend = n.xy * (min(h, 12.0) + 1.5) * texel.y * 4.0;
-  var through = backdrop(uv - bend);
-  /* its edge, where the surface meets the glass steeply, turns light away: a thin dark line */
-  let slope = length(vec2f(gx, gy));
-  through *= 1.0 - smoothstep(0.3, 1.2, slope) * 0.6;
-  /* light gathered by the dome lands inside the lower edge as a bright crescent */
-  through += vec3f(0.8, 0.85, 0.95) * smoothstep(0.2, 0.7, slope) * smoothstep(0.1, 0.8, n.y) * (1.0 - smoothstep(0.7, 1.2, slope)) * 0.3;
-  /* the storm's glow on the wet surface, and a hard specular from above */
-  let hv = normalize(vec3f(-0.25, -0.8, 1.0) + vec3f(0.0, 0.0, 1.0));
-  let spec = pow(max(dot(n, hv), 0.0), 90.0);
-  let fres = 0.03 + 0.97 * pow(1.0 - n.z, 5.0);
-  let sky = backdrop(clamp(vec2f(uv.x, 0.06) + n.xy * 0.3, vec2f(0.0), vec2f(1.0)));
-  through = mix(through * 1.06, sky * 1.5, fres * 0.6) + vec3f(1.0, 0.98, 0.94) * spec * (0.7 + look.x * 3.0);
-  col = mix(col, through, inside);
+  let px = vec2f(1.0 / look.z, 1.0 / look.w);
+  let F = water(uv);
+  /* the slope of the water's thickness, in screen heights per screen height */
+  let gx = (water(uv + vec2f(px.x, 0.0)).g - water(uv - vec2f(px.x, 0.0)).g) / (2.0 * px.x * look.y);
+  let gy = (water(uv + vec2f(0.0, px.y)).g - water(uv - vec2f(0.0, px.y)).g) / (2.0 * px.y);
+  let n = normalize(vec3f(-gx, -gy, 1.0));
+  let T = 0.3; let w = max(fwidth(F.r), 1e-4);
+  let inside = smoothstep(T - w, T + w, F.r);
+  var col = backdrop(uv);
+  /* a drop is a small lens: the view through it is turned over and shrunk, displaced by about its own size */
+  let bend = n.xy * (F.g * 1.4 + 0.004);
+  var through = backdrop(uv - bend * vec2f(1.0 / look.y, 1.0));
+  /* the rim bends light away: a thin dark edge. Inside the lower edge the dome gathers light into a crescent */
+  let slope = length(n.xy);
+  through *= 1.0 - smoothstep(0.55, 0.9, slope) * 0.55;
+  through += vec3f(0.85, 0.9, 1.0) * smoothstep(0.45, 0.75, slope) * smoothstep(0.2, 0.8, n.y) * 0.18;
+  /* a small hard highlight from the sky, brighter in a flash */
+  let hv = normalize(vec3f(-0.3, -0.7, 1.0) + vec3f(0.0, 0.0, 1.0));
+  through += vec3f(1.0, 0.98, 0.95) * pow(max(dot(n, hv), 0.0), 60.0) * (0.55 + look.x * 2.5);
+  col = mix(col, through * 1.04, inside);
   return vec4f(col, 1.0);
 }
 `;

@@ -15,7 +15,7 @@ import { reduced, adapterName } from './common.js';
 import { MONO } from './ui.js';
 import { SCENE, DEBRIS_KERNEL, DEBRIS_DRAW, GRASS } from './storm-wgsl.js';
 import { spriteAtlas, SPRITE_PX, SPRITE_FRAMES } from './storm-sprites.js';
-import { WATER_FORCE, WATER_MOVE, rainOnLens, LENS, MAX_HITS } from './storm-lens.js';
+import { lensSim, MAX_DROPS, MAX_DEW, MAX_WIPE, DROPS, DEW, WIPE, DRY, LENS } from './storm-lens.js';
 
 const clamp = (v, a = 0, b = 1) => (v < a ? a : v > b ? b : v), mix = (a, b, t) => a + (b - a) * t, sstep = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0)); return t * t * (3 - 2 * t); };
 const hash = (n) => { let x = Math.imul((n | 0) ^ 0x9e3779b9, 0x85ebca6b); x ^= x >>> 13; x = Math.imul(x, 0xc2b2ae35); x ^= x >>> 16; return (x >>> 0) / 4294967296; };
@@ -124,8 +124,8 @@ export function stormApp() {
   if (q.has('scale')) scale = clamp(+q.get('scale'), 0.25, 1); if (q.has('steps')) steps = Math.max(4, +q.get('steps') | 0);
   const med = (a) => { if (!a.length) return null; const b = a.slice().sort((x, y) => x - y); return b[b.length >> 1]; };
   /* a handle for verification: pause or seek the storm, change the march's cost, read the timer */
-  const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; }, lensOff(v) { lensOff = v; }, lab(v) { s && s.lensFx.set({ lab: [v ? 1 : 0, 0, 0, 0] }); }, fling() { if (s) s.water.rain.flingNow = true; }, probe(list) { if (s) s.water.rain.probe = list; },
-    spans: () => ({ frame: med(spans.frame), cpu: med(spans.cpu), scene: med(spans.scene), debris: med(spans.debris), n: spans.scene.length, scale, steps, water: s ? [s.water.W, s.water.H] : null }), director: (T) => director(T), lightning: (T) => lightning(T), nextFlyby(T) { for (let t = T; t < T + 600; t += 0.25) { const f = flybyAt(t); if (f) return f.t0; } return null; }, get renders() { return renders; }, get ready() { return !!s; } };
+  const api = { seek(T) { seek = T - performance.now() / 1000; pauseAt = null; }, pause(T) { pauseAt = T; }, resume() { pauseAt = null; }, steps(n) { steps = n; }, scale(v) { scale = v; }, lensOff(v) { lensOff = v; }, lab(v) { s && s.lensFx.set({ lab: [v ? 1 : 0, 0, 0, 0] }); }, fling() { if (s) s.water.sim.flingNow = true; }, probe(list) { if (s) s.water.sim.probe = list; },
+    spans: () => ({ frame: med(spans.frame), cpu: med(spans.cpu), scene: med(spans.scene), debris: med(spans.debris), n: spans.scene.length, scale, steps, water: s ? { drops: s.water.sim.drops, running: s.water.sim.running } : null }), director: (T) => director(T), lightning: (T) => lightning(T), nextFlyby(T) { for (let t = T; t < T + 600; t += 0.25) { const f = flybyAt(t); if (f) return f.t0; } return null; }, get renders() { return renders; }, get ready() { return !!s; } };
   globalThis.__supercell = api;
 
   /* the reduced-motion still: halfway through the first peak */
@@ -156,16 +156,21 @@ export function stormApp() {
     const debris = draw(gpu, { shader: DEBRIS_DRAW, label: 'supercell-debris', geometry: { vertexCount: 4, topology: 'triangle-strip' }, instances: ND, set: { cam, ds: particles, atlas, smp: sampler(gpu, { minFilter: 'nearest', magFilter: 'nearest' }), air } });
     const stV = { t0: [0, 1.4, 0.25, 1], t1: [0, 1.9, 0.25, 0], t2: [0, 2.4, 0.25, 0], s0: [0, 0, 0, 0], s1: [0, 0, 0, 0], s2: [0, 0, 0, 0], b0: [0, 0, 0, 0], b1: [0, 0, 0, 0], b2: [0, 0, 0, 0], b3: [0, 0, 0, 0], time: 0, storm: 0.4, flash: 0, wind: 0, rain: 0.2, tspin: 2.4, base: 0.62, tflow: 1, glow: [0, 0, 0, 0] };
     const sceneFx = effect(gpu, SCENE, { label: 'supercell-scene', set: { cam, st: stV, debrisAlbedo: debrisT.colors[0], debrisDist: debrisT.colors[1] } });
-    /* water on the lens: a thin-film fluid on the GPU (storm-lens.js), and the scene seen through it */
+    /* water on the lens (storm-lens.js): particle drops and a persistent micro-droplet layer, both at the canvas's
+       own resolution so the droplets stay crisp, and the scene seen through them */
     const lensT = target(gpu, { size: [64, 64], format: 'rgba8unorm', label: 'supercell-lens' });
-    const waterU = uniforms(gpu, { dt: 0.09, g: 0.15, gamma: 0.75, drag: 0.8, hs: 0.03, B: 1.4, pin: 0.15, wind: 0, count: 0, reset: 1, time: 0, maxH: 14, hits: Array.from({ length: MAX_HITS }, () => [0, 0, 0, 0]) });
+    const dropsT = target(gpu, { size: [64, 64], format: 'rgba16float', clearColor: [0, 0, 0, 0], label: 'supercell-drops' });
+    const dewT = target(gpu, { size: [64, 64], format: 'rgba16float', clearColor: [0, 0, 0, 0], label: 'supercell-dew' });
     const lin = sampler(gpu, { minFilter: 'linear', magFilter: 'linear' });
-    const waterTex = (W, H) => [0, 1].map((k) => texture(gpu, { kind: '2d', size: [W, H], format: 'rgba16float', usage: ['storage_binding', 'texture_binding'], label: 'supercell-water-' + k }));
-    const [wA, wB] = waterTex(64, 64);
-    const force = compute(gpu, WATER_FORCE, { label: 'supercell-water-force', set: { w: waterU, src: wA, dst: wB } });
-    const move = compute(gpu, WATER_MOVE, { label: 'supercell-water-move', set: { w: waterU, src: wB, dst: wA } });
-    const lensFx = effect(gpu, LENS, { label: 'supercell-lens', set: { scene, water: wA, smp: lin, look: [0, 0.9, 64, 64], lab: [0, 0, 0, 0] } });
-    const water = { A: wA, B: wB, W: 64, H: 64, U: waterU, force, move, rain: rainOnLens(), make: waterTex, fresh: true };
+    const lensU = uniforms(gpu, { aspect: 1.42, drops: 0, dews: 0, wipes: 0 });
+    const dropBuf = storage(gpu, MAX_DROPS * 32), dewBuf = storage(gpu, MAX_DEW * 32), wipeBuf = storage(gpu, MAX_WIPE * 32);
+    const quad = { vertexCount: 4, topology: 'triangle-strip' };
+    const dropDraw = draw(gpu, { shader: DROPS, label: 'supercell-drops', geometry: quad, instances: MAX_DROPS, blend: { color: { src: 'one', dst: 'one' } }, set: { lens: lensU, items: dropBuf } });
+    const dewDraw = draw(gpu, { shader: DEW, label: 'supercell-dew', geometry: quad, instances: MAX_DEW, blend: { color: { src: 'one', dst: 'one', op: 'max' } }, set: { lens: lensU, items: dewBuf } });
+    const wipeDraw = draw(gpu, { shader: WIPE, label: 'supercell-wipe', geometry: quad, instances: MAX_WIPE, blend: { color: { src: 'zero', dst: 'one-minus-src-alpha' } }, set: { lens: lensU, items: wipeBuf } });
+    const dryFx = effect(gpu, DRY, { label: 'supercell-dry', blend: { color: { src: 'zero', dst: 'src-alpha' } }, set: { dry: [1, 0, 0, 0] } });
+    const lensFx = effect(gpu, LENS, { label: 'supercell-lens', set: { scene, drops: dropsT, dew: dewT, smp: lin, look: [0, 1.42, 64, 64], lab: [0, 0, 0, 0] } });
+    const water = { sim: lensSim(), lensU, dropBuf, dewBuf, wipeBuf, dropsT, dewT, dropDraw, dewDraw, wipeDraw, dryFx };
     const tm = dev.features.has('timestamp-query') ? timer(gpu) : null;
     if (tm) tm.onResults((r) => { for (const k of ['scene', 'debris']) if (r[k] !== undefined) { spans[k].push(r[k]); if (spans[k].length > 60) spans[k].shift(); } });
     gpu.onError && gpu.onError((e) => { err = e; console.error('supercell', e); });
@@ -223,12 +228,7 @@ export function stormApp() {
       const tgt = ui.prepare(scale), aspect = tgt.w / tgt.h;
       if (s.scene.size[0] !== tgt.w || s.scene.size[1] !== tgt.h) { s.scene.resize([tgt.w, tgt.h]); s.debrisT.resize([tgt.w, tgt.h]); s.sceneFx.set({ debrisAlbedo: s.debrisT.colors[0], debrisDist: s.debrisT.colors[1] }); s.lensFx.set({ scene: s.scene }); }
       const full = [ui.canvas.width, ui.canvas.height];
-      if (s.lensT.size[0] !== full[0] || s.lensT.size[1] !== full[1]) {
-        /* the fluid runs at 1/2.5 of the canvas, fine enough for small drops; the cubic read in the lens pass smooths it back up */
-        s.lensT.resize(full); const Wt = s.water, W = Math.max(8, Math.round(full[0] / 2.5)), H = Math.max(8, Math.round(full[1] / 2.5));
-        Wt.A.destroy(); Wt.B.destroy(); [Wt.A, Wt.B] = Wt.make(W, H); Wt.W = W; Wt.H = H; Wt.fresh = true;
-        Wt.force.set({ src: Wt.A, dst: Wt.B }); Wt.move.set({ src: Wt.B, dst: Wt.A }); s.lensFx.set({ water: Wt.A });
-      }
+      if (s.lensT.size[0] !== full[0] || s.lensT.size[1] !== full[1]) { for (const t of [s.lensT, s.water.dropsT, s.water.dewT]) t.resize(full); s.lensFx.set({ drops: s.water.dropsT, dew: s.water.dewT }); }
       if (reduced.matches && !s.preRolled) { for (let i = 0; i < 480; i++) { step(T - (480 - i) / 60, 1 / 60, aspect); s.kernel.dispatch(Math.ceil(ND / 256)); } s.preRolled = true; }
       const { D, L } = step(T, dt, aspect);
       /* the camera: out in it — a low handheld eye in the grass, looking up at the funnels, rolling with
@@ -247,25 +247,31 @@ export function stormApp() {
       s.cam.set({ pos, tanHalf: 0.5, fwd, aspect, right, steps, up, pxH: tgt.h });
       const frameStart = performance.now();
       /* the water on the lens runs on wall-clock time, however the storm is scrubbed */
+      const Wt = s.water;
+      let dewN = 0, wipeN = 0;
       if (!lensOff && (!reduced.matches || !s.lensWet)) {
-        const Wt = s.water, frames = reduced.matches ? 420 : 1, sub = 6;
-        const gust = D.fly ? D.fly.w : 0;
+        const frames = reduced.matches ? 480 : 1, gust = D.fly ? D.fly.w : 0;
+        const dewAll = reduced.matches ? new Float32Array(MAX_DEW * 8) : null;
         for (let f = 0; f < frames; f++) {
-          const hits = Wt.rain(reduced.matches ? 1 / 60 : dt, D.rain, gust, Wt.W, Wt.H, D.wind);
-          for (let k = 0; k < sub; k++) {
-            Wt.U.set({ reset: Wt.fresh ? 1 : 0, count: k === 0 && !Wt.fresh ? MAX_HITS : 0, hits, wind: D.wind * 0.003 + (D.fly ? D.fly.side * D.fly.w * 0.012 : 0), time: T });
-            Wt.force.dispatch(Math.ceil(Wt.W / 8), Math.ceil(Wt.H / 8)); Wt.move.dispatch(Math.ceil(Wt.W / 8), Math.ceil(Wt.H / 8));
-            Wt.fresh = false;
-          }
+          Wt.sim.step(reduced.matches ? 1 / 60 : dt, D.rain, D.wind + (D.fly ? D.fly.side * D.fly.w : 0), aspect, gust);
+          if (dewAll) { const n = Math.min(Wt.sim.dews, MAX_DEW - dewN); dewAll.set(Wt.sim.dewBuf.subarray(0, n * 8), dewN * 8); dewN += n; }
         }
+        if (dewAll) { Wt.dewBuf.write(dewAll); } else { dewN = Wt.sim.dews; wipeN = Wt.sim.wipes; Wt.dewBuf.write(Wt.sim.dewBuf); Wt.wipeBuf.write(Wt.sim.wipeBuf); }
+        Wt.dropBuf.write(Wt.sim.dropBuf);
         s.lensWet = true;
       }
-      s.lensFx.set({ look: [L.flash, 0.35, s.water.W, s.water.H] });
+      Wt.lensU.set({ aspect, drops: Wt.sim.drops, dews: dewN, wipes: wipeN });
+      Wt.dryFx.set({ dry: [reduced.matches ? 1 : Math.exp(-dt / 45), 0, 0, 0] });
+      s.lensFx.set({ look: [L.flash, aspect, full[0], full[1]] });
       if (!reduced.matches) s.kernel.dispatch(Math.ceil(ND / 256));
       frame(gpu, (f) => {
         f.pass(s.tm ? { target: s.debrisT, timer: s.tm.span('debris') } : s.debrisT, (p) => { p.draw(s.debris); p.draw(s.grass); });
         f.pass(s.tm ? { target: s.scene, timer: s.tm.span('scene') } : s.scene, s.sceneFx);
-        if (!lensOff) f.pass(s.lensT, s.lensFx);
+        if (!lensOff) {
+          f.pass({ target: Wt.dewT, clear: false }, (p) => { p.draw(Wt.dryFx); if (wipeN) p.draw(Wt.wipeDraw, { instances: wipeN }); if (dewN) p.draw(Wt.dewDraw, { instances: dewN }); });
+          f.pass(Wt.dropsT, (p) => { if (Wt.sim.drops) p.draw(Wt.dropDraw, { instances: Wt.sim.drops }); });
+          f.pass(s.lensT, s.lensFx);
+        }
       });
       ui.scene(lensOff ? s.scene.color.gpu : s.lensT.color.gpu);
       if (!reduced.matches) { if (rafLast) { const iv = now - rafLast; rafEMA = rafEMA ? rafEMA * 0.92 + iv * 0.08 : iv; } rafLast = now; }
