@@ -21,10 +21,11 @@
      → Runners erase the micro layer along their path and gain a little area for it.
    · Drops that touch merge, and the volume is kept.
      → Area-conserving merges; the merged drop is lopsided, then rings back round.
-   · Where water comes from on a camera in a storm: gusts fling spray onto the glass, and water gathers
-     at the top of the hood and drips.
-     → Flings: a streak of fine spray along the wind with a few small drops at its head. Drips: beads
-       released from a few slowly wandering places along the top edge.
+   · Where water comes from on a camera in a storm: spray, gusts that throw more of it, heavier drops,
+     and water that gathers at the top of the hood and drips.
+     → Spray lands one droplet at a time anywhere on the glass; a gust raises the rate for under a second
+       and leans it toward a broad area, never a burst. Every few seconds a bolder drop lands with a few
+       tiny impact satellites and runs. Drips are beads released from slowly wandering places along the top.
 
    Units: x across 0–aspect, y down 0–1 (the screen's height is 1). Radius is the visible radius. */
 
@@ -50,16 +51,26 @@ export function lensSim() {
   const dew = (x, y, r, stretch = 1, dx = 0, dy = 1) => { if (nDew >= MAX_DEW) return; const o = nDew * 8; dewBuf[o] = x; dewBuf[o + 1] = y; dewBuf[o + 2] = r; dewBuf[o + 3] = stretch; dewBuf[o + 4] = dx; dewBuf[o + 5] = dy; dewBuf[o + 6] = rnd() * 100; dewBuf[o + 7] = 0; nDew++; };
   const wipe = (x0, y0, x1, y1, r) => { if (nWipe >= MAX_WIPE) return; const o = nWipe * 8; wipeBuf[o] = x0; wipeBuf[o + 1] = y0; wipeBuf[o + 2] = x1; wipeBuf[o + 3] = y1; wipeBuf[o + 4] = r; nWipe++; };
 
-  function fling(rain, wind) {
-    const dir = wind >= 0 ? 1 : -1, ang = (rnd() - 0.5) * 0.8, dx = Math.cos(ang) * dir, dy = Math.sin(ang);
-    const len = 0.06 + rnd() * 0.22, x0 = rnd() * aspect, y0 = 0.08 + rnd() * 0.84;
-    const spray = 50 + (rnd() * (60 + rain * 60)) | 0;
-    for (let k = 0; k < spray; k++) {
-      /* dense at the head, thinning along the streak, spreading as it goes */
-      const f = Math.pow(rnd(), 1.6), spread = (rnd() - 0.5) * (0.012 + f * len * 0.5) * (0.4 + rnd());
-      dew(x0 + dx * f * len - dy * spread, y0 + dy * f * len + dx * spread, 0.0007 + Math.pow(rnd(), 2.5) * 0.0022 * (1.2 - f), 1 + rnd() * 0.6 * (1 - f), dx, dy);
+  /* spray: single droplets landing one at a time, anywhere on the glass. A gust only raises the rate for a moment
+     and leans where they land toward one broad area; nothing arrives as a burst. */
+  let gustT = 0, gustX = 0.5, gustY = 0.5, gustW = 0, boldIn = 3;
+  const gauss = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
+  function spray(dt, rain) {
+    const rate = (0.15 + rain) * 30 + gustW * 180;
+    let n = rate * dt; while (n > 0) {
+      if (rnd() < n) {
+        const inGust = gustW > 0 && rnd() < gustW * 180 / rate;
+        const x = inGust ? gustX + gauss() * 0.45 * aspect : rnd() * aspect, y = inGust ? gustY + gauss() * 0.4 : rnd();
+        dew(x, y, 0.0009 + Math.pow(rnd(), 2.5) * 0.0026, 1 + rnd() * 0.3, rnd() - 0.5, 1);
+      }
+      n -= 1;
     }
-    for (let k = 0, n = 1 + (rnd() * 3) | 0; k < n; k++) { const f = rnd() * 0.25; add(x0 + dx * f * len + (rnd() - 0.5) * 0.01, y0 + dy * f * len + (rnd() - 0.5) * 0.01, 0.0025 + rnd() * 0.0035); }
+  }
+  /* now and then a bolder drop lands: a few tiny satellites thrown from its impact, and it runs */
+  function bold(rain) {
+    const x = rnd() * aspect, y = 0.05 + rnd() * 0.75, r = 0.0085 + rnd() * 0.0055;
+    add(x, y, r, 0.02);
+    for (let k = 0, n = 4 + (rnd() * 7) | 0; k < n; k++) { const a = rnd() * 6.283, d = r * (1.6 + rnd() * 2.5); dew(x + Math.cos(a) * d, y + Math.sin(a) * d, 0.0006 + rnd() * 0.0012); }
   }
 
   const api = {
@@ -71,7 +82,11 @@ export function lensSim() {
       for (let k = 0; k < wet.length; k++) wet[k] *= Math.exp(-dt * 0.08);
       /* flings: every few seconds, sooner in heavy rain and much sooner when a tornado passes */
       flingIn -= dt * (0.35 + rain * 0.7 + gust * 5);
-      if (api.flingNow || flingIn <= 0) { api.flingNow = false; flingIn = 1.2 + rnd() * 2.8; fling(rain, wind); }
+      if (api.flingNow || flingIn <= 0) { api.flingNow = false; flingIn = 1.5 + rnd() * 3; gustT = 0.6 + rnd() * 0.8; gustX = rnd() * aspect; gustY = 0.2 + rnd() * 0.6; }
+      gustT = Math.max(0, gustT - dt); gustW = Math.min(1, gustT * 2);
+      spray(dt, rain);
+      boldIn -= dt * (0.4 + rain);
+      if (boldIn <= 0) { boldIn = 3 + rnd() * 5; bold(rain); }
       /* drips from the top edge */
       dripCarry += (0.15 + rain) * 0.7 * dt;
       while (dripCarry >= 1) { dripCarry -= 1; const sp = spouts[(rnd() * spouts.length) | 0]; const x = (rnd() < 0.7 ? sp.x + (rnd() - 0.5) * 0.015 : rnd()) * aspect; add(x, 0.004, R_CRIT * (1.1 + rnd() * 0.5), 0.05); }
