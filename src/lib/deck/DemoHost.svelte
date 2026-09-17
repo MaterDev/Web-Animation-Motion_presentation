@@ -63,7 +63,7 @@
 {#if !live}
   <div class="dh-frame dh-still" data-testid={testId && `${testId}-poster`}>
     {#if poster}
-      <img class="dh-poster" class:cover={!fit} src={poster} alt="" loading="lazy" decoding="async" />
+      <img class="dh-poster" class:cover={!fit} src={poster} alt="" decoding="sync" />
     {:else}
       <div class="dh-skel" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     {/if}
