@@ -1,0 +1,20 @@
+- **The Fenwick: a museum's object page (invented)**
+  - A real photogrammetry scan: Marble Bust 01, Poly Haven, CC0
+- **320,000 points of light**
+  - Sampled from the scan's surface; they gather into the bust in about two seconds
+  - The points live on the GPU; nothing is uploaded per frame
+- **Points → object**
+  - A scan line rises; below it the points give way to the lit mesh
+  - Both are drawn from the same mesh in the same space, so they line up exactly
+- **Outline**
+  - A second copy of the mesh, turned inside out and pushed a pixel or two past the edge
+  - It separates pale stone from a dark ground without any post-processing
+- **Light as content**
+  - Gallery, daylight and raking light: the same stone reads differently under each
+  - The fine tool grain is in a normal map, not the geometry, so it turns with the light
+- **Look closer**
+  - Each note turns the bust to show the detail
+- **A composite**
+  - Real text and buttons where they need to be read; the graphics card where it needs pixels
+- **WebGL is not only for static scenes**
+  - Models, lighting and effects are comfortable; its limit is lots of interacting state

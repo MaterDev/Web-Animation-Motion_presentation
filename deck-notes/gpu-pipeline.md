@@ -1,0 +1,10 @@
+- **What a frame costs on the GPU**
+  - 200,000 particles, one storage buffer
+- **Four passes**
+  - Flow field, integrate, density, render
+  - Each pass is timed by the GPU itself, start and end
+  - Switch a pass off and the frame loses exactly its time
+- **Bytes uploaded: uniforms only**
+  - The particles never come back to the CPU; only a few parameters cross each frame
+- **Why WebGPU**
+  - Compute shaders: the GPU holds the state and evolves it

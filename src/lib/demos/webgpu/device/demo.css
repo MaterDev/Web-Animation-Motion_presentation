@@ -1,4 +1,4 @@
-/* SL-14 · webgpu · the iPhone Duo on a slide (slide fit, 2026-09-17)
+/* SL-14 · webgpu · the fPhone Duo on a slide (slide fit, 2026-09-17)
    The demo is one canvas the size of the box. The device in it — hardware and
    screen — is WebGPU; where no ray lands the canvas is transparent, so the
    slide's own LCD ground is the floor it stands on. Words sit in a narrow
@@ -14,14 +14,19 @@
 .dv-side { position: absolute; left: 0; bottom: 12px; width: 118px; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
 .dv-cap-name { font-family: var(--sans); font-size: 15px; font-weight: 650; line-height: 1.15; }
 .dv-cap-line { font-family: var(--sans); font-size: 11px; line-height: 1.35; color: var(--lcd-dim); }
-.dv-bytes { margin-top: 6px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; color: var(--lcd-dim); }
-.dv-bytes b { color: var(--lcd-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.dv-bytes { margin-top: 6px; display: flex; flex-direction: column; gap: 1px; font-family: var(--sans); font-size: 11px; color: var(--lcd-dim); } .dv-bytes i { font-style: normal; }
+.dv-bytes b { font-family: var(--mono); font-size: 12px; color: var(--lcd-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* controls: an LCD-style key pair, bottom-right */
 .dv-ctl { position: absolute; right: 0; bottom: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .dv-btn { min-width: 76px; height: 30px; padding: 0 14px; border-radius: 6px; border: 1.5px solid var(--lcd-ink); background: var(--lcd-ink); color: var(--lcd-ground-top); font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: transform 0.15s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s; }
-.dv-btn-quiet { background: transparent; color: var(--lcd-ink); }
 .dv-btn:hover { transform: translateY(-1px); } .dv-btn:active { transform: translateY(1px); }
 .dv-btn:focus-visible { outline: 2px solid var(--lcd-ink); outline-offset: 3px; }
 .dv-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
 .dv-btn[hidden] { display: none; }
+/* the app exit: outside the device, at its top-right corner — a red hairline, a faint red tint, quiet until hovered */
+.dv-exit { position: absolute; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid oklch(0.62 0.18 28); background: oklch(0.62 0.18 28 / 0.16); color: oklch(0.55 0.18 28); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; transition: background 0.18s, transform 0.18s cubic-bezier(0.32, 0.72, 0, 1); }
+.dv-exit svg { width: 14px; height: 14px; }
+.dv-exit:hover, .dv-exit:focus-visible { background: oklch(0.62 0.18 28 / 0.28); transform: scale(1.06); }
+.dv-exit:focus-visible { outline: 2px solid oklch(0.62 0.18 28); outline-offset: 3px; }
+.dv-exit[hidden] { display: none; }

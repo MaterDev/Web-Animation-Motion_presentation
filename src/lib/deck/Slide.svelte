@@ -174,6 +174,12 @@
      margin bands, small and dim. */
   import { TINTS, SLIDES } from './slides.js';
   import DemoHost from './DemoHost.svelte';
+  /* the GIF opener shows the format itself: the slime stickers, as files */
+  import gifIdle from '$lib/demos/gif/stickers/assets/slime-idle.gif?url';
+  import gifEat from '$lib/demos/gif/stickers/assets/slime-eat.gif?url';
+  import gifHappy from '$lib/demos/gif/stickers/assets/slime-happy.gif?url';
+  import gifSleep from '$lib/demos/gif/stickers/assets/slime-sleep.gif?url';
+  const GIFS = [gifHappy, gifEat, gifIdle, gifSleep];
   /* the site's QR code, generated once (qrcode 1.5.4, error level M) so the
      deck needs no QR library at runtime */
   import qrSvg from './assets/qr-wam-2026.svg?raw';
@@ -334,20 +340,44 @@
             <!-- gif: the loop that cannot be switched off — the dek on an
                  emissive LED panel with its lamp permanently lit -->
             <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
-            <div class="dk-led dk-center" style="{at(2, 6, 3, 3)};--ct:{tint}">
-              <span class="led dk-panel-lamp" style="--c:var(--ok)" aria-hidden="true"></span>
-              {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
-            </div>
-            <div class="dk-at dk-end" style={at(8, 5, 6, 1)}>{@render ladder()}</div>
+            {#if slide.blocks}
+              <!-- two points on dark LED panels, and the format itself: four
+                   real GIFs looping, with no way to stop them -->
+              {#each slide.blocks as b, n (b.h)}
+                <div class="dk-led dk-gifpt" style="{at(1, 6, n === 0 ? 3 : 5, 2)};--ct:{tint}" data-testid="slide-{slide.id}-block-{n + 1}">
+                  <span class="dk-gifpt-h">{b.h}</span>
+                  <p class="dk-led-body dk-gifpt-b">{@html brand(b.body)}</p>
+                </div>
+              {/each}
+              <div class="dk-gifs" style={at(8, 5, 3, 4)} aria-label="Four looping GIFs" data-testid="slide-{slide.id}-gifs">
+                {#each GIFS as g (g)}<span class="dk-gif"><img src={g} alt="" /></span>{/each}
+                <span class="dk-gifs-cap">.gif · 256 colours · no controls</span>
+              </div>
+            {:else}
+              <div class="dk-led dk-center" style="{at(2, 6, 3, 3)};--ct:{tint}">
+                {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+              </div>
+            {/if}
 
           {:else if L === 'screen' && shape === 'frame'}
             <!-- video: the dek in a bracketed frame, like a player's picture area -->
             <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            {#if slide.blocks}
+              <!-- two explanatory blocks side by side (Key: combined slide, two blocks) -->
+              {#each slide.blocks as b, n (b.h)}
+                <div class="dk-rg dk-center dk-block" class:dk-block-l={n === 0} class:dk-block-r={n === 1} style="{at(n === 0 ? 1 : 7, 6, 3, 3)};--ct:{tint}" data-testid="slide-{slide.id}-block-{n + 1}">
+                  <span class="dk-rg-cast" aria-hidden="true"></span>
+                  <span class="dk-rg-title">{b.h}</span>
+                  <p class="dk-rg-note">{@html brand(b.body)}</p>
+                </div>
+              {/each}
+            {:else}
             <div class="dk-rg dk-center" style="{at(6, 7, 3, 3)};--ct:{tint}">
               <span class="dk-rg-cast" aria-hidden="true"></span>
               {@render reg()}
               {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
             </div>
+            {/if}
             <div class="dk-at dk-end" style={at(1, 5, 6, 1)}>{@render ladder()}</div>
 
           {:else if L === 'screen' && shape === 'low'}
@@ -361,8 +391,26 @@
                  and the ladder both inside it -->
             <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
             <div class="dk-led dk-gpu" style="{at(1, 12, 4, 3)};--ct:{tint}">
+              <!-- a graphics card, exploded like the composite graphic: the
+                   shroud with its fans, the heatsink fins, the board with its
+                   memory and edge connector. Layers breathe apart and back;
+                   fans turn slowly. -->
+              <div class="gpu-fig" aria-hidden="true" data-testid="slide-{slide.id}-gpu-figure">
+                <div class="gpu-iso">
+                  <div class="gpu-pl gpu-board"><span class="gpu-tag">board</span>
+                    {#each [0, 1, 2, 3] as k (k)}<i class="gpu-chip" style="--k:{k}"></i>{/each}
+                    <i class="gpu-die"></i><i class="gpu-pcie"></i>
+                  </div>
+                  <div class="gpu-pl gpu-sink"><span class="gpu-tag">heatsink</span><i class="gpu-fins"></i></div>
+                  <div class="gpu-pl gpu-shroud"><span class="gpu-tag">shroud</span>
+                    <i class="gpu-fan" style="--f:0"><b></b></i><i class="gpu-fan" style="--f:1"><b></b></i>
+                  </div>
+                </div>
+              </div>
+              <div class="gpu-copy">
               {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
               <div class="dk-gpu-ladder">{@render ladder()}</div>
+              </div>
             </div>
 
           {:else if L === 'screen' && shape === 'points'}
@@ -609,9 +657,31 @@
             {#each slide.compare as c, n (c.h)}
               {@const side = slide.sides?.[n]}
               {@const ct = side ? (TINTS[side.tint] ?? tint) : tint}
-              {@const place = alt ? at(n === 0 ? 2 : 8, 5, 3, 4) : at(n === 0 ? 1 : 7, 5, 1, 4)}
-              <div class={alt ? 'dk-rg dk-pair' : 'dk-led dk-pair'} style="{place};--ct:{ct};--tint:{ct}"
+              {@const place = alt ? at(n === 0 ? 2 : 8, 5, 3, 4) : at(n === 0 ? 1 : 7, 6, 1, 4)}
+              <div class={alt ? 'dk-rg dk-pair' : 'dk-led dk-pair dk-pair-wide'} class:dk-block-l={!alt && n === 0} class:dk-block-r={!alt && n === 1} style="{place};--ct:{ct};--tint:{ct}"
                    data-testid="slide-{slide.id}-side-{slug(c.h)}">
+                {#if side?.mark === 'webgl'}
+                  <!-- WebGL: the CPU holds the state and hands the GPU one
+                       instruction at a time; data crosses every frame -->
+                  <svg class="pr-fig" viewBox="0 0 300 96" aria-hidden="true" data-testid="slide-{slide.id}-fig-webgl">
+                    <rect class="pr-box" x="6" y="18" width="84" height="60" rx="4" /><text x="14" y="32">cpu</text>
+                    {#each [0, 1, 2, 3, 4, 5] as k (k)}<rect class="pr-mem" x={16 + (k % 3) * 22} y={42 + Math.floor(k / 3) * 16} width="16" height="10" rx="1" />{/each}
+                    <rect class="pr-box" x="210" y="18" width="84" height="60" rx="4" /><text x="218" y="32">gpu</text>
+                    <line class="pr-wire" x1="96" y1="40" x2="204" y2="40" /><line class="pr-wire" x1="204" y1="58" x2="96" y2="58" />
+                    {#each [0, 1, 2] as k (k)}<rect class="pr-pkt pr-out" x="96" y="36" width="9" height="8" rx="1" style="--k:{k}" /><rect class="pr-pkt pr-back" x="195" y="54" width="9" height="8" rx="1" style="--k:{k}" />{/each}
+                  </svg>
+                {:else if side?.mark === 'webgpu'}
+                  <!-- WebGPU: one batch of instructions goes over once; the
+                       state lives on the GPU and many cores work it in place -->
+                  <svg class="pr-fig" viewBox="0 0 300 96" aria-hidden="true" data-testid="slide-{slide.id}-fig-webgpu">
+                    <rect class="pr-box" x="6" y="18" width="84" height="60" rx="4" /><text x="14" y="32">cpu</text>
+                    {#each [0, 1, 2] as k (k)}<rect class="pr-cmd" x="18" y={40 + k * 11} width="60" height="7" rx="1" />{/each}
+                    <line class="pr-wire" x1="96" y1="48" x2="130" y2="48" />
+                    <rect class="pr-batch" x="96" y="41" width="30" height="14" rx="2" />
+                    <rect class="pr-box" x="136" y="8" width="158" height="80" rx="4" /><text x="144" y="22">gpu · memory stays here</text>
+                    {#each Array.from({ length: 36 }, (_, n) => n) as n (n)}<rect class="pr-core" x={146 + (n % 12) * 12} y={32 + Math.floor(n / 12) * 17} width="9" height="11" rx="1" style="--n:{n}" />{/each}
+                  </svg>
+                {/if}
                 {#if alt}<span class="dk-rg-cast" aria-hidden="true"></span>{@render reg()}{/if}
                 <span class="dk-rg-top dk-float">
                   <span class="dk-rg-head">
@@ -644,6 +714,21 @@
                 </div>
               {:else}
                 <div class="dk-led dk-end-flex" style="{at(6, 7, 1, 6)};--ct:{tint}" data-testid="slide-{slide.id}-side-{slug(c.h)}">
+                  <!-- the two freedoms, drawn: depth (a cube on three axes)
+                       and every pixel (a grid lit cell by cell) -->
+                  <div class="cv-fig" aria-hidden="true" data-testid="slide-{slide.id}-figure">
+                    <svg class="cv-depth" viewBox="0 0 150 150">
+                      <g class="cv-axes"><line x1="40" y1="112" x2="132" y2="112" /><line x1="40" y1="112" x2="40" y2="18" /><line x1="40" y1="112" x2="8" y2="140" /></g>
+                      <g class="cv-cube">
+                        <path class="cv-back" d="M70 50 h40 v40 h-40 z" />
+                        <path class="cv-front" d="M56 64 h40 v40 h-40 z" />
+                        <path class="cv-edge" d="M56 64 L70 50 M96 64 L110 50 M96 104 L110 90 M56 104 L70 90" />
+                      </g>
+                      <text x="134" y="116">x</text><text x="44" y="22">y</text><text x="2" y="146">z</text>
+                    </svg>
+                    <div class="cv-px">{#each Array.from({ length: 48 }, (_, n) => n) as n (n)}<i style="--n:{n}"></i>{/each}</div>
+                    <span class="cv-lab cv-lab-a">depth</span><span class="cv-lab cv-lab-b">every pixel</span>
+                  </div>
                   <span class="dk-tag">{two(n + 1)}</span>
                   <span class="dk-rg-title">{c.h}</span>
                   <span class="dk-rg-note">{c.body}</span>
@@ -693,6 +778,10 @@
         </div>
 
         <!-- bottom margin band: dev status and citations, quiet -->
+        {#if slide.caption}
+          <!-- demo slides: one line of caption in the bottom margin (Key) -->
+          <p class="dk-caption" data-testid="slide-{slide.id}-caption">{@html brand(slide.caption)}</p>
+        {/if}
         <div class="dk-band dk-band-bot">
           <span>{slide.sample ? 'sample' : slide.verify ? 'figures to verify' : ''}</span>
           <span>{#if slide.cite}<b class="dk-cite" data-testid="slide-{slide.id}-cite">{slide.cite.map((n) => `[${n}]`).join(' ')}</b>{/if}</span>
@@ -741,18 +830,78 @@
   .dk-cast { position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: color-mix(in oklch, var(--tint) 58%, transparent); }
   /* ── opener shapes ───────────────────────────────────────────── */
-  .dk-panel-lamp { position: absolute; top: 18px; right: 18px; }
+  .dk-led.dk-gifpt { justify-content: center; gap: 6px; padding: 16px 22px; }
+  .dk-gifpt-h { font-family: var(--mono); font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--led-ink); opacity: 0.6; }
+  .dk-gifpt-b { font-size: 16px !important; line-height: 24px !important; }
+  .dk-gifs { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr auto; gap: 10px; }
+  .dk-gif { display: grid; place-items: center; border-radius: 4px; overflow: hidden;
+    background: color-mix(in oklch, var(--lcd-ink) 8%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 25%, transparent); }
+  .dk-gif img { width: 78%; height: 78%; object-fit: contain; image-rendering: pixelated; }
+  .dk-gifs-cap { grid-column: 1 / -1; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lcd-ink); opacity: 0.7; text-align: right; }
   .dk-gpu { padding: 36px; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 72px; }
   .dk-gpu .dk-led-body { max-width: 360px; }
   .dk-gpu-ladder { flex: none; }
+  /* canvas "why" figure: simple, amber on the dark panel */
+  .dk-led > .cv-fig { position: absolute; left: 36px; right: 36px; top: 30px; height: 170px; display: grid;
+    grid-template-columns: 1fr 1fr; align-items: center; justify-items: center; column-gap: 24px;
+    --cvc: color-mix(in oklch, var(--tint-canvas) 80%, white); }
+  .cv-depth { width: 150px; height: 150px; overflow: visible; }
+  .cv-axes line { stroke: color-mix(in oklch, var(--cvc) 45%, transparent); stroke-width: 1; }
+  .cv-depth text { font-family: var(--mono); font-size: 9px; fill: color-mix(in oklch, var(--cvc) 60%, transparent); }
+  .cv-cube { transform-box: fill-box; transform-origin: center; animation: cv-float 7s var(--ease-mechanical) infinite; }
+  .cv-back { fill: none; stroke: color-mix(in oklch, var(--cvc) 40%, transparent); stroke-width: 1; }
+  .cv-front { fill: color-mix(in oklch, var(--cvc) 14%, transparent); stroke: var(--cvc); stroke-width: 1.4; }
+  .cv-edge { stroke: color-mix(in oklch, var(--cvc) 70%, transparent); stroke-width: 1; fill: none; }
+  @keyframes cv-float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10px, 9px); } }
+  .cv-px { display: grid; grid-template-columns: repeat(8, 12px); gap: 3px; }
+  .cv-px i { width: 12px; height: 12px; background: var(--cvc); opacity: 0.1; animation: cv-pix 4.8s steps(1, end) infinite;
+    animation-delay: calc(var(--n) * 0.1s); }
+  @keyframes cv-pix { 0% { opacity: 0.95; } 8% { opacity: 0.45; } 16%, 100% { opacity: 0.1; } }
+  .cv-lab { position: absolute; bottom: -8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--cvc); opacity: 0.65; }
+  .cv-lab-a { left: 0; width: 50%; text-align: center; } .cv-lab-b { right: 0; width: 50%; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { .cv-cube, .cv-px i { animation: none; } .cv-px i { opacity: 0.4; } }
+  /* the graphics card slide: figure left, copy and ladder right, in a grid
+     so the two can never overlap */
+  .dk-led.dk-gpu { display: grid !important; grid-template-columns: 360px minmax(0, 1fr); align-items: stretch; gap: 24px; padding: 18px 36px 24px 12px; }
+  .gpu-copy { display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 18px; padding-top: 18px; min-width: 0; }
+  .dk-gpu .gpu-copy .dk-led-body { max-width: none; margin: 0; }
+  .gpu-fig { display: grid; place-items: center; }
+  .gpu-iso { position: relative; width: 250px; height: 118px; transform-style: preserve-3d; transform: rotateX(58deg) rotateZ(-34deg); }
+  .gpu-pl { position: absolute; inset: 0; border-radius: 6px; border: 1px solid var(--bc); background: var(--bg);
+    transform: translateZ(var(--z)); animation: gpu-breathe 10s var(--ease-mechanical) infinite; overflow: hidden; }
+  @keyframes gpu-breathe { 0%, 30% { transform: translateZ(var(--z)); } 50%, 72% { transform: translateZ(calc(var(--z) * 0.25)); } 92%, 100% { transform: translateZ(var(--z)); } }
+  .gpu-tag { position: absolute; top: 5px; right: 8px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--bc); }
+  .gpu-board { --z: -52px; --bc: color-mix(in oklch, var(--tint-svg) 70%, white); --bg: color-mix(in oklch, var(--tint-svg) 16%, transparent); }
+  .gpu-chip { position: absolute; top: 14px; left: calc(16px + var(--k) * 28px); width: 20px; height: 16px; border-radius: 2px;
+    background: color-mix(in oklch, var(--bc) 35%, transparent); box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--bc) 70%, transparent); }
+  .gpu-chip:nth-of-type(n+3) { top: 78px; }
+  .gpu-die { position: absolute; left: 150px; top: 36px; width: 42px; height: 42px; border-radius: 3px;
+    background: color-mix(in oklch, var(--tint-webgpu) 55%, transparent); box-shadow: 0 0 14px color-mix(in oklch, var(--tint-webgpu) 70%, transparent); }
+  .gpu-pcie { position: absolute; left: 22px; width: 150px; bottom: 0; height: 6px;
+    background: repeating-linear-gradient(90deg, color-mix(in oklch, var(--tint-canvas) 90%, white) 0 3px, transparent 3px 5px); }
+  .gpu-sink { --z: 0px; --bc: color-mix(in oklch, var(--tint-css) 70%, white); --bg: color-mix(in oklch, var(--tint-css) 10%, transparent); }
+  .gpu-fins { position: absolute; inset: 20px 14px 14px; background: repeating-linear-gradient(90deg, color-mix(in oklch, var(--bc) 55%, transparent) 0 1px, transparent 1px 7px); }
+  .gpu-shroud { --z: 52px; --bc: color-mix(in oklch, var(--tint-webgpu) 70%, white); --bg: color-mix(in oklch, var(--tint-webgpu) 12%, transparent); }
+  .gpu-fan { position: absolute; top: 20px; left: calc(26px + var(--f) * 110px); width: 80px; height: 80px; border-radius: 50%;
+    border: 1px solid var(--bc); display: grid; place-items: center; }
+  .gpu-fan b { width: 64px; height: 64px; border-radius: 50%; animation: gpu-spin 3s linear infinite;
+    background: repeating-conic-gradient(from 0deg, color-mix(in oklch, var(--bc) 55%, transparent) 0 14deg, transparent 14deg 45deg); }
+  @keyframes gpu-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .gpu-pl, .gpu-fan b { animation: none; } }
   .dk-start { justify-content: flex-start; }
   .dk-points { border: 0; padding: 0; gap: 18px; justify-content: center; flex: 1; }
   .dk-points .dk-row { align-items: baseline; }
-  .dk-mix { display: grid; grid-template-columns: repeat(4, 72px); grid-auto-rows: 72px;
+  .dk-rg.dk-mix { display: grid; grid-template-columns: repeat(4, 72px); grid-auto-rows: 72px;
     align-content: center; justify-content: center; padding: 18px; }
   .dk-mix-chip { align-self: center; justify-self: center; margin: 0; }
-  .dk-card { justify-content: space-between; padding: 36px; }
-  .dk-credits { justify-content: center; gap: 18px; padding: 36px; }
+  .dk-rg.dk-block { padding: 18px 24px; gap: 8px; }
+  /* a gutter between the pair: half a module each side of the shared line */
+  .dk-rg.dk-block-l, .dk-led.dk-block-l { margin-right: 12px; }
+  .dk-rg.dk-block-r, .dk-led.dk-block-r { margin-left: 12px; }
+  .dk-block .dk-rg-note { font-size: 15px; line-height: 22px; }
+  .dk-rg.dk-card { justify-content: space-between; padding: 36px; }
+  .dk-rg.dk-credits { justify-content: center; gap: 18px; padding: 36px; }
   .dk-credit { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; }
   .dk-credit .dk-sw { width: 12px; height: 12px; }
   /* people get the warm face: the sans, at the sub size, on a whole-cell line */
@@ -761,7 +910,7 @@
   .dk-card-strip { flex-direction: column; align-items: flex-start; gap: 12px; }
   /* a region whose left edge carries the whole spectrum: the shared
      system, stated as seven tints stacked in one 6px stripe */
-  .dk-prismedge { padding-left: 36px; }
+  .dk-rg.dk-prismedge { padding-left: 36px; }
   .dk-prismedge::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
     background: linear-gradient(180deg,
       var(--tint-css) 0 14.3%, var(--tint-svg) 0 28.6%, var(--tint-video) 0 42.9%, var(--tint-canvas) 0 57.1%,
@@ -790,6 +939,13 @@
     font-family: var(--mono); font-size: 12px; line-height: 18px; letter-spacing: 0.18em; text-transform: uppercase;
     color: var(--lcd-ink); }
   .dk-band-top { top: 12px; }
+  /* the caption sits in the bottom margin under the demo well, left of the
+     citation; sentence case, the sans, quiet but readable */
+  .dk-caption { position: absolute; left: 48px; right: 48px; bottom: 8px; z-index: 7; margin: 0; max-width: none;
+    font-family: var(--sans); font-size: 11px; line-height: 14px; font-weight: 500; color: var(--lcd-ink);
+    opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* the citation shares the bottom band; lift it clear of the caption */
+  .led-slide:has(.dk-caption) .dk-band-bot { bottom: 22px; }
   .dk-band-bot { bottom: 12px; opacity: 0.55; }
   /* the section label is wayfinding: small, but contained so it is found
      at a glance. INLAID, not raised (Key): a dark, flat, section-tinted
@@ -938,7 +1094,7 @@
       0 6px 18px oklch(0.2 0.02 265 / 0.12); }
   .dk-glass::before { opacity: 0.18; }
   /* the LCD sheen on a slide carrying glass: kept, but faint */
-  .lcd.dk-glassy::after { opacity: 0.3; }
+  .lcd.dk-glassy::after { opacity: 0.21; }  /* 0.3 of the global 0.7 */
   .dk-glass > :not(.led-reg) { position: relative; }
   .dk-framed { padding: 36px; justify-content: center; gap: 18px; }
   .dk-framed .led-reg i { border-color: color-mix(in oklch, var(--lcd-ink) 55%, transparent); }
@@ -950,6 +1106,22 @@
 
   .dk-pair { justify-content: flex-end; }
   .dk-pair .dk-float { position: absolute; top: 18px; left: 18px; right: 18px; }
+  /* wide pair (WebGL / WebGPU): the figure sits between the head and the note */
+  .dk-led.dk-pair-wide { justify-content: flex-end; gap: 10px; }
+  .dk-pair-wide .pr-fig { position: absolute; left: 18px; right: 18px; top: 64px; width: calc(100% - 36px); height: 96px; }
+  .pr-fig text { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; fill: var(--ct); opacity: 0.8; }
+  .pr-box { fill: color-mix(in oklch, var(--ct) 8%, transparent); stroke: color-mix(in oklch, var(--ct) 55%, transparent); stroke-width: 1; }
+  .pr-mem, .pr-cmd { fill: color-mix(in oklch, var(--ct) 45%, transparent); }
+  .pr-wire { stroke: color-mix(in oklch, var(--ct) 35%, transparent); stroke-width: 1; stroke-dasharray: 3 3; }
+  .pr-pkt { fill: var(--ct); }
+  .pr-out { animation: pr-out 1.8s linear infinite; animation-delay: calc(var(--k) * -0.6s); }
+  .pr-back { animation: pr-back 1.8s linear infinite; animation-delay: calc(var(--k) * -0.6s - 0.3s); }
+  @keyframes pr-out { from { transform: translateX(0); } to { transform: translateX(99px); } }
+  @keyframes pr-back { from { transform: translateX(0); } to { transform: translateX(-99px); } }
+  .pr-batch { fill: var(--ct); opacity: 0.9; }
+  .pr-core { fill: var(--ct); opacity: 0.2; animation: pr-core 1.6s ease-in-out infinite; animation-delay: calc(mod(var(--n), 12) * 0.08s + mod(var(--n), 3) * 0.1s); }
+  @keyframes pr-core { 0%, 100% { opacity: 0.2; } 40% { opacity: 0.9; } }
+  @media (prefers-reduced-motion: reduce) { .pr-pkt, .pr-core { animation: none; } .pr-core { opacity: 0.55; } }
 
   /* datum: a share as two LED segments, lit | off, labels sitting over
      the segment they name. Columns are fr of the share itself, so the

@@ -1,0 +1,10 @@
+- **Lineage radar: AI history as weather**
+  - 30 events and 22 sourced movements of people between institutions, 1943–2024
+  - Each site's mass grows with the events and movements on record there by that year
+- **Melding and radiating**
+  - An SVG filter (blur, then a hard threshold) welds nearby masses into one shape
+  - Rings pulse out from every active site
+- **Honest data**
+  - Every size is counted from the dataset, not tuned for the picture
+- **Still SVG**
+  - A filter chain the browser runs, no shader code

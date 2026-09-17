@@ -197,8 +197,8 @@ export function stormApp() {
     ui.text(24, 18, 'SUPERCELL', 14, C.ink, { weight: 800, track: 0.34, op: 0.9 });
     /* the red edge */
     const pulse = 0.35 + 0.65 * Math.max(0, beat);
-    ui.stroke(3, 3, ui.W - 6, ui.H - 6, [1, 0.08, 0.06, 0.55 * pulse], 22, 6);
-    ui.stroke(10, 10, ui.W - 20, ui.H - 20, [1, 0.1, 0.08, 0.25 * pulse], 18, 3);
+    ui.stroke(3, 3, ui.W - 6, ui.H - 6, [1, 0.08, 0.06, 0.55 * pulse], (ui.screenRadius || 25) - 3, 6); /* slide: follows the display's own corner radius */
+    ui.stroke(10, 10, ui.W - 20, ui.H - 20, [1, 0.1, 0.08, 0.25 * pulse], Math.max(4, (ui.screenRadius || 25) - 10), 3);
     /* the banner: hazard stripes either side of the headline, strobing red on black */
     const bx = 24, by = 42, bw = 560, bh = 34;
     ui.rect(bx, by, bw, bh, on ? [0.86, 0.06, 0.05, 0.96] : [0.12, 0.02, 0.02, 0.92], 6);

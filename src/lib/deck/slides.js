@@ -60,6 +60,8 @@
  * @property {string[]} [items]
  * @property {[string, string][]} [readout]
  * @property {string} [qr]  a URL shown as a QR code with the address under it
+ * @property {{ h: string, body: string }[]} [blocks]  two explanatory blocks on a screen slide
+ * @property {string} [caption]  one line in the bottom margin of a demo slide
  * @property {string} [demoId]  a demo from the collection (src/lib/demos), mounted live
  * @property {boolean} [bare]  no LED well: the demo sits directly on the slide's screen
  * @property {boolean} [even]  demo well with equal screen margins on all four sides (864 × 444)
@@ -139,14 +141,17 @@ export const SLIDES = [
      (goo, moiré, aperture); typography (holographic, variable) ── */
   {
     id: 'css-timeless', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/timeless',
+    caption: 'Six magazine layouts that move with no JavaScript: sticky mastheads, staggered cards, tabs, drawers.',
     kicker: '1 · Layout & CSS · Timeless', h: 'timeless, a magazine animated',
   },
   {
     id: 'css-drawing', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/drawing',
+    caption: 'CSS as a drawing tool: blur and contrast make goo, a blend mode makes moiré, a scroll timeline opens the aperture.',
     kicker: '1 · Layout & CSS · Drawing', h: 'css as a drawing instrument',
   },
   {
     id: 'css-typography', code: 'SL-06', layout: 'stage', tint: 'css', demoId: 'css/typography',
+    caption: 'A gradient clipped to real text, and variable fonts animating weight and roundness inside the font file.',
     kicker: '1 · Layout & CSS · Typography', h: 'holographic and variable type',
   },
 
@@ -168,10 +173,12 @@ export const SLIDES = [
   /* ── SVG demos, each the whole slide ── */
   {
     id: 'svg-zoom-map', code: 'SL-10', layout: 'stage', tint: 'svg', demoId: 'svg/zoom-map', demoWidth: 1600, even: true,
+    caption: 'One SVG camera flies from the world to Dartmouth College, 1956: sharp at every zoom, labels as real text.',
     kicker: '2 · SVG · The camera', h: 'a survey-sheet zoom map',
   },
   {
     id: 'svg-lineage-radar', code: 'SL-10', layout: 'stage', tint: 'svg', demoId: 'svg/lineage-radar', demoWidth: 1600, even: true,
+    caption: 'AI history as weather: 30 events and 22 movements of people, welded together by an SVG filter.',
     kicker: '2 · SVG · Real data', h: 'lineage radar',
   },
 
@@ -179,28 +186,32 @@ export const SLIDES = [
   {
     id: 'gif-intro', code: 'SL-05', layout: 'screen', strip: [['Stop', '3 of 6'], ['Sheet', 'SL-05']], tint: 'video', motif: 'gif', shape: 'led',
     kicker: '3 · GIF', h: 'no off switch',
-    body: 'Works anywhere with no code, but you can’t pause it or slow it down. Ours are made by a script, so changing one is an edit, not a redo.',
+    blocks: [
+      { h: 'the format', body: 'Works anywhere with no code, but you can’t pause it or slow it down.' },
+      { h: 'the pipeline', body: 'Ours are made by a script, so changing one is an edit, not a redo.' },
+    ],
   },
   /* ── GIF demos: the three stickers and the companion device, one slide ── */
   {
     id: 'gif-stickers', code: 'SL-05', layout: 'stage', tint: 'video', motif: 'gif', demoId: 'gif/stickers', even: true, bare: true, demoWidth: 900,
+    caption: 'One GIF character in four product contexts, and a companion app that swaps GIFs as its mood changes.',
     kicker: '3 · GIF · Stickers', h: 'one character, four places',
   },
 
   /* ── Stop 4 · Video ── */
   {
     id: 'video-intro', code: 'SL-04', layout: 'screen', strip: [['Stop', '4 of 6'], ['Sheet', 'SL-04']], tint: 'video', shape: 'frame',
-    kicker: '4 · Video', h: 'it can’t react',
-    body: 'Video is the cheapest way to put motion on a page, and you can pause it. But it can’t respond to a scroll, a hover or a click.',
-  },
-  {
-    id: 'video-component', code: 'SL-04', layout: 'mirror', tint: 'video', alt: true,
-    kicker: '4 · Video', h: 'motion you can edit',
-    body: 'Built in code, motion can be changed like any other part of the site, even by a client in their content system. We’re not making a video. We’re making the thing that makes them.',
+    kicker: '4 · Video', h: 'video',
+    /* combined with the former "motion you can edit" slide (Key) */
+    blocks: [
+      { h: 'it can’t react', body: 'Video is the cheapest way to put motion on a page, and you can pause it. But it can’t respond to a scroll, a hover or a click.' },
+      { h: 'motion you can edit', body: 'Built in code, motion changes like any other part of the site, even by a client in their content system. We’re not making a video; we’re making the thing that makes them.' },
+    ],
   },
   /* ── Video demos, each the whole slide ── */
   {
     id: 'video-player-rack', code: 'SL-04', layout: 'stage', tint: 'video', demoId: 'video/player-rack', even: true, bare: true, demoWidth: 960,
+    caption: 'The decoded frame is a buffer: effects rewrite a playing video, or a live camera, frame by frame.',
     kicker: '4 · Video · The buffer rack', h: 'the decoded frame is a buffer',
   },
 
@@ -221,15 +232,13 @@ export const SLIDES = [
   },
   /* ── 2D Canvas demos, each the whole slide ── */
   {
-    id: 'canvas-batching', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/batching', even: true, bare: true, demoWidth: 864,
-    kicker: '5 · 2D Canvas · Batching', h: 'batching',
-  },
-  {
     id: 'canvas-readback', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/readback', even: true, bare: true, demoWidth: 864,
+    caption: 'Readback: histogram, region stats and profile are all computed from the canvas pixels, every frame.',
     kicker: '5 · 2D Canvas · Readback', h: 'readback',
   },
   {
     id: 'canvas-off-thread', code: 'SL-11', layout: 'stage', tint: 'canvas', demoId: 'canvas/off-thread', even: true, bare: true, demoWidth: 864,
+    caption: 'A worker draws the player and visualizer through OffscreenCanvas; block the page and they keep running.',
     kicker: '5 · 2D Canvas · Off-thread', h: 'off-thread',
   },
 
@@ -250,19 +259,18 @@ export const SLIDES = [
   },
   /* ── WebGL & WebGPU demos, each the whole slide ── */
   {
-    id: 'gpu-fenwick-hero', code: 'SL-12', layout: 'stage', tint: 'webgl', demoId: 'webgl/fenwick-hero', even: true, bare: true, demoWidth: 864,
-    kicker: '6 · WebGL · Homepage hero', h: 'the fenwick · homepage hero',
-  },
-  {
-    id: 'gpu-fenwick-museum', code: 'SL-12', layout: 'stage', tint: 'webgl', demoId: 'webgl/fenwick-museum', even: true, bare: true, demoWidth: 864,
-    kicker: '6 · WebGL · Object in the round', h: 'the fenwick · object in the round',
+    id: 'gpu-fenwick', code: 'SL-12', layout: 'stage', tint: 'webgl', demoId: 'webgl/fenwick', even: true, bare: true, demoWidth: 864,
+    caption: 'A CC0 scan as 320,000 GPU points that resolve into the lit, outlined marble; gallery, daylight and raking light read the stone differently.',
+    kicker: '6 · WebGL · The Fenwick', h: 'the fenwick · object in the round',
   },
   {
     id: 'gpu-pipeline', code: 'SL-14', layout: 'stage', tint: 'webgpu', demoId: 'webgpu/pipeline', even: true, bare: true, demoWidth: 864,
+    caption: '200,000 particles in one storage buffer, four passes timed by the GPU; only uniforms cross each frame.',
     kicker: '6 · WebGPU · The pipeline', h: 'what a frame costs on the gpu',
   },
   {
     id: 'gpu-device', code: 'SL-14', layout: 'stage', tint: 'webgpu', demoId: 'webgpu/device', even: true, bare: true, demoWidth: 864, cite: [29],
+    caption: 'One canvas, all WebGPU: the fPhone Duo, its home screen and every app drawn by the graphics card.',
     kicker: '6 · WebGPU · One device', h: 'one device, four apps',
   },
 
@@ -270,16 +278,19 @@ export const SLIDES = [
      two slides between the graphics card and the friction section. ── */
   {
     id: 'composite-layers', code: 'SL-07', layout: 'demo', tint: 'composite', demoId: 'composite/layers', wide: false,
+    caption: 'One page, three surfaces: real elements on top, a GPU canvas in the middle, video at the back.',
     kicker: 'Composite', h: 'one page, three surfaces',
     body: 'Most of what you just saw was already a combination: real page elements where you need text and clicks, the graphics card where you need pixels, video where nothing has to respond.',
   },
   /* the chroma key composite: moved here from the video stop (Key) */
   {
     id: 'composite-chroma-key', code: 'SL-07', layout: 'stage', tint: 'composite', demoId: 'composite/chroma-key', even: true, bare: true, demoWidth: 960,
+    caption: 'Green-screen footage keyed live in the browser and layered between real page elements.',
     kicker: 'Composite · Video as a material', h: 'an alpha channel the file never had',
   },
   {
     id: 'composite-brief', code: 'SL-07', layout: 'demo', tint: 'composite', demoId: 'composite/carries',
+    caption: 'For a brief: each part goes on the cheapest surface that can carry it.',
     kicker: 'Composite', h: 'which technique carries which part?',
     body: 'Don’t be a purist. Put each part on the cheapest surface that can carry it.',
   },

@@ -1,8 +1,10 @@
 // @ts-nocheck -- derived from design/techniques/webgpu/sheet.js; untyped sheet code
-/* SL-14 §2 · one device, four apps, as a demo the deck owns.
-   sheet.js, cut down to the device card and four of its eight apps: acquire a device, run the card from one
-   WAM clock, keep the instrument plate current — and, unlike the sheet, give
-   all of it back on dispose so a slide can mount it again. */
+/* SL-14 §2 · the fPhone Duo, as a demo the deck owns.
+   From sheet.js: acquire a device, run the card from one WAM clock, keep the
+   state readout current — and, unlike the sheet, give all of it back on
+   dispose so a slide can mount it again. On the slide the device itself is
+   WebGPU (duo.js); it opens onto a Home Screen (home.js) that launches Roost,
+   Tessera and Supercell. */
 import css from './demo.css?raw';
 import html from './demo.html?raw';
 import { stage } from '../../_kit/stage.js';
@@ -19,7 +21,7 @@ const APPS = [
   { id: 'flock', name: 'Roost', make: flockApp }, { id: 'tessera', name: 'Tessera', make: tesseraApp }, { id: 'storm', name: 'Supercell', make: stormApp },
 ];
 const CAPTIONS = {
-  closed: ['iPhone Duo', 'the hardware is sphere-traced too — press Open'],
+  closed: ['fPhone Duo', 'the hardware is sphere-traced too — press Open'],
   home: ['Home Screen', 'widgets, glass and type, all drawn by WebGPU'],
   flock: ['Roost', 'a flock game that plays itself · 131 072 starlings'],
   tessera: ['Tessera', 'a site grown as a world, ray-marched every frame'],

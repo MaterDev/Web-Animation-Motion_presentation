@@ -555,10 +555,8 @@ self.T5_VIS_LIVE = function (ctx, W, H, ink, g, field) {
     for (i = g.wY + 2; i < g.wY + g.wH; i += 3) ctx.fillRect(g.wX, i, g.wW, 1);
     ctx.globalAlpha = 1;
 
-    /* overlay chip: the mode label, top-left */
-    ctx.fillStyle = ink.well;
-    ctx.fillRect(g.wX + 8, g.wY + 8, self.T5_WIDTH('OIL', 2) + 8, 20);
-    self.T5_TEXT(ctx, 'OIL', g.wX + 13, g.wY + 12, 2, ink.lcd);
+    /* (the floating "OIL" chip over the screen was removed — Key; the
+       mode chips under the screen still name the mode) */
 
     /* level meters: decorative and calm, slow integer-rate swells */
     var L = 0.50 + 0.10 * Math.sin(t * TAU * 90 + 0.3) + 0.05 * Math.sin(t * TAU * 233 + 1.1);

@@ -168,8 +168,9 @@
                 <span class="num">{n + 1}</span>
               </span>
               <span class="rtext">
-                <span class="rc">{s.code}{#if n === i}<span class="now">now</span>{/if}</span>
-                <span class="rk">{s.kicker ?? '—'}</span>
+                <!-- the slide's own title first; the section label under it -->
+                <span class="rc"><span class="rt">{(s.h ?? s.id).replace(/<br\s*\/?>/gi, ' ')}</span>{#if n === i}<span class="now">now</span>{/if}</span>
+                <span class="rk">{[s.code, s.kicker].filter(Boolean).join(' · ')}</span>
               </span>
             </button>
           </li>
@@ -186,8 +187,16 @@
         <span class="code" data-testid="remote-code">{slide.code}</span>
         <span class="kick">{slide.kicker ?? ''}</span>
       </span>
-      <button class="jump" onclick={() => { jumping = true; }} aria-haspopup="dialog"
-        aria-expanded={jumping} data-testid="remote-jump">Slides ▾</button>
+      <span class="mid">
+        <button class="jump" onclick={() => { jumping = true; }} aria-haspopup="dialog"
+          aria-expanded={jumping} data-testid="remote-jump">Slides ▾</button>
+        <!-- portrait: present sits beside the slide selector (Key) -->
+        <button class="jump present-mini" class:on={deckMode === 'present'} onclick={togglePresent}
+          data-testid="remote-present-mini" aria-pressed={deckMode === 'present'}
+          aria-label={deckMode === 'present' ? 'Exit presenting' : 'Present fullscreen'}>
+          {deckMode === 'present' ? '✕ Exit' : '▶ Present'}
+        </button>
+      </span>
       <span class="pos" data-testid="remote-pos">{i + 1}<i>/{SLIDES.length}</i></span>
     </header>
 
@@ -196,10 +205,15 @@
       {deckMode === 'present' ? '✕  Exit presenting' : '▶  Present fullscreen'}
     </button>
 
-    <div class="preview" bind:this={box} data-testid="remote-preview">
-      <div class="fit" style="transform:scale({scale})">
-        <Slide {slide} {ex} live={false} />
+    <div class="stagerow">
+      <!-- portrait: prev and next flank the thumbnail (Key) -->
+      <button class="flank flank-prev" onclick={() => go(i - 1)} data-testid="remote-prev-flank" aria-label="Previous slide">◀</button>
+      <div class="preview" bind:this={box} data-testid="remote-preview">
+        <div class="fit" style="transform:scale({scale})">
+          <Slide {slide} {ex} live={false} />
+        </div>
       </div>
+      <button class="flank flank-next" onclick={() => go(i + 1)} data-testid="remote-next-flank" aria-label="Next slide">▶</button>
     </div>
 
     <div class="upnext">
@@ -226,7 +240,7 @@
     <!-- Thumb zone. Big, fixed, and clear of the home indicator. -->
     <nav class="pad">
       <button class="side" onclick={() => go(i - 1)} data-testid="remote-prev" aria-label="Previous slide">◀</button>
-      <button class="main" onclick={() => go(i + 1)} data-testid="remote-next">Next ▶</button>
+      <button class="main" onclick={() => go(i + 1)} data-testid="remote-next" aria-label="Next slide"><span class="next-word">Next </span>▶</button>
     </nav>
    </div>
 
@@ -295,6 +309,8 @@
      sit straight in the page's column. The thumb pad is moved last with
      `order`, so it stays at the bottom under the notes. */
   .left { display: contents; }
+  .stagerow { display: contents; }
+  .flank { display: none; }
   .pad { order: 10; }
 
   /* Present / exit, full width under the header: the one control used
@@ -317,6 +333,11 @@
     font-weight: 700; letter-spacing: 0.04em; white-space: nowrap;
     -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .jump:active { background: var(--r-line); }
+  .mid { display: flex; align-items: center; gap: 6px; }
+  .present-mini.on { background: oklch(0.52 0.15 28); border-color: oklch(0.52 0.15 28); color: oklch(0.985 0.003 265); }
+  /* Portrait: the full-width present bar goes (its control lives in the
+     header now) and the preview shrinks, so the notes get the height. */
+
 
   /* The jump window: a scrim over the remote and a light panel that fits
      the visible screen, its list scrolling inside it. */
@@ -356,10 +377,11 @@
     text-align: center; line-height: 1.3; }
   .rtext { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .rc { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
-  .rk { font-size: 14px; font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--sans); font-weight: 700; }
+  .rk { font-size: 12px; color: var(--r-dim); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .now { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--r-ink);
     padding: 1px 6px; border-radius: 4px; background: var(--r-bg); }
-  .code { color: var(--r-ink); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; }
+  .code { color: var(--r-ink); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; flex: none; }
   .kick { color: var(--r-dim); text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em; min-width: 0;
     font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pos { justify-self: end; color: var(--r-ink); font-size: 20px; font-weight: 700; }
@@ -462,6 +484,7 @@
     .left { display: flex; flex-direction: column; gap: 6px; min-height: 0; height: 100%; }
     .top { flex: none; }
     .present { flex: none; height: 38px; font-size: 13px; }
+    .present-mini { display: none; }
     .preview { flex: 1 1 auto; min-height: 0; width: auto; max-width: 100%; aspect-ratio: 16 / 9;
       align-self: center; height: auto; }
     .exs { flex: none; height: 40px; }
@@ -470,5 +493,26 @@
     .pad button { height: 50px; font-size: 16px; }
     .notes { min-height: 0; height: 100%; border-top: 0; padding: 4px 0 8px; }
     .n { line-height: 1.5; }
+  }
+
+  /* Portrait (Key): the present control lives in the header beside the
+     slide selector, and the preview shrinks so the notes get the height.
+     Last in the sheet so it wins over the base .preview and .present. */
+  @media (orientation: portrait) {
+    .remote .present { display: none; }
+    .remote .preview { align-self: center; }
+    .remote .top { grid-template-columns: minmax(0, 1fr) auto auto; }
+  }
+  /* Portrait (Key): prev and next flank the slide thumbnail, so the
+     notes run all the way to the bottom with nothing floating over them. */
+  @media (orientation: portrait) {
+    .remote .pad { display: none; }
+    .remote .stagerow { display: grid; grid-template-columns: minmax(0, 1fr) 58% minmax(0, 1fr); align-items: stretch; gap: 10px; flex: none; }
+    .remote .stagerow .preview { width: 100%; align-self: center; }
+    .remote .flank { display: block; border-radius: 14px; border: 1.5px solid var(--r-line); background: var(--r-soft); color: var(--r-ink);
+      font-size: 24px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+    .remote .flank:active { background: var(--r-line); }
+    .remote .flank-next { border-color: var(--r-tint-deep); background: var(--r-tint); color: oklch(0.16 0.02 150); }
+    .remote .notes { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
   }
 </style>
