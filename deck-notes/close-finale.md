@@ -1,3 +1,6 @@
+- **Everything you just saw, at once**
+  - The credits are real page elements, SVG, GIFs, video and a 2D canvas composited over a WebGPU device
+- **The whole talk was the composite**
 - **With thanks**
   - Sean Van Dyk
   - Irene Polo
