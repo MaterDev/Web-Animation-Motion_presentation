@@ -1,84 +1,105 @@
 /* composite · the finale (2026-09-17)
-   A credits screen that is really the inner display of the fPhone Duo.
-   Layers, back to front: the WebGPU canvas (the device, the screen's ground
-   and its particles), then .fn-screen — page elements, SVG, GIFs, video and a
-   2D canvas — placed over the display every frame with one transform
-   computed from the same camera. Every class is prefixed fn-. */
+   The last slide covers the deck's whole 960 × 540 surface (layout 'full').
+   It opens as a replica of a deck slide — the same well > lcd structure, the
+   bands and the field at the deck's offsets (values copied from
+   src/lib/deck/Slide.svelte) — and that whole frame is the inner display of
+   the fPhone Duo. Layers, back to front: the white studio (.fn), the WebGPU
+   canvas (the device; on its display the slide's bezel, LCD ground and
+   particles), then .fn-screen, the page layer, placed over the display every
+   frame from the same camera. Every class is prefixed fn-. */
 :host { --tint: var(--tint-composite); }
-.fn { position: relative; width: 100%; aspect-ratio: 864 / 444; overflow: hidden; color: var(--lcd-ink); outline: none; }
-.fn:focus-visible { box-shadow: inset 0 0 0 2px var(--lcd-ink); }
+.fn { position: relative; width: 100%; aspect-ratio: 960 / 540; overflow: hidden; color: var(--lcd-ink); outline: none;
+  background: #fff; }
+.fn:focus-visible { box-shadow: inset 0 0 0 2px oklch(0.3 0.01 265 / 0.5); }
 .fn-gpu { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-/* the screen layer: the display's own size in its own units (864 × LAYER_H), moved as one piece */
-.fn-screen { position: absolute; left: 0; top: 0; width: 864px; height: var(--fn-lh, 607.6px); transform-origin: 0 0; overflow: hidden;
-  border-radius: var(--fn-radius, 38.7px); will-change: transform, opacity; }
-/* until the GPU has drawn its first frame (or if it never can), the page paints the screen's ground itself */
-.fn-screen.fn-css-ground { background: linear-gradient(180deg, var(--lcd-ground-top), var(--lcd-ground-bot)); }
-.fn-band { position: absolute; left: 0; top: var(--fn-band-top, 81.8px); width: 864px; height: 444px; }
-.fn-glare { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(118deg, oklch(1 0 0 / 0.20) 0 18%, oklch(1 0 0 / 0.05) 18% 36%, transparent 60%); }
+/* the page layer: the display in its own units (960 × LAYER_H), the slide letterboxed in it */
+.fn-screen { position: absolute; left: 0; top: 0; width: 960px; height: var(--fn-lh, 675px); transform-origin: 0 0; overflow: hidden;
+  border-radius: var(--fn-radius, 43px); will-change: transform, opacity; }
+.fn-slide { position: absolute; left: 0; top: var(--fn-band-top, 67.5px); width: 960px; height: 540px; contain: layout paint; }
 
-/* SVG: a lineage-style network drawing itself on behind the names */
-.fn-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.fn-lines path { fill: none; stroke: var(--lcd-ink); stroke-width: 1; stroke-opacity: 0.26; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
-.fn-lines circle { fill: var(--lcd-ink); fill-opacity: 0.45; opacity: 0; }
-.is-live .fn-lines path { animation: fn-draw 2.4s var(--ease-standard) both; animation-delay: calc(200ms + var(--i) * 110ms); }
-.is-live .fn-lines circle { animation: fn-fade 500ms var(--ease-standard) both; animation-delay: calc(500ms + var(--i) * 110ms); }
-@keyframes fn-draw { to { stroke-dashoffset: 0; } }
+/* ── the replica: Slide.svelte's .dk-screen > .well > .lcd ── */
+.fn-well { display: block; box-sizing: border-box; height: 100%; padding: 6px; border-radius: 0; background: transparent; }
+.fn-lcd { height: 100%; border-radius: 0; background: transparent; }
+.fn-lcd::before { opacity: 0.3; }
+/* before the GPU's first frame (or without one) the page paints the ground the GPU normally draws */
+.fn-css-ground .fn-well { background: var(--well-floor); }
+.fn-css-ground .fn-lcd { background: linear-gradient(178deg, var(--lcd-ground-top), var(--lcd-ground-bot)); }
+.fn-cast { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: oklch(0.85 0.008 120 / 0.42); }
+.fn-band { position: absolute; left: 42px; right: 42px; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 18px; height: 18px;
+  font-family: var(--mono); font-size: 12px; line-height: 18px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--lcd-ink); }
+.fn-band-top { top: 12px; }
+.fn-band-bot { bottom: 12px; }
+.fn-kicker { display: inline-block; padding: 0 12px; border-radius: 2px; font-weight: 700; letter-spacing: 0.16em; color: var(--lcd-ground-top);
+  background: color-mix(in oklch, oklch(from var(--tint) 0.3 calc(c * 1.6) h) 88%, transparent);
+  box-shadow: inset 0 1px 3px oklch(0 0 0 / 0.45), inset 0 0 0 1px oklch(0.18 0.04 130 / 0.55); }
+.fn-code { opacity: 0.45; }
+/* the start control, as quiet as the band's own notation */
+.fn-play { font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 0; padding: 0 2px; cursor: pointer; opacity: 0.55; transition: opacity 0.18s; }
+.fn-play:hover, .fn-play:focus-visible { opacity: 1; }
+.fn-play:focus-visible { outline: 1px solid var(--lcd-ink); outline-offset: 3px; }
+.fn-play.gone { opacity: 0; pointer-events: none; }
+.fn-field { position: absolute; inset: 48px 42px; z-index: 2; }
+
+/* SVG: coordinate dots, fading in */
+.fn-dots { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fn-dots circle { fill: var(--lcd-ink); fill-opacity: 0.4; opacity: 0; }
+.fn-dots path { fill: none; stroke: var(--lcd-ink); stroke-opacity: 0.35; stroke-width: 1; opacity: 0; }
+.is-live .fn-dots circle, .is-live .fn-dots path { animation: fn-fade 600ms var(--ease-standard) both; animation-delay: calc(200ms + var(--i) * 70ms); }
 @keyframes fn-fade { to { opacity: 1; } }
 
-/* type */
-.fn-kicker { position: absolute; left: 56px; top: 40px; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lcd-dim); }
-.fn-kicker i, .fn-cap i, .fn-end i { font-style: normal; opacity: 0.6; }
-.fn-title { position: absolute; left: 52px; top: 58px; margin: 0; font-family: var(--sans); font-size: 58px; line-height: 1; letter-spacing: -0.02em; color: var(--lcd-ink); white-space: nowrap; font-weight: 400; }
-.fn-title span { display: inline-block; font-variation-settings: 'wght' 360; }
-.fn-title span.sp { width: 0.26em; }
-/* CSS: a variable-font weight wave running through the heading */
-.is-live .fn-title span { animation: fn-in 700ms var(--ease-decelerate) both, fn-wght 2.6s ease-in-out infinite; animation-delay: calc(var(--i) * 45ms), calc(900ms + var(--i) * 110ms); }
-@keyframes fn-wght { 0%, 100% { font-variation-settings: 'wght' 340; } 50% { font-variation-settings: 'wght' 780; } }
-.fn-dek { position: absolute; left: 56px; top: 132px; margin: 0; font-family: var(--sans); font-size: 13px; color: var(--lcd-dim); opacity: 0; }
+/* heading: the deck's .dk-title, with a variable-font weight wave */
+.fn-title { position: absolute; left: 0; top: 0; margin: 0; font-family: var(--dot); font-size: 48px; line-height: 48px; letter-spacing: 0.01em;
+  color: var(--lcd-ink); text-transform: lowercase; white-space: nowrap; font-weight: 900; }
+.fn-title span { display: inline-block; font-variation-settings: 'wght' 900, 'ROND' 0; }
+.fn-title span.sp { width: 0.4em; }
+.is-live .fn-title span { animation: fn-in 700ms var(--ease-decelerate) both, fn-wght 2.8s ease-in-out infinite; animation-delay: calc(var(--i) * 45ms), calc(900ms + var(--i) * 110ms); }
+@keyframes fn-wght { 0%, 100% { font-variation-settings: 'wght' 900, 'ROND' 0; } 50% { font-variation-settings: 'wght' 300, 'ROND' 0; } }
+.fn-dek { position: absolute; left: 0; top: 66px; margin: 0; font-family: var(--sans); font-size: 18px; line-height: 30px; font-weight: 500; color: var(--lcd-ink); opacity: 0; }
 .is-live .fn-dek { animation: fn-in 700ms var(--ease-decelerate) 450ms both; }
 
 /* CSS/layout: the names, real text, a staggered reveal on transform and opacity */
-.fn-names { position: absolute; left: 56px; top: 170px; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 236px 236px; grid-auto-rows: 34px; }
-.fn-name { display: flex; align-items: baseline; gap: 10px; opacity: 0; font-family: var(--sans); font-size: 19px; font-weight: 500; letter-spacing: -0.005em; }
+.fn-names { position: absolute; left: 0; top: 126px; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 270px 270px; grid-auto-rows: 36px; }
+.fn-name { display: flex; align-items: baseline; gap: 12px; opacity: 0; font-family: var(--sans); font-size: 22px; line-height: 30px; font-weight: 600; color: var(--lcd-ink); }
 .fn-name i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--lcd-dim); width: 18px; }
 .is-live .fn-name { animation: fn-in 800ms var(--ease-decelerate) both; animation-delay: calc(650ms + var(--i) * 95ms); }
 @keyframes fn-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 /* GIF: three slimes, living marks in the grid's eighth cell */
-.fn-slimes { display: flex; align-items: center; gap: 2px; margin-top: -8px; opacity: 0; }
-.fn-slimes img { width: 30px; height: 30px; image-rendering: pixelated; display: block; }
+.fn-slimes { display: flex; align-items: center; gap: 2px; margin-top: -6px; opacity: 0; }
+.fn-slimes img { width: 34px; height: 34px; image-rendering: pixelated; display: block; }
 .is-live .fn-slimes { animation: fn-in 800ms var(--ease-decelerate) both; animation-delay: calc(650ms + 7 * 95ms); }
 
 /* video: the NOVA-7 loop in an inset tile */
-.fn-tile { position: absolute; left: 584px; top: 62px; width: 224px; margin: 0; opacity: 0; }
-.fn-video { display: block; width: 224px; height: 126px; object-fit: cover; border-radius: 6px; background: var(--lcd-ink); box-shadow: 0 0 0 1px var(--lcd-rule); }
-.fn-cap { margin-top: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lcd-dim); }
+.fn-tile { position: absolute; right: 0; top: 0; width: 248px; margin: 0; opacity: 0; }
+.fn-video { display: block; width: 248px; height: 140px; object-fit: cover; border-radius: 4px; background: var(--lcd-ink); box-shadow: 0 0 0 1px var(--lcd-rule); }
+.fn-cap { margin-top: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lcd-dim); }
+.fn-cap i, .fn-end i { font-style: normal; opacity: 0.6; }
 .is-live .fn-tile { animation: fn-in 900ms var(--ease-decelerate) 300ms both; }
-.fn-key { position: absolute; left: 584px; top: 222px; margin: 0; padding: 8px 0 0; list-style: none; width: 224px; border-top: 1px solid var(--lcd-rule);
-  font-family: var(--sans); font-size: 11px; line-height: 16px; color: var(--lcd-dim); opacity: 0; }
-.fn-key b { display: inline-block; width: 58px; font-family: var(--mono); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lcd-ink); }
+.fn-key { position: absolute; right: 0; top: 180px; margin: 0; padding: 8px 0 0; list-style: none; width: 248px; border-top: 1px solid var(--lcd-rule);
+  font-family: var(--sans); font-size: 11px; line-height: 17px; color: var(--lcd-dim); opacity: 0; }
+.fn-key b { display: inline-block; width: 60px; font-family: var(--mono); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lcd-ink); }
 .is-live .fn-key { animation: fn-in 900ms var(--ease-decelerate) 1300ms both; }
 
 /* canvas 2D: the oil slick band */
-.fn-slick { position: absolute; left: 0; top: 326px; width: 864px; height: 56px; opacity: 0; image-rendering: auto; }
+.fn-slick { position: absolute; left: 0; top: 69.4%; width: 864px; height: 54px; opacity: 0; }
 .is-live .fn-slick { animation: fn-fade 1.4s var(--ease-standard) 900ms both; }
-.fn-made { position: absolute; left: 56px; top: 402px; margin: 0; font-family: var(--sans); font-size: 12px; color: var(--lcd-dim); opacity: 0; }
-.fn-made code { font-family: var(--mono); font-size: 11.5px; color: var(--lcd-ink); padding: 2px 6px; border-radius: 4px; background: oklch(0.30 0.045 140 / 0.08); box-shadow: inset 0 0 0 1px var(--lcd-rule); }
+.fn-made { position: absolute; left: 0; bottom: 0; margin: 0; font-family: var(--sans); font-size: 15px; line-height: 22px; font-weight: 500; color: var(--lcd-ink); opacity: 0; }
+/* the deck's inline-code treatment for the employer's name (Slide.svelte code.dk-brand) */
+.fn-brand { font-family: var(--mono) !important; font-size: 0.9em; font-weight: 500; letter-spacing: 0; padding: 0.08em 0.4em; border-radius: 3px; white-space: nowrap;
+  color: var(--lcd-ink); text-shadow: none; border: 0; background: color-mix(in oklch, var(--lcd-ink) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 30%, transparent); }
 .is-live .fn-made { animation: fn-in 800ms var(--ease-decelerate) 1500ms both; }
 
-/* slide chrome, outside the screen */
-.fn-end { position: absolute; left: 16px; bottom: 14px; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lcd-dim);
-  opacity: 0; transition: opacity 600ms var(--ease-standard); pointer-events: none; }
-.fn-end b { color: var(--lcd-ink); font-weight: 600; }
+/* ── the studio, outside the phone: quiet controls on white ── */
+.fn-end { position: absolute; left: 24px; bottom: 18px; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: oklch(0.45 0.01 265); opacity: 0; transition: opacity 600ms var(--ease-standard); pointer-events: none; }
+.fn-end b { color: oklch(0.25 0.01 265); font-weight: 600; }
 .fn-end.on { opacity: 1; }
-.fn-btn { position: absolute; right: 16px; bottom: 12px; height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--lcd-rule); background: oklch(0.868 0.048 128 / 0.55);
-  color: var(--lcd-ink); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
-  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 500ms var(--ease-standard), border-color 0.18s, transform 0.15s var(--ease-standard); }
-.fn-btn:hover { border-color: var(--lcd-ink); }
+.fn-btn { position: absolute; right: 24px; bottom: 14px; height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid oklch(0.85 0.005 265);
+  background: #fff; color: oklch(0.3 0.01 265); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+  opacity: 0; transition: opacity 500ms var(--ease-standard), border-color 0.18s, transform 0.15s var(--ease-standard); }
+.fn-btn.on { opacity: 1; }
+.fn-btn:hover { border-color: oklch(0.45 0.01 265); }
 .fn-btn:active { transform: translateY(1px); }
-.fn-btn:focus-visible { outline: 2px solid var(--lcd-ink); outline-offset: 3px; }
+.fn-btn:focus-visible { outline: 2px solid oklch(0.3 0.01 265); outline-offset: 3px; }
 .fn-btn[hidden] { display: none; }
-.fn-btn.gone { opacity: 0; pointer-events: none; }
-.fn-replay { opacity: 0; }
-.fn-replay.on { opacity: 1; }

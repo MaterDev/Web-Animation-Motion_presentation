@@ -252,12 +252,12 @@ export function tesseraApp() {
       ui.glass(q[0] - w / 2, ty, w, h, hot ? C.glassHi : C.glass, h / 2, 0.06); ui.text(q[0], ty + (h - fz * 1.25) / 2 + P(0.5), p.name, fz, C.ink, { align: 'center', weight: 600 });
       ui.hit('pin' + k, q[0] - w / 2, q[1] - P(10), w, P(36)); });
     /* the field guide, at a place: bottom-left, sized to what it says */
-    if (at >= 0) { const p = PLACES[at]; const kk = Math.min(1, flightT * 1.6), op = kk; const gw = P(232), gx = P(10), pad = P(11), L = gx + pad, Rr = gx + gw - pad;
+    if (at >= 0) { const p = PLACES[at]; const kk = Math.min(1, flightT * 1.6), op = kk; const gw = P(330), gx = P(10), pad = P(10), L = gx + pad, Rr = gx + gw - pad;
       const g = panel(); let y = pad; let gy = 0;
             { const yy = y; g.add(() => { ui.text(L, gy + yy, p.name, P(16), C.ink, { weight: 750, track: -0.01, op }); ui.text(Rr, gy + yy + P(4), `${at + 1} / 5`, P(10), C.dim, { family: MONO, align: 'right', op }); }); } y += P(21);
       { const yy = y; g.add(() => ui.text(L, gy + yy, p.kind.toUpperCase(), P(10), C.acc, { weight: 600, track: 0.1, op })); } y += P(13);
       wrap(ui, p.clim, P(10), gw - 2 * pad, { family: MONO }).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(10), C.dim, { family: MONO, op })); y += P(13); }); y += P(5);
-      wrap(ui, p.text, P(11), gw - 2 * pad, {}).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(11), C.ink, { op })); y += P(14.5); }); y += P(5);
+      wrap(ui, p.text, P(11), gw - 2 * pad, {}).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(11), C.ink, { op })); y += P(14); }); y += P(3);
       wrap(ui, p.species.join(' · '), P(10), gw - 2 * pad, {}).forEach((ln) => { const yy = y; g.add(() => ui.text(L, gy + yy, ln, P(10), C.acc, { op })); y += P(13); }); y += P(8);
       { const yy = y, bw = (gw - 2 * pad - P(6)) / 2, bh = P(20);
         g.add(() => { const by = gy + yy;
@@ -266,8 +266,8 @@ export function tesseraApp() {
         y += bh; }
       const gh = y + pad; gy = ui.H - P(10) - gh + (1 - kk) * P(8);
       ui.glass(gx, gy, gw, gh, C.glass, P(12), 0.07, op); g.run(); }
-    /* the panel: top-right, clear of the Dock — one header row, two sliders, two measured lines */
-    { const pw = P(152), px = ui.W - P(50) - pw, py = P(10), pad = P(9), L = px + pad, Rr = px + pw - pad, g = panel(); let y = py + pad;
+    /* the panel: top-left (Key), above the field guide — one header row, two sliders, two measured lines */
+    { const pw = P(152), px = P(10), py = P(10), pad = P(9), L = px + pad, Rr = px + pw - pad, g = panel(); let y = py + pad;
       { const bh = P(16), bt = 'New world', bw = ui.measure(bt, P(10), { weight: 650 }) + P(14), bx = Rr - bw, by = y - P(1.5);
         g.add(() => { ui.text(L, py + pad, 'TESSERA', P(11), C.ink, { weight: 800, track: 0.14 });
           ui.rect(bx, by, bw, bh, [...C.acc.slice(0, 3), hover === 'grow' ? 0.36 : 0.16], bh / 2); ui.stroke(bx, by, bw, bh, [...C.acc.slice(0, 3), 0.6], bh / 2, P(1));
@@ -318,7 +318,8 @@ export function tesseraApp() {
       }
       if (flightT < 1) flightT = Math.min(1, flightT + dt / flightDur);
       orbit += dt * 0.05;
-      const idle = (now - lastTouch) / 1000; if (flightT >= 1 && idle > 14) { lastTouch = now - 2000; goTo(at < 0 ? 0 : at === 4 ? -1 : at + 1, false); }
+      /* the tour starts soon after opening and dwells long enough to read (Key: less waiting) */
+      const idle = (now - lastTouch) / 1000; if (flightT >= 1 && idle > (at < 0 ? 2.5 : 9)) { lastTouch = now; goTo(at < 0 ? 0 : at === 4 ? -1 : at + 1, false); }
       const k = ease(flightT), A = poseOf(from, T), B = poseOf(at, T);
       const pos = v3lerp(A.pos, B.pos, k), tg = v3lerp(A.tgt, B.tgt, k), fov = lerp(A.fov, B.fov, k);
       if (from >= 0 && at >= 0) pos[1] += Math.sin(k * Math.PI) * 260;

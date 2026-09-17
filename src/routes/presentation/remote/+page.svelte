@@ -68,8 +68,8 @@
      dynamic viewport height." The page is pinned to 100dvh (see .remote),
      so every container is sized to what is actually visible with the
      address bar showing. What can still overflow is the notes, so their
-     type steps down until they fit — portrait 20px to a 14px floor,
-     landscape 18px to 13px — re-fitted whenever the slide, the notes or
+     type steps down until they fit — portrait 22px to a 16px floor,
+     landscape 20px to 15px (bumped, Key) — re-fitted whenever the slide, the notes or
      the screen change. Only notes too long even at the floor scroll, and
      only inside their own panel. */
   /** @type {HTMLElement | null} */
@@ -83,7 +83,7 @@
     const fitNotes = () => {
       const body = el.firstElementChild instanceof HTMLElement ? el.firstElementChild : null;
       if (!body) return;
-      const [top, floor] = land.matches ? [18, 13] : [20, 14];
+      const [top, floor] = land.matches ? [20, 15] : [22, 16];
       let size = top;
       body.style.fontSize = `${size}px`;
       while (size > floor && body.scrollHeight > el.clientHeight) { size -= 0.5; body.style.fontSize = `${size}px`; }
@@ -123,6 +123,34 @@
   const jumpTo = (n) => { go(n); jumping = false; };
   /** @param {KeyboardEvent} e */
   const onKey = (e) => { if (jumping && e.key === 'Escape') jumping = false; };
+
+  /* THE TALK CLOCK. A 30-minute countdown, started by a tap. Kept as wall-
+     clock timestamps in localStorage, so a phone that sleeps or reloads
+     mid-talk comes back to the right time. Past zero it counts over, red. */
+  const TALK = 30 * 60;
+  const CLOCK_KEY = 'wam-remote-clock';
+  /** @type {{ running: boolean, startedAt: number, banked: number }} */
+  let clock = $state({ running: false, startedAt: 0, banked: 0 });
+  let now = $state(Date.now());
+  try { const saved = JSON.parse(localStorage.getItem(CLOCK_KEY) ?? 'null'); if (saved && typeof saved.banked === 'number') clock = saved; } catch {}
+  /* preview a colour state (Key, rehearsal): ?clock=<minutes gone> sets the clock, paused; ↺ resets it */
+  try { const m = new URLSearchParams(location.search).get('clock'); if (m !== null && !isNaN(+m)) clock = { running: false, startedAt: 0, banked: +m * 60 }; } catch {}
+  const saveClock = () => { try { localStorage.setItem(CLOCK_KEY, JSON.stringify(clock)); } catch {} };
+  const elapsed = $derived(clock.banked + (clock.running ? (now - clock.startedAt) / 1000 : 0));
+  const clockLeft = $derived(Math.round(TALK - elapsed));
+  $effect(() => { if (!clock.running) return; const t = setInterval(() => { now = Date.now(); }, 250); return () => clearInterval(t); });
+  const toggleClock = () => {
+    const t = Date.now(); now = t;
+    clock = clock.running ? { running: false, startedAt: 0, banked: clock.banked + (t - clock.startedAt) / 1000 } : { running: true, startedAt: t, banked: clock.banked };
+    saveClock();
+  };
+  const resetClock = () => { clock = { running: false, startedAt: 0, banked: 0 }; saveClock(); };
+  /** @param {number} sec */
+  const fmtClock = (sec) => { const a = Math.abs(sec); return `${sec < 0 ? '+' : ''}${Math.floor(a / 60)}:${String(a % 60).padStart(2, '0')}`; };
+
+  /* One beat of a slide's own sequence on the laptop (the finale). */
+  let tapped = $state(false);
+  const tap = () => { setState({ tap: true }); tapped = true; setTimeout(() => { tapped = false; }, 260); };
 
   const togglePresent = () => {
     deckMode = deckMode === 'present' ? 'open' : 'present';
@@ -183,9 +211,16 @@
    <div class="left">
 
     <header class="top">
-      <span class="id">
-        <span class="code" data-testid="remote-code">{slide.code}</span>
-        <span class="kick">{slide.kicker ?? ''}</span>
+      <!-- the talk clock replaces the slide title here (Key): 30 minutes,
+           tap to start or pause; ↺ resets it while paused -->
+      <span class="id clock-wrap">
+        <button class="clock" class:running={clock.running} class:half={clockLeft <= TALK / 2 && clockLeft > 5 * 60} class:low={clockLeft <= 5 * 60}
+          onclick={toggleClock} data-testid="remote-timer" aria-label={clock.running ? 'Pause timer' : 'Start timer'}>
+          <span class="clock-dot" aria-hidden="true"></span>{fmtClock(clockLeft)}
+        </button>
+        {#if !clock.running && clockLeft !== TALK}
+          <button class="clock-reset" onclick={resetClock} data-testid="remote-timer-reset" aria-label="Reset timer">↺</button>
+        {/if}
       </span>
       <span class="mid">
         <button class="jump" onclick={() => { jumping = true; }} aria-haspopup="dialog"
@@ -194,7 +229,7 @@
         <button class="jump present-mini" class:on={deckMode === 'present'} onclick={togglePresent}
           data-testid="remote-present-mini" aria-pressed={deckMode === 'present'}
           aria-label={deckMode === 'present' ? 'Exit presenting' : 'Present fullscreen'}>
-          {deckMode === 'present' ? '✕ Exit' : '▶ Present'}
+          {deckMode === 'present' ? '✕' : '▶'}
         </button>
       </span>
       <span class="pos" data-testid="remote-pos">{i + 1}<i>/{SLIDES.length}</i></span>
@@ -212,6 +247,14 @@
         <div class="fit" style="transform:scale({scale})">
           <Slide {slide} {ex} live={false} />
         </div>
+        {#if slide.demoId === 'composite/finale'}
+          <!-- the finale runs its own sequence on the laptop; each tap steps
+               it: pull back, close the device, replay (Key) -->
+          <button class="tapper" class:tapped onclick={tap} data-testid="remote-finale-tap" aria-label="Step the finale">
+            <span class="tapper-k">Tap</span>
+            <span class="tapper-v">pull back · close · replay</span>
+          </button>
+        {/if}
       </div>
       <button class="flank flank-next" onclick={() => go(i + 1)} data-testid="remote-next-flank" aria-label="Next slide">▶</button>
     </div>
@@ -381,9 +424,6 @@
   .rk { font-size: 12px; color: var(--r-dim); font-family: var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .now { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--r-ink);
     padding: 1px 6px; border-radius: 4px; background: var(--r-bg); }
-  .code { color: var(--r-ink); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; white-space: nowrap; flex: none; }
-  .kick { color: var(--r-dim); text-transform: uppercase; font-size: 12px; letter-spacing: 0.06em; min-width: 0;
-    font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pos { justify-self: end; color: var(--r-ink); font-size: 20px; font-weight: 700; }
   .pos i { font-style: normal; color: var(--r-dim); font-size: 14px; font-weight: 600; }
 
@@ -515,4 +555,35 @@
     .remote .flank-next { border-color: var(--r-tint-deep); background: var(--r-tint); color: oklch(0.16 0.02 150); }
     .remote .notes { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
   }
+
+  /* finale: a tap target over the whole thumbnail */
+  .preview { position: relative; }
+  .tapper { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: rgba(12, 14, 13, 0.42); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: inherit; color: #fff;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); cursor: pointer; transition: background 0.2s, transform 0.12s; touch-action: manipulation; }
+  .tapper.tapped { background: rgba(255, 196, 64, 0.5); transform: scale(0.98); }
+  .tapper-k { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; }
+  .tapper-v { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; opacity: 0.85; }
+
+  /* the talk clock */
+  .clock-wrap { display: flex; align-items: center; gap: 6px; }
+  .remote .top { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .remote .top .mid { justify-self: center; }
+  .clock { flex: none; display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px 0 10px; border-radius: 18px;
+    border: 1.5px solid var(--r-line); background: var(--r-soft); color: var(--r-ink); font-family: var(--mono);
+    font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .clock-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--r-dim); flex: none; }
+  .clock.running .clock-dot { background: oklch(0.62 0.16 150); }
+  /* yellow from halfway, red with 5 minutes left and over (Key) */
+  .clock.half { border-color: oklch(0.72 0.15 85); background: oklch(0.88 0.13 92); color: oklch(0.2 0.03 80); }
+  .clock.half .clock-dot { background: oklch(0.2 0.03 80); }
+  .clock.low { border-color: oklch(0.52 0.15 28); background: oklch(0.55 0.17 28); color: oklch(0.985 0.003 265); }
+  .clock.low .clock-dot { background: #fff; }
+  .clock-reset { width: 32px; height: 32px; border-radius: 16px; border: 1.5px solid var(--r-line); background: transparent;
+    color: var(--r-dim); font-size: 16px; flex: none; touch-action: manipulation; }
+  /* the header holds clock · slides · present · position in a phone's width */
+  .remote .top { gap: 8px; }
+  .present-mini { width: 40px; padding: 0; font-size: 14px; }
+  .clock-reset { width: 30px; height: 30px; }
 </style>

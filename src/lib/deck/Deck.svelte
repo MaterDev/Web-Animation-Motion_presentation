@@ -140,7 +140,15 @@
        send /presentation/s06b straight back to slide one. It pushes where it
        is instead, then follows like any other client. */
     let first = opened !== null;
+    /** @type {number | null} */
+    let lastTap = null;
     const stop = watchState((/** @type {any} */ st) => {
+      /* The phone's tap: a slide that runs its own sequence (the finale)
+         steps it forward. Not a position, so it never moves the deck. */
+      if (Number.isInteger(st.tap)) {
+        if (lastTap !== null && st.tap !== lastTap && mode !== 'grid') window.dispatchEvent(new CustomEvent('wam-deck-tap'));
+        lastTap = st.tap;
+      }
       /* A poll that left before our own push can land after it carrying
          the old position; adopting it snapped a rail click straight back.
          Anything at or below the revision this deck last wrote is stale. */
@@ -238,6 +246,18 @@
     mode = to;
   }
   let fullscreen = $state(false);
+  /* Takeover: a slide's demo can ask for a white world (the finale pulls
+     back to the phone on white). While presenting, the letterbox around the
+     slide turns white; in the preview nothing outside the slide changes.
+     The demo dispatches `wam-deck-takeover` on window; a slide change resets it. */
+  let takeover = $state(false);
+  $effect(() => {
+    /** @param {Event} e */
+    const on = (e) => { takeover = !!(/** @type {CustomEvent} */ (e).detail?.on); };
+    addEventListener('wam-deck-takeover', on);
+    return () => removeEventListener('wam-deck-takeover', on);
+  });
+  $effect(() => { void i; void mode; takeover = false; });
   $effect(() => {
     const onFs = () => { fullscreen = !!document.fullscreenElement; if (!document.fullscreenElement && mode === 'present') mode = 'grid'; };
     document.addEventListener('fullscreenchange', onFs);
@@ -267,7 +287,7 @@
 <svelte:head><title>{showing ? `${slide.code} · ${slide.kicker ?? slide.id} — ` : ''}Presentation — WAM-2026</title></svelte:head>
 <svelte:window onkeydown={key} />
 
-<div class="shell" bind:this={shell} class:presenting={mode === 'present'} data-testid="deck">
+<div class="shell" bind:this={shell} class:presenting={mode === 'present'} class:takeover data-testid="deck">
   {#if mode === 'grid'}
     <div class="wrap">
       <div class="bar">
@@ -404,6 +424,13 @@
      only removes the browser's own chrome on top of it. So a denied
      or dismissed fullscreen degrades to a full-window presentation
      rather than a slide floating in a page with a nav bar above it. */
+  /* takeover (the finale): only while presenting, the letterbox around the
+     slide turns white so the phone sits in a white world edge to edge. In
+     the preview it stays in its box (Key): the slide itself is white and the
+     rail and notes remain. */
+  .shell.presenting.takeover { background: #fff; }
+  .shell.presenting.takeover .exit-zone { opacity: 0; }
+  .shell.presenting.takeover .exit-zone:hover, .shell.presenting.takeover .exit-zone:focus-within { opacity: 1; }
   .shell.presenting {
     position: fixed; inset: 0; z-index: 900; background: #000;
     display: grid; place-items: center;

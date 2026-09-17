@@ -23,7 +23,7 @@ async function req(path, init) {
 /** Where the deck currently is. `null` when there is no control API. */
 export const getState = () => req('/state');
 
-/** @param {{ i?: number, ex?: number, mode?: string }} patch */
+/** @param {{ i?: number, ex?: number, mode?: string, tap?: boolean }} patch */
 export const setState = (patch) =>
   req('/state', {
     method: 'POST',
