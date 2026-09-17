@@ -322,19 +322,17 @@ export const SLIDES = [
       { h: 'could the client?', body: 'And can we help them do it early? That gap is where the budget quietly goes.' },
     ],
   },
-  /* Credits, before the last slide: Key's coworkers and the design team. */
-  {
-    id: 'close-credits', code: 'CLOSE', layout: 'index', tint: 'composite', prism: true,
-    kicker: 'With thanks', h: 'with thanks',
-    body: 'For feedback and collaboration over the last nine months.',
-    items: ['Sean Van Dyk', 'Irene Polo', 'Aayush Joshi', 'Tyler Knight', 'Kyle Johnson', 'Kayla Long', 'Mike Matheny'],
-  },
   {
     id: 'close-end', code: 'WAM-2026', layout: 'screen', tint: 'composite', prism: true, showStrip: true, shape: 'card',
     kicker: 'Key Clark · Talk', h: 'thank you',
     body: 'Every source is in the paper, and every example runs on the site. Scan to open it.',
     strip: [['Made for', 'Folklore Digital']],
     qr: 'https://wam-2026.netlify.app',
+  },
+  /* The finale, last: the credits screen turns out to be the fPhone Duo's inner display, which zooms out, sleeps and folds shut. */
+  {
+    id: 'close-finale', code: 'END', layout: 'stage', tint: 'composite', prism: true, demoId: 'composite/finale', even: true, bare: true, demoWidth: 864,
+    kicker: 'With thanks', h: 'with thanks',
   },
 ];
 

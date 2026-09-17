@@ -1,0 +1,84 @@
+/* composite · the finale (2026-09-17)
+   A credits screen that is really the inner display of the fPhone Duo.
+   Layers, back to front: the WebGPU canvas (the device, the screen's ground
+   and its particles), then .fn-screen — page elements, SVG, GIFs, video and a
+   2D canvas — placed over the display every frame with one transform
+   computed from the same camera. Every class is prefixed fn-. */
+:host { --tint: var(--tint-composite); }
+.fn { position: relative; width: 100%; aspect-ratio: 864 / 444; overflow: hidden; color: var(--lcd-ink); outline: none; }
+.fn:focus-visible { box-shadow: inset 0 0 0 2px var(--lcd-ink); }
+.fn-gpu { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* the screen layer: the display's own size in its own units (864 × LAYER_H), moved as one piece */
+.fn-screen { position: absolute; left: 0; top: 0; width: 864px; height: var(--fn-lh, 607.6px); transform-origin: 0 0; overflow: hidden;
+  border-radius: var(--fn-radius, 38.7px); will-change: transform, opacity; }
+/* until the GPU has drawn its first frame (or if it never can), the page paints the screen's ground itself */
+.fn-screen.fn-css-ground { background: linear-gradient(180deg, var(--lcd-ground-top), var(--lcd-ground-bot)); }
+.fn-band { position: absolute; left: 0; top: var(--fn-band-top, 81.8px); width: 864px; height: 444px; }
+.fn-glare { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(118deg, oklch(1 0 0 / 0.20) 0 18%, oklch(1 0 0 / 0.05) 18% 36%, transparent 60%); }
+
+/* SVG: a lineage-style network drawing itself on behind the names */
+.fn-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fn-lines path { fill: none; stroke: var(--lcd-ink); stroke-width: 1; stroke-opacity: 0.26; stroke-dasharray: 1 1; stroke-dashoffset: 1; }
+.fn-lines circle { fill: var(--lcd-ink); fill-opacity: 0.45; opacity: 0; }
+.is-live .fn-lines path { animation: fn-draw 2.4s var(--ease-standard) both; animation-delay: calc(200ms + var(--i) * 110ms); }
+.is-live .fn-lines circle { animation: fn-fade 500ms var(--ease-standard) both; animation-delay: calc(500ms + var(--i) * 110ms); }
+@keyframes fn-draw { to { stroke-dashoffset: 0; } }
+@keyframes fn-fade { to { opacity: 1; } }
+
+/* type */
+.fn-kicker { position: absolute; left: 56px; top: 40px; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lcd-dim); }
+.fn-kicker i, .fn-cap i, .fn-end i { font-style: normal; opacity: 0.6; }
+.fn-title { position: absolute; left: 52px; top: 58px; margin: 0; font-family: var(--sans); font-size: 58px; line-height: 1; letter-spacing: -0.02em; color: var(--lcd-ink); white-space: nowrap; font-weight: 400; }
+.fn-title span { display: inline-block; font-variation-settings: 'wght' 360; }
+.fn-title span.sp { width: 0.26em; }
+/* CSS: a variable-font weight wave running through the heading */
+.is-live .fn-title span { animation: fn-in 700ms var(--ease-decelerate) both, fn-wght 2.6s ease-in-out infinite; animation-delay: calc(var(--i) * 45ms), calc(900ms + var(--i) * 110ms); }
+@keyframes fn-wght { 0%, 100% { font-variation-settings: 'wght' 340; } 50% { font-variation-settings: 'wght' 780; } }
+.fn-dek { position: absolute; left: 56px; top: 132px; margin: 0; font-family: var(--sans); font-size: 13px; color: var(--lcd-dim); opacity: 0; }
+.is-live .fn-dek { animation: fn-in 700ms var(--ease-decelerate) 450ms both; }
+
+/* CSS/layout: the names, real text, a staggered reveal on transform and opacity */
+.fn-names { position: absolute; left: 56px; top: 170px; margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 236px 236px; grid-auto-rows: 34px; }
+.fn-name { display: flex; align-items: baseline; gap: 10px; opacity: 0; font-family: var(--sans); font-size: 19px; font-weight: 500; letter-spacing: -0.005em; }
+.fn-name i { font-style: normal; font-family: var(--mono); font-size: 11px; color: var(--lcd-dim); width: 18px; }
+.is-live .fn-name { animation: fn-in 800ms var(--ease-decelerate) both; animation-delay: calc(650ms + var(--i) * 95ms); }
+@keyframes fn-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* GIF: three slimes, living marks in the grid's eighth cell */
+.fn-slimes { display: flex; align-items: center; gap: 2px; margin-top: -8px; opacity: 0; }
+.fn-slimes img { width: 30px; height: 30px; image-rendering: pixelated; display: block; }
+.is-live .fn-slimes { animation: fn-in 800ms var(--ease-decelerate) both; animation-delay: calc(650ms + 7 * 95ms); }
+
+/* video: the NOVA-7 loop in an inset tile */
+.fn-tile { position: absolute; left: 584px; top: 62px; width: 224px; margin: 0; opacity: 0; }
+.fn-video { display: block; width: 224px; height: 126px; object-fit: cover; border-radius: 6px; background: var(--lcd-ink); box-shadow: 0 0 0 1px var(--lcd-rule); }
+.fn-cap { margin-top: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lcd-dim); }
+.is-live .fn-tile { animation: fn-in 900ms var(--ease-decelerate) 300ms both; }
+.fn-key { position: absolute; left: 584px; top: 222px; margin: 0; padding: 8px 0 0; list-style: none; width: 224px; border-top: 1px solid var(--lcd-rule);
+  font-family: var(--sans); font-size: 11px; line-height: 16px; color: var(--lcd-dim); opacity: 0; }
+.fn-key b { display: inline-block; width: 58px; font-family: var(--mono); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lcd-ink); }
+.is-live .fn-key { animation: fn-in 900ms var(--ease-decelerate) 1300ms both; }
+
+/* canvas 2D: the oil slick band */
+.fn-slick { position: absolute; left: 0; top: 326px; width: 864px; height: 56px; opacity: 0; image-rendering: auto; }
+.is-live .fn-slick { animation: fn-fade 1.4s var(--ease-standard) 900ms both; }
+.fn-made { position: absolute; left: 56px; top: 402px; margin: 0; font-family: var(--sans); font-size: 12px; color: var(--lcd-dim); opacity: 0; }
+.fn-made code { font-family: var(--mono); font-size: 11.5px; color: var(--lcd-ink); padding: 2px 6px; border-radius: 4px; background: oklch(0.30 0.045 140 / 0.08); box-shadow: inset 0 0 0 1px var(--lcd-rule); }
+.is-live .fn-made { animation: fn-in 800ms var(--ease-decelerate) 1500ms both; }
+
+/* slide chrome, outside the screen */
+.fn-end { position: absolute; left: 16px; bottom: 14px; margin: 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--lcd-dim);
+  opacity: 0; transition: opacity 600ms var(--ease-standard); pointer-events: none; }
+.fn-end b { color: var(--lcd-ink); font-weight: 600; }
+.fn-end.on { opacity: 1; }
+.fn-btn { position: absolute; right: 16px; bottom: 12px; height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--lcd-rule); background: oklch(0.868 0.048 128 / 0.55);
+  color: var(--lcd-ink); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); transition: opacity 500ms var(--ease-standard), border-color 0.18s, transform 0.15s var(--ease-standard); }
+.fn-btn:hover { border-color: var(--lcd-ink); }
+.fn-btn:active { transform: translateY(1px); }
+.fn-btn:focus-visible { outline: 2px solid var(--lcd-ink); outline-offset: 3px; }
+.fn-btn[hidden] { display: none; }
+.fn-btn.gone { opacity: 0; pointer-events: none; }
+.fn-replay { opacity: 0; }
+.fn-replay.on { opacity: 1; }
