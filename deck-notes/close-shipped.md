@@ -1,0 +1,11 @@
+- **We've already been doing this, and it shipped**
+- **Design-token and component system**
+  - Shipped globally for a client
+  - Isolate, then combine — the logic transfers to motion, per technology
+- **Animotion**
+  - A Storybook-style gallery of motion patterns for our designers
+  - Easing, duration, Bézier curves → nav menus, page transitions
+  - Primitives built up like tokens: atom → molecule → organism
+  - **CSS, SVG and JavaScript only**
+- **A progress report, not a proposal**
+  - ***The gap is opportunity, not skill***

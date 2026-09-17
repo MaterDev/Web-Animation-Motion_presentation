@@ -1,0 +1,10 @@
+- **If the web stops being where people go for answers, it becomes where they go for experiences**
+  - An observation on the table, not a fact
+- **What a chat can't deliver: authored sequence**
+  - Someone decided what you see
+  - In what order
+  - How it feels arriving
+- **A different product, not a nicer version of the same one**
+  - The techniques are how you build it
+- **Do people want these experiences?**
+  - Deliberately left open

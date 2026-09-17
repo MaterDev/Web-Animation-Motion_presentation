@@ -2,13 +2,13 @@
 
 A custom-built, interactive presentation app for a talk on web animation and motion techniques — delivered as real running code rather than slides or screen recordings.
 
-**Talk date:** 21 August 2026
+**Talk date:** 17 September 2026
 
 ## Overview
 
-The talk tours a spectrum of rendering techniques, from cheap/passive to powerful/expensive: Video/GIF → CSS → Layout/Paint/Composite → Layout Animation → SVG → Canvas → WebGL → WebGPU. A single recurring "thread demo" reappears in a new form at each stage as a visual callback, culminating in a WebGPU-upgraded version at the close.
+The talk climbs a comprehension ladder, not a cost ladder: Layout/CSS → SVG → GIF → Video → Canvas → WebGL and WebGPU, then Composite as the closing argument. Seven techniques in the paper, six stops on stage. The paper explains the order.
 
-**Thesis:** as AI becomes a universal interface for consuming reference content, a website's comparative advantage shifts from being a repository of content to being a crafted, authored experience. Motion, animation, and interaction are the craft that makes that possible.
+**Premise:** most US Google searches now end without a click. The reading the paper offers: if the web stops being where people go for answers, it becomes where they go for experiences, and motion is how those are built.
 
 ## The site
 
@@ -17,13 +17,13 @@ Three top-level sections, deployed as one static site:
 | Route | What it is |
 |---|---|
 | `/design` | Methodology — how the design system was made, and why the process is what it is |
-| `/design/reference` | The live reference sheets: materials, motion, graphic language, layouts, and seven technique demos |
+| `/design/reference` | The live reference sheets: materials, motion, graphic language, layouts, and seven technique sheets |
 | `/paper` | [SCOPE.md](./SCOPE.md), rendered — the paper the talk is built on |
-| `/presentation` | The deck itself. Not built yet; next phase |
+| `/presentation` | The deck itself, in build |
 
 ## Documents
 
-- **[SCOPE.md](./SCOPE.md)** — the paper. Thesis, motion craft, accessibility, the degradation ladder, mobile-first motion. Written first; everything defers to it.
+- **[SCOPE.md](./SCOPE.md)** — the paper, with its bibliography. The talk is compressed from it; everything defers to it.
 - **[DESIGN.md](./DESIGN.md)** — the design research it produced. Visual language, motion system, architecture, conventions.
 
 ## Tech stack
@@ -31,7 +31,7 @@ Three top-level sections, deployed as one static site:
 - **Svelte 5 + SvelteKit**, static output via `adapter-static`
 - **Bun** as runtime, package manager and bundler
 - **Vite 8**
-- Per-technique demo tooling native to each rendering method — plain CSS, plain SVG, raw Canvas 2D, Three.js for WebGL/WebGPU
+- Per-technique demo tooling native to each rendering method — plain CSS, plain SVG, raw Canvas 2D, Three.js for WebGL, raw WGSL (and `vgpu` for Supercell) for WebGPU
 - **Anime.js** for JS animation, including the layout-animation slide transitions
 - No CDNs. Every dependency, fonts included, is installed and vendored — see below.
 
@@ -47,7 +47,7 @@ bun run check      # svelte-check
 
 `dev` and `build` both run two generator steps first:
 
-- **`bun run vendor`** — copies Anime.js, Three.js and the three variable fonts out of `node_modules` into `design/vendor/`, so nothing loads from a third party and the standalone sheets have real files to reference.
+- **`bun run vendor`** — copies Anime.js, Three.js, vgpu and the three variable fonts out of `node_modules` into `design/vendor/`, so nothing loads from a third party and the standalone sheets have real files to reference.
 - **`bun run sync:design`** — copies `design/` into `static/sheets/`, which is how SvelteKit serves the harness at `/sheets/…`.
 
 Both outputs are generated and gitignored. After a fresh clone, `bun install` plus either script handles it.

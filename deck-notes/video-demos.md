@@ -1,0 +1,10 @@
+- **NOVA-7**
+  - Fictional handheld, baked by a custom software rasteriser
+  - Depth buffer, per-pixel Fresnel, 3× supersampling, exact loop
+- **Live effects**
+  - Effects rack on the decoded frame
+  - Same effects on a live camera feed
+- **Green screen**
+  - One decode keyed across seven scenes, composed into the page
+- **Vertical cut**
+  - 9:16 at 720×1280 — **generated, not cropped**

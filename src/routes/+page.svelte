@@ -1,4 +1,7 @@
 <script>
+  import { SLIDES } from '$lib/deck/slides.js';
+  import { SHEETS } from '$lib/sheets.js';
+
   let { data } = $props();
 
   /* The whole page is the device's readout: one LCD, and the index
@@ -25,8 +28,8 @@
       code: 'PR',
       tint: 'var(--tint-webgpu)',
       title: 'presentation',
-      note: 'The deck itself, delivered as running code rather than slides. Viewer in progress.',
-      meta: '16 slides',
+      note: 'The deck itself, delivered as running code rather than slides, with speaker notes per slide.',
+      meta: `${SLIDES.length} slides`,
       status: 'in build',
     },
     {
@@ -35,12 +38,14 @@
       tint: 'var(--tint-css)',
       title: 'design system',
       note: 'Methodology, the six treatments, and the live reference: materials, motion, graphic language, layouts.',
-      meta: '16 sheets',
+      meta: `${SHEETS.length} sheets`,
       status: 'live',
     },
   ]);
 
-  const SPECTRUM = ['video', 'css', 'composite', 'svg', 'canvas', 'webgl', 'webgpu'];
+  /* the talk's comprehension ladder, not the old cost order: CSS first,
+     the graphics card last, composite as the close (GIF shares video's tint) */
+  const SPECTRUM = ['css', 'svg', 'video', 'canvas', 'webgl', 'webgpu', 'composite'];
 
   /* The paper readout holds at most ten lines and never scrolls. Past
      ten sections it shows the first nine and spends the tenth line
@@ -63,7 +68,7 @@
         <div class="lcd-body hero-body">
           <div class="hero-top">
             <span class="lcd-label">Key Clark · Talk</span>
-            <span class="lcd-label">21 Aug 2026</span>
+            <span class="lcd-label">17 Sep 2026</span>
           </div>
 
           <h1 class="hero-title">web animation<br />&amp; motion</h1>
@@ -140,8 +145,8 @@
                device's own readout -->
           <div class="lcd-strip hero-foot">
             <span class="lcd-kv"><span class="k">Model</span><span class="v">WAM-2026</span></span>
-            <span class="lcd-kv"><span class="k">Slides</span><span class="v">16</span></span>
-            <span class="lcd-kv"><span class="k">Spectrum</span><span class="v">video → webgpu</span></span>
+            <span class="lcd-kv"><span class="k">Slides</span><span class="v">{SLIDES.length}</span></span>
+            <span class="lcd-kv"><span class="k">Ladder</span><span class="v">css → webgpu</span></span>
 
             <span class="lamps" aria-hidden="true">
               <span class="led" style="--c:var(--ok)"></span>

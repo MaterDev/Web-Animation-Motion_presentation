@@ -19,9 +19,30 @@
    decidable by searching for the placeholders that remain.
 
    Statistics on screen are pending verification (track 006's claims
-   register) and carry `verify: true` until checked. */
+   register) and carry `verify: true` until checked.
 
-/** @typedef {'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'} Layout */
+   `screen` is the title and every section opener: the LCD panel the home
+   hero and the paper's front panel use, so the deck's structure reads in
+   the app's own voice. Since 2026-09-17 every other slide is on that LCD
+   too, composed as regions of the display the way the home index is; the
+   layout names below choose the arrangement of those regions. */
+
+/* PRESENTATION FIELDS — how a section is recognised before a word is read.
+   From design/graphic-language: every technique section owns a tint and a
+   pixel mark, shown as a small chip beside the heading. None of these carry
+   text, so none of them can go stale against the paper.
+
+   `motif`  which section this is, for the chip beside the heading and the
+            ladder's one lit chip. Defaults to `tint`. `gif` shares the video
+            tint on purpose (DESIGN.md: a separate GIF tint would imply a
+            capability step it lacks), so it is told apart by its chip mark.
+   `mark`   override the chip mark.
+   `sides`  per-region tint, chip and sheet code on a `pair` slide, so a
+            css/svg or webgl/webgpu comparison is coloured by what each side IS.
+   `graphic` a figure drawn from a number already stated in `body`. */
+
+/** @typedef {'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'|'screen'|'datum'|'mirror'|'low'|'framed'|'ledger'|'pair'|'weighted'} Layout */
+/** @typedef {'composite'|'css'|'svg'|'gif'|'video'|'canvas'|'webgl'|'webgpu'} Motif */
 /** @typedef {{ label: string, demo: string }} Example */
 /**
  * @typedef {object} Slide
@@ -38,8 +59,22 @@
  * @property {string} [demo]
  * @property {string[]} [items]
  * @property {[string, string][]} [readout]
+ * @property {number[]} [cite]  bibliography numbers in the paper (SCOPE.md), shown as markers
+ * @property {[string, string][]} [strip]  key/value readout along the foot of a `screen` slide
  * @property {{ h: string, body: string }[]} [compare]
  * @property {Example[]} [examples]
+ * @property {Motif} [motif]  section kit: rule, band and default mark
+ * @property {string} [mark]  chip mark override (a topic key); technique slides only
+ * @property {{ tint: string, mark: string, code?: string }[]} [sides]  per-region tint, chip mark and sheet code, `pair` layout
+ * @property {{ kind: 'waffle' | 'bar', lit: number, of: number }} [graphic]  a share already stated in `body`,
+ *   drawn as a two-segment LED bar (lit | off) with both parts labelled on the figure
+ * @property {boolean} [prism]  neutral screen base with section tints used as accents (opening and close):
+ *   no dominant cast; regions, label, brackets, rows and chips each take a spectrum tint, rotated per slide
+ * @property {boolean} [alt]  the mirrored/alternate arrangement of this slide's layout, so two slides in
+ *   one layout family are not the same shape (see Slide.svelte for what each layout's alternate is)
+ * @property {boolean} [showStrip]  render `strip` on a `screen` slide. Off by default: stop numbers and
+ *   sheet codes are notation for the presenter, not the audience, so only the title and the end
+ *   (presenter/date, site/paper) show theirs — and then below the title in rank, not beside it.
  */
 
 /** @type {Slide[]} */
@@ -47,43 +82,48 @@ export const SLIDES = [
   /* ── Opening. Beats 1 and 2 (why I'm up here; the nine months) are spoken
      over the title, not slides. Context, not argument. ── */
   {
-    id: 'open-title', code: 'WAM', layout: 'hero', tint: 'composite',
-    kicker: 'WAM-2026', h: 'web animation<br>& motion',
-    body: 'Key Clark · Folklore · 17 September 2026',
+    id: 'open-title', code: 'WAM-2026', layout: 'screen', tint: 'composite', prism: true, showStrip: true,
+    kicker: 'Key Clark · Talk', h: 'web animation<br>& motion',
+    body: 'A tour through the ways a web page can move, and what it takes to get them built.',
+    strip: [['Presenter', 'Key Clark'], ['Presented', '17 Sep 2026'], ['At', 'Folklore']],
   },
   {
-    id: 'open-data', code: 'OPEN', layout: 'figure', tint: 'composite', verify: true,
-    kicker: 'Why now', h: '68% never click',
-    body: 'Most Google searches this year ended without anyone visiting a website. — SparkToro, January–April 2026',
+    id: 'open-data', code: 'OPEN', layout: 'datum', tint: 'composite', prism: true, cite: [1],
+    graphic: { kind: 'bar', lit: 68, of: 100 },
+    kicker: 'Why now', h: '68% no click',
+    body: 'In the US, 68% of Google searches in January–April 2026 ended without a click on anything.',
   },
   {
-    id: 'open-reading', code: 'OPEN', layout: 'figure', tint: 'composite',
+    id: 'open-reading', code: 'OPEN', layout: 'mirror', tint: 'composite', prism: true,
     kicker: 'What that might mean', h: 'from answers to experiences',
     body: 'If people stop visiting websites for answers, what’s left to visit for is the experience. That’s a reading, not a prophecy.',
   },
   {
-    id: 'open-reframe', code: 'OPEN', layout: 'figure', tint: 'composite',
+    id: 'open-reframe', code: 'OPEN', layout: 'low', tint: 'composite', prism: true,
     kicker: 'Why an engineer cares', h: 'not decoration',
     body: 'A good site is built from a shared kit of parts. Motion built into that kit can be changed once, everywhere. Motion bolted on has to be redone by hand, every time.',
+    /* the kit, named, so later slides can point back at it: motion joins
+       the list as one more part (paper: Decoration vs. infrastructure) */
+    items: ['colour', 'type', 'spacing', 'components — buttons, cards, menus', 'motion — timing, easing, how things arrive'],
   },
   {
-    id: 'open-question', code: 'OPEN', layout: 'figure', tint: 'composite',
+    id: 'open-question', code: 'OPEN', layout: 'framed', tint: 'composite', prism: true,
     kicker: 'Keep this in mind', h: 'could you describe it?',
     body: 'As we go: could you describe what you’re seeing well enough for someone else to build it? Or would you have to point?',
   },
 
   /* ── Stop 1 · Layout / CSS ── */
   {
-    id: 'css-intro', code: 'SL-06', layout: 'figure', tint: 'css',
+    id: 'css-intro', code: 'SL-06', layout: 'screen', strip: [['Stop', '1 of 6'], ['Sheet', 'SL-06']], tint: 'css',
     kicker: '1 · Layout & CSS', h: 'the page itself moves',
     body: 'You already know this one: menus that slide, cards that open. A newspaper can’t move. A web page can, and this is the cheapest way to do it.',
   },
   {
-    id: 'css-cost', code: 'SL-06', layout: 'compare', tint: 'css',
+    id: 'css-cost', code: 'SL-06', layout: 'ledger', tint: 'css', cite: [7],
     kicker: '1 · Layout & CSS', h: 'cheap, until it isn’t',
     compare: [
       { h: 'good at', body: 'Free, works everywhere, and the browser does the heavy lifting.' },
-      { h: 'costs', body: 'Animate the wrong thing and the browser redraws the page. Stick to moving and fading, transform and opacity, and it stays smooth.' },
+      { h: 'costs', body: 'Animate size or position and the browser redoes layout and paint every frame. Stick to moving and fading — transform and opacity — and it stays smooth.' },
     ],
   },
   {
@@ -94,12 +134,13 @@ export const SLIDES = [
 
   /* ── Stop 2 · SVG ── */
   {
-    id: 'svg-intro', code: 'SL-10', layout: 'figure', tint: 'svg',
+    id: 'svg-intro', code: 'SL-10', layout: 'screen', strip: [['Stop', '2 of 6'], ['Sheet', 'SL-10']], tint: 'svg', alt: true,
     kicker: '2 · SVG', h: 'drawn, not loaded',
-    body: 'The browser draws the graphic from instructions while the page runs. It’s behind most charts, maps and icons. The catch: every shape has a cost, so thousands of them get slow.',
+    body: 'The browser draws the graphic from instructions while the page runs. It suits charts, maps and icons. The catch: every shape has a cost, so thousands of them get slow.',
   },
   {
-    id: 'svg-vs-css', code: 'SL-10', layout: 'compare', tint: 'svg',
+    id: 'svg-vs-css', code: 'SL-10', layout: 'pair', tint: 'svg', alt: true,
+    sides: [{ tint: 'css', mark: 'css', code: 'SL-06' }, { tint: 'svg', mark: 'svg', code: 'SL-10' }],
     kicker: '2 · SVG', h: 'not the same as CSS',
     compare: [
       { h: 'css', body: 'Moves what’s already on the page: boxes, text, images.' },
@@ -107,48 +148,48 @@ export const SLIDES = [
     ],
   },
   {
-    id: 'svg-demos', code: 'SL-10', layout: 'index', tint: 'svg', placeholder: true,
+    id: 'svg-demos', code: 'SL-10', layout: 'index', tint: 'svg', alt: true, placeholder: true,
     kicker: '2 · SVG · demos', h: 'demos',
     items: ['a history of ai, drawn from real data', 'the camera bench'],
   },
 
   /* ── Stop 3 · GIF — the shortest stop ── */
   {
-    id: 'gif-intro', code: 'SL-05', layout: 'figure', tint: 'video',
+    id: 'gif-intro', code: 'SL-05', layout: 'screen', strip: [['Stop', '3 of 6'], ['Sheet', 'SL-05']], tint: 'video', motif: 'gif',
     kicker: '3 · GIF', h: 'no off switch',
     body: 'Works anywhere with no code, but you can’t pause it or slow it down. Ours are made by a script, so changing one is an edit, not a redo.',
   },
   {
-    id: 'gif-demos', code: 'SL-05', layout: 'index', tint: 'video', placeholder: true,
+    id: 'gif-demos', code: 'SL-05', layout: 'index', tint: 'video', motif: 'gif', placeholder: true,
     kicker: '3 · GIF · demos', h: 'demos',
     items: ['one sticker, four places', 'eight tiny animated id cards'],
   },
 
   /* ── Stop 4 · Video ── */
   {
-    id: 'video-intro', code: 'SL-04', layout: 'figure', tint: 'video',
+    id: 'video-intro', code: 'SL-04', layout: 'screen', strip: [['Stop', '4 of 6'], ['Sheet', 'SL-04']], tint: 'video', alt: true,
     kicker: '4 · Video', h: 'it can’t react',
     body: 'Video is the cheapest way to put motion on a page, and you can pause it. But it can’t respond to a scroll, a hover or a click.',
   },
   {
-    id: 'video-component', code: 'SL-04', layout: 'figure', tint: 'video',
+    id: 'video-component', code: 'SL-04', layout: 'mirror', tint: 'video', alt: true,
     kicker: '4 · Video', h: 'motion you can edit',
     body: 'Built in code, motion can be changed like any other part of the site, even by a client in their content system. We’re not making a video. We’re making the thing that makes them.',
   },
   {
-    id: 'video-demos', code: 'SL-04', layout: 'index', tint: 'video', placeholder: true,
+    id: 'video-demos', code: 'SL-04', layout: 'index', tint: 'video', alt: true, placeholder: true,
     kicker: '4 · Video · demos', h: 'demos',
-    items: ['nova-7 — a gadget rendered to video', 'live filters on a camera', 'an elk filmed on green screen, placed into the page', 'the vertical social cut, made not cropped'],
+    items: ['nova-7 — a gadget rendered to video', 'live filters on a camera', 'green-screen footage placed into the page', 'the vertical social cut, made not cropped'],
   },
 
   /* ── Stop 5 · Canvas — the setup for the graphics card; can run short ── */
   {
-    id: 'canvas-intro', code: 'SL-11', layout: 'figure', tint: 'canvas',
+    id: 'canvas-intro', code: 'SL-11', layout: 'screen', strip: [['Stop', '5 of 6'], ['Sheet', 'SL-11']], tint: 'canvas',
     kicker: '5 · Canvas', h: 'try selecting the text',
     body: 'On most sites you can highlight text, drag an image, tab to a link. On a canvas you can’t. It’s just pixels the page painted, and it remembers nothing.',
   },
   {
-    id: 'canvas-why', code: 'SL-11', layout: 'compare', tint: 'canvas',
+    id: 'canvas-why', code: 'SL-11', layout: 'weighted', tint: 'canvas',
     kicker: '5 · Canvas', h: 'so why use it?',
     compare: [
       { h: 'for a content site', body: 'You’d give up too much.' },
@@ -163,20 +204,21 @@ export const SLIDES = [
 
   /* ── Stop 6 · WebGL and WebGPU, as one: the graphics card. Punchy — no buffers, no shaders. ── */
   {
-    id: 'gpu-intro', code: 'SL-12 · SL-14', layout: 'figure', tint: 'webgpu',
+    id: 'gpu-intro', code: 'SL-12 · SL-14', layout: 'screen', strip: [['Stop', '6 of 6'], ['Sheets', 'SL-12 · SL-14']], tint: 'webgpu', alt: true,
     kicker: '6 · WebGL & WebGPU', h: 'the graphics card',
     body: 'Think of a video game, then think of a website. Much of that difference is the graphics card, and these let a web page use it.',
   },
   {
-    id: 'gpu-two', code: 'SL-12 · SL-14', layout: 'compare', tint: 'webgpu',
+    id: 'gpu-two', code: 'SL-12 · SL-14', layout: 'pair', tint: 'webgpu', cite: [16, 17, 19, 21],
+    sides: [{ tint: 'webgl', mark: 'webgl', code: 'SL-12' }, { tint: 'webgpu', mark: 'webgpu', code: 'SL-14' }],
     kicker: '6 · WebGL & WebGPU', h: 'two ways in',
     compare: [
       { h: 'webgl', body: 'Older. Runs almost everywhere. Years of answers online.' },
-      { h: 'webgpu', body: 'Newer. Can do far more at once. Less help when you get stuck.' },
+      { h: 'webgpu', body: 'Newer: in every major browser for about a year. Can do far more at once. Less help when you get stuck.' },
     ],
   },
   {
-    id: 'gpu-demos', code: 'SL-12 · SL-14', layout: 'index', tint: 'webgpu', placeholder: true,
+    id: 'gpu-demos', code: 'SL-12 · SL-14', layout: 'index', tint: 'webgpu', alt: true, placeholder: true, cite: [29],
     kicker: '6 · WebGL & WebGPU · demos', h: 'demos',
     items: ['roost — 131,072 birds, each reacting', 'a vermeer under a magnifying glass', 'the marble bust', 'supercell — a storm'],
   },
@@ -184,24 +226,24 @@ export const SLIDES = [
   /* ── What gets in the way. One slide, four points; Key talks through them and paces it live.
      Not a warning; naming what's uncertain, not a call to action. ── */
   {
-    id: 'friction', code: 'FRICTION', layout: 'figure', tint: 'composite',
-    kicker: 'What gets in the way', h: 'what gets<br>in the way',
+    id: 'friction', code: 'FRICTION', layout: 'screen', tint: 'webgl', motif: 'composite',
+    kicker: 'Friction', h: 'what gets<br>in the way',
     body: 'Real technical limits. No shared words for motion. Saying clearly what you want. No agreed limit for how much motion a page can afford.',
   },
 
   /* ── Close. Mix and match, proof it's buildable, then the question — to us and to the client. ── */
   {
-    id: 'close-composite', code: 'CLOSE', layout: 'figure', tint: 'composite',
+    id: 'close-composite', code: 'CLOSE', layout: 'screen', tint: 'composite', prism: true,
     kicker: 'Bringing it together', h: 'mix and match',
     body: 'Most of what you just saw combined several of these. The useful question isn’t which technique a project uses. It’s which one does which part.',
   },
   {
-    id: 'close-shipped', code: 'CLOSE', layout: 'figure', tint: 'composite',
+    id: 'close-shipped', code: 'CLOSE', layout: 'low', tint: 'composite', prism: true, alt: true,
     kicker: 'Already happening', h: 'it’s already shipped',
     body: 'We’ve done this: a gallery of motion patterns for our designers, and a shared design system that went live for a client.',
   },
   {
-    id: 'close-question', code: 'CLOSE', layout: 'compare', tint: 'composite',
+    id: 'close-question', code: 'CLOSE', layout: 'compare', tint: 'composite', prism: true,
     kicker: 'Back to the question', h: 'could you describe it?',
     compare: [
       { h: 'could we?', body: 'AI didn’t create the need to explain clearly. It removed the last place to hide.' },
@@ -209,9 +251,10 @@ export const SLIDES = [
     ],
   },
   {
-    id: 'close-end', code: 'WAM', layout: 'hero', tint: 'composite',
-    kicker: 'WAM-2026', h: 'thank you',
-    body: 'wam-2026.netlify.app · every source is in the paper',
+    id: 'close-end', code: 'WAM-2026', layout: 'screen', tint: 'composite', prism: true, showStrip: true,
+    kicker: 'Key Clark · Talk', h: 'thank you',
+    body: 'Every source is in the paper, and every example runs on the site.',
+    strip: [['Site', 'wam-2026.netlify.app'], ['Paper', '/paper']],
   },
 ];
 

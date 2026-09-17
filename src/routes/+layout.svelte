@@ -41,7 +41,7 @@
       <NavMenu />
     </nav>
 
-    <span class="mono topmeta" data-testid="topbar-meta">Key Clark · 21 Aug 2026</span>
+    <span class="mono topmeta" data-testid="topbar-meta">Key Clark · 17 Sep 2026</span>
   </header>
 
   <main class="content">

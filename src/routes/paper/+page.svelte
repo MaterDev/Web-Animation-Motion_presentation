@@ -6,7 +6,7 @@
   <title>Full Paper — WAM-2026</title>
   <meta
     name="description"
-    content="The paper behind the Web Animation & Motion talk: thesis, motion craft, accessibility, the degradation ladder and mobile-first motion."
+    content="The paper behind the Web Animation & Motion talk: the techniques on a comprehension ladder, composites, performance budgets, getting motion shipped, and a verified bibliography."
   />
 </svelte:head>
 

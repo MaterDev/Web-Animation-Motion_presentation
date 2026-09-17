@@ -1,0 +1,10 @@
+- **Graphics as instructions**
+  - Not a picture you load; a drawing the browser performs at runtime
+- **Where it suits the work**
+  - Shapes that come from information, not an artist
+  - Data visualisation, maps, small icons
+- **Every shape is a real element**
+  - Styled, animated and inspected like anything else on the page
+- **Costs: quantity**
+  - Every node tracked individually → a real ceiling on complexity
+  - The graphics card is the way past it (stop 6)

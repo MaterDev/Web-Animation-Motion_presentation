@@ -1,0 +1,14 @@
+- **Why is an engineer this invested in animation?**
+  - *It's not visual interest, it's systems work that happens to be visible*
+- **Decoration**
+  - A one-off added on top
+  - Owned by nobody, inherits nothing, ages out
+  - Approved once, as a cost
+- **Infrastructure**
+  - Something the rest of the work depends on and builds from
+  - Keeps paying
+- **A well-built website is already a design system**
+  - Motion **outside** it is an orphan: no inheritance, no central updates, every sweeping change a hand-edit
+  - Motion **inside** it behaves like any token: change once, propagates everywhere
+- **Everything later hangs off this**
+  - Cost per change, portability, CMS-driven motion, mix and match

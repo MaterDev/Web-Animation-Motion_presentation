@@ -1,0 +1,10 @@
+- **Think of a video game you've played**
+  - Or an interactive experience outside a web page
+  - Much of the difference from a website is the graphics
+- ***That gap is the graphics card***
+  - WebGL and WebGPU let a web page use the same chip that runs games
+- **An enormous amount of small work, all at once**
+  - A flock of **131,072 birds** instead of a dozen
+- **Two questions decide which**
+  - How much simulation or calculation do you need?
+  - How much support and community do you want to lean on?

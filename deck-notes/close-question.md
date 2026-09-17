@@ -1,0 +1,10 @@
+- **Back to the question**
+  - *Could you describe this well enough for someone to build it?*
+  - You've now watched things you couldn't have described
+- ***AI didn't create the need to articulate. It removed the last place it could hide.***
+- **The craft question**
+  - Can **we** describe it?
+- **The client question — the bigger one**
+  - Can a client who isn't technical or designerly describe what **they** want?
+  - Can we facilitate that conversation early enough not to fly blind?
+  - The gap between ideation and a living experience is where **budget quietly goes**
