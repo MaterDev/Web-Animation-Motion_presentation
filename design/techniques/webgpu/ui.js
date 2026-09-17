@@ -86,9 +86,13 @@ export function makeUI(canvas, W, H) {
   const bu = uniform(16), bh = uniform(16), bp = render(BLUR), blit = render(BLIT), ip = render(IMG, { blend: true, topology: 'triangle-strip' });
   let imgs = [], imgData = new Float32Array(64 * 8), imgBuf = storage(64 * 8 * 4); const imgGroups = new Map(); let split = -1, sceneScale = 1;
   let bg = null, half = null, halfB = null, g = null, gBlurA = null, gBlurB = null, gBlit = null, pw = 0, ph = 0;
+  /* an app whose scene is rendered by another runtime (Supercell, on vgpu) hands its
+     texture over with ui.scene(tex) each frame; blur and blit then read it instead of bg.
+     The groups are cached for the last texture seen and rebuilt when it changes or ensure() rebuilds. */
+  let ext = null, extKey = null, extG = null;
   const ensure = () => { const want = [Math.max(2, Math.round(canvas.width * sceneScale)), Math.max(2, Math.round(canvas.height * sceneScale))]; if (want[0] === pw && want[1] === ph && bg) return; if (bg) { bg.destroy(); half.destroy(); halfB.destroy(); } pw = want[0]; ph = want[1];
     const mk = (w, h) => dev.createTexture({ size: [w, h], format: fmt, usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
-    bg = mk(pw, ph); half = mk(Math.max(1, pw >> 1), Math.max(1, ph >> 1)); halfB = mk(Math.max(1, pw >> 1), Math.max(1, ph >> 1));
+    bg = mk(pw, ph); half = mk(Math.max(1, pw >> 1), Math.max(1, ph >> 1)); halfB = mk(Math.max(1, pw >> 1), Math.max(1, ph >> 1)); extKey = null;
     const mkb = (p, list) => dev.createBindGroup({ layout: p.getBindGroupLayout(0), entries: list.map((r, i) => ({ binding: i, resource: r })) });
     g = mkb(pipe, [{ buffer: u }, { buffer: ibuf }, smp, atlas.createView(), halfB.createView()]);
     gBlurA = mkb(bp, [{ buffer: bu }, smp, bg.createView()]); gBlurB = mkb(bp, [{ buffer: bh }, smp, half.createView()]); gBlit = mkb(blit, [smp, bg.createView()]);
@@ -102,7 +106,9 @@ export function makeUI(canvas, W, H) {
   const hits = []; let clipRect = null;
   const ui = {
     ctx, fit, W, H, canvas, hits, time: 0,
-    begin() { n = 0; hits.length = 0; clipRect = null; imgs = []; split = -1; },
+    begin() { n = 0; hits.length = 0; clipRect = null; imgs = []; split = -1; ext = null; },
+    /* use a GPUTexture from elsewhere as this frame's scene, in place of prepare()'s view */
+    scene(tex) { ext = tex; },
     /* everything pushed after layer(1) is drawn above the images */
     layer(i) { split = i ? n : -1; },
     image(tex, x, y, w, h, r = 0, op = 1) { if (imgs.length >= 64) return; const o = imgs.length * 8; imgData[o] = x; imgData[o + 1] = y; imgData[o + 2] = w; imgData[o + 3] = h; imgData[o + 4] = r; imgData[o + 5] = op; imgs.push(tex); },
@@ -127,10 +133,12 @@ export function makeUI(canvas, W, H) {
     /* the app draws its background into ui.bgView() during its own pass, then calls compose */
     prepare(scale = 1) { fit(); sceneScale = scale; ensure(); return { view: bg.createView(), w: pw, h: ph }; },
     compose(enc) { flushAtlas(); dev.queue.writeBuffer(u, 0, new Float32Array([W, H, pw / W, ui.time])); dev.queue.writeBuffer(ibuf, 0, data, 0, n * STRIDE);
-      let rp = enc.beginRenderPass({ colorAttachments: [{ view: half.createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bp); rp.setBindGroup(0, gBlurA); rp.draw(3); rp.end();
+      let blurA = gBlurA, blitG = gBlit;
+      if (ext) { if (ext !== extKey) { const v = ext.createView(); extKey = ext; extG = { a: dev.createBindGroup({ layout: bp.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: bu } }, { binding: 1, resource: smp }, { binding: 2, resource: v }] }), b: dev.createBindGroup({ layout: blit.getBindGroupLayout(0), entries: [{ binding: 0, resource: smp }, { binding: 1, resource: v }] }) }; } blurA = extG.a; blitG = extG.b; }
+      let rp = enc.beginRenderPass({ colorAttachments: [{ view: half.createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bp); rp.setBindGroup(0, blurA); rp.draw(3); rp.end();
       rp = enc.beginRenderPass({ colorAttachments: [{ view: halfB.createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(bp); rp.setBindGroup(0, gBlurB); rp.draw(3); rp.end();
       if (imgs.length) dev.queue.writeBuffer(imgBuf, 0, imgData, 0, imgs.length * 8);
-      rp = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(blit); rp.setBindGroup(0, gBlit); rp.draw(3);
+      rp = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', storeOp: 'store' }] }); rp.setPipeline(blit); rp.setBindGroup(0, blitG); rp.draw(3);
       const a = split < 0 ? n : split; if (a) { rp.setPipeline(pipe); rp.setBindGroup(0, g); rp.draw(4, a); }
       if (imgs.length) { rp.setPipeline(ip); imgs.forEach((tex, i) => { rp.setBindGroup(0, imgGroup(tex)); rp.draw(4, 1, 0, i); }); }
       if (split >= 0 && n > split) { rp.setPipeline(pipe); rp.setBindGroup(0, g); rp.draw(4, n - split, 0, split); } rp.end(); },

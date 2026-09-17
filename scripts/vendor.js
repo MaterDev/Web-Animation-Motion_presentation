@@ -66,9 +66,15 @@ for (const { from, outfile } of copies) {
 
 const bundles = [
   { entry: 'scripts/three-entry.js', outfile: 'three.module.js' },
+  /* vgpu runs one app on the WebGPU sheet (Supercell, track 013). Its
+     package is multi-file ESM across @vgpu/* workspaces, so it bundles
+     like Three. Measured at 0.5.0: ~200 KB, 19 public exports — the floor
+     sits well under that and well over an export-list stub. */
+  { entry: 'scripts/vgpu-entry.js', outfile: 'vgpu.module.js', minBytes: 100_000,
+    expect: ['initFromDevice', 'effect', 'draw', 'compute', 'storage', 'target', 'frame', 'timer', 'sampler', 'uniforms', 'clock'] },
 ];
 
-for (const { entry, outfile, expect } of bundles) {
+for (const { entry, outfile, expect, minBytes = 20_000 } of bundles) {
   /* No `outdir`/`naming` here on purpose. Passing both made Bun
      write every emitted artifact — the entry *and* its code-split
      chunks — to the same filename, so they overwrote each other and
@@ -94,6 +100,22 @@ for (const { entry, outfile, expect } of bundles) {
     process.exit(1);
   }
   const code = await result.outputs[0].text();
+  /* The same floor the prebuilt copies get: a barrel that bundles to an
+     export list alone is a few KB and must not reach the harness. */
+  if (code.length < minBytes) {
+    console.error(`vendor: ${outfile} is only ${code.length} bytes — that is not a real bundle`);
+    process.exit(1);
+  }
+  /* A bare specifier left in a browser bundle fails at import in the
+     harness, which has no import map. Scanned by Bun's own parser, not a
+     regex: a regex reads prose in a Three warning string, and vgpu's
+     WGSL tokenizer compares against the literal "import", as imports. */
+  const specs = new Bun.Transpiler({ loader: 'js' }).scanImports(code).map((i) => i.path);
+  const bare = specs.filter((s) => !/^(?:\.{1,2}\/|\/|https?:|data:)/.test(s));
+  if (bare.length) {
+    console.error(`vendor: ${outfile} still imports bare specifier(s): ${[...new Set(bare)].slice(0, 5).join(', ')}`);
+    process.exit(1);
+  }
   await writeFile(new URL(outfile, out), code);
   /* Assert the API survived, not just the byte count. A bundle can be
      the right size and still export nothing callable — which is

@@ -9,17 +9,17 @@
    Usage:
      bun scripts/cdp-verify.js <url> [--eval 'js expression'] [--shot out.png]
                                [--wait ms] [--click 'selector'] [--port 9333]
-                               [--width 1180] [--height 900]
+                               [--width 1180] [--height 900] [--dpr 1] [--reduced]
    --eval runs in the page after the wait and prints the JSON result; the
    expression may be an async IIFE. --click and --wait may repeat, in order.
    Console errors and page errors are collected and printed at the end. */
 const args = process.argv.slice(2);
 const url = args[0];
 if (!url || url.startsWith('--')) { console.error('usage: bun scripts/cdp-verify.js <url> [--eval js] [--shot file] [--wait ms] [--click sel]'); process.exit(1); }
-const opt = { port: 9333, width: 1180, height: 900 }, steps = [];
+const opt = { port: 9333, width: 1180, height: 900, dpr: 1 }, steps = [];
 for (let i = 1; i < args.length; i++) {
   const a = args[i], v = args[i + 1];
-  if (a === '--port') { opt.port = +v; i++; } else if (a === '--width') { opt.width = +v; i++; } else if (a === '--height') { opt.height = +v; i++; }
+  if (a === '--port') { opt.port = +v; i++; } else if (a === '--width') { opt.width = +v; i++; } else if (a === '--height') { opt.height = +v; i++; } else if (a === '--dpr') { opt.dpr = +v; i++; } else if (a === '--reduced') { opt.reduced = true; }
   else if (a === '--eval') { steps.push({ eval: v }); i++; } else if (a === '--shot') { steps.push({ shot: v }); i++; }
   else if (a === '--wait') { steps.push({ wait: +v }); i++; } else if (a === '--click') { steps.push({ click: v }); i++; }
   else if (a === '--full') { steps.push({ full: true }); }
@@ -38,7 +38,8 @@ ws.onmessage = (ev) => {
 };
 await new Promise((r) => { ws.onopen = r; });
 await send('Network.enable'); await send('Network.setCacheDisabled', { cacheDisabled: true }); await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable');
-await send('Emulation.setDeviceMetricsOverride', { width: opt.width, height: opt.height, deviceScaleFactor: 1, mobile: false });
+if (opt.reduced) await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+await send('Emulation.setDeviceMetricsOverride', { width: opt.width, height: opt.height, deviceScaleFactor: opt.dpr, mobile: false });
 const evalIn = async (expr) => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.exceptionDetails) return { error: r.exceptionDetails.exception?.description || r.exceptionDetails.text }; return r.result.value; };
 await send('Page.navigate', { url });
 await new Promise((r) => setTimeout(r, 1500));
