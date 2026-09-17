@@ -102,30 +102,52 @@ fn faceY(p: vec2i) -> f32 { let u = uy(p); if (u > 0.0) { return u * (hh(p) - w.
   }
   if (c.y >= i32(size.y) - 2) { h = mix(h, w.hs, 0.35); }   /* water runs off the bottom of the lens */
   /* small beads and thin films slowly dry; drops big enough to matter do not */
-  h -= w.dt * 0.0012 * (1.0 - smoothstep(1.0, 2.5, h));
+  h -= w.dt * 0.0012 * (1.0 - smoothstep(0.06, 0.2, h));
   h = clamp(h, w.hs, w.maxH);
   textureStore(dst, c, vec4f(h, s.g, s.b, 0.0));
 }
 `;
 
-/* rain landing on the lens, in sim cells: mostly fine drops, some fat ones, and bursts of spray */
+/* where water comes from, in sim cells. Nothing lands at random: a lens under a hood gets water two ways.
+   · Drips from the top edge. Water gathers along the hood and lets go in beads at a few places, which wander
+     slowly, so the same channels run again and again.
+   · Flings. Every few seconds a gust (harder in a flyby) throws a spatter onto the glass: a streak of fine
+     droplets along the wind, thinning out, with one or two larger ones where it hit first. */
 export function rainOnLens() {
   let rng = 11; const rnd = () => { rng = (rng * 1664525 + 1013904223) >>> 0; return rng / 4294967296; };
-  let carry = 0;
-  return (dt, rain, gust, W, H) => {
-    const hits = [];
-    carry += (0.3 + rain) * 26 * dt + gust * 60 * dt;
-    while (carry >= 1 && hits.length < MAX_HITS) {
-      carry -= 1;
-      const x = rnd() * W, y = rnd() * H * 1.05 - H * 0.05, big = Math.pow(rnd(), 2.6);
-      const r = 1.6 + big * 7.0 + rain * 0.8;
-      hits.push([x, y, r, r * (0.42 + 0.18 * rnd())]);
-      if (rnd() < 0.1) for (let k = 0, n = 2 + (rnd() * 3) | 0; k < n && hits.length < MAX_HITS; k++) { const a = rnd() * 6.283, rr = r * (1.5 + rnd() * 3); hits.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr, 0.9 + rnd() * 0.7, 0.4 + rnd() * 0.3]); }
+  const queue = []; let dripCarry = 0, flingIn = 2, time = 0;
+  const spouts = Array.from({ length: 9 }, () => ({ x: rnd(), drift: (rnd() - 0.5) * 0.01 }));
+  const fn = (dt, rain, gust, W, H, wind) => {
+    time += dt;
+    if (fn.flingNow) { fn.flingNow = false; flingIn = 0; }
+    if (fn.probe) { for (const p of fn.probe) queue.push([p[0] * W, p[1] * H, p[2], p[3]]); fn.probe = null; }
+    /* drips: slow, and mostly from the spouts */
+    dripCarry += (0.2 + rain) * 0.6 * dt;
+    while (dripCarry >= 1) {
+      dripCarry -= 1;
+      const sp = spouts[(rnd() * spouts.length) | 0];
+      const x = rnd() < 0.6 ? (sp.x + (rnd() - 0.5) * 0.02) * W : rnd() * W;
+      queue.push([x, 3 + rnd() * 2, 6 + rnd() * 2, 4.4 + rnd() * 1.2]);
     }
-    if (carry > 3) carry = 3;
+    for (const sp of spouts) { sp.x += sp.drift * dt; if (sp.x < 0.02 || sp.x > 0.98) sp.drift = -sp.drift; }
+    /* flings: a spatter along the wind */
+    flingIn -= dt * (0.4 + rain * 0.8 + gust * 4);
+    if (flingIn <= 0) {
+      flingIn = 2.5 + rnd() * 4;
+      const dir = wind >= 0 ? 1 : -1, ang = (rnd() - 0.5) * 0.9, dx = Math.cos(ang) * dir, dy = Math.sin(ang);
+      const len = W * (0.1 + rnd() * 0.2), x0 = rnd() * W, y0 = H * (0.1 + rnd() * 0.8), n = 7 + (rnd() * 10) | 0;
+      for (let k = 0; k < n; k++) {
+        const f = Math.pow(rnd(), 0.7), spread = (rnd() - 0.5) * len * 0.12 * (0.3 + f);
+        const r = k < 2 ? 6 + rnd() * 1.5 : 3.6 + (1 - f) * 2 * rnd();
+        queue.push([x0 + dx * f * len - dy * spread, y0 + dy * f * len + dx * spread, r, r * (0.7 + 0.1 * rnd())]);
+      }
+    }
+    const hits = queue.splice(0, MAX_HITS);
+    if (queue.length > 120) queue.length = 120;
     while (hits.length < MAX_HITS) hits.push([0, 0, 0, 0]);
     return hits;
   };
+  return fn;
 }
 
 /* ── the glass: the scene seen through the water ── */
