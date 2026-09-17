@@ -70,7 +70,7 @@ fn pressure(p: vec2i) -> f32 {
   u.y /= 1.0 + w.dt * w.drag / (hy * hy + 0.02);
   /* pinning: near the edge of the water static friction takes a fixed bite out of the speed */
   let edge = 1.0 - smoothstep(0.15, 0.9, min(min(hh(c + vec2i(1, 0)), hh(c - vec2i(1, 0))), min(hh(c + vec2i(0, 1)), hh(c - vec2i(0, 1)))));
-  let bite = w.pin * grip(c) * (0.25 + 0.75 * edge) * w.dt;
+  let bite = w.pin * grip(c) * (0.7 + 0.3 * edge) * w.dt;
   let sp = length(u);
   u *= max(sp - bite, 0.0) / max(sp, 1e-6);
   let lim = 0.5 / w.dt; let sp2 = length(u); if (sp2 > lim) { u *= lim / sp2; }
@@ -101,6 +101,8 @@ fn faceY(p: vec2i) -> f32 { let u = uy(p); if (u > 0.0) { return u * (hh(p) - w.
     if (d < hit.z) { h += hit.w * (1.0 - d * d / (hit.z * hit.z)); }
   }
   if (c.y >= i32(size.y) - 2) { h = mix(h, w.hs, 0.35); }   /* water runs off the bottom of the lens */
+  /* small beads and thin films slowly dry; drops big enough to matter do not */
+  h -= w.dt * 0.0012 * (1.0 - smoothstep(1.0, 2.5, h));
   h = clamp(h, w.hs, w.maxH);
   textureStore(dst, c, vec4f(h, s.g, s.b, 0.0));
 }
@@ -112,13 +114,13 @@ export function rainOnLens() {
   let carry = 0;
   return (dt, rain, gust, W, H) => {
     const hits = [];
-    carry += (0.35 + rain) * 26 * dt + gust * 60 * dt;
+    carry += (0.3 + rain) * 26 * dt + gust * 60 * dt;
     while (carry >= 1 && hits.length < MAX_HITS) {
       carry -= 1;
-      const x = rnd() * W, y = rnd() * H * 1.05 - H * 0.05, big = Math.pow(rnd(), 3.2);
-      const r = 1.8 + big * 9 + rain * 2;
-      hits.push([x, y, r, r * (0.45 + 0.25 * rnd())]);
-      if (rnd() < 0.18) for (let k = 0, n = 2 + (rnd() * 4) | 0; k < n && hits.length < MAX_HITS; k++) { const a = rnd() * 6.283, rr = r * (1.5 + rnd() * 3); hits.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr, 1 + rnd() * 1.4, 0.5 + rnd() * 0.5]); }
+      const x = rnd() * W, y = rnd() * H * 1.05 - H * 0.05, big = Math.pow(rnd(), 2.6);
+      const r = 1.6 + big * 7.0 + rain * 0.8;
+      hits.push([x, y, r, r * (0.42 + 0.18 * rnd())]);
+      if (rnd() < 0.1) for (let k = 0, n = 2 + (rnd() * 3) | 0; k < n && hits.length < MAX_HITS; k++) { const a = rnd() * 6.283, rr = r * (1.5 + rnd() * 3); hits.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr, 0.9 + rnd() * 0.7, 0.4 + rnd() * 0.3]); }
     }
     if (carry > 3) carry = 3;
     while (hits.length < MAX_HITS) hits.push([0, 0, 0, 0]);
@@ -132,6 +134,8 @@ export const LENS = /* wgsl */ `
 @group(0) @binding(1) var water: texture_2d<f32>;
 @group(0) @binding(2) var smp: sampler;
 @group(0) @binding(3) var<uniform> look: vec4f;   /* flash, thickness at the water's edge, sim width, sim height */
+@group(0) @binding(4) var<uniform> lab: vec4f;    /* x > 0.5: show the water against a grid, for judging the physics */
+fn backdrop(uv: vec2f) -> vec3f { if (lab.x < 0.5) { return textureSampleLevel(scene, smp, uv, 0.0).rgb; } let g = abs(fract(uv * vec2f(24.0, 17.0)) - 0.5); let line = 1.0 - smoothstep(0.44, 0.48, max(g.x, g.y)); return mix(vec3f(0.85, 0.5, 0.2), vec3f(0.12, 0.2, 0.4), uv.y) * (0.75 + 0.25 * line); }
 fn bw(v: f32) -> vec4f { let n = vec4f(1.0, 2.0, 3.0, 4.0) - v; let s = n * n * n; let x = s.x; let y = s.y - 4.0 * s.x; let z = s.z - 4.0 * s.y + 6.0 * s.x; return vec4f(x, y, z, 6.0 - x - y - z) / 6.0; }
 /* a smooth cubic read of the height field in four bilinear taps */
 fn H(uv: vec2f) -> f32 {
@@ -151,29 +155,30 @@ fn H(uv: vec2f) -> f32 {
   /* the slope from plain filtered taps: the cubic read sets the edge, the normal needs no more than this */
   let gx = (textureSampleLevel(water, smp, uv + vec2f(texel.x, 0.0), 0.0).r - textureSampleLevel(water, smp, uv - vec2f(texel.x, 0.0), 0.0).r) * 0.5;
   let gy = (textureSampleLevel(water, smp, uv + vec2f(0.0, texel.y), 0.0).r - textureSampleLevel(water, smp, uv - vec2f(0.0, texel.y), 0.0).r) * 0.5;
-  let n = normalize(vec3f(-gx * 1.5, -gy * 1.5, 1.0));
-  let base = textureSampleLevel(scene, smp, uv, 0.0).rgb;
+  let n = normalize(vec3f(-gx * 3.5, -gy * 3.5, 1.0));
+  let base = backdrop(uv);
   let T = look.y;
   let wEdge = max(fwidth(h), 1e-4);
   let inside = smoothstep(T - wEdge, T + wEdge, h);
   var col = base;
   /* a wet film too thin to bead still smears the view a little */
   let film = smoothstep(T * 0.25, T, h) * (1.0 - inside);
-  col = mix(col, textureSampleLevel(scene, smp, uv - n.xy * 0.01, 0.0).rgb * 1.06, film * 0.7);
+  col = mix(col, backdrop(uv - n.xy * 0.01) * 1.06, film * 0.7);
   /* refraction: a drop is a small lens that turns what is behind it over and shrinks it */
-  let bend = n.xy * (0.03 + min(h, 12.0) * 0.012);
-  var through = textureSampleLevel(scene, smp, uv - bend, 0.0).rgb;
+  /* a drop is a small lens: the view through it is flipped and shrunk, displaced by about the drop's own size */
+  let bend = n.xy * (min(h, 12.0) + 1.5) * texel.y * 4.0;
+  var through = backdrop(uv - bend);
   /* its edge, where the surface meets the glass steeply, turns light away: a thin dark line */
   let slope = length(vec2f(gx, gy));
-  through *= 1.0 - smoothstep(0.25, 1.1, slope) * 0.8;
+  through *= 1.0 - smoothstep(0.3, 1.2, slope) * 0.6;
   /* light gathered by the dome lands inside the lower edge as a bright crescent */
   through += vec3f(0.8, 0.85, 0.95) * smoothstep(0.2, 0.7, slope) * smoothstep(0.1, 0.8, n.y) * (1.0 - smoothstep(0.7, 1.2, slope)) * 0.3;
   /* the storm's glow on the wet surface, and a hard specular from above */
   let hv = normalize(vec3f(-0.25, -0.8, 1.0) + vec3f(0.0, 0.0, 1.0));
-  let spec = pow(max(dot(n, hv), 0.0), 220.0);
+  let spec = pow(max(dot(n, hv), 0.0), 90.0);
   let fres = 0.03 + 0.97 * pow(1.0 - n.z, 5.0);
-  let sky = textureSampleLevel(scene, smp, clamp(vec2f(uv.x, 0.06) + n.xy * 0.3, vec2f(0.0), vec2f(1.0)), 0.0).rgb;
-  through = mix(through * 1.06, sky * 1.5, fres * 0.6) + vec3f(1.0, 0.98, 0.94) * spec * (1.6 + look.x * 4.0);
+  let sky = backdrop(clamp(vec2f(uv.x, 0.06) + n.xy * 0.3, vec2f(0.0), vec2f(1.0)));
+  through = mix(through * 1.06, sky * 1.5, fres * 0.6) + vec3f(1.0, 0.98, 0.94) * spec * (0.7 + look.x * 3.0);
   col = mix(col, through, inside);
   return vec4f(col, 1.0);
 }
