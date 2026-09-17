@@ -303,6 +303,7 @@
 <div class="led-slide" class:guides style="--tint:{tint}" data-motif={motif} data-testid="slide-{slide.id}">
   <span class="probe" bind:this={probe} style="color:{tint}"></span>
 
+  {#if L !== 'full'}
   <div class="lcd-panel dk-screen" data-testid="screen-{slide.id}">
     <div class="well">
       <div class="lcd" class:dk-glassy={glassy}>
@@ -791,6 +792,16 @@
   </div>
 
   <div class="led-guides"><span class="margin"></span><span class="field"></span></div>
+  {/if}
+
+  {#if L === 'full' && slide.demoId}
+    <!-- full: the demo IS the slide. It covers the whole 960 × 540 surface,
+         bezel and chrome included, so a finale can pull back from the
+         entire frame (Key: the whole presentation was inside the phone). -->
+    <div class="dk-full" data-testid="well-{slide.id}">
+      <DemoHost id={slide.demoId} {live} fit width={960} testId="demo-{slide.id}" />
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -1057,6 +1068,10 @@
   .dk-led .dk-tag { color: var(--led-ground); background: oklch(from var(--ct) 0.84 calc(c * 2.2) h); }
   .dk-led .dk-meta { color: var(--led-dim); opacity: 1; }
   .dk-demo-well { position: relative; overflow: hidden; }
+  .dk-full { position: absolute; inset: 0; z-index: 20; }
+  /* a full slide draws nothing of its own: no LED grid or vignette under the demo */
+  .led-slide:has(.dk-full)::before, .led-slide:has(.dk-full)::after { display: none; }
+  .led-slide:has(.dk-full) { background: #fff; }
   /* even: the same 42px of screen on all four sides of the demo. The screen
      is 948 × 528 inside its 6px bezel, so the well is 864 × 444 at 42,42
      on the screen: the field's width, pulled up 6px into the top band and

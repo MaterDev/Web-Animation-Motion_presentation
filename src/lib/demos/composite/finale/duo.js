@@ -43,11 +43,18 @@ fn wallpaper(u: vec2f, ar: f32) -> vec3f { let q = vec2f(u.x * ar, u.y);
 
 const BODY = FSQ_VS + WALLPAPER + `
 struct R { camPos: vec3f, tf: f32, camF: vec3f, aspect: f32, camR: vec3f, fold: f32, camU: vec3f, frameIdx: f32,
-  dims: vec4f, misc: vec4f, frame: vec4f, back: vec4f, hingeC: vec4f, pad0: vec4f, pad1: vec4f,
+  dims: vec4f, misc: vec4f, frame: vec4f, back: vec4f, hingeC: vec4f, mark: vec4f, pad1: vec4f, /* mark: half width (face u), half height (face v), —, on */
   res: vec4f,   /* target w, h, samples this frame, march steps */
   lock: vec4f,  /* outer display awake, shadow steps, AO steps, — */
 };
 @group(0) @binding(0) var<uniform> r: R;
+@group(0) @binding(1) var markT: texture_2d<f32>; /* the FOLKLORE wordmark, alpha = coverage */
+@group(0) @binding(2) var markS: sampler;
+/* the wordmark etched into the outer glass: coverage at a face uv (u across, v up), 0 outside it */
+fn markAt(uv: vec2f) -> f32 { if (r.mark.w < 0.5) { return 0.0; }
+  let q = vec2f((uv.x - 0.5) / (2.0 * r.mark.x) + 0.5, 0.5 - (uv.y - 0.5) / (2.0 * r.mark.y));
+  if (q.x < 0.0 || q.x > 1.0 || q.y < 0.0 || q.y > 1.0) { return 0.0; }
+  return textureSampleLevel(markT, markS, q, 0.0).a; }
 fn rotY(p: vec3f, a: f32) -> vec3f { let c = cos(a); let s = sin(a); return vec3f(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 fn sdRBox(p: vec3f, b: vec3f, rad: f32) -> f32 { let q = abs(p) - b + rad; return length(max(q, vec3f(0.0))) + min(max(q.x, max(q.y, q.z)), 0.0) - rad; }
 fn sdBox2(p: vec2f, b: vec2f, rad: f32) -> f32 { let q = abs(p) - b + rad; return length(max(q, vec2f(0.0))) + min(max(q.x, q.y), 0.0) - rad; }
@@ -115,7 +122,10 @@ fn shade(p: vec3f, n: vec3f, rd: vec3f, m: f32) -> vec3f { let key = normalize(v
   if (m < 4.5) { return vec3f(0.02, 0.02, 0.03) + refl * (0.05 + 0.9 * fr) + vec3f(pow(max(dot(n, hv), 0.0), 400.0)) * 1.5; }
   if (m < 5.5) { return r.hingeC.rgb * (vec3f(0.45) + vec3f(0.55) * nd * sh + refl * 0.25) * occ + vec3f(pow(max(dot(n, hv), 0.0), 10.0)) * 0.12; }
   if (m < 6.5) { return vec3f(0.97) * (0.66 + 0.34 * sh) * (0.72 + 0.28 * occ); }
-  if (m < 7.5) { let pa = rotY(p - vec3f(0.0, 0.0, r.misc.y), -r.fold) + vec3f(0.0, 0.0, r.misc.y); let uv = vec2f(clamp(-pa.x / W, 0.0, 1.0), pa.y / H + 0.5); let content = screenOuter(uv) * r.lock.x; return content * content * 1.2 + vec3f(0.01) + refl * (0.06 + 0.9 * fr) + vec3f(pow(max(dot(n, hv), 0.0), 320.0)) * sh; }
+  if (m < 7.5) { let pa = rotY(p - vec3f(0.0, 0.0, r.misc.y), -r.fold) + vec3f(0.0, 0.0, r.misc.y); let uv = vec2f(clamp(-pa.x / W, 0.0, 1.0), pa.y / H + 0.5); let content = screenOuter(uv) * r.lock.x;
+    /* etched, not stickered: the letters are a frosted band in the glass — a pale satin base, a broad sheen from the environment and a soft highlight from the key light */
+    let mk = markAt(uv); let etch = vec3f(0.20, 0.205, 0.215) * (0.55 + 0.45 * nd * sh) + refl * 0.20 + vec3f(pow(max(dot(n, hv), 0.0), 40.0)) * sh * 0.35;
+    return mix(content * content * 1.2 + vec3f(0.01) + refl * (0.06 + 0.9 * fr) + vec3f(pow(max(dot(n, hv), 0.0), 320.0)) * sh, etch + refl * 0.04, mk * 0.92); }
   return r.frame.rgb * (refl * 0.9 + vec3f(nd * sh * 0.3)) * occ; }
 fn tm(c: vec3f) -> vec3f { let x = max(c / (1.0 + c * 0.25) * 1.2, vec3f(0.0)); return pow(x, vec3f(1.0 / 2.2)); }
 /* the inner display as a plane in one leaf's frame: returns (t, u, v, inside) */
@@ -157,8 +167,8 @@ struct Out { @location(0) col: vec4f, @location(1) scr: vec4f };
 
 /* the composite: body + the screen's own ground and particles, at device pixels */
 const COMPOSITE = FSQ_VS + `
-struct C { origin: vec2f, size: vec2f, canvas: vec2f, awake: f32, settled: f32, time: f32, dpr: f32, fade: f32, pad: f32,
-  top: vec4f, bot: vec4f, ink: vec4f, tint: vec4f };
+struct C { origin: vec2f, size: vec2f, canvas: vec2f, awake: f32, settled: f32, time: f32, grow: f32, fade: f32, pad: f32,
+  top: vec4f, bot: vec4f, ink: vec4f, tint: vec4f, well: vec4f };
 @group(0) @binding(0) var<uniform> c: C;
 @group(0) @binding(1) var smp: sampler;
 @group(0) @binding(2) var body: texture_2d<f32>;
@@ -166,7 +176,7 @@ struct C { origin: vec2f, size: vec2f, canvas: vec2f, awake: f32, settled: f32, 
 fn h12(p: vec2f) -> f32 { return fract(sin(dot(p, vec2f(12.9898, 78.233))) * 43758.5453); }
 fn h22(p: vec2f) -> vec2f { return vec2f(h12(p), h12(p + vec2f(19.19, 7.31))); }
 /* one layer of particles: a point per cell, drifting inside a 3 × 3 neighbourhood; returns coverage.
-   L is in layer px (the screen is 864 px wide in its own units); ppx is device px per layer px */
+   L is in layer px (the display is 960 px wide in its own units); ppx is device px per layer px */
 fn dots(L: vec2f, cell: f32, rad: f32, ppx: f32, t: f32, speed: f32, seed: f32) -> f32 {
   let g = floor(L / cell); var a = 0.0;
   for (var j = -1; j <= 1; j++) { for (var i = -1; i <= 1; i++) {
@@ -182,12 +192,21 @@ fn dots(L: vec2f, cell: f32, rad: f32, ppx: f32, t: f32, speed: f32, seed: f32) 
 @fragment fn fs(o: VO) -> @location(0) vec4f { let fc = o.p.xy; let buv = fc / c.canvas;
   let b = textureSampleLevel(body, smp, buv, 0.0); let sm = textureSampleLevel(scr, smp, buv, 0.0); let m = clamp(sm.b, 0.0, 1.0);
   let uvLive = sm.rg / max(sm.b, 1e-4); let uv = select(uvLive, (fc - c.origin) / c.size, c.settled > 0.5);
-  let LS = vec2f(864.0, 864.0 * c.size.y / c.size.x); let L = uv * LS; let ppx = c.size.x / 864.0;
-  var col = mix(c.top.rgb, c.bot.rgb, smoothstep(0.0, 1.0, uv.y));
-  let fine = dots(L, 15.0, 0.75, ppx, c.time, 0.35, 3.0);
-  let big = dots(L, 46.0, 1.5, ppx, c.time, 0.22, 11.0);
-  col = mix(col, c.ink.rgb, fine * 0.30 * c.fade);
-  col = mix(col, c.tint.rgb, big * 0.75 * c.fade);
+  let LS = vec2f(960.0, 960.0 * c.size.y / c.size.x); let L = uv * LS; let ppx = c.size.x / 960.0;
+  /* the display holds the slide. At grow 0 it is the deck's 960 × 540 frame (centred, the rest off-canvas); as the camera pulls
+     back, grow → 1 and the slide re-lays out to the display's own proportions, its 6 px bezel thinning to nothing (index.js does
+     the same to the page layer from the same number) */
+  let g = clamp(c.grow, 0.0, 1.0); let bandTop = (LS.y - 540.0) * 0.5 * (1.0 - g); let bandH = 540.0 + (LS.y - 540.0) * g; let bz = 6.0 * (1.0 - g);
+  let S = vec2f(L.x, L.y - bandTop);
+  let inBand = step(0.0, S.y) * step(S.y, bandH); let inLcd = step(bz, S.x) * step(S.x, 960.0 - bz) * step(bz, S.y) * step(S.y, bandH - bz);
+  var col = vec3f(0.012);
+  col = mix(col, c.well.rgb, inBand);
+  var lcd = mix(c.top.rgb, c.bot.rgb, clamp((S.y - bz) / (bandH - 2.0 * bz), 0.0, 1.0));
+  let fine = dots(S, 15.0, 0.75, ppx, c.time, 0.35, 3.0);
+  let big = dots(S, 46.0, 1.5, ppx, c.time, 0.22, 11.0);
+  lcd = mix(lcd, c.ink.rgb, fine * 0.26 * c.fade);
+  lcd = mix(lcd, c.tint.rgb, big * 0.7 * c.fade);
+  col = mix(col, lcd, inLcd);
   let k = m * c.awake; let a = max(b.a, k);
   var outc = b.rgb * (1.0 - k) + col * k;
   outc += (h12(fc) - 0.5) / 255.0 * a;
@@ -199,26 +218,32 @@ export const ease = (t) => (t = Math.max(0, Math.min(1, t)), t < 0.5 ? 4 * t * t
 const TF = Math.tan(0.23), W = SPECS.leafW.v, H = SPECS.leafH.v, T_ = SPECS.leafT.v, BZ = SPECS.bezel.v, HZ = SPECS.hingeAxis.v;
 const lerp = (a, b, t) => a + (b - a) * t;
 /* the display in its own units: 864 wide, and this tall */
-export const LAYER_W = 864, LAYER_H = 864 * (H - 2 * BZ) / (2 * (W - BZ));
-export const LAYER_RADIUS = 864 * (SPECS.cornerR.v - BZ) / (2 * (W - BZ));
+export const LAYER_W = 960, LAYER_H = 960 * (H - 2 * BZ) / (2 * (W - BZ));
+export const LAYER_RADIUS = 960 * (SPECS.cornerR.v - BZ) / (2 * (W - BZ));
 
 /**
  * The hardware, over a premultiplied canvas: where no ray lands, the slide shows through.
  * pose p: 0 closed, 1 open and frontal. zoom z (only meaningful at p = 1): 0 display fills the canvas, 1 the whole device in frame.
  */
-export function makeHardware(dev, canvas, ctx, fmt) {
+/** mark: optional { image (canvas), aspect (width / height) } — the wordmark for the outer face */
+export function makeHardware(dev, canvas, ctx, fmt, mark) {
   const bodyMod = dev.createShaderModule({ code: BODY });
   const bodyPipe = dev.createRenderPipeline({ layout: 'auto', vertex: { module: bodyMod, entryPoint: 'vs' },
     fragment: { module: bodyMod, entryPoint: 'fs', targets: ['rgba16float', 'rgba16float'].map((format) => ({ format, blend: { color: { srcFactor: 'constant', dstFactor: 'one-minus-constant' }, alpha: { srcFactor: 'constant', dstFactor: 'one-minus-constant' } } })) },
     primitive: { topology: 'triangle-list' } });
   const compPipe = render(COMPOSITE, { format: fmt });
-  const ru = uniform(208), cu = uniform(112), smp = dev.createSampler({ magFilter: 'linear', minFilter: 'linear' });
-  const bodyG = dev.createBindGroup({ layout: bodyPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: ru } }] });
+  const ru = uniform(208), cu = uniform(128), smp = dev.createSampler({ magFilter: 'linear', minFilter: 'linear' });
+  const markW = mark ? mark.image.width : 1, markH = mark ? mark.image.height : 1;
+  const markT = dev.createTexture({ size: [markW, markH], format: 'rgba8unorm', usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
+  if (mark) dev.queue.copyExternalImageToTexture({ source: mark.image }, { texture: markT }, [markW, markH]);
+  /* the word spans 60% of the outer face's width, centred; its height follows the rendered word's aspect */
+  const MARK_U = 0.30, MARK_V = mark ? (2 * MARK_U * W / mark.aspect) / H / 2 : 0;
+  const bodyG = dev.createBindGroup({ layout: bodyPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: ru } }, { binding: 1, resource: markT.createView() }, { binding: 2, resource: smp }] });
   let bodyT = null, scrT = null, cw = 0, ch = 0, acc = 0, lastKey = '', compG = null;
-  const margin = () => Math.round(10 * (canvas.width / Math.max(1, canvas.clientWidth || canvas.width)));
+  const margin = () => Math.round(30 * (canvas.width / Math.max(1, canvas.clientWidth || canvas.width)));
   const openDist = () => { const m = margin(); return H * ch / ((ch - 2 * m) * 2 * TF); };
-  /* close enough that the display's width is the canvas's, a hair over so no bezel shows at the edges */
-  const fillDist = () => (W - BZ) / (TF * (cw / ch) * 1.003);
+  /* close enough that the display's width is exactly the canvas's: the slide replica on it is the whole frame */
+  const fillDist = () => (W - BZ) / (TF * (cw / ch));
   const zoomDist = (z) => lerp(fillDist(), openDist(), z);
   const camera = (p, z) => {
     const aspect = cw / ch, e = ease(p);
@@ -237,6 +262,8 @@ export function makeHardware(dev, canvas, ctx, fmt) {
       bodyT = mk(); scrT = mk(); acc = 0; lastKey = ''; compG = null; },
     /* the inner display's rect on the canvas, in device pixels, for a frontal pose at zoom z. This is the
        projection the shader does, done once for the four corners: the one source both layers are placed from */
+    /* the open, frontal body's box on the canvas in device pixels (the click target once the device is out) */
+    boundsOpen() { const d = openDist(), bx = W / (d * TF * (cw / ch)) * cw / 2, by = (H * 0.5) / (d * TF) * ch / 2; return { x: cw / 2 - bx, y: ch / 2 - by, w: bx * 2, h: by * 2 }; },
     rectAt(z) { const d = zoomDist(z), sx = (W - BZ) / (d * TF * (cw / ch)) * cw / 2, sy = (H * 0.5 - BZ) / (d * TF) * ch / 2;
       return { x: cw / 2 - sx, y: ch / 2 - sy, w: sx * 2, h: sy * 2 }; },
     /* march the body if the pose changed or it has not converged; returns true while it is still accumulating */
@@ -248,7 +275,7 @@ export function makeHardware(dev, canvas, ctx, fmt) {
       const RB = new ArrayBuffer(208), Rf = new Float32Array(RB);
       Rf.set(cam.pos, 0); Rf[3] = TF; Rf.set(cam.F, 4); Rf[7] = cam.aspect; Rf.set(cam.Rt, 8); Rf[11] = fold; Rf.set(cam.Up, 12); Rf[15] = acc;
       Rf.set([W, H, T_, SPECS.cornerR.v], 16); Rf.set([BZ, HZ, SPECS.outerBezelEnd.v, SPECS.outerBezelSide.v], 20);
-      Rf.set([...WAY.frame, 1], 24); Rf.set([...WAY.back, 1], 28); Rf.set([...WAY.hinge, 1], 32);
+      Rf.set([...WAY.frame, 1], 24); Rf.set([...WAY.back, 1], 28); Rf.set([...WAY.hinge, 1], 32); Rf.set([MARK_U, MARK_V, 0, mark ? 1 : 0], 36);
       Rf.set([cw, ch, spp, still ? 200 : 140], 44); Rf.set([outerAwake, still ? 48 : 28, 5, 0], 48);
       dev.queue.writeBuffer(ru, 0, RB);
       const rp = enc.beginRenderPass({ colorAttachments: [bodyT, scrT].map((t) => ({ view: t.createView(), loadOp: acc === 0 ? 'clear' : 'load', clearValue: [0, 0, 0, 0], storeOp: 'store' })) });
@@ -257,10 +284,10 @@ export function makeHardware(dev, canvas, ctx, fmt) {
     composite(enc, o) {
       if (!compG) compG = dev.createBindGroup({ layout: compPipe.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: cu } }, { binding: 1, resource: smp }, { binding: 2, resource: bodyT.createView() }, { binding: 3, resource: scrT.createView() }] });
       const R = o.rect, k = o.colors;
-      dev.queue.writeBuffer(cu, 0, new Float32Array([R.x, R.y, R.w, R.h, cw, ch, o.awake, o.settled ? 1 : 0, o.time, 1, o.fade, 0, ...k.top, ...k.bot, ...k.ink, ...k.tint]));
+      dev.queue.writeBuffer(cu, 0, new Float32Array([R.x, R.y, R.w, R.h, cw, ch, o.awake, o.settled ? 1 : 0, o.time, o.grow || 0, o.fade, 0, ...k.top, ...k.bot, ...k.ink, ...k.tint, ...k.well]));
       const rp = enc.beginRenderPass({ colorAttachments: [{ view: ctx.getCurrentTexture().createView(), loadOp: 'clear', clearValue: [0, 0, 0, 0], storeOp: 'store' }] });
       rp.setPipeline(compPipe); rp.setBindGroup(0, compG); rp.draw(3); rp.end(); },
-    destroy() { if (bodyT) { bodyT.destroy(); scrT.destroy(); } ru.destroy(); cu.destroy(); bodyT = null; },
+    destroy() { if (bodyT) { bodyT.destroy(); scrT.destroy(); } ru.destroy(); cu.destroy(); markT.destroy(); bodyT = null; },
   };
   return hw;
 }

@@ -1,30 +1,44 @@
-<div class="fn" data-testid="finale" tabindex="0" aria-label="Finale: credits on the fPhone Duo's screen">
+<div class="fn" data-testid="finale" tabindex="0" aria-label="Finale: credits, and the talk was on the fPhone Duo's screen">
   <canvas class="fn-gpu" data-testid="finale-gpu" aria-hidden="true"></canvas>
   <div class="fn-screen" data-testid="finale-screen">
-    <div class="fn-band" data-testid="finale-credits">
-      <canvas class="fn-slick" data-testid="finale-slick" width="240" height="18" aria-hidden="true"></canvas>
-      <svg class="fn-lines" data-testid="finale-lines" viewBox="0 0 864 444" aria-hidden="true"></svg>
-      <p class="fn-kicker" data-testid="finale-kicker">WAM-2026 <i>·</i> credits</p>
-      <h2 class="fn-title" data-testid="finale-title" aria-label="with thanks"></h2>
-      <p class="fn-dek" data-testid="finale-dek">For feedback and collaboration over the last nine months.</p>
-      <ol class="fn-names" data-testid="finale-names"></ol>
-      <figure class="fn-tile" data-testid="finale-video">
-        <video class="fn-video" data-testid="finale-video-el" muted loop playsinline preload="auto" aria-label="NOVA-7 product film loop"></video>
-        <figcaption class="fn-cap" data-testid="finale-video-cap">nova-7 <i>·</i> video</figcaption>
-      </figure>
-      <ul class="fn-key" data-testid="finale-key" aria-label="Surfaces on this screen">
-        <li data-testid="finale-key-dom"><b>dom</b> names, type</li>
-        <li data-testid="finale-key-svg"><b>svg</b> the lines</li>
-        <li data-testid="finale-key-gif"><b>gif</b> the slimes</li>
-        <li data-testid="finale-key-video"><b>video</b> the film</li>
-        <li data-testid="finale-key-canvas"><b>canvas</b> the slick</li>
-        <li data-testid="finale-key-webgpu"><b>webgpu</b> ground, dots, device</li>
-      </ul>
-      <p class="fn-made" data-testid="finale-made">made for <code>Folklore Digital</code></p>
+    <!-- the slide replica: the deck's own screen structure (well > lcd), bands and field at the deck's offsets -->
+    <div class="fn-slide" data-testid="finale-slide">
+      <div class="well fn-well">
+        <div class="lcd fn-lcd">
+          <span class="fn-cast" aria-hidden="true"></span>
+          <div class="fn-band fn-band-top" data-testid="finale-band-top">
+            <span class="fn-kicker" data-testid="finale-kicker">With thanks</span>
+            <span class="fn-code" data-testid="finale-code">END</span>
+          </div>
+          <div class="fn-field" data-testid="finale-credits">
+            <svg class="fn-dots" data-testid="finale-dots" viewBox="0 0 864 432" aria-hidden="true"></svg>
+            <canvas class="fn-slick" data-testid="finale-slick" width="240" height="18" aria-hidden="true"></canvas>
+            <h2 class="fn-title" data-testid="finale-title" aria-label="with thanks"></h2>
+            <p class="fn-dek" data-testid="finale-dek">For feedback and collaboration over the last nine months.</p>
+            <ol class="fn-names" data-testid="finale-names"></ol>
+            <figure class="fn-tile" data-testid="finale-video">
+              <video class="fn-video" data-testid="finale-video-el" muted loop playsinline preload="auto" aria-label="NOVA-7 product film loop"></video>
+              <figcaption class="fn-cap" data-testid="finale-video-cap">nova-7 <i>·</i> video</figcaption>
+            </figure>
+            <ul class="fn-key" data-testid="finale-key" aria-label="Surfaces on this screen">
+              <li data-testid="finale-key-dom"><b>dom</b> names, type</li>
+              <li data-testid="finale-key-svg"><b>svg</b> the dots</li>
+              <li data-testid="finale-key-gif"><b>gif</b> the slimes</li>
+              <li data-testid="finale-key-video"><b>video</b> the film</li>
+              <li data-testid="finale-key-canvas"><b>canvas</b> the slick</li>
+              <li data-testid="finale-key-webgpu"><b>webgpu</b> ground, particles, device</li>
+            </ul>
+            <p class="fn-made" data-testid="finale-made">made for <code class="fn-brand">Folklore Digital</code></p>
+          </div>
+          <div class="fn-band fn-band-bot" data-testid="finale-band-bot">
+            <span></span>
+            <button class="fn-play" data-testid="finale-play" type="button">the end <span aria-hidden="true">▸</span></button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="fn-glare" aria-hidden="true"></div>
   </div>
   <p class="fn-end" data-testid="finale-end" aria-live="polite"><b>end</b> <i>·</i> WAM-2026</p>
-  <button class="fn-btn" data-testid="finale-play" type="button">the end <span aria-hidden="true">▸</span></button>
-  <button class="fn-btn fn-replay" data-testid="finale-replay" type="button" hidden>replay <span aria-hidden="true">↺</span></button>
+  <button class="fn-btn" data-testid="finale-close" type="button" hidden>close <span aria-hidden="true">▸</span></button>
+  <button class="fn-btn" data-testid="finale-replay" type="button" hidden>replay <span aria-hidden="true">↺</span></button>
 </div>

@@ -90,8 +90,8 @@ function body(req) {
 
 /** @returns {import('vite').Plugin} */
 export function deckApi() {
-  /** @type {{ i: number, ex: number, rev: number, mode: string }} */
-  const state = { i: 0, ex: 0, rev: 0, mode: 'grid' };
+  /** @type {{ i: number, ex: number, rev: number, mode: string, tap: number }} */
+  const state = { i: 0, ex: 0, rev: 0, mode: 'grid', tap: 0 };
   let root = process.cwd();
 
   return {
@@ -119,6 +119,7 @@ export function deckApi() {
             if (Number.isInteger(b.i)) state.i = b.i;
             if (Number.isInteger(b.ex)) state.ex = b.ex;
             if (typeof b.mode === 'string') state.mode = b.mode;
+            if (b.tap === true) state.tap++;        // the phone taps a slide's own sequence forward
             state.rev++;
             return send(200, state);
           }

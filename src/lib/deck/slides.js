@@ -41,7 +41,7 @@
             css/svg or webgl/webgpu comparison is coloured by what each side IS.
    `graphic` a figure drawn from a number already stated in `body`. */
 
-/** @typedef {'stage'|'demo'|'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'|'screen'|'datum'|'mirror'|'low'|'framed'|'ledger'|'pair'|'weighted'} Layout */
+/** @typedef {'full'|'stage'|'demo'|'hero'|'statement'|'index'|'figure'|'split'|'bleed'|'compare'|'gallery'|'screen'|'datum'|'mirror'|'low'|'framed'|'ledger'|'pair'|'weighted'} Layout */
 /** @typedef {'composite'|'css'|'svg'|'gif'|'video'|'canvas'|'webgl'|'webgpu'} Motif */
 /** @typedef {{ label: string, demo: string }} Example */
 /**
@@ -322,17 +322,17 @@ export const SLIDES = [
       { h: 'could the client?', body: 'And can we help them do it early? That gap is where the budget quietly goes.' },
     ],
   },
+  /* The finale: the credits screen turns out to be the fPhone Duo's inner display, which zooms out, sleeps and folds shut. */
+  {
+    id: 'close-finale', code: 'END', layout: 'full', tint: 'composite', prism: true, demoId: 'composite/finale', demoWidth: 960,
+    kicker: 'With thanks', h: 'with thanks',
+  },
   {
     id: 'close-end', code: 'WAM-2026', layout: 'screen', tint: 'composite', prism: true, showStrip: true, shape: 'card',
     kicker: 'Key Clark · Talk', h: 'thank you',
     body: 'Every source is in the paper, and every example runs on the site. Scan to open it.',
     strip: [['Made for', 'Folklore Digital']],
     qr: 'https://wam-2026.netlify.app',
-  },
-  /* The finale, last: the credits screen turns out to be the fPhone Duo's inner display, which zooms out, sleeps and folds shut. */
-  {
-    id: 'close-finale', code: 'END', layout: 'stage', tint: 'composite', prism: true, demoId: 'composite/finale', even: true, bare: true, demoWidth: 864,
-    kicker: 'With thanks', h: 'with thanks',
   },
 ];
 
