@@ -12,12 +12,13 @@ The talk climbs a comprehension ladder, not a cost ladder: Layout/CSS → SVG �
 
 ## The site
 
-Three top-level sections, deployed as one static site:
+Four top-level sections, deployed as one static site:
 
 | Route | What it is |
 |---|---|
 | `/design` | Methodology — how the design system was made, and why the process is what it is |
-| `/design/reference` | The live reference sheets: materials, motion, graphic language, layouts, and seven technique sheets |
+| `/design/reference` | The design system's live reference sheets: materials, motion, graphic language, layouts |
+| `/techniques` | One live sheet per rendering technique, in the talk's order |
 | `/paper` | [SCOPE.md](./SCOPE.md), rendered — the paper the talk is built on |
 | `/presentation` | The deck itself, in build |
 

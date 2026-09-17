@@ -1,0 +1,69 @@
+<div class="wrap" data-testid="technique-webgpu">
+  <div class="crumb" data-testid="crumb"><a href="../index.html" data-testid="crumb-home">← WAM-2026</a><span class="sep">/</span><a href="../index.html#sl-14" data-testid="crumb-techniques">Techniques</a></div>
+
+  <div class="head"><span class="code">SL-14</span><h1>webgpu</h1></div>
+  <p class="dek" data-testid="dek">
+    The GPU stops being a place you send pictures to and becomes a place things
+    <b>happen</b>. Compute passes read and write storage buffers that never come back;
+    a hundred thousand grains can be an interface, a flock can be a game, a world can be
+    grown and flown over, a product shot can be lit without a product — and the app
+    around each of those can be the GPU's work too. One device, eight apps, one canvas,
+    each a fragment of a product that could ship — because a technique on a coloured
+    square teaches nothing about where you would reach for it.
+  </p>
+  <p class="gp-instr" data-testid="instrument-plate">
+    <b>Every number on this sheet is measured on this machine, now.</b> The GPU
+    writes its own clock at the start and end of each pass (<code>timestamp-query</code>),
+    so cards print passes, not frames. A counter on the device queue records every
+    byte the CPU sends per frame. Adapter <b data-testid="instrument-adapter">…</b> ·
+    <code>timestamp-query</code> <b data-testid="instrument-ts">…</b> · state uploaded this
+    frame <b data-testid="instrument-bytes">…</b> · uniforms <b data-testid="instrument-uni">…</b>
+    · backing store <b data-testid="instrument-dpr">…</b>
+  </p>
+
+  <!-- ═══ §2 ══════════════════════════════════════════════════════════ -->
+  <section class="gp-sec" data-testid="section-2">
+    <div class="gp-label">One device · eight apps · one canvas</div>
+    <h2>WebGPU treated as an app, not a demo</h2>
+    <p>The oldest WebGPU demo is a particle system, and it is usually a screensaver. The
+      argument here is that the GPU can be <b>the whole app</b>: below is one iPhone Duo,
+      and everything inside its display — the panes, the type, the glass, the buttons,
+      the cards, the sand, the honey, the flock, the world, the shoe, the storm and the
+      phone's own portrait — is drawn by WebGPU from one canvas. The phone around it is CSS, there
+      only to say "this form factor". The Dock opens one app at a time; the last one is
+      torn down before the next compiles, so a single set of buffers is ever alive.
+      Text is glyphs in an atlas, panels are signed distances, and frosted glass samples
+      a blurred copy of whatever the app drew behind it.</p>
+    <div class="dv" data-testid="dv-card">
+      <div class="dv-plate" data-testid="dv-plate"><div class="dd-fit" data-testid="dv-fit"><div class="dd-frame" data-testid="dv-phone">
+        <div class="dd-display" data-testid="dv-display">
+          <canvas data-testid="dv-canvas"></canvas>
+          <div class="dd-crease" aria-hidden="true"></div>
+          <div class="dd-status" aria-hidden="true">9:41</div>
+          <div class="dd-radios" aria-hidden="true" title="battery · Wi-Fi · cellular"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round"><path d="M12 2.6a9.4 9.4 0 1 1-6.6 2.7" /><path d="M7.6 10.3a6.2 6.2 0 0 1 8.8 0"/><path d="M9.7 12.6a3.3 3.3 0 0 1 4.6 0"/><circle cx="12" cy="14.9" r="0.9" fill="#111" stroke="none"/><g fill="#111" stroke="none"><circle cx="8.4" cy="18.6" r="1"/><circle cx="10.8" cy="18.6" r="1"/><circle cx="13.2" cy="18.6" r="1"/></g><circle cx="15.6" cy="18.6" r="0.8" stroke-width="0.9"/></svg></div>
+          <div class="dd-dock" data-testid="dv-dock"><button data-testid="dv-app-flock" style="--c:oklch(0.55 0.10 288)" aria-label="Roost" title="Roost"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3-4 6-4 9 0 3-4 6-4 9 0"/><path d="M6 17.5c2-2.5 4-2.5 6 0 2-2.5 4-2.5 6 0"/></svg></button><button data-testid="dv-app-tessera" style="--c:oklch(0.62 0.12 180)" aria-label="Tessera" title="Tessera"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 19L9 7l4.5 8 2.5-4 5.5 8z"/><circle cx="17.5" cy="6" r="1.8"/></svg></button><button data-testid="dv-app-storm" style="--c:oklch(0.45 0.08 280)" aria-label="Supercell" title="Supercell"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18"/><path d="M5 9h14"/><path d="M8 13h9"/><path d="M10 17h5"/><path d="M12 21h1"/></svg></button><button data-testid="dv-app-duo" style="--c:oklch(0.62 0.02 260)" aria-label="Duo" title="Duo"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M12 3v18"/><path d="M8.5 7.5h1M14.5 7.5h1"/></svg></button></div>
+          <span class="dv-loading" data-testid="dv-loading" hidden>opening…</span>
+          <span class="gp-status" data-testid="dv-status">requesting a device…</span>
+        </div>
+      </div></div></div>
+      <div class="dv-caps" data-testid="dv-caps">
+        <div class="gp-cap" data-testid="dv-cap-flock"><b>Roost · a game that plays itself</b> · 131 072 starlings on a rank-based rule (Ballerini et al. 2008): the flock is the player, an autopilot steers it to the roosts that light up and away from the hawk that stoops every so often; birds lost to the hawk come off the score, roosts reached go on it · binning by atomics, a sort by cell, a k-nearest query per bird per frame · <i>drag on the sky to steer it yourself</i></div>
+        <div class="gp-cap" data-testid="dv-cap-tessera" hidden><b>Tessera · a site as a world</b> · biome-blended noise, flow routing and stream-power carving grow the heights; every frame is a ray march through them — sun, soft shadows, water, fog; five places, one world, the pins projected from the buffer, the field guide in glass; left alone, it tours · <i>heights and flow live on the GPU; five floats come back so the camera knows where the ground is</i></div>
+        <div class="gp-cap" data-testid="dv-cap-storm" hidden><b>Supercell · a storm that runs itself</b> · from the Rock ’em Sock ’em stage "Vortex", rebuilt in three dimensions: a storm director swings lull → build → peak → crash; up to three tornadoes roam the plain, each a striped, spinning funnel marched as a density field you can see between the bands, with a wall cloud and a dust skirt; forked lightning lights the cloud it lands in and kicks the camera; rain runs from drizzle to torrential; eight thousand chips and a hundred and sixty cows, trees, barns, hay bales, fences and fish are lofted by the funnels' wind field in a compute kernel · the one app on this device written in vgpu, on the sheet's own device; the frame cost it prints names its timer · <i>it runs itself</i></div>
+        <div class="gp-cap" data-testid="dv-cap-duo" hidden><b>iPhone Duo · the device, inside itself</b> · sphere-traced signed-distance hardware: two rounded slabs on a hinge axis on the screen side, a spine that is flush open and the flat of the D closed, a polished band, a camera bar, emissive procedural screens that sleep and wake with the fold; a white softbox, a contact shadow, the sweep's reflection; every dimension labelled verified, derived or constructed · <i>the hinge runs itself; drag to orbit; the slider takes it</i></div>
+      </div>
+    </div>
+    <div class="gp-strip" data-testid="loop-strip"><span>open app</span><b data-testid="loop-count">—</b><span>state uploaded per frame, between retargets</span><b class="gp-zero" data-testid="loop-bytes">—</b></div>
+  </section>
+
+  <div class="notes" data-testid="notes">
+    <h3>What this sheet is holding itself to</h3>
+    <ol>
+      <li><b>Name the pass, not the frame.</b> Every GPU time printed here is one named pass between two timestamps.</li>
+      <li><b>The zero is queried.</b> Bytes per frame come from a counter on the device queue; the pointer and the uniforms are what crosses, and they are printed rather than rounded away.</li>
+      <li><b>A readback is a stall with a number.</b> Where a card asks the GPU a question — a fragment count, five heights — it prints what the asking cost.</li>
+      <li><b>Raw WGSL, no library.</b> The storage buffers, the workgroups, the atomics and the sort are the argument — and so is the interface: the text atlas, the signed-distance panels and the frosted glass in every app are a hundred lines of WGSL, not a framework.</li>
+      <li><b>Every product is invented.</b> Atlas, Nectar, the eight issuers in the wallet and their scheme, Roost, Tessera, Halcyon and Supercell do not exist. The iPhone Duo is Apple's; the model's dimensions are labelled verified, derived or constructed on the card. The physics, the rule after Ballerini et al. 2008 and every measurement are real.</li>
+    </ol>
+  </div>
+</div>

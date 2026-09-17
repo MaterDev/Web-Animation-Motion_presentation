@@ -1,0 +1,28 @@
+<div class="sv" id="svPaper" data-testid="zoom-map">
+  <div class="sv-sheet" id="svSheet" data-testid="frame-stage">
+    <svg viewBox="0 0 1600 900" aria-label="A survey sheet zooming from the world to Dartmouth College, 1956">
+      <defs>
+        <!-- Land tint for the survey sheet. A stipple rather than a flat
+             fill because a printed sheet is a halftone — and it is counter
+             -scaled every frame so the dots stay a constant size on the
+             page instead of growing into circles at depth. -->
+        <pattern id="sv-stipple" width="7" height="7" patternUnits="userSpaceOnUse">
+          <circle cx="1.6" cy="1.6" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+          <circle cx="5.1" cy="5.1" r="0.62" fill="oklch(0.52 0.06 58 / 0.20)"/>
+        </pattern>
+      </defs>
+      <g id="svCam">
+        <g id="svShelf"></g>
+        <g id="svLand"></g>
+        <g id="svTex"></g>
+        <g id="svBord"></g>
+        <g id="svGrat"></g>
+        <g id="svMarks"></g>
+      </g>
+    </svg>
+    <div class="sv-labels" id="svLabels"></div>
+    <div class="sv-plate" id="svPlate" data-testid="frame-stage-plate"></div>
+    <div class="sv-scalebar" id="svScale" data-testid="frame-stage-scalebar"></div>
+    <div class="sv-record" id="svRecord" data-testid="frame-stage-record" hidden></div>
+  </div>
+</div>

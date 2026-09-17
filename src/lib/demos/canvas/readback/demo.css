@@ -1,0 +1,57 @@
+/* The page context a world sat in on the sheet: `:root { --tint }` becomes
+   :host, and the sheet's `body` rule from tokens.css (which does not reach
+   into a shadow root) is restated on the demo's own root. */
+:host { --tint: var(--tint-canvas); }
+.demo-root {
+  background: var(--hz-000); color: var(--hz-600);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── sheet furniture the demo renders (canvas.html) ─────────────────── */
+.cv-dagger { color: var(--hz-400); }
+.cv-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.cv-instr b { color: var(--hz-500); font-weight: 500; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   §4 · READ — a radiology soft-copy workstation
+
+   This world is deliberately ACHROMATIC, and it is the only world on the
+   sheet whose lack of colour is a standard rather than a shortage. DICOM
+   Part 14's Grayscale Standard Display Function is a real worldwide
+   calibration for medical displays — constant perceived contrast at every
+   grey level — and a reading room is colourless on purpose.
+
+   One colour is allowed in: the overlay annotation, which is how a
+   workstation has always separated what the machine measured from what a
+   person wrote on it. The heat ramp is the second LUT, and switching
+   between them is the demonstration — same pixels, read back and mapped
+   two ways.
+   ───────────────────────────────────────────────────────────────────────── */
+.r4 {
+  --r4-void:  oklch(0.080 0 0);           /* the surround                    */
+  --r4-frame: oklch(0.170 0 0);
+  --r4-rule:  oklch(0.320 0 0);
+  --r4-ink:   oklch(0.870 0 0);
+  --r4-anno:  oklch(0.880 0.155 108);     /* overlay annotation — one colour */
+  --r4-roi:   oklch(0.640 0.190  27);     /* the region of interest          */
+  --r4-gutter: 20px;
+}
+.r4-world { background: var(--r4-void); }
+.r4-bar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 14px var(--r4-gutter) 4px; }
+.r4-btn {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--r4-ink); background: transparent;
+  border: 1px solid var(--r4-rule); border-radius: 0; padding: 6px 11px; cursor: pointer;
+}
+.r4-btn.r4-on { color: var(--r4-void); background: var(--r4-anno); border-color: var(--r4-anno); }
+.r4-stage { position: relative; line-height: 0; padding: 8px var(--r4-gutter); }
+.r4-stage canvas { display: block; width: 100%; cursor: crosshair; }
+.r4-cap {
+  font-family: var(--mono); font-size: 10px; line-height: 1.65; color: var(--r4-ink);
+  max-width: 74ch; padding: 4px var(--r4-gutter) 8px; opacity: 0.6;
+}
+.r4-plate { display: flex; gap: calc(var(--u)*4); flex-wrap: wrap; padding: 6px var(--r4-gutter) 18px; }
+.r4-kv { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--r4-rule); }
+.r4-kv b { display: block; font-family: var(--mono); font-size: 14px; color: var(--r4-ink); font-weight: 500; font-variant-numeric: tabular-nums; text-transform: none; margin-top: 3px; }
+.r4-kv b.r4-anno { color: var(--r4-anno); }

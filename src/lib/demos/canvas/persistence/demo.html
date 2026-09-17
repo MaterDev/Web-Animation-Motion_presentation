@@ -1,0 +1,57 @@
+    <div class="v1" data-testid="v1-world">
+      <div class="v1-stage" data-testid="v1-explain-stage">
+        <canvas data-testid="v1-explain"></canvas>
+      </div>
+      <p class="v1-cap" data-testid="v1-explain-cap">How one mark ages. Each
+        generation is the one before it, dimmed by the decay and scaled 1.006 about
+        the field's centre — so a mark drifts outward as it fades, and the ladder
+        below it is what the palette does to that fade: sixteen steps, no dither,
+        which is why the trail bands instead of dissolving.</p>
+      <div class="v1-stage" data-testid="v1-stage">
+        <canvas data-testid="v1-canvas"></canvas>
+      </div>
+
+      <div class="v1-bar" data-testid="v1-bar">
+        <button class="v1-btn v1-on" data-mode="analyser" data-testid="v1-mode-analyser">analyser</button>
+        <button class="v1-btn" data-mode="scope" data-testid="v1-mode-scope">oscilloscope</button>
+        <button class="v1-btn" data-testid="v1-clear">clear the field</button>
+        <button class="v1-btn" data-testid="v1-quantise">quantise: on</button>
+      </div>
+
+      <div class="v1-readouts" data-testid="v1-readouts">
+        <div class="v1-kv">frame<b class="v1-dot" data-testid="v1-frame">0</b></div>
+        <div class="v1-kv">palette<b data-testid="v1-palette">—</b></div>
+        <div class="v1-kv">decay per frame<b data-testid="v1-decay">—</b></div>
+        <div class="v1-kv">quantise cost<b data-testid="v1-qcost">—</b></div>
+      </div>
+
+      <p class="cv-instr" data-testid="v1-instr">
+        <b>Two operations on a surface that keeps what it is given, and neither
+        has an equivalent outside canvas.</b> First the field is <i>replaced</i> by
+        a faded copy of itself scaled 1.006 about its centre — the canvas reading
+        its own output, so the trail drifts outward as it dims. Replaced, not drawn
+        over: drawing the previous frame back on top adds a second copy, the field
+        gains brightness every frame and saturates to white inside a second, and it
+        looks like a fault in the arithmetic rather than in the compositing mode.
+        Then the new marks. The analyser's bars <i>replace</i>, because a bar is an
+        object and its trail comes from the pass above; the oscilloscope's line is
+        composited with <code>lighter</code> at partial alpha, so where the trace
+        crosses its own history the two brighten instead of one hiding the other.
+        Finally the whole field is frozen to a <b data-testid="v1-instr-pal">24</b>-entry
+        palette with no dither, which is why the trail steps rather than fading
+        smoothly. <b>The banding is the material.</b> Press <i>clear the field</i> to
+        see what the surface was holding — and note that it comes back, because
+        nothing here is stored.
+      </p>
+      <p class="cv-instr" data-testid="v1-idem">
+        <b>This is the one demo on the sheet that is path-dependent by
+        construction</b>, which is a problem the sheet has to answer rather than
+        hide: <code>render(t)</code> is supposed to give the same picture at the
+        same <code>t</code> from any prior frame, and a framebuffer that accumulates
+        cannot. So it does both. A small step forward accumulates, which is the real
+        thing; a jump — a scrub, the poster frame, the QC pass — rebuilds the field
+        from empty by running a fixed <b data-testid="v1-steps">—</b> steps up to
+        <code>t</code>. Reconstruction is deterministic, so idempotency holds where
+        it is checked, and the accumulation stays honest where it is watched.
+      </p>
+    </div>

@@ -1,0 +1,26 @@
+/* Colours follow the composite sheet: a surface reads as the technique
+   that carries it. */
+:host {
+  --cr-dom: color-mix(in oklch, var(--tint-css) 78%, white);
+  --cr-svg: color-mix(in oklch, var(--tint-svg) 78%, white);
+  --cr-vid: color-mix(in oklch, var(--tint-video) 78%, white);
+  --cr-gl: color-mix(in oklch, var(--tint-webgl) 78%, white);
+  --cr-gpu: color-mix(in oklch, var(--tint-webgpu) 78%, white);
+  --cr-alt: color-mix(in oklch, var(--tint-composite) 78%, white);
+}
+.demo-root { position: absolute; inset: 0; display: grid; place-items: center; }
+:host { min-height: 432px; }
+svg { width: 100%; height: 100%; display: block; }
+.cr-page { fill: color-mix(in oklch, var(--hz-200) 60%, transparent); stroke: var(--hz-400); }
+.cr-part { fill: color-mix(in oklch, var(--c) 16%, transparent); stroke: var(--c); stroke-width: 1.4; }
+.cr-solid { fill: var(--c); opacity: 0.85; }
+.cr-lead { stroke: var(--c); stroke-width: 1; fill: none; opacity: 0.55; stroke-dasharray: 3 3; }
+.cr-tag rect { fill: color-mix(in oklch, var(--c) 20%, var(--hz-050)); stroke: var(--c); }
+.cr-tag text { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; fill: var(--c); text-transform: uppercase; }
+.cr-part-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; fill: var(--hz-500); }
+.cr-dot { fill: var(--c); }
+/* one pair lit at a time: part, leader and tag brighten together */
+.cr-grp { animation: cr-step 12s infinite; animation-delay: calc(var(--i) * 2s); opacity: 0.55; }
+@keyframes cr-step { 0%, 3% { opacity: 0.55; } 6%, 14% { opacity: 1; } 18%, 100% { opacity: 0.55; } }
+.cr-grp .cr-lead { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .cr-grp { animation: none; opacity: 1; } }

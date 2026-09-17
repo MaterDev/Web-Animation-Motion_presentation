@@ -1,0 +1,88 @@
+/* Copied from design/techniques/webgl.html <style>: only the rules this demo uses.
+   `:root { --tint }` became `:host`. Class names kept; the shadow root isolates them. */
+:host { --tint: var(--tint-webgl); }
+
+.wg-instr { font-family: var(--mono); font-size: 9.5px; color: var(--hz-400); line-height: 1.6; margin-top: 10px; max-width: 76ch; }
+.wg-instr b { color: var(--hz-500); font-weight: 500; }
+.wg-instr code { color: var(--hz-500); }
+.wg-dagger { color: var(--hz-400); }
+/* The one Doto element per world, and it sits HERE — in the harness, at
+   head size — never inside the world. The canvas sheet learned that the
+   deck's headline face wearing a world's colour turns a self-contained
+   screen back into presentation chrome. */
+.wg-band { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin: calc(var(--u)*2) 0 calc(var(--u)*2); }
+.wg-dot { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 44px; line-height: 1; color: var(--tint); font-variant-numeric: tabular-nums; min-width: 3.2ch; }
+.wg-band-l { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hz-400); max-width: 40ch; line-height: 1.5; }
+.wg-band-l b { color: var(--hz-500); font-weight: 500; }
+
+.wg-scroll { overflow-x: auto; }
+.wg-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; margin-top: calc(var(--u)*2); min-width: 460px; }
+.wg-table th, .wg-table td { text-align: left; padding: 6px 10px 6px 0; border-bottom: var(--hair) solid var(--hz-200); white-space: nowrap; }
+.wg-table th { color: var(--hz-400); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; font-size: 9px; }
+.wg-table td { color: var(--hz-600); font-variant-numeric: tabular-nums; }
+.wg-table td.wg-num { color: var(--tint); }
+.wg-guard { font-family: var(--mono); font-size: 10px; padding: 7px 10px; border-radius: 4px; margin-top: 10px; display: inline-block; }
+.wg-guard.wg-ok { color: var(--ok); background: color-mix(in oklch, var(--ok) 12%, transparent); }
+.wg-guard.wg-bad { color: var(--signal); background: color-mix(in oklch, var(--signal) 14%, transparent); }
+.wg-guard.wg-wait { color: var(--hz-500); background: var(--hz-100); }
+.wg-btn {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  border-radius: 4px; padding: 7px 12px; cursor: pointer;
+}
+.wg-btn:hover { border-color: var(--tint); color: var(--tint); }
+.wg-btn[disabled] { opacity: 0.5; cursor: default; }
+.wg-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: calc(var(--u)*3); }
+
+.rl { color: var(--hz-600); }
+.rl-p { display: none; background: var(--rlp-bg); color: var(--rlp-ink); padding: 18px; }
+.rl-p.rl-open { display: block; }
+.rlp-mast { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: var(--hair) solid var(--rlp-rule); margin-bottom: 18px; }
+.rlp-brand { font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--rlp-ink); }
+.rlp-brand span { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--rlp-dim); font-size: 12.5px; margin-left: 10px; }
+.rlp-nav { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--rlp-dim); }
+.rlp-nav b { color: var(--rlp-ink); font-weight: 500; }
+.rlp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 820px) { .rlp-grid { grid-template-columns: minmax(0, 1fr) 270px; } }
+.rlp-grid.rlp-wide { grid-template-columns: minmax(0, 1fr); }
+.rlp-slot { min-width: 0; position: relative; }
+.rl-stage { position: relative; aspect-ratio: 4 / 3; background: var(--rlp-well); overflow: hidden; touch-action: none; cursor: crosshair; }
+.rl-stage.rl-a169 { aspect-ratio: 16 / 9; }
+.rl-stage.rl-grab { cursor: grab; }
+.rl-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rl-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.rl-stage .rl-lead { fill: none; stroke: var(--rlp-acc); stroke-width: 1.25; }
+.rl-stage .rl-anchor { fill: none; stroke: var(--rlp-acc); stroke-width: 1.25; }
+.rl-stage .rl-lead-n { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; fill: var(--rlp-acc); }
+.rl-stage .rl-lamp-mark { fill: var(--rlp-lamp-mark); }
+.rl-status { position: absolute; left: 14px; bottom: 12px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rlp-dim); pointer-events: none; }
+.rl-status[hidden] { display: none !important; }
+.rl-hint { position: absolute; right: 14px; bottom: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rlp-dim); pointer-events: none; opacity: 0.8; }
+/* the hero's headline sits over its stage — DOM text, not pixels */
+.rlp-hero-copy { position: absolute; left: 6%; bottom: 12%; max-width: 46%; pointer-events: none; }
+.rlp-hero-copy h3 { font-family: var(--sans); font-size: clamp(22px, 3.6vw, 44px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.02; color: var(--rlp-ink); margin: 0 0 10px; text-transform: none; }
+.rlp-hero-copy p { font-family: var(--sans); font-size: 13px; color: var(--rlp-dim); margin: 0 0 14px; line-height: 1.5; }
+.rlp-hero-copy .rlp-cta { pointer-events: auto; }
+.rlp-cta { font-family: var(--sans); font-size: 12.5px; font-weight: 600; color: var(--rlp-bg); background: var(--rlp-ink); border: 0; border-radius: 3px; padding: 10px 14px; cursor: pointer; }
+.rlp-cta.rl-on { background: var(--rlp-acc); color: var(--rlp-bg); }
+.rlp-foot { display: flex; gap: 6px 18px; flex-wrap: wrap; margin-top: 18px; padding-top: 12px; border-top: var(--hair) solid var(--rlp-rule); font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--rlp-dim); }
+.rlp-foot b { color: var(--rlp-ink); font-weight: 500; }
+
+.rl-p-hero {
+  --rlp-bg: oklch(0.110 0.010 260); --rlp-ink: oklch(0.950 0.006 90); --rlp-dim: oklch(0.680 0.010 90); --rlp-rule: oklch(0.300 0.010 260);
+  --rlp-acc: oklch(0.820 0.120 80); --rlp-well: oklch(0.090 0.010 260); --rlp-lamp-mark: oklch(0.95 0.03 85);
+}
+/* the harness's measurement block — OUTSIDE every world's product surface.
+   A museum panel does not print frame times; the sheet does, underneath. */
+.wg-bench { margin-top: calc(var(--u)*3); padding-top: calc(var(--u)*2); border-top: var(--hair) dashed var(--hz-200); }
+.wg-bench-k { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--hz-400); margin-bottom: 4px; }
+.wg-bench-k b { color: var(--tint); font-weight: 500; }
+.wg-kvs { display: flex; gap: 10px 28px; flex-wrap: wrap; margin-top: 12px; }
+.wg-kv { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-400); }
+.wg-kv b { display: block; font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--hz-600); text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 560px) {
+  .wg-dot { font-size: 34px; }
+  .rl-p { padding: 14px; }
+  .rlp-hero-copy { max-width: 70%; }
+}

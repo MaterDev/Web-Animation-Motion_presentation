@@ -1,0 +1,31 @@
+<div class="cp-deck cp-deck-brief"><div class="cp-asks">
+      <div class="cp-ask cp-ask-no" data-testid="composite-ask-purist">
+        <div class="cp-ask-k">Don't ask</div>
+        <div class="cp-ask-q">Which technique is this project?</div>
+        <p>One surface is chosen first and then made to carry everything, including the work it is bad at.</p>
+      </div>
+      <div class="cp-ask cp-ask-yes" data-testid="composite-ask-composite">
+        <div class="cp-ask-k">Ask</div>
+        <div class="cp-ask-q">Which technique carries which part?</div>
+        <p>Each part goes to the cheapest surface that can carry it, and the parts are coordinated so the whole feels seamless.</p>
+      </div>
+    </div>
+
+    <div class="cp-fig cp-brief" data-testid="composite-brief-table">
+      <div class="cp-brief-head"><span><b>Brief</b> · a product launch page</span><span>illustrative · parts → surfaces</span></div>
+      <div class="cp-scroll">
+        <table class="cp-table">
+          <thead><tr><th>Part</th><th>Carried by</th><th>Because</th></tr></thead>
+          <tbody>
+            <tr data-testid="composite-brief-row-copy"><td>Navigation, headline, copy, price</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">DOM</span></td><td>Text that has to be read, selected, translated and found.</td></tr>
+            <tr data-testid="composite-brief-row-controls"><td>Buy button, form, focus</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">DOM</span></td><td>Interaction and accessibility live in real elements. A canvas has nothing to focus.</td></tr>
+            <tr data-testid="composite-brief-row-states"><td>Hover and state changes on those</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">CSS · transform, opacity</span></td><td>The browser runs it, and these two properties skip layout and paint.<sup>[7]</sup></td></tr>
+            <tr data-testid="composite-brief-row-icons"><td>Line icons that draw themselves on</td><td><span class="cp-chip" style="--cp-c: var(--cp-dom)">SVG</span></td><td>Vector, styleable, and still part of the page.</td></tr>
+            <tr data-testid="composite-brief-row-ambient"><td>Ambient background loop</td><td><span class="cp-chip" style="--cp-c: var(--cp-vid)">Video</span></td><td>Pre-rendered and fixed. It stops being an option the moment it has to respond.</td></tr>
+            <tr data-testid="composite-brief-row-product"><td>The product, lit, turning under the cursor</td><td><span class="cp-chip" style="--cp-c: var(--cp-gpu)">WebGL canvas</span></td><td>Pixels that respond. Runs basically everywhere, with the larger ecosystem.</td></tr>
+            <tr data-testid="composite-brief-row-particles"><td>A field where every particle reads its neighbours</td><td><span class="cp-chip" style="--cp-c: var(--cp-gpu)">WebGPU canvas</span></td><td>Shared state stays in GPU memory instead of uploading from the CPU every frame.</td></tr>
+            <tr data-testid="composite-brief-row-alternative"><td>Anyone who can't use the GPU layer</td><td><span class="cp-chip cp-chip-alt" style="--cp-c: var(--cp-src)">Still + same DOM</span></td><td>The alternative experience. The accessible layer never depended on the canvas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></div>

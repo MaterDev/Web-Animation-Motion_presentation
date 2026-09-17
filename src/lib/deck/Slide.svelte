@@ -1,4 +1,12 @@
 <script module>
+  /* The employer's name gets an inline-code treatment wherever a slide
+     uses it (Key). Body text is escaped first, so {@html} only ever
+     emits the one <code> this adds. */
+  /** @param {string} t @returns {string} */
+  export const brand = (t) =>
+    t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c)
+      .replace(/Folklore Digital|folklore\.digital/g, (m) => `<code class="dk-brand">${m}</code>`);
+
   /* SECTION MARKS — the pixel symbols from design/graphic-language,
      ported as static geometry. Same predicates, same 12 × 12 grid, no
      canvas and no motion.
@@ -165,6 +173,10 @@
      Notation — kicker, code, position, citations, status — lives in the
      margin bands, small and dim. */
   import { TINTS, SLIDES } from './slides.js';
+  import DemoHost from './DemoHost.svelte';
+  /* the site's QR code, generated once (qrcode 1.5.4, error level M) so the
+     deck needs no QR library at runtime */
+  import qrSvg from './assets/qr-wam-2026.svg?raw';
 
   /** @typedef {import('./slides.js').Slide} Slide */
   /** @type {{ slide: Slide, live?: boolean, ex?: number, guides?: boolean }} */
@@ -190,6 +202,8 @@
   const chipCode = $derived(slide.code.split(' ')[0]);
   const L = $derived(slide.layout);
   const alt = $derived(!!slide.alt);
+  /** which opener composition a `screen` slide uses (see slides.js `shape`) */
+  const shape = $derived(slide.shape ?? '');
   /* slides that put content in glass: the LCD's sheen band is toned down
      on these, because the field sits in a stacking context below the
      sheen and a pane cannot rise above it to shield its own text */
@@ -251,6 +265,22 @@
   </div>
 {/snippet}
 
+<!-- the seven-chip ladder: exactly one on for a technique -->
+{#snippet ladder()}
+  <div class="dk-ladder" aria-hidden="true" data-testid="slide-{slide.id}-ladder">
+    {#each SPECTRUM as t (t)}
+      <span class="lcd-chip dk-rung" class:dk-off={t !== onTint}>
+        <span class="lcd dk-chip-lcd">
+          <span class="wash" style="background:var(--tint-{t})"></span>
+          <svg class="dk-mark" width="24" height="24" viewBox="0 0 12 12" shape-rendering="crispEdges">
+            {#each cellsFor(t) as [x, y] (x + ':' + y)}<rect {x} {y} width="1" height="1" />{/each}
+          </svg>
+        </span>
+      </span>
+    {/each}
+  </div>
+{/snippet}
+
 <!-- registration brackets from the system (.led-reg), on a framed subject -->
 {#snippet reg()}<span class="led-reg" aria-hidden="true"><i></i><i></i><i></i><i></i></span>{/snippet}
 
@@ -281,39 +311,147 @@
                 {#each run as s, n (s.id)}<span class="led" class:off={n !== pos} style="--c:var(--lcd-ink)"></span>{/each}
               </span>
             {/if}
-            <span class="dk-code">{slide.code}</span>
+            {#if slide.code.toLowerCase() !== (slide.kicker ?? '').toLowerCase()}<span class="dk-code">{slide.code}</span>{/if}
           </span>
         </div>
 
         <div class="led-field dk-field">
 
-          {#if L === 'screen'}
+          {#if L === 'screen' && shape === 'stack'}
+            <!-- css: title, dek indented under it, rule and ladder at the foot -->
             <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
-            {#if slide.body}
-              <p class="dk-body" style={alt && technique ? at(7, 6, 3, 2) : at(technique ? 2 : 1, 6, 3, 2)} data-testid="slide-{slide.id}-body">{slide.body}</p>
+            {#if slide.body}<p class="dk-body" style={at(2, 6, 3, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            <div class="lcd-rule dk-rule-top" style={at(1, 12, 6, 1)}></div>
+            <div class="dk-at dk-end" style={at(8, 5, 6, 1)}>{@render ladder()}</div>
+
+          {:else if L === 'screen' && shape === 'right'}
+            <!-- svg: ladder foot-left, dek set low on the right -->
+            <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={at(7, 6, 4, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            <div class="dk-at dk-end" style={at(1, 5, 6, 1)}>{@render ladder()}</div>
+
+          {:else if L === 'screen' && shape === 'led'}
+            <!-- gif: the loop that cannot be switched off — the dek on an
+                 emissive LED panel with its lamp permanently lit -->
+            <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            <div class="dk-led dk-center" style="{at(2, 6, 3, 3)};--ct:{tint}">
+              <span class="led dk-panel-lamp" style="--c:var(--ok)" aria-hidden="true"></span>
+              {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            </div>
+            <div class="dk-at dk-end" style={at(8, 5, 6, 1)}>{@render ladder()}</div>
+
+          {:else if L === 'screen' && shape === 'frame'}
+            <!-- video: the dek in a bracketed frame, like a player's picture area -->
+            <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            <div class="dk-rg dk-center" style="{at(6, 7, 3, 3)};--ct:{tint}">
+              <span class="dk-rg-cast" aria-hidden="true"></span>
+              {@render reg()}
+              {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            </div>
+            <div class="dk-at dk-end" style={at(1, 5, 6, 1)}>{@render ladder()}</div>
+
+          {:else if L === 'screen' && shape === 'low'}
+            <!-- canvas: ladder first along the top, title below it, dek at the foot -->
+            <div class="dk-at" style={at(8, 5, 1, 1)}>{@render ladder()}</div>
+            <div class="dk-at" style={at(1, 11, 2, 2)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={at(2, 7, 5, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+
+          {:else if L === 'screen' && shape === 'panel'}
+            <!-- graphics card: an LED panel across the lower field, the dek
+                 and the ladder both inside it -->
+            <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            <div class="dk-led dk-gpu" style="{at(1, 12, 4, 3)};--ct:{tint}">
+              {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+              <div class="dk-gpu-ladder">{@render ladder()}</div>
+            </div>
+
+          {:else if L === 'screen' && shape === 'points'}
+            <!-- friction: the four obstacles, one per row, in a warm region.
+                 The body is split at sentence ends only; the words are its own. -->
+            <div class="dk-at" style={at(1, 7, 1, 2)}>{@render heading()}</div>
+            <div class="dk-rg dk-list" style="{at(8, 5, 1, 6)};--ct:{tint}" data-testid="slide-{slide.id}-body">
+              <span class="dk-rg-cast" aria-hidden="true"></span>
+              <span class="dk-readout dk-points">
+                {#each (slide.body ?? '').split(/(?<=\.)\s+/) as sentence, n (sentence)}
+                  <span class="dk-row"><span class="dk-idx">§{two(n + 1)}</span><span class="dk-rg-note">{sentence}</span></span>
+                {/each}
+              </span>
+            </div>
+            <div class="lcd-rule dk-rule-top" style={at(1, 6, 6, 1)}></div>
+            <span class="dk-spectrum dk-end dk-start" style={at(1, 3, 6, 1)} aria-hidden="true">
+              {#each SPECTRUM as t (t)}<span class="dk-pip" style="background:var(--tint-{t})"></span>{/each}
+            </span>
+
+          {:else if L === 'screen' && shape === 'mix'}
+            <!-- mix and match: the seven chips, all on, gathered into one
+                 region beside the statement — the combination is the figure -->
+            <div class="dk-at" style={at(1, 8, 1, 1)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={at(1, 6, 3, 3)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            <div class="dk-rg dk-mix" style={at(8, 5, 2, 4)} aria-hidden="true" data-testid="slide-{slide.id}-ladder">
+              {#each SPECTRUM as t (t)}
+                <span class="lcd-chip dk-chip dk-mix-chip">
+                  <span class="lcd dk-chip-lcd">
+                    <span class="wash" style="background:var(--tint-{t})"></span>
+                    <svg class="dk-mark" width="24" height="24" viewBox="0 0 12 12" shape-rendering="crispEdges">
+                      {#each cellsFor(t) as [x, y] (x + ':' + y)}<rect {x} {y} width="1" height="1" />{/each}
+                    </svg>
+                  </span>
+                </span>
+              {/each}
+            </div>
+            <div class="lcd-rule dk-rule-top" style={at(1, 12, 6, 1)}></div>
+            <span class="dk-spectrum dk-end" style={at(10, 3, 6, 1)} aria-hidden="true">
+              {#each SPECTRUM as t (t)}<span class="dk-pip" style="background:var(--tint-{t})"></span>{/each}
+            </span>
+
+          {:else if L === 'screen' && shape === 'card'}
+            <!-- thank you: where to go next, as a region you could point at -->
+            <div class="dk-at" style={at(1, 8, 1, 1)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={slide.qr ? at(1, 6, 3, 2) : at(1, 4, 3, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            {#if slide.qr && slide.strip}
+              <!-- with a QR code the card would repeat the address, so the
+                   strip becomes one quiet line under the body -->
+              <p class="dk-qr-meta" style={at(1, 6, 5, 1)} data-testid="slide-{slide.id}-strip">
+                {#each slide.strip as [k, v] (k)}<span><span class="k">{k}</span> {@html brand(v)}</span>{/each}
+              </p>
             {/if}
+            {#if slide.qr}
+              <!-- scan to open the site: dark modules on a light plate for a reliable read from the room -->
+              <div class="dk-qr" style={at(8, 5, 2, 4)} data-testid="slide-{slide.id}-qr">
+                <span class="dk-qr-code" role="img" aria-label="QR code for {slide.qr}">{@html qrSvg.replace(/<\?xml[^>]*>|<!DOCTYPE[^>]*>/g, '')}</span>
+                <span class="dk-qr-url" data-testid="slide-{slide.id}-qr-url">{slide.qr.replace(/^https?:\/\//, '')}</span>
+              </div>
+            {/if}
+            {#if slide.strip && !slide.qr}
+              <div class="dk-rg dk-card" style="{at(7, 6, 2, 4)};--ct:{acc(2)}" data-testid="slide-{slide.id}-strip">
+                <span class="dk-rg-cast" aria-hidden="true"></span>
+                <span class="dk-rg-top"><span class="dk-tag">{slide.code}</span><span class="led" style="--c:var(--ok)" aria-hidden="true"></span></span>
+                <span class="lcd-strip dk-strip dk-card-strip">
+                  {#each slide.strip as [k, v] (k)}
+                    <span class="lcd-kv"><span class="k">{k}</span><span class="v">{@html brand(v)}</span></span>
+                  {/each}
+                </span>
+              </div>
+            {/if}
+            <div class="lcd-rule dk-rule-top" style={at(1, 12, 6, 1)}></div>
+            <span class="dk-spectrum dk-end" style={at(10, 3, 6, 1)} aria-hidden="true">
+              {#each SPECTRUM as t (t)}<span class="dk-pip" style="background:var(--tint-{t})"></span>{/each}
+            </span>
+
+          {:else if L === 'screen'}
+            <!-- title (and any unshaped opener) -->
+            <div class="dk-at" style={at(1, 11, 1, 2)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={at(1, 6, 3, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
             <div class="lcd-rule dk-rule-top" style={at(1, 12, 6, 1)}></div>
             {#if slide.strip && slide.showStrip}
               <div class="lcd-strip dk-strip dk-end" style={at(1, 7, 6, 1)} data-testid="slide-{slide.id}-strip">
                 {#each slide.strip as [k, v] (k)}
-                  <span class="lcd-kv"><span class="k">{k}</span><span class="v">{v}</span></span>
+                  <span class="lcd-kv"><span class="k">{k}</span><span class="v">{@html brand(v)}</span></span>
                 {/each}
               </div>
             {/if}
-            {#if technique || (prism && !slide.showStrip)}
-              <!-- techniques: one chip on. mix and match: all seven on. -->
-              <div class="dk-ladder dk-end" style={at(8, 5, 6, 1)} aria-hidden="true" data-testid="slide-{slide.id}-ladder">
-                {#each SPECTRUM as t (t)}
-                  <span class="lcd-chip dk-rung" class:dk-off={!prism && t !== onTint}>
-                    <span class="lcd dk-chip-lcd">
-                      <span class="wash" style="background:var(--tint-{t})"></span>
-                      <svg class="dk-mark" width="24" height="24" viewBox="0 0 12 12" shape-rendering="crispEdges">
-                        {#each cellsFor(t) as [x, y] (x + ':' + y)}<rect {x} {y} width="1" height="1" />{/each}
-                      </svg>
-                    </span>
-                  </span>
-                {/each}
-              </div>
+            {#if technique}
+              <div class="dk-at dk-end" style={at(8, 5, 6, 1)}>{@render ladder()}</div>
             {:else}
               <span class="dk-spectrum dk-end" style={at(10, 3, 6, 1)} aria-hidden="true">
                 {#each SPECTRUM as t (t)}<span class="dk-pip" style="background:var(--tint-{t})"></span>{/each}
@@ -325,7 +463,7 @@
                  field width, each segment labelled on the figure. Row 3 is
                  the empty module between statement and figure. -->
             <div class="dk-at" style={at(1, 7, 1, 1)}>{@render heading()}</div>
-            {#if slide.body}<p class="dk-body" style={at(1, 6, 2, 2)} data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+            {#if slide.body}<p class="dk-body" style={at(1, 6, 2, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
             {#if slide.graphic}
               {@const lit = Math.round((slide.graphic.lit / slide.graphic.of) * 100)}
               <div class="dk-led dk-share" style="{at(1, 12, 4, 3)};--ct:{tint};--lit:{lit}fr;--rest:{100 - lit}fr" data-testid="slide-{slide.id}-figure">
@@ -343,26 +481,31 @@
             {#if alt}
               <div class="dk-at" style={at(1, 5, 1, 3)}>{@render heading()}</div>
               <div class="dk-led dk-center" style="{at(7, 6, 1, 6)};--ct:{tint}">
-                {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+                {#if slide.body}<p class="dk-led-body" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
               </div>
             {:else}
               <div class="dk-rg dk-center" style="{at(1, 6, 1, 6)};--ct:{tint}">
                 <span class="dk-rg-cast" aria-hidden="true"></span>
-                {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+                {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
               </div>
               <div class="dk-at dk-end" style={at(8, 5, 4, 3)}>{@render heading()}</div>
             {/if}
 
           {:else if L === 'low'}
             {#if alt}
-              <div class="dk-at" style={at(4, 9, 1, 1)}>{@render heading()}</div>
-              {#if slide.body}<p class="dk-body" style={at(4, 7, 2, 2)} data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
-              <div class="dk-at dk-end" style={at(1, 12, 6, 1)}>{@render annot()}</div>
+              <!-- already shipped: annotation rule on top, the claim, then the
+                   proof in a region edged with the whole spectrum -->
+              <div class="dk-at" style={at(1, 12, 1, 1)}>{@render annot()}</div>
+              <div class="dk-at dk-end" style={at(1, 9, 2, 1)}>{@render heading()}</div>
+              <div class="dk-rg dk-center dk-prismedge" style="{at(1, 8, 4, 3)};--ct:{tint}">
+                <span class="dk-rg-cast" aria-hidden="true"></span>
+                {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+              </div>
             {:else if slide.items}
               <!-- the kit of parts, named: statement left, the parts as a §
                    readout right, motion (the last, and the point) lit -->
               <div class="dk-at" style={at(1, 6, 1, 1)}>{@render heading()}</div>
-              {#if slide.body}<p class="dk-body" style={at(1, 5, 2, 4)} data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+              {#if slide.body}<p class="dk-body" style={at(1, 5, 2, 4)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
               <div class="dk-rg dk-list" style="{at(7, 6, 1, 6)};--ct:{tint}" data-testid="slide-{slide.id}-items">
                 <span class="dk-rg-cast" aria-hidden="true"></span>
                 <span class="dk-rg-top">
@@ -384,7 +527,7 @@
             {:else}
               <div class="dk-at" style={at(1, 12, 1, 1)}>{@render annot()}</div>
               <div class="dk-at dk-end" style={at(1, 9, 4, 1)}>{@render heading()}</div>
-              {#if slide.body}<p class="dk-body" style={at(1, 7, 5, 2)} data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+              {#if slide.body}<p class="dk-body" style={at(1, 7, 5, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
             {/if}
 
           {:else if L === 'framed'}
@@ -398,8 +541,28 @@
                 {@render reg()}
               {/if}
               {@render heading()}
-              {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+              {#if slide.body}<p class="dk-rg-note" data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
             </div>
+
+          {:else if L === 'index' && prism}
+            <!-- credits: people, not candidates. No count, no status lamp, no §
+                 numbers — each name in the warm sans at sub size, each with its
+                 own section-tint swatch, on a plain framed region of the
+                 neutral screen. -->
+            <div class="dk-at" style={at(1, 6, 1, 1)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={at(1, 5, 2, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            <div class="dk-rg dk-credits" style={at(7, 6, 1, 5)} data-testid="slide-{slide.id}-list">
+              {#each slide.items ?? [] as it, n (it)}
+                <span class="dk-credit" data-testid="slide-{slide.id}-item-{slug(it)}">
+                  <span class="dk-sw" style="background:{acc(n + 1)}" aria-hidden="true"></span>
+                  <span class="dk-credit-name">{it}</span>
+                </span>
+              {/each}
+            </div>
+            <div class="lcd-rule dk-rule-top" style={at(1, 12, 6, 1)}></div>
+            <span class="dk-spectrum dk-end" style={at(10, 3, 6, 1)} aria-hidden="true">
+              {#each SPECTRUM as t (t)}<span class="dk-pip" style="background:var(--tint-{t})"></span>{/each}
+            </span>
 
           {:else if L === 'index'}
             <div class="dk-at" style={alt ? at(9, 4, 1, 2) : at(1, 4, 1, 2)}>{@render heading()}</div>
@@ -500,9 +663,16 @@
               </div>
             {/each}
 
+          {:else if L === 'demo' && slide.demoId}
+            <!-- a collection demo on the right, the point on the left -->
+            <div class="dk-at" style={slide.wide ? at(1, 8, 1, 2) : at(1, 5, 1, 3)}>{@render heading()}</div>
+            {#if slide.body}<p class="dk-body" style={slide.wide ? at(9, 4, 1, 2) : at(1, 5, 4, 3)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
+            <div class="dk-led dk-demo-well" style={slide.wide ? at(1, 12, 3, 4) : at(6, 7, 1, 6)} data-testid="well-{slide.id}">
+              <DemoHost id={slide.demoId} {live} testId="demo-{slide.id}" />
+            </div>
           {:else}
             <div class="dk-at" style={at(1, 9, 1, 2)}>{@render heading()}</div>
-            {#if slide.body}<p class="dk-body" style={at(1, 7, 3, 2)} data-testid="slide-{slide.id}-body">{slide.body}</p>{/if}
+            {#if slide.body}<p class="dk-body" style={at(1, 7, 3, 2)} data-testid="slide-{slide.id}-body">{@html brand(slide.body)}</p>{/if}
           {/if}
 
           {#if demoUrl}
@@ -529,6 +699,17 @@
 </div>
 
 <style>
+  /* inline-code treatment for the employer's name: a small inset ink
+     well in the mono face, the way a code span sits in prose */
+  .led-slide :global(code.dk-brand) {
+    font-family: var(--mono) !important; font-variation-settings: normal; font-size: 0.9em; font-weight: 500; letter-spacing: 0; text-transform: none;
+    padding: 0.08em 0.4em; border-radius: 3px; white-space: nowrap;
+    /* explicit ink and ground: the system's global code style is light
+       text for dark pages and vanished on the LCD */
+    color: var(--lcd-ink); text-shadow: none; border: 0;
+    background: color-mix(in oklch, var(--lcd-ink) 9%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 30%, transparent);
+  }
   .probe { position: absolute; width: 0; height: 0; overflow: hidden; }
 
   /* ── the screen: fills the slide inside a one-cell bezel ─────── */
@@ -540,6 +721,33 @@
      dominant color treatment"). */
   .dk-cast { position: absolute; inset: 0; z-index: 1; pointer-events: none;
     background: color-mix(in oklch, var(--tint) 58%, transparent); }
+  /* ── opener shapes ───────────────────────────────────────────── */
+  .dk-panel-lamp { position: absolute; top: 18px; right: 18px; }
+  .dk-gpu { padding: 36px; flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 72px; }
+  .dk-gpu .dk-led-body { max-width: 360px; }
+  .dk-gpu-ladder { flex: none; }
+  .dk-start { justify-content: flex-start; }
+  .dk-points { border: 0; padding: 0; gap: 18px; justify-content: center; flex: 1; }
+  .dk-points .dk-row { align-items: baseline; }
+  .dk-mix { display: grid; grid-template-columns: repeat(4, 72px); grid-auto-rows: 72px;
+    align-content: center; justify-content: center; padding: 18px; }
+  .dk-mix-chip { align-self: center; justify-self: center; margin: 0; }
+  .dk-card { justify-content: space-between; padding: 36px; }
+  .dk-credits { justify-content: center; gap: 18px; padding: 36px; }
+  .dk-credit { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; }
+  .dk-credit .dk-sw { width: 12px; height: 12px; }
+  /* people get the warm face: the sans, at the sub size, on a whole-cell line */
+  .dk-credit-name { font-family: var(--sans); font-size: 24px; line-height: 30px; font-weight: 600;
+    letter-spacing: 0; color: var(--lcd-ink); }
+  .dk-card-strip { flex-direction: column; align-items: flex-start; gap: 12px; }
+  /* a region whose left edge carries the whole spectrum: the shared
+     system, stated as seven tints stacked in one 6px stripe */
+  .dk-prismedge { padding-left: 36px; }
+  .dk-prismedge::after { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: linear-gradient(180deg,
+      var(--tint-css) 0 14.3%, var(--tint-svg) 0 28.6%, var(--tint-video) 0 42.9%, var(--tint-canvas) 0 57.1%,
+      var(--tint-webgl) 0 71.4%, var(--tint-webgpu) 0 85.7%, var(--tint-composite) 0 100%); }
+
   /* opening and close: no section cast — the LCD gently pulled toward a
      neutral grey so it reads as the device's base, not as teal */
   .dk-cast.dk-neutral { background: oklch(0.85 0.008 120 / 0.42); }
@@ -565,20 +773,17 @@
   .dk-band-top { top: 12px; }
   .dk-band-bot { bottom: 12px; opacity: 0.55; }
   /* the section label is wayfinding: small, but contained so it is found
-     at a glance — a translucent pane in the section accent with the
-     system glass's tight top highlight and a light blur. Codes and
+     at a glance. INLAID, not raised (Key): a dark, flat, section-tinted
+     well set into the screen — inner shadow and an ink hairline, no top
+     highlight, no drop shadow, backlight-coloured letters. Codes and
      citations stay uncontained and dim. */
   .dk-kicker {
-    display: inline-block; padding: 0 12px; border-radius: 3px; font-weight: 700; letter-spacing: 0.16em;
-    color: var(--lcd-ink);
-    background: linear-gradient(170deg,
-      color-mix(in oklch, oklch(from var(--tint) calc(l + 0.12) c h) 55%, oklch(1 0 0 / 0.25)),
-      color-mix(in oklch, var(--tint) 30%, transparent));
-    backdrop-filter: blur(6px) saturate(160%);
+    display: inline-block; padding: 0 12px; border-radius: 2px; font-weight: 700; letter-spacing: 0.16em;
+    color: var(--lcd-ground-top);
+    background: color-mix(in oklch, oklch(from var(--tint) 0.3 calc(c * 1.6) h) 88%, transparent);
     box-shadow:
-      inset 0 1px 0 oklch(1 0 0 / 0.7),
-      inset 0 0 0 1px color-mix(in oklch, oklch(from var(--tint) 0.4 calc(c * 2) h) 45%, transparent),
-      0 1px 6px oklch(0.2 0.02 265 / 0.14);
+      inset 0 1px 3px oklch(0 0 0 / 0.45),
+      inset 0 0 0 1px oklch(0.18 0.04 130 / 0.55);
   }
   .dk-code { opacity: 0.45; }
   .dk-band-r { display: inline-flex; align-items: center; gap: 18px; }
@@ -676,6 +881,14 @@
   .dk-led-body { margin: 0; font-family: var(--sans); font-size: 18px; line-height: 30px; }
   .dk-led .dk-tag { color: var(--led-ground); background: oklch(from var(--ct) 0.84 calc(c * 2.2) h); }
   .dk-led .dk-meta { color: var(--led-dim); opacity: 1; }
+  .dk-demo-well { position: relative; overflow: hidden; }
+  .dk-qr-meta { margin: 0; align-self: center; display: flex; gap: 24px; font-size: 16px; color: var(--lcd-ink); }
+  .dk-qr-meta .k { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lcd-dim); margin-right: 6px; }
+  .dk-qr { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  .dk-qr-code { display: block; width: 216px; height: 216px; padding: 12px; box-sizing: border-box; border-radius: 4px;
+    background: #f4f7f1; box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--lcd-ink) 30%, transparent); }
+  .dk-qr-code :global(svg) { display: block; width: 100%; height: 100%; }
+  .dk-qr-url { font-family: var(--mono); font-size: 18px; font-weight: 600; letter-spacing: 0.02em; color: var(--lcd-ink); }
   .dk-led iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; display: block; }
 
   /* ── glass: the system's optical glass over the tinted screen ─── */

@@ -27,7 +27,7 @@
       code: 'REF',
       title: 'reference',
       meta: `${SHEETS.length}`,
-      note: 'Live sheets — materials, motion, graphic language, layouts, and one demo per rendering technique.',
+      note: 'Live sheets — materials, motion, graphic language and layouts. The technique demos have their own section.',
       status: 'running code',
     },
   ];
@@ -37,7 +37,7 @@
   <title>Design System — WAM-2026</title>
   <meta
     name="description"
-    content="The design system behind the Web Animation & Motion talk: methodology, treatments, and live reference sheets."
+    content="The design system behind the Web Animation & Motion talk: overview, methodology, reference sheets and treatments."
   />
 </svelte:head>
 

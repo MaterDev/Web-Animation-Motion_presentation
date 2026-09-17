@@ -1,0 +1,46 @@
+    <div class="t5" data-testid="t5-world">
+      <div class="t5-rack" data-testid="t5-rack">
+        <div>
+          <div class="t5-unit-name">unit 1 · <b>main thread</b></div>
+          <div class="t5-stage" data-testid="t5-main-stage">
+            <canvas data-testid="t5-main-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-main-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
+          </div>
+        </div>
+        <div>
+          <div class="t5-unit-name">unit 2 · <b data-testid="t5-host">worker</b></div>
+          <div class="t5-stage" data-testid="t5-worker-stage">
+            <canvas data-testid="t5-worker-canvas"></canvas>
+            <canvas class="t5-fallback" data-testid="t5-fallback-canvas"></canvas>
+            <span class="t5-sr" data-testid="t5-worker-title">Now playing: UNTITLED / A-SIDE — TRANSFER MASTER — 24 BIT 96 KHZ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="t5-bar" data-testid="t5-bar">
+        <button class="t5-btn" data-testid="t5-freerun">free-run both</button>
+        <button class="t5-btn" data-testid="t5-block">block the main thread 800 ms</button>
+      </div>
+
+      <div class="t5-readouts" data-testid="t5-readouts">
+        <div class="t5-kv">main-thread frames<b class="t5-dot" data-testid="t5-main-frames">0</b></div>
+        <div class="t5-kv">worker frames<b data-testid="t5-worker-frames">0</b></div>
+        <div class="t5-kv">worker parity<b data-testid="t5-parity">booting…</b></div>
+        <div class="t5-kv">chassis paint<b data-testid="t5-chrome-ms">—</b></div>
+      </div>
+
+      <p class="t5-note" data-testid="t5-note" hidden></p>
+      <p class="cv-instr" data-testid="t5-instr">
+        <b>Both players are drawn, and drawn the same way: a blitter.</b> Flat
+        colours, integer rectangles, a hand-set 5×6 bitmap font, and bevels that are
+        four colours and six lines with no interpolation — a bevel here is a
+        <i>notation</i> for depth, the way a contour line is, not a simulation of
+        light. The font is hand-set rather than rasterised because text rendering is
+        the least portable thing in a browser and the parity check below is
+        byte-exact; a bitmap font cannot disagree with itself, which is also why
+        skins shipped one. <b>The scrolling title is the mark that freezes</b> — a
+        stalled marquee is exactly what a hung player looked like, and everyone in
+        the room has seen one. Both strings are duplicated in the DOM, because a
+        raster is somewhere a screen reader cannot go.
+      </p>
+    </div>

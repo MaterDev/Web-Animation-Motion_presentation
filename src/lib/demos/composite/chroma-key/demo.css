@@ -1,0 +1,265 @@
+/* chroma-key · CSS copied from design/techniques/video/index.html lines 206–467. :root → :host. */
+:host { --tint: var(--tint-video); }
+
+/* ── chroma key ───────────────────────────────────────────────
+   The stage is a mock page, not a video player: the point is the
+   subject standing IN page furniture rather than inside a rectangle,
+   so every scene puts real DOM in front of and behind the canvas. */
+.ck { display: flex; flex-direction: column; gap: 14px; }
+
+/* Controls run along the top rather than down a side rail: the stages
+   are 9:16, so vertical space is the scarce axis and a side rail was
+   spending it on nothing. */
+.ck-bar { border: var(--hair) solid var(--hz-300); border-radius: 8px; background: var(--hz-050); box-shadow: var(--recess);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 11px 14px; }
+.ck-bar-head { flex: none; }
+.ck-bar-head b { display: block; font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 17px; color: var(--hz-900); text-transform: lowercase; line-height: 1.1; }
+.ck-bar-head span { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); margin-top: 2px; }
+.ck-scenes { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+.ck-scene { flex: none; display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 6px 10px; border-radius: 5px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300);
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard); }
+.ck-scene:hover { background: var(--hz-200); }
+.ck-scene:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.ck-scene b { font-size: 12px; font-weight: 500; color: var(--hz-700); text-transform: lowercase; }
+.ck-scene i { font-family: var(--mono); font-style: normal; font-size: 8.5px; letter-spacing: 0.04em; color: var(--hz-500); }
+.ck-scene.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); }
+.ck-scene.is-on b { color: var(--hz-900); }
+.ck-ctls { flex: none; display: flex; align-items: center; gap: 14px; padding-left: 16px; border-left: var(--hair) solid var(--hz-300); }
+@media (max-width: 880px) { .ck-ctls { padding-left: 0; border-left: 0; flex-wrap: wrap; } }
+.ck-ctl { display: flex; flex-direction: column; gap: 3px; width: 116px; }
+.ck-ctl label { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hz-500); }
+.ck-ctl label var { font-style: normal; color: var(--tint); font-variant-numeric: tabular-nums; }
+.ck-ctl input { width: 100%; accent-color: var(--tint); }
+.ck-swatch { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
+.ck-swatch i { width: 12px; height: 12px; border-radius: 3px; background: rgb(48,192,54); border: var(--hair) solid var(--hz-400); }
+
+/* the stage and its layers */
+.ck-pair { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.ck-cell { margin: 0; display: flex; flex-direction: column; align-items: center; }
+/* The subject was shot 9:16, and the argument is that it sits inside
+   real UI — so the stage is a handset, not a landscape viewer with a
+   portrait clip letterboxed into the middle of it. */
+.ck-stage { position: relative; height: min(70vh, 660px); aspect-ratio: 9/16; width: auto; max-width: 100%; border-radius: 22px; overflow: hidden;
+  background: var(--hz-050); border: var(--hair) solid var(--hz-300);
+  box-shadow: var(--recess), 0 26px 60px oklch(0 0 0 / 0.45); container-type: inline-size; }
+.ck-layer { position: absolute; inset: 0; pointer-events: none; }
+.ck-front { z-index: 5; }
+.ck-g { position: absolute; opacity: 0; transition: opacity var(--dur-base) var(--ease-standard); }
+/* Full-bleed in every scene, exactly like the source panel beside it.
+   Scaling the subject down per scene made the same animal read as two
+   different sizes across the pair, which undercuts the comparison —
+   the depth is supposed to come from what is layered in front of and
+   behind it, not from shrinking it out of the way. The bitmap is
+   360×640 against a 9:16 box, so filling is a ~0.07% stretch. */
+.ck-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3;
+  transition: filter var(--dur-base) var(--ease-standard); }
+.ck-src { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.ck-stage-raw { background: rgb(48,192,54); }
+
+
+/* scene 2 · float — page ground, a real cast shadow off the alpha */
+.ck-g-ground { inset: 0; background:
+  radial-gradient(120% 80% at 50% 108%, oklch(0.30 0.02 265) 0%, transparent 60%),
+  linear-gradient(180deg, var(--hz-100), var(--hz-050)); }
+.ck-g-chips { left: 20px; top: 18px; display: flex; gap: 6px; }
+.ck-g-chips span { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--hz-600); background: var(--hz-200); border: var(--hair) solid var(--hz-300); border-radius: 999px; padding: 4px 9px; }
+.ck-stage[data-scene='float'] .ck-g-ground,
+.ck-stage[data-scene='float'] .ck-g-chips { opacity: 1; }
+.ck-stage[data-scene='float'] .ck-canvas { filter: drop-shadow(0 26px 22px oklch(0 0 0 / 0.45)); }
+
+/* scene 3 · type — an editorial poster the subject stands inside.
+   Two type layers at different depths drift at different rates, which
+   is the cheapest convincing parallax there is; the back headline is
+   set in a heavier weight and lower contrast so it reads as further
+   away even before anything moves. */
+.ck-g-paper { inset: 0; background:
+  radial-gradient(90% 60% at 50% 0%, oklch(0.26 0.03 262), transparent 70%),
+  linear-gradient(180deg, oklch(0.17 0.014 265), oklch(0.11 0.01 265)); }
+.ck-g-hed { left: 0; right: 0; top: 7%; text-align: center; margin: 0; line-height: 0.80;
+  font-family: var(--sans); font-weight: 800; font-size: 30cqw; letter-spacing: -0.05em;
+  text-transform: uppercase; color: oklch(0.34 0.02 265);
+  animation: ckDriftBack 14s var(--ease-standard) infinite; }
+.ck-g-kicker { left: 0; right: 0; top: 5%; text-align: center;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.42em; text-transform: uppercase; color: var(--tint); }
+.ck-g-hedfront { left: 0; right: 0; bottom: 9%; text-align: center;
+  font-family: var(--sans); font-weight: 800; font-size: 30cqw; letter-spacing: -0.05em;
+  text-transform: uppercase; color: oklch(0.97 0.01 265);
+  animation: ckDriftFore 11s var(--ease-standard) infinite; }
+.ck-g-folio { left: 0; right: 0; bottom: 4.5%; text-align: center;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--hz-500); }
+@keyframes ckDriftBack { 0%,100% { transform: translateY(0) } 50% { transform: translateY(14px) } }
+@keyframes ckDriftFore { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
+@media (prefers-reduced-motion: reduce) { .ck-g-hed, .ck-g-hedfront { animation: none !important; } }
+.ck-stage[data-scene='type'] .ck-g-paper,
+.ck-stage[data-scene='type'] .ck-g-hed,
+.ck-stage[data-scene='type'] .ck-g-kicker,
+.ck-stage[data-scene='type'] .ck-g-folio,
+.ck-stage[data-scene='type'] .ck-g-hedfront { opacity: 1; }
+.ck-stage[data-scene='type'] .ck-canvas { filter: drop-shadow(0 14px 26px oklch(0 0 0 / 0.6)); }
+
+/* scene 4 · card — the subject is SANDWICHED into the card rather
+   than pasted over it: the card body sits behind, the lower content
+   block sits in front and occludes the legs. That single ordering is
+   what sells it as one object instead of a cut-out on a rectangle —
+   and it is only available because the alpha is real. */
+.ck-g-appbg { inset: 0; background: linear-gradient(180deg, oklch(0.15 0.012 265), oklch(0.10 0.01 265)); }
+.ck-g-card { left: 50%; top: 30%; width: 88%; height: 58%; transform: translateX(-50%);
+  border-radius: 16px; background: linear-gradient(180deg, oklch(0.29 0.03 250), oklch(0.21 0.02 258));
+  border: var(--hair) solid oklch(0.40 0.03 255); box-shadow: 0 22px 48px oklch(0 0 0 / 0.55); }
+.ck-g-cardfront { left: 50%; bottom: 12%; width: 86%; transform: translateX(-50%);
+  border-radius: 0 0 16px 16px; padding: 13px 15px 15px;
+  background: linear-gradient(180deg, transparent, oklch(0.19 0.02 258) 22%, oklch(0.17 0.02 258));
+  border: var(--hair) solid oklch(0.40 0.03 255); border-top: 0; }
+.ck-g-cardfront b { display: block; font-family: var(--sans); font-weight: 600; font-size: 15px; color: oklch(0.97 0.01 265); }
+.ck-g-cardfront em { display: block; font-style: normal; font-family: var(--mono); font-size: 8.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: oklch(0.72 0.03 255); margin-top: 4px; }
+.ck-g-cardfront u { display: block; text-decoration: none; margin-top: 11px; text-align: center;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: oklch(0.14 0.01 265); background: var(--tint); border-radius: 6px; padding: 7px; }
+.ck-g-tabbar { left: 0; right: 0; bottom: 0; height: 9%; display: flex; align-items: center; justify-content: space-around;
+  background: oklch(0.13 0.012 265); border-top: var(--hair) solid oklch(0.26 0.014 265); }
+.ck-g-tabbar i { width: 15px; height: 3px; border-radius: 2px; background: oklch(0.40 0.02 265); }
+.ck-g-tabbar i:first-child { background: var(--tint); }
+.ck-stage[data-scene='card'] .ck-g-appbg,
+.ck-stage[data-scene='card'] .ck-g-card,
+.ck-stage[data-scene='card'] .ck-g-cardfront,
+.ck-stage[data-scene='card'] .ck-g-tabbar { opacity: 1; }
+.ck-stage[data-scene='card'] .ck-canvas { filter: drop-shadow(0 16px 18px oklch(0 0 0 / 0.55)); }
+
+/* scene 5 · duotone — a filter that only exists because there is alpha */
+.ck-g-field { inset: 0; background: linear-gradient(150deg, oklch(0.22 0.10 300), oklch(0.30 0.13 265) 45%, oklch(0.46 0.16 30));
+  animation: ckField 18s var(--ease-standard) infinite; }
+@keyframes ckField { 0%,100% { filter: hue-rotate(0deg) } 50% { filter: hue-rotate(26deg) } }
+@media (prefers-reduced-motion: reduce) { .ck-g-field { animation: none !important; } }
+.ck-stage[data-scene='duo'] .ck-g-field { opacity: 1; }
+.ck-stage[data-scene='duo'] .ck-canvas { filter: drop-shadow(0 20px 18px oklch(0 0 0 / 0.45)); }
+/* One ring, drawn twice and clipped into halves: the top half sits in
+   the back layer, the bottom half in the front. The subject threads
+   through it. Nothing about this is possible with a rectangular video
+   — it needs the alpha to be genuine, and it is the clearest statement
+   the section makes about layering. */
+.ck-g-ring { left: 50%; top: 46%; width: 78%; aspect-ratio: 1; transform: translate(-50%,-50%);
+  border: 7px solid oklch(0.86 0.19 78); border-radius: 50%; }
+.ck-g-ring-b { clip-path: inset(0 0 50% 0); }
+.ck-g-ring-f { clip-path: inset(50% 0 0 0); }
+.ck-stage[data-scene='duo'] .ck-g-ring-b,
+.ck-stage[data-scene='duo'] .ck-g-ring-f { opacity: 1; }
+.ck-g-halftone { inset: 0; mix-blend-mode: overlay;
+  background: repeating-linear-gradient(0deg, oklch(0 0 0 / 0.55) 0 1px, transparent 1px 3px); }
+.ck-stage[data-scene='duo'] .ck-g-halftone { opacity: 0.55; }
+
+/* scene 5 · knockout — the alpha used as a STENCIL rather than a
+   sprite. A solid slab is painted over the whole frame and the subject
+   is punched out of it with destination-out, so what you see through
+   the animal is whatever the page put behind the canvas. Same one
+   channel, opposite polarity. */
+.ck-g-behind { inset: 0; background:
+  linear-gradient(135deg, oklch(0.62 0.21 28), oklch(0.55 0.20 350) 40%, oklch(0.48 0.19 265) 72%, oklch(0.66 0.17 190)); }
+/* Torn chromatic bands rather than concentric rings — the rings read
+   as a bullseye, which fights a silhouette sitting dead centre. Each
+   layer is the same gradient clipped to a moving slab and offset in a
+   different direction under `screen`, which is what produces the
+   channel-separation look. steps() timing is the whole trick: glitches
+   jump between states, they do not travel between them. */
+.ck-g-glitch { inset: 0; }
+.ck-g-glitch i { position: absolute; inset: 0; mix-blend-mode: screen; }
+.ck-g-glitch .g1 { background: linear-gradient(180deg, oklch(0.70 0.24 20), oklch(0.40 0.18 350));
+  animation: ckTear1 2.3s steps(1) infinite; }
+.ck-g-glitch .g2 { background: linear-gradient(180deg, oklch(0.66 0.20 200), oklch(0.44 0.16 245));
+  animation: ckTear2 1.7s steps(1) infinite; }
+.ck-g-glitch .g3 { background: repeating-linear-gradient(0deg, oklch(1 0 0 / 0.14) 0 1px, transparent 1px 5px);
+  animation: ckTear3 3.1s steps(1) infinite; }
+@keyframes ckTear1 {
+  0%   { clip-path: inset(12% 0 62% 0); transform: translateX(-9px); }
+  25%  { clip-path: inset(48% 0 34% 0); transform: translateX(7px); }
+  50%  { clip-path: inset(70% 0 12% 0); transform: translateX(-4px); }
+  75%  { clip-path: inset(28% 0 55% 0); transform: translateX(11px); }
+  100% { clip-path: inset(12% 0 62% 0); transform: translateX(-9px); }
+}
+@keyframes ckTear2 {
+  0%   { clip-path: inset(58% 0 22% 0); transform: translateX(8px); }
+  33%  { clip-path: inset(16% 0 68% 0); transform: translateX(-11px); }
+  66%  { clip-path: inset(38% 0 44% 0); transform: translateX(5px); }
+  100% { clip-path: inset(58% 0 22% 0); transform: translateX(8px); }
+}
+@keyframes ckTear3 {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ck-g-glitch i { animation: none !important; }
+}
+.ck-stage[data-scene='knock'] .ck-g-behind,
+.ck-stage[data-scene='knock'] .ck-g-glitch { opacity: 1; }
+
+/* scene 6 · snowfall — the same weather in two planes. The back field
+   is small, slow and sharp; the front field is larger, faster and
+   blurred, because that is what being nearer the lens does. The
+   subject sits between them, which is the whole illusion. */
+/* A winter night rather than a grey one: evergreen at the top falling
+   to midnight, with a warm hearth glow pooling at the bottom so the
+   animal is lit from below by something offstage. */
+.ck-g-weather { inset: 0; background:
+  radial-gradient(120% 55% at 50% 104%, oklch(0.62 0.15 62 / 0.55) 0%, transparent 62%),
+  linear-gradient(180deg, oklch(0.24 0.05 168) 0%, oklch(0.16 0.04 232) 46%, oklch(0.09 0.02 264) 100%); }
+
+/* string lights, thrown far out of focus. Front bulbs are bigger and
+   blurred harder — the same depth cue the flakes use. */
+.ck-bokeh-b, .ck-bokeh-f { inset: 0; }
+.ck-bulb { position: absolute; width: 9px; height: 9px; border-radius: 50%; filter: blur(3.5px);
+  animation: ckTwinkle 3.6s var(--ease-standard) infinite; }
+.ck-bokeh-f .ck-bulb { width: 20px; height: 20px; filter: blur(9px); opacity: 0.75; }
+@keyframes ckTwinkle {
+  0%, 100% { opacity: 0.32; transform: scale(0.86); }
+  50%      { opacity: 1;    transform: scale(1.18); }
+}
+.ck-stage[data-scene='snow'] .ck-bokeh-b,
+.ck-stage[data-scene='snow'] .ck-bokeh-f { opacity: 1; }
+.ck-flake { position: absolute; top: -6%; border-radius: 50%; background: oklch(0.97 0.01 250);
+  animation: ckFall linear infinite; }
+@keyframes ckFall {
+  0%   { transform: translate3d(0, -10%, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate3d(14px, 720px, 0); opacity: 0; }
+}
+/* These need an explicit box. `.ck-g` is position:absolute with no
+   inset, so an empty container shrink-to-fits to zero width — and
+   `left: 42%` of zero is zero, which piled every flake on the left
+   edge. */
+.ck-snow-b, .ck-snow-f { inset: 0; }
+.ck-snow-b .ck-flake { width: 4px; height: 4px; opacity: 0.8; box-shadow: 0 0 5px oklch(1 0 0 / 0.5); }
+.ck-snow-f .ck-flake { width: 9px; height: 9px; filter: blur(2.2px); }
+.ck-stage[data-scene='snow'] .ck-g-weather,
+.ck-stage[data-scene='snow'] .ck-snow-b,
+.ck-stage[data-scene='snow'] .ck-snow-f { opacity: 1; }
+
+/* scene 7 · ticker — two bands of the same marquee running opposite
+   ways, one behind the animal and one in front of its legs. Motion
+   crossing the subject in both directions reads as depth far more
+   strongly than a static overlap does. */
+.ck-g-tickbg { inset: 0; background: linear-gradient(180deg, oklch(0.14 0.012 265), oklch(0.10 0.01 265)); }
+/* Deliberately NOT the section tint, which is green: a green band
+   sitting against the green source panel one column over reads as
+   backdrop that failed to key rather than as page furniture. */
+.ck-band { left: -10%; right: -10%; height: 13%; display: flex; align-items: center; overflow: hidden;
+  background: oklch(0.82 0.16 72); }
+.ck-band.is-back { top: 30%; transform: rotate(-4deg); }
+.ck-band.is-fore { bottom: 22%; transform: rotate(3deg); background: oklch(0.96 0.01 265); }
+.ck-band span { flex: none; white-space: nowrap; padding-right: 22px;
+  font-family: var(--sans); font-weight: 800; font-size: 6.4cqw; letter-spacing: -0.02em; text-transform: uppercase;
+  color: oklch(0.12 0.01 265); animation: ckMarquee 9s linear infinite; }
+.ck-band.is-fore span { animation-direction: reverse; animation-duration: 11s; }
+@keyframes ckMarquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+.ck-stage[data-scene='tick'] .ck-g-tickbg,
+.ck-stage[data-scene='tick'] .ck-band { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-flake, .ck-band span, .ck-bulb { animation: none !important; }
+}
+
+.ck-cap { display: flex; flex-direction: column; gap: 2px; align-items: center; text-align: center; margin-top: 9px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); }
+.ck-cap b { font-weight: 400; color: var(--hz-800); letter-spacing: 0.14em; }

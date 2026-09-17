@@ -4,5 +4,7 @@
 - **The nine months**
   - Projects, experiments and pit stops on the design ↔ engineering workflow around motion
   - This talk is a consequence of those; it has taken a lot of work
+- **Made for Folklore Digital**
+  - The paper, the talk and every example were made here, for the people I build with
 - **Everything today is live, running code**
   - Every source is in the paper on the site

@@ -1,0 +1,175 @@
+<div class="wrap">
+  <div class="crumb" id="crumb">
+    <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
+    <a href="../index.html#sl-06">Techniques</a>
+  </div>
+
+  <div class="head"><span class="code">SL-06</span><h1>layout / css</h1></div>
+  <p class="dek">
+    Motion the browser runs for you. Two quite different jobs share one engine, and this
+    slide keeps them apart. First <b>CSS for layout</b> — animating a page's own structure,
+    driven by scroll position and by the selectors already describing state. Then <b>CSS as
+    a drawing instrument</b> — the same declarations pointed at elements that aren't
+    structure at all, where what comes out is a picture rather than an interface. You
+    declare the start and the end; the engine works out the frames either way.
+  </p>
+
+  <!-- ═══ TIMELESS ═════════════════════════════════════ -->
+  <div class="fmt-section" data-testid="fmt-examples">
+    <div class="fmt-head"><span class="fmt-tag">CSS FOR LAYOUT</span><h2>timeless, a magazine animated</h2></div>
+    <p class="fmt-case">
+      <b>Here CSS is animating layout.</b> Six fragments of a fictional newsweekly, because a
+      technique shown on a coloured square teaches nothing about where you would actually
+      reach for it. Every element below is doing a page's job — a masthead, a drawer, a
+      nav, a story feed — and what moves is its <b>position, size, stacking and
+      disclosure</b>. <b>Nothing here runs a line of JavaScript.</b> The top row is driven by
+      scroll position and the clock; the bottom row entirely by selectors that were already
+      describing state — <code>:checked</code>, <code>:focus-within</code>,
+      <code>:has()</code>. Scroll inside the first two; the rest respond to hover, focus and
+      click.
+    </p>
+
+    <div class="card-grid">
+      <!-- row 1 · the page reads itself -->
+      <div class="scene-card" data-testid="ex-cover">
+        <div class="scene-stage mag">
+          <div class="mg-scroll">
+            <div class="mg-page">
+            <div class="mg-hero"><div class="cl"><span class="mg-tag" style="color:oklch(0.85 0.14 60)">The Long View</span>
+              <div class="mg-hed">The Century That Refused to End</div></div></div>
+            <div style="padding:10px">
+              <p class="mg-dek">A survey of the decade’s unfinished arguments, and the institutions still trying to settle them.</p>
+              <div class="mg-rule" style="margin:9px 0"></div>
+              <div class="mg-lines"><i style="width:100%"></i><i style="width:96%"></i><i style="width:99%"></i><i style="width:72%"></i>
+                <i style="width:98%"></i><i style="width:91%"></i><i style="width:99%"></i><i style="width:64%"></i>
+                <i style="width:97%"></i><i style="width:88%"></i><i style="width:94%"></i><i style="width:58%"></i></div>
+            </div>
+            </div>
+            <div class="mg-bar"><span class="mg-mast">TIMELESS</span><span class="issue">VOL XI · 14</span></div>
+          </div>
+        </div>
+        <span class="scene-label">cover → masthead · scroll()</span>
+        <span class="scene-note">The page runs past a pinned masthead, which packs down as it goes. These are the keyframes you would bind to <code>animation-timeline: scroll()</code> in production — driven from the clock here so the card demonstrates itself. Same declaration, different timeline.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-feed">
+        <div class="scene-stage mag">
+          <div class="mg-scroll">
+            <div class="mg-feed">
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Politics</span><div class="mg-hed">The Quiet Redistricting</div><p class="mg-dek">Four states, one map, and a decade of consequences.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Science</span><div class="mg-hed">What the Ice Kept</div><p class="mg-dek">Core samples are rewriting a settled timeline.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Culture</span><div class="mg-hed">Everyone’s Second Album</div><p class="mg-dek">On the economics of the difficult follow-up.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Business</span><div class="mg-hed">The Warehouse Belt</div><p class="mg-dek">Where the logistics boom actually landed.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">Health</span><div class="mg-hed">Sleep, Reconsidered</div><p class="mg-dek">The eight-hour rule was never a finding.</p></div></div>
+              <div class="mg-card"><span class="thumb"></span><div><span class="mg-tag">World</span><div class="mg-hed">The Strait in Winter</div><p class="mg-dek">Shipping lanes, and the politics of a thaw.</p></div></div>
+            </div>
+          </div>
+        </div>
+        <span class="scene-label">story feed · view() + stagger</span>
+        <span class="scene-note">Six stories arriving on staggered delays — one animation, one incrementing <code>animation-delay</code>, no index maths. Bind the same keyframes to <code>animation-timeline: view()</code> and each element's own position drives it instead of the clock.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-ticker">
+        <div class="scene-stage mag">
+          <div class="mg-tick">
+            <div class="plate">
+              <span class="mg-tag">Live</span>
+              <div class="mg-hed" style="font-size:15px;margin:5px 0 7px">The Wire</div>
+              <div class="mg-rule" style="margin-bottom:8px"></div>
+              <div class="mg-lines"><i style="width:94%"></i><i style="width:100%"></i><i style="width:78%"></i><i style="width:96%"></i><i style="width:62%"></i></div>
+            </div>
+            <div class="belt"><div class="run">
+              <span><b>Markets</b> — indices close mixed on revised guidance</span>
+              <span><b>Filed</b> — committee returns the transport bill</span>
+              <span><b>Weather</b> — an unusually warm front holds</span>
+              <span><b>Markets</b> — indices close mixed on revised guidance</span>
+              <span><b>Filed</b> — committee returns the transport bill</span>
+              <span><b>Weather</b> — an unusually warm front holds</span>
+            </div></div>
+          </div>
+        </div>
+        <span class="scene-label">the wire · infinite keyframes</span>
+        <span class="scene-note">A crawl on a loop, moved with <code>transform</code> alone — so it runs on the compositor and costs nothing per frame. The strip is duplicated so the wrap has nothing to reveal.</span>
+      </div>
+
+      <!-- row 2 · the reader works the page -->
+      <div class="scene-card" data-testid="ex-sections">
+        <div class="scene-stage mag">
+          <div class="mg-sect">
+            <input type="radio" name="sc" id="sc-a"><input type="radio" name="sc" id="sc-b"><input type="radio" name="sc" id="sc-c">
+            <div class="mg-tabs"><label for="sc-a">Politics</label><label for="sc-b">Science</label><label for="sc-c">Culture</label></div>
+            <div class="band"></div>
+            <div><span class="mg-tag">This Week</span>
+              <div class="mg-hed" style="font-size:14px;margin-top:3px">The Section Retints</div></div>
+            <div class="swatch"></div>
+            <div class="mg-lines"><i style="width:100%"></i><i style="width:88%"></i><i style="width:95%"></i><i style="width:60%"></i></div>
+          </div>
+        </div>
+        <span class="scene-label">sections · :checked + custom properties</span>
+        <span class="scene-note">The accent cycles on its own — a registered <code>@property</code>, so a custom property can actually interpolate. Click a tab and the loop drops away: they are radio inputs, and <code>:checked</code> pins the accent from then on.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-contents">
+        <div class="scene-stage mag">
+          <div class="mg-toc" tabindex="-1">
+            <button class="btn">Contents ▾</button>
+            <ul class="panel">
+              <li><span>The Long View</span><em>p. 12</em></li>
+              <li><span>The Quiet Redistricting</span><em>p. 18</em></li>
+              <li><span>What the Ice Kept</span><em>p. 24</em></li>
+              <li><span>Everyone’s Second Album</span><em>p. 31</em></li>
+              <li><span>Letters</span><em>p. 40</em></li>
+            </ul>
+          </div>
+        </div>
+        <span class="scene-label">contents · :focus-within + cascade</span>
+        <span class="scene-note">The contents cascade open and closed unprompted. Tab to the button or click it and <code>:focus-within</code> takes over, holding the panel open for as long as focus is anywhere inside — the accessible behaviour coming free is the point.</span>
+      </div>
+
+      <div class="scene-card" data-testid="ex-expand">
+        <div class="scene-stage mag">
+          <div class="mg-exp">
+            <span class="mg-tag">Dispatches</span>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">The Warehouse Belt</div></label>
+              <div class="drawer"><div><p>Two decades of distribution capacity arrived in places with no plan for it. What the map looks like once the leases turn over.</p></div></div></div>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">Sleep, Reconsidered</div></label>
+              <div class="drawer"><div><p>The eight-hour figure entered the literature as an average and left it as a prescription. Researchers are unpicking the difference.</p></div></div></div>
+            <div class="mg-item"><label><input type="checkbox"><div class="mg-hed">The Strait in Winter</div></label>
+              <div class="drawer"><div><p>A shipping lane that stays open three weeks longer each decade, and the quiet diplomacy following it north.</p></div></div></div>
+          </div>
+        </div>
+        <span class="scene-label">expand · :has() + 0fr → 1fr</span>
+        <span class="scene-note">The drawers open in turn on a loop. <code>grid-template-rows: 0fr → 1fr</code> animates to the content's real height — the one genuine layout animation CSS manages unaided, and the exact point where the next slide picks up. Click a headline and <code>:has()</code> takes the wheel.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 06</h3>
+    <p>"CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
+      Layout → Paint → Composite; visual: animated pipeline diagram + simple live
+      hover/transition demo (generic, not the thread demo — keep this one legible)."</p>
+    <p>Both halves are real. The pipeline diagram is interactive rather than a static
+      graphic: the stage map, the cost readout and the moving specimen are driven from one
+      property table, so the diagram cannot drift out of step with what the specimen is
+      animating. Kept generic per the scope note — no thread demo here.</p>
+    <p>The examples were rebuilt around <b>Timeless</b>, a fictional newsweekly, after the
+      first pass proved that a technique demonstrated on a coloured square teaches nothing
+      about when to reach for it. The masthead, the section tabs and the contents flyout are
+      page fragments; the CSS is the point but the context is what makes it legible. The
+      identity is deliberately its own — the reusable part of the genre is its grammar, not
+      any real title's trade dress.</p>
+    <p><b>Every card runs itself.</b> A demo that has to be poked is a dead demo from the
+      back of a room, so each fragment loops its own technique unprompted. On the three
+      state-driven cards the loop is a default rather than a cage: the moment you click a
+      tab, focus the contents button or open a story, the animation is dropped and the real
+      selector — <code>:checked</code>, <code>:focus-within</code>, <code>:has()</code> —
+      takes over. The two scroll-linked cards run from the clock instead, using the same
+      keyframes you would bind to <code>scroll()</code> or <code>view()</code> in
+      production; only the timeline differs, which is the actual lesson.</p>
+    <p>Two boundaries are held on purpose. <b>SL-07</b> measures what this sheet only
+      models: cost. <b>SL-08</b> owns animating between two arbitrary measured layouts —
+      which is why the expand example stops at <code>0fr → 1fr</code>, the one layout
+      animation CSS manages unaided, rather than reflowing the whole grid.</p>
+  </div>
+</div>

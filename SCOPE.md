@@ -9,7 +9,7 @@ revised: 2026-09-17
 
 ## Overview
 
-This paper is the long form of a 35-minute talk given at Folklore on 17 September 2026. The talk is in plain language for a mixed room. The paper keeps the detail the talk leaves out. Anyone who wants to go further can use the live site, where every example runs as real code.
+This paper was made for my employer, [`Folklore Digital`](https://folklore.digital/). It is the long form of a 35-minute talk given there on 17 September 2026. The talk is in plain language for a mixed room. The paper keeps the detail the talk leaves out. Anyone who wants to go further can use the live site, where every example runs as real code.
 
 There are three layers, and each is compressed from the one before it:
 
@@ -585,7 +585,7 @@ These are named honestly, and each one was checked rather than assumed where we 
 
 The full register is kept with the project's planning notes.
 
-**What could not be verified this way:** anything that needs a running browser, anything internal to Folklore (the Inspire Sleep account, Animotion), and pages that refuse scripted fetches. GTmetrix is one of those, which is why it is named without a citation.
+**What could not be verified this way:** anything that needs a running browser, anything internal to `Folklore Digital` (the Inspire Sleep account, Animotion), and pages that refuse scripted fetches. GTmetrix is one of those, which is why it is named without a citation.
 
 **On dates.** All sources were accessed on 17 September 2026. Where a page is old, its date is given in the text, as with the 2015 compositor article.
 
@@ -702,3 +702,9 @@ Accessed 17 September 2026 unless stated. Numbers match the citation markers in 
 <a id="ref-54"></a>**[54]** Lumar. *Lumar | Website Optimization Platform.* <https://lumar.io/>
 
 <a id="ref-55"></a>**[55]** Sitebulb. *Website Performance Audit & Core Web Vitals.* <https://sitebulb.com/product/performance/>
+
+## Acknowledgement
+
+This paper, the talk and every example on the site were made for [`Folklore Digital`](https://folklore.digital/), where I work. The projects, experiments and conversations it reports on happened there, and it is written for the people I build with.
+
+Thank you to Sean Van Dyk, Irene Polo, Aayush Joshi and Tyler Knight, and to the Design team, for the feedback and collaboration over the last nine months that shaped this work.

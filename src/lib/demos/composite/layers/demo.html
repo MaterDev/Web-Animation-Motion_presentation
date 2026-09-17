@@ -1,0 +1,40 @@
+<div class="cp-deck cp-deck-layers"><div class="cp-hero">
+      <figure class="cp-fig cp-stage" data-testid="composite-exploded"
+        role="img" aria-label="Exploded view of one product page in three layers: real DOM elements on top, a GPU canvas drawing the product in the middle, and a background video at the back.">
+        <div class="cp-iso" aria-hidden="true">
+          <div class="cp-plane cp-p-vid"><span class="cp-plane-tag">video</span><span class="cp-scrub"></span></div>
+          <div class="cp-plane cp-p-gpu"><span class="cp-plane-tag">canvas</span><span class="cp-product"></span></div>
+          <div class="cp-plane cp-p-dom"><span class="cp-plane-tag">dom</span>
+            <i class="cp-nav"></i><i class="cp-nav2"></i><i class="cp-nav3"></i><i class="cp-rule"></i>
+            <i class="cp-h1"></i><i class="cp-h2"></i><i class="cp-copy"></i><i class="cp-copy2"></i>
+            <i class="cp-price"></i><i class="cp-btn"></i>
+          </div>
+        </div>
+      </figure>
+
+      <div class="cp-fig" style="padding:0" data-testid="composite-legend">
+        <ol class="cp-legend">
+          <li class="cp-legend-lede" data-testid="composite-legend-lede">What the user sees: <b>one page.</b><br>What the browser runs: <b>three surfaces.</b></li>
+          <li class="cp-li" style="--cp-c: var(--cp-dom)" data-testid="composite-legend-dom">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-dom-name">DOM <span>· HTML + CSS · on top</span></div>
+              <p>Navigation, headline, price, the buy button and its focus ring. <b>Needs semantics, interaction, accessibility.</b></p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-gpu)" data-testid="composite-legend-canvas">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-canvas-name">Canvas <span>· WebGL / WebGPU</span></div>
+              <p>The product, its light, the particle field. <b>Needs pixels.</b> Nothing inside can be read, so nothing that must be read goes there.</p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-vid)" data-testid="composite-legend-video">
+            <span class="cp-sw"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-video-name">Video <span>· at the back</span></div>
+              <p>The ambient loop. <b>Pre-rendered and fixed</b>, which is fine while it never has to respond.</p></div>
+          </li>
+          <li class="cp-li" style="--cp-c: var(--cp-src)" data-testid="composite-legend-alternative">
+            <span class="cp-sw cp-sw-alt"></span>
+            <div><div class="cp-li-name" data-testid="composite-legend-alternative-name">Alternative <span>· no GPU layer</span></div>
+              <p>A still in place of the canvas. The DOM layer is unchanged, so <b>switching the GPU layer off loses nothing a keyboard or screen reader needs.</b></p></div>
+          </li>
+        </ol>
+      </div>
+    </div></div>

@@ -1,0 +1,202 @@
+:host { --tint: var(--tint-css); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: calc(var(--u)*5) calc(var(--u)*5) calc(var(--u)*16); }
+.crumb { display: flex; align-items: center; gap: 8px; margin-bottom: calc(var(--u)*4); }
+.crumb a { color: var(--hz-500); text-decoration: none; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; }
+.crumb a:hover { color: var(--tint); }
+.crumb .sep { color: var(--hz-400); }
+.head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+.head .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--tint); background: color-mix(in oklch, var(--tint) 16%, var(--hz-100)); padding: 4px 9px; border-radius: 3px; }
+.head h1 { font-size: clamp(36px, 6vw, 60px); }
+p.dek { color: var(--hz-500); font-size: 14px; max-width: 68ch; margin-bottom: calc(var(--u)*6); }
+
+.fmt-section { margin-bottom: calc(var(--u)*9); }
+.fmt-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.fmt-head .fmt-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tint); border: var(--hair) solid color-mix(in oklch, var(--tint) 40%, var(--hz-300)); border-radius: 3px; padding: 3px 8px; }
+.fmt-head h2 { font-size: 30px; }
+.fmt-case { color: var(--hz-500); font-size: 13.5px; max-width: 72ch; margin-bottom: calc(var(--u)*4); }
+.fmt-case b { color: var(--hz-700); font-weight: 500; }
+
+/* ── example grid — same container vocabulary as SL-05, so the two
+   baseline sheets read as one system rather than two ── */
+.card-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(var(--u)*3); align-items: start;
+  --stage-bg: oklch(0.90 0.004 265);
+  --stage-bg-2: oklch(0.85 0.005 265);
+  --stage-ink: oklch(0.32 0.012 265);
+  --stage-dim: oklch(0.48 0.01 265);
+  --stage-chip: oklch(0.965 0.002 265);
+  --stage-line: oklch(0.74 0.006 265);
+}
+@media (max-width: 900px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 620px) { .card-grid { grid-template-columns: 1fr; } }
+.scene-card { display: flex; flex-direction: column; gap: 8px; }
+.scene-stage {
+  aspect-ratio: 4/5; border-radius: 8px; position: relative; overflow: hidden;
+  background: var(--stage-bg); box-shadow: var(--recess); display: grid; place-items: center;
+}
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+
+/* ── TIMELESS ────────────────────────────────────────────────
+   A fictional newsweekly, used so the examples are page fragments
+   rather than coloured boxes in a vacuum. The borrowed part is the
+   newsweekly *grammar* — heavy serif masthead, one rationed red,
+   hairline rules, small-caps section tags — not any real title's
+   trade dress. Paper-light inside the dark harness, so it reads as a
+   website being demonstrated rather than as deck chrome. */
+.mag { --paper: oklch(0.955 0.004 85); --ink: oklch(0.24 0.012 265); --sub: oklch(0.52 0.01 265);
+       --rule: oklch(0.80 0.006 265); --red: oklch(0.55 0.21 27);
+       --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+       background: var(--paper); display: block; }
+.mag * { box-sizing: border-box; }
+.mg-mast { font-family: var(--serif); font-weight: 700; letter-spacing: -0.02em; color: var(--ink); }
+.mg-tag { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); }
+.mg-hed { font-family: var(--serif); font-weight: 700; color: var(--ink); line-height: 1.12; }
+.mg-dek { font-size: 11.5px; line-height: 1.5; color: var(--sub); }
+.mg-rule { height: 1px; background: var(--rule); }
+.mg-lines { display: flex; flex-direction: column; gap: 6px; }
+.mg-lines i { display: block; height: 4px; border-radius: 2px; background: var(--rule); }
+
+/* 1 · cover compresses into a sticky masthead, driven by scroll position */
+.mg-scroll { position: absolute; inset: 0; overflow: hidden; }
+/* The page is carried past a pinned masthead on a timer. The keyframes
+   are the ones you would bind to animation-timeline: scroll() in
+   production — only the timeline differs — which is the actual lesson
+   of scroll-driven animation: the declaration is the same, you just
+   change what is driving it. Driving it from the clock here means the
+   card demonstrates itself on a slide instead of waiting to be poked. */
+.mg-page { padding-top: 72px; animation: autoScroll 9s var(--ease-standard) infinite; }
+@keyframes autoScroll { 0%, 10% { transform: translateY(0); } 52%, 66% { transform: translateY(-168px); } 100% { transform: translateY(0); } }
+.mg-bar { position: absolute; top: 0; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 10px; background: var(--paper); border-bottom: 2px solid var(--red); overflow: hidden;
+  height: 72px; animation: mastPack 9s var(--ease-standard) infinite; }
+.mg-bar .mg-mast { font-size: 30px; animation: mastType 9s var(--ease-standard) infinite; }
+.mg-bar .issue { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--sub); }
+@keyframes mastPack { 0%, 10% { height: 72px; } 52%, 66% { height: 30px; } 100% { height: 72px; } }
+@keyframes mastType { 0%, 10% { font-size: 30px; } 52%, 66% { font-size: 14px; } 100% { font-size: 30px; } }
+.mg-hero { height: 168px; background: linear-gradient(150deg, oklch(0.42 0.07 250), oklch(0.30 0.05 265)); position: relative; }
+.mg-hero .cl { position: absolute; left: 10px; bottom: 9px; right: 10px; }
+.mg-hero .mg-hed { color: oklch(0.99 0 0); font-size: 22px; }
+
+/* 2 · each card animates as it enters the scroller's view */
+.mg-feed { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.mg-card { display: grid; grid-template-columns: 66px 1fr; gap: 11px; padding-bottom: 11px; border-bottom: 1px solid var(--rule);
+  animation: cardIn 7s var(--ease-standard) infinite; }
+.mg-card .thumb { width: 66px; height: 66px; border-radius: 3px; background: linear-gradient(150deg, oklch(0.66 0.09 45), oklch(0.44 0.10 20)); }
+.mg-card:nth-child(2n) .thumb { background: linear-gradient(150deg, oklch(0.60 0.08 190), oklch(0.38 0.07 240)); }
+.mg-card:nth-child(3n) .thumb { background: linear-gradient(150deg, oklch(0.68 0.10 120), oklch(0.42 0.08 150)); }
+.mg-card .mg-hed { font-size: 14.5px; margin: 3px 0 4px; }
+@keyframes cardIn {
+  0%   { opacity: 0; transform: translateY(16px); }
+  16%  { opacity: 1; transform: none; }
+  74%  { opacity: 1; transform: none; }
+  90%, 100% { opacity: 0; transform: translateY(-10px); }
+}
+.mg-card:nth-child(1) { animation-delay: 0s; }   .mg-card:nth-child(2) { animation-delay: .16s; }
+.mg-card:nth-child(3) { animation-delay: .32s; } .mg-card:nth-child(4) { animation-delay: .48s; }
+.mg-card:nth-child(5) { animation-delay: .64s; } .mg-card:nth-child(6) { animation-delay: .80s; }
+
+/* 3 · ticker — transform only, so it never touches layout */
+.mg-tick { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.mg-tick .plate { flex: 1; padding: 16px; }
+.mg-tick .belt { border-top: 2px solid var(--red); background: var(--paper); overflow: hidden; padding: 10px 0; }
+.mg-tick .run { display: inline-flex; gap: 26px; white-space: nowrap; animation: crawl 14s linear infinite; }
+.mg-tick .run span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.mg-tick .run b { color: var(--red); }
+@keyframes crawl { to { transform: translateX(-50%); } }
+
+/* 4 · section tabs — :checked retints the whole fragment */
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #b5342a; }
+.mg-sect { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  --accent: var(--red); animation: sectCycle 9s steps(1, end) infinite; }
+@keyframes sectCycle {
+  0%   { --accent: oklch(0.55 0.21 27); }
+  33%  { --accent: oklch(0.55 0.16 240); }
+  66%  { --accent: oklch(0.52 0.15 150); }
+  100% { --accent: oklch(0.55 0.21 27); }
+}
+/* the loop is a default, not a cage: the moment a tab is chosen the
+   animation is dropped and :checked owns the accent again */
+.mg-sect:has(input:checked) { animation: none; }
+.mg-tabs label { animation: tabCycle 9s steps(1, end) infinite; }
+.mg-tabs label[for="sc-b"] { animation-delay: -6s; }
+.mg-tabs label[for="sc-c"] { animation-delay: -3s; }
+@keyframes tabCycle {
+  0%, 33% { color: oklch(0.99 0 0); background: var(--accent); border-color: var(--accent); }
+  34%, 100% { color: var(--sub); background: transparent; border-color: var(--rule); }
+}
+.mg-sect:has(input:checked) .mg-tabs label { animation: none; }
+.mg-sect:has(#sc-b:checked) { --accent: oklch(0.55 0.16 240); }
+.mg-sect:has(#sc-c:checked) { --accent: oklch(0.52 0.15 150); }
+.mg-sect input { position: absolute; opacity: 0; pointer-events: none; }
+.mg-tabs { display: flex; gap: 5px; }
+.mg-tabs label { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 11px; border-radius: 3px; cursor: pointer; color: var(--sub); border: 1px solid var(--rule);
+  transition: color 260ms var(--ease-standard), border-color 260ms var(--ease-standard), background 260ms var(--ease-standard); }
+.mg-sect:has(#sc-a:checked) label[for="sc-a"],
+.mg-sect:has(#sc-b:checked) label[for="sc-b"],
+.mg-sect:has(#sc-c:checked) label[for="sc-c"] { color: oklch(0.99 0 0); background: var(--accent); border-color: var(--accent); }
+.mg-sect .band { height: 3px; background: var(--accent); transition: background 300ms var(--ease-standard); }
+.mg-sect .mg-tag { color: var(--accent); transition: color 300ms var(--ease-standard); }
+.mg-sect .swatch { height: 74px; border-radius: 3px; background: color-mix(in oklch, var(--accent) 26%, var(--paper));
+  border-left: 3px solid var(--accent); transition: background 320ms var(--ease-standard), border-color 320ms var(--ease-standard); }
+
+/* 5 · contents flyout — opens on focus-within, entries cascade */
+.mg-toc { position: absolute; inset: 0; padding: 16px; }
+.mg-toc .btn { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 13px; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper); color: var(--ink); cursor: pointer; }
+.mg-toc .panel { margin-top: 12px; border-top: 2px solid var(--red); padding-top: 12px;
+  display: flex; flex-direction: column; gap: 11px; }
+.mg-toc .panel li { list-style: none; display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--serif); font-size: 14px; color: var(--ink);
+  opacity: 0; transform: translateX(-8px); transition: opacity 320ms var(--ease-standard), transform 320ms var(--ease-standard);
+  animation: tocCycle 4.2s var(--ease-standard) infinite; }
+@keyframes tocCycle {
+  0%, 2%    { opacity: 0; transform: translateX(-8px); }
+  16%, 60%  { opacity: 1; transform: none; }
+  80%, 100% { opacity: 0; transform: translateX(-8px); }
+}
+.mg-toc .panel li:nth-child(1) { animation-delay: 0s; }   .mg-toc .panel li:nth-child(2) { animation-delay: .05s; }
+.mg-toc .panel li:nth-child(3) { animation-delay: .10s; } .mg-toc .panel li:nth-child(4) { animation-delay: .15s; }
+.mg-toc .panel li:nth-child(5) { animation-delay: .20s; }
+.mg-toc:focus-within .panel li { animation: none; }
+.mg-toc .panel li em { font-family: var(--mono); font-size: 9.5px; font-style: normal; color: var(--sub); }
+.mg-toc:focus-within .panel li { opacity: 1; transform: none; }
+.mg-toc:focus-within .panel li:nth-child(1) { transition-delay: 40ms; }
+.mg-toc:focus-within .panel li:nth-child(2) { transition-delay: 90ms; }
+.mg-toc:focus-within .panel li:nth-child(3) { transition-delay: 140ms; }
+.mg-toc:focus-within .panel li:nth-child(4) { transition-delay: 190ms; }
+.mg-toc:focus-within .panel li:nth-child(5) { transition-delay: 240ms; }
+
+/* 6 · the one real layout animation CSS can do unaided: 0fr → 1fr */
+.mg-exp { position: absolute; inset: 0; padding: 16px; display: flex; flex-direction: column; gap: 11px; overflow-y: auto; scrollbar-width: none; }
+.mg-exp::-webkit-scrollbar { display: none; }
+.mg-exp input { position: absolute; opacity: 0; pointer-events: none; }
+.mg-item { border-bottom: 1px solid var(--rule); padding-bottom: 10px; }
+.mg-item label { display: block; cursor: pointer; }
+.mg-item .mg-hed { font-size: 15px; margin: 4px 0 0; transition: color 240ms var(--ease-standard); }
+.mg-item:has(input:checked) .mg-hed { color: var(--red); }
+.mg-item .drawer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 380ms var(--ease-standard);
+  animation: drawerCycle 10.5s var(--ease-standard) infinite; }
+@keyframes drawerCycle {
+  0%, 4%    { grid-template-rows: 0fr; }
+  10%, 28%  { grid-template-rows: 1fr; }
+  34%, 100% { grid-template-rows: 0fr; }
+}
+.mg-item:nth-of-type(2) .drawer { animation-delay: -7s; }
+.mg-item:nth-of-type(3) .drawer { animation-delay: -3.5s; }
+.mg-exp:has(input:checked) .drawer { animation: none; }
+.mg-item:has(input:checked) .drawer { grid-template-rows: 1fr; }
+.mg-item .drawer > div { overflow: hidden; }
+.mg-item .drawer p { font-size: 11.5px; line-height: 1.6; color: var(--sub); margin: 6px 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-bar, .mg-bar .mg-mast, .mg-card, .mg-tick .run, .mg-page,
+  .mg-sect, .mg-tabs label, .mg-toc .panel li, .mg-item .drawer { animation: none !important; }
+  .mg-toc .panel li { opacity: 1; transform: none; transition: none; }
+  .mg-item .drawer { transition: none; }
+}
+
+.notes { border-top: var(--hair) solid var(--hz-300); padding-top: calc(var(--u)*3); margin-top: calc(var(--u)*4); }
+.notes h3 { margin-bottom: calc(var(--u)*1.5); }
+.notes p { max-width: 68ch; color: var(--hz-500); font-size: 13.5px; }

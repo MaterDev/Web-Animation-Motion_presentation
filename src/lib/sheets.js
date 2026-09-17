@@ -12,23 +12,21 @@
 
    If a sheet is added, add it in both places. */
 
-/** Pages in the design section that are app routes, not sheets. */
+/** The design section's landing page. */
 export const PAGES = [
   { href: '/design', code: 'OVW', name: 'Overview', note: 'What this section is' },
+];
+
+/** The pages that narrate how the system was decided. They head the
+ *  Treatments group, next to the six treatments they describe: the
+ *  methodology tells the process, the write-up compares the directions. */
+export const PROCESS_PAGES = [
   { href: '/design/methodology', code: 'MTH', name: 'Methodology', note: 'How the system was made, and why the process is what it is' },
   { href: '/design/treatments', code: 'ITR', name: 'Treatments', note: 'The six competing directions, five of them superseded' },
 ];
 
-/** The live reference sheets, shown in the viewer. */
-/* ORDER IS THE DECK'S OWN SPECTRUM, not the slide numbers and not the order
-   these were built in: layout/CSS, SVG, canvas, GIF, video, WebGL, WebGPU,
-   composite. Browser-managed motion first, then the hand-drawn surfaces,
-   then the two pre-baked baselines, then the GPU, ending on the one sheet
-   that is about the pipeline rather than a technique.
-
-   Decided 2026-09-11, which closes the "intentional, or drift?" stub in
-   conductor/product.md. It WAS drift — the old order was neither slide
-   numbers nor the spectrum, it was the order the sheets got built in. */
+/** The design system's live reference sheets, shown in the design viewer.
+ *  The technique sheets moved to their own section; see TECHNIQUES. */
 export const SHEETS = [
   {
     group: 'Reference',
@@ -51,14 +49,22 @@ export const SHEETS = [
     note: 'Per-topic tint, pixel marks, rule treatments, glyph sets, pattern bands',
     file: 'graphic-language/index.html',
   },
+];
+
+/* The technique sheets are their own top-level section (/techniques),
+   no longer part of the design system. ORDER IS THE TALK'S COMPREHENSION
+   LADDER (SCOPE.md › The techniques): CSS, SVG, GIF, Video, Canvas, then
+   WebGL and WebGPU. Composite follows as the pipeline demo; the paper
+   does not count it as a technique. */
+export const TECHNIQUES = [
   { group: 'Techniques', code: 'SL-06', name: 'Layout / CSS', note: 'Layout animated by selectors + scroll', file: 'techniques/css.html', tint: 'var(--tint-css)' },
   { group: 'Techniques', code: 'SL-10', name: 'SVG', note: 'Vector, DOM-based', file: 'techniques/svg.html', tint: 'var(--tint-svg)' },
-  { group: 'Techniques', code: 'SL-11', name: 'Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
   { group: 'Techniques', code: 'SL-05', name: 'GIF', note: 'Baseline — pre-baked, no player', file: 'techniques/gif/index.html', tint: 'var(--tint-video)' },
   { group: 'Techniques', code: 'SL-04', name: 'Video', note: 'Baseline — pre-baked pixels', file: 'techniques/video/index.html', tint: 'var(--tint-video)' },
+  { group: 'Techniques', code: 'SL-11', name: '2D Canvas', note: 'Imperative pixel drawing', file: 'techniques/canvas.html', tint: 'var(--tint-canvas)' },
   { group: 'Techniques', code: 'SL-12', name: 'WebGL', note: 'The picture is computed, not stored', file: 'techniques/webgl.html', tint: 'var(--tint-webgl)' },
   { group: 'Techniques', code: 'SL-14', name: 'WebGPU', note: 'Compute shaders', file: 'techniques/webgpu.html', tint: 'var(--tint-webgpu)' },
-  { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'CPU vs. GPU', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
+  { group: 'Techniques', code: 'SL-07', name: 'Composite', note: 'The closing argument — which surface carries which part', file: 'techniques/composite.html', tint: 'var(--tint-composite)' },
 ];
 
 /* The six treatments: the kept one first, then the rest newest to
@@ -145,9 +151,18 @@ export const VIEWABLE = [...SHEETS, ...TREATMENTS];
 /** @param {string} path */
 export const base = (path) => `/sheets/${path}`;
 
+/**
+ * @param {{ code: string }[]} list
+ * @param {string | null | undefined} code
+ */
+export const indexIn = (list, code) =>
+  list.findIndex((s) => s.code.toLowerCase() === String(code ?? '').toLowerCase());
+
 /** @param {string | null | undefined} code */
-export const indexFor = (code) =>
-  VIEWABLE.findIndex((s) => s.code.toLowerCase() === String(code ?? '').toLowerCase());
+export const indexFor = (code) => indexIn(VIEWABLE, code);
 
 /** @param {string} code */
 export const sheetHref = (code) => `/design/reference?sheet=${code.toLowerCase()}`;
+
+/** @param {string} code */
+export const techniqueHref = (code) => `/techniques?sheet=${code.toLowerCase()}`;

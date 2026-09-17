@@ -25,7 +25,7 @@
   const SECTION_NAMES = /** @type {Record<string, [string, string]>} */ ({
     open: ['Opening', 'spectrum'], css: ['1 · Layout & CSS', 'css'], svg: ['2 · SVG', 'svg'],
     gif: ['3 · GIF', 'video'], video: ['4 · Video', 'video'], canvas: ['5 · Canvas', 'canvas'],
-    gpu: ['6 · WebGL & WebGPU', 'webgpu'], friction: ['What gets in the way', 'webgl'], close: ['Close', 'spectrum'],
+    gpu: ['6 · WebGL & WebGPU', 'webgpu'], composite: ['Composite', 'composite'], friction: ['What gets in the way', 'webgl'], close: ['Close', 'spectrum'],
   });
   /* Opening and Close have a neutral base with the other sections'
      colours as accents, so their swatch is the whole spectrum. */

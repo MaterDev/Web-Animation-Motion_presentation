@@ -1,0 +1,11 @@
+- **Most of what you just saw was already a combination**
+  - Real page elements where you need text, clicks and accessibility
+  - The graphics card where you need pixels
+  - Video where nothing has to respond
+  - An alternative for anyone who can't use the GPU layer
+- **One page, three surfaces**
+  - The user sees one page; the browser runs three layers
+  - A canvas is one opaque rectangle to the page, so nothing that must be read goes in it
+- **Composites are a performance strategy, not just an aesthetic one**
+  - Each part on the cheapest surface that can carry it
+  - Keep the parts that move out of the expensive pipeline stages

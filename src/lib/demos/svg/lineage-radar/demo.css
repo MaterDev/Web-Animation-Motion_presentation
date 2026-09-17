@@ -1,0 +1,72 @@
+/* Lineage radar — copied from design/techniques/svg.html lines 309–379 (the .wx rules), unchanged. */
+/* ── 4 · THE PIPELINE, stage ──────────────────────────────────
+   A BROADCAST WEATHER RADAR, and like §2's chart recorder it is its
+   own product with its own trade dress — a different world again, so
+   the sheet reads as three instruments demonstrated rather than three
+   panels of one website.
+
+   The choice is not decoration. A goo filter's entire visual behaviour
+   — separate cells that swell, touch and fuse into one mass with a
+   hard edge — is precipitation on a radar. Everyone has read one.
+   Nobody needs to be taught what merging cells mean, so the filter
+   graph gets to be the subject instead of the thing needing explained.
+
+   The precipitation ramp is the one piece of colour in this project
+   that is allowed to break the sheet's chroma ceiling, and it has to:
+   cyan-green-yellow-red IS the convention, it is what makes a radar
+   legible without a legend, and a tasteful low-chroma version of it
+   would be a worse graphic that merely matched the page better. Scoped
+   to .wx so it reaches nothing else. */
+.wx {
+  --wx-ground: oklch(0.17 0.045 250);   /* the unlit sweep field */
+  --wx-grid:   oklch(0.30 0.045 250);
+  --wx-coast:  oklch(0.72 0.030 230);
+  --wx-ink:    oklch(0.96 0.010 230);
+  --wx-sub:    oklch(0.68 0.025 235);
+  --wx-1: oklch(0.72 0.13 205);         /* light */
+  --wx-2: oklch(0.78 0.19 150);
+  --wx-3: oklch(0.86 0.17 105);
+  --wx-4: oklch(0.80 0.19 60);
+  --wx-5: oklch(0.62 0.23 27);          /* heaviest */
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--wx-ground); color: var(--wx-ink);
+  box-shadow: var(--recess);
+}
+.wx-screen { position: relative; width: 960px; height: 540px; transform-origin: 0 0; }
+.wx-screen svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+/* Scan lines. A broadcast graphic is a video signal before it is a
+   picture, and one 3px raster does more for that read than any amount
+   of styling on the marks themselves. */
+.wx-screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: repeating-linear-gradient(0deg, oklch(0 0 0 / 0.16) 0 1px, transparent 1px 3px);
+}
+.wx-coast { fill: none; stroke: var(--wx-coast); stroke-width: 1; opacity: 0.55;
+  vector-effect: non-scaling-stroke; }
+.wx-grat { stroke: var(--wx-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.wx-site { fill: var(--wx-ink); }
+.wx-slabel { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; fill: var(--wx-ink); }
+
+.wx-chrome { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--wx-sub); }
+.wx-year { position: absolute; z-index: 5; pointer-events: none;
+  font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 44px; line-height: 44px; color: var(--wx-ink);
+  font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px oklch(0 0 0 / 0.6); }
+/* The key every radar carries. It is also the legend for the filter:
+   each step is one more band the threshold has snapped to. */
+.wx-key { position: absolute; z-index: 5; pointer-events: none; display: flex; align-items: center; gap: 0; }
+.wx-key i { display: block; width: 34px; height: 9px; }
+.wx-key .cap { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--wx-sub); }
+.wx-bar { position: absolute; z-index: 5; left: 0; right: 0; bottom: 0; height: 40px;
+  background: oklch(0.11 0.035 250 / 0.92);
+  border-top: 1px solid var(--wx-grid);
+  display: flex; align-items: center; gap: 26px; padding: 0 34px;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--wx-ink); }
+.wx-bar > span { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.wx-bar > span.wx-hot { flex: 1; min-width: 0; }
+.wx-bar .k { color: var(--wx-sub); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; flex: none; }
+.wx-bar .wx-hot b { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,0 +1,53 @@
+<svg viewBox="0 0 504 432" role="img" aria-label="A product page: text and buttons are carried by the DOM, line icons by SVG, the background loop by video, the product by a WebGL canvas, the particle field by WebGPU, and a still with the same DOM for anyone without the GPU layer." data-testid="composite-carries">
+  <!-- the page -->
+  <rect class="cr-page" x="18" y="22" width="276" height="388" rx="8"/>
+
+  <!-- video: the whole backdrop loop -->
+  <g class="cr-grp" style="--c: var(--cr-vid); --i: 4" data-testid="carries-video">
+    <rect class="cr-part" x="28" y="32" width="256" height="368" rx="5"/>
+    <path class="cr-lead" d="M284 380 H352 V383 H370"/>
+    <g class="cr-tag" transform="translate(370 368)"><rect width="118" height="30" rx="4"/><text x="12" y="20">video</text></g>
+  </g>
+
+  <!-- webgpu: particle field -->
+  <g class="cr-grp" style="--c: var(--cr-gpu); --i: 3" data-testid="carries-webgpu">
+    <rect class="cr-part" x="40" y="206" width="232" height="120" rx="4"/>
+    <g class="cr-dot">
+      <circle cx="58" cy="224" r="1.6"/><circle cx="84" cy="238" r="1.6"/><circle cx="112" cy="220" r="1.6"/><circle cx="238" cy="232" r="1.6"/><circle cx="256" cy="214" r="1.6"/><circle cx="70" cy="300" r="1.6"/><circle cx="250" cy="306" r="1.6"/><circle cx="226" cy="290" r="1.6"/><circle cx="92" cy="314" r="1.6"/><circle cx="60" cy="266" r="1.6"/><circle cx="262" cy="268" r="1.6"/>
+    </g>
+    <path class="cr-lead" d="M272 306 H340 V318 H370"/>
+    <g class="cr-tag" transform="translate(370 303)"><rect width="118" height="30" rx="4"/><text x="12" y="20">webgpu</text></g>
+  </g>
+
+  <!-- webgl: the product -->
+  <g class="cr-grp" style="--c: var(--cr-gl); --i: 2" data-testid="carries-webgl">
+    <circle class="cr-part" cx="156" cy="266" r="46"/>
+    <circle class="cr-solid" cx="143" cy="252" r="14" style="opacity:.35"/>
+    <path class="cr-lead" d="M202 262 H340 V253 H370"/>
+    <g class="cr-tag" transform="translate(370 238)"><rect width="118" height="30" rx="4"/><text x="12" y="20">webgl</text></g>
+  </g>
+
+  <!-- svg: line icons -->
+  <g class="cr-grp" style="--c: var(--cr-svg); --i: 1" data-testid="carries-svg">
+    <rect class="cr-part" x="40" y="150" width="112" height="36" rx="4"/>
+    <path class="cr-lead" style="stroke-dasharray:none;opacity:1" d="M52 176 l8 -10 l8 6 l10 -12 M92 176 h14 v-14 h-14z M118 168 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0"/>
+    <path class="cr-lead" d="M152 168 H340 V188 H370"/>
+    <g class="cr-tag" transform="translate(370 173)"><rect width="118" height="30" rx="4"/><text x="12" y="20">svg</text></g>
+  </g>
+
+  <!-- dom: nav, headline, button -->
+  <g class="cr-grp" style="--c: var(--cr-dom); --i: 0" data-testid="carries-dom">
+    <rect class="cr-part" x="40" y="44" width="232" height="96" rx="4"/>
+    <rect class="cr-solid" x="52" y="54" width="34" height="8" rx="2"/><rect class="cr-solid" x="100" y="56" width="30" height="4" rx="2" style="opacity:.5"/><rect class="cr-solid" x="140" y="56" width="30" height="4" rx="2" style="opacity:.5"/>
+    <rect class="cr-solid" x="52" y="78" width="150" height="12" rx="2"/><rect class="cr-solid" x="52" y="96" width="104" height="12" rx="2"/>
+    <rect class="cr-part" x="52" y="116" width="66" height="16" rx="8" style="stroke-dasharray:3 2"/>
+    <path class="cr-lead" d="M272 92 H340 V123 H370"/>
+    <g class="cr-tag" transform="translate(370 108)"><rect width="118" height="30" rx="4"/><text x="12" y="20">dom · css</text></g>
+  </g>
+
+  <!-- alternative: no GPU layer -->
+  <g class="cr-grp" style="--c: var(--cr-alt); --i: 5" data-testid="carries-alternative">
+    <path class="cr-lead" d="M294 40 H340 V58 H370"/>
+    <g class="cr-tag" transform="translate(370 43)"><rect width="118" height="30" rx="4"/><text x="12" y="20">no gpu</text></g>
+  </g>
+</svg>

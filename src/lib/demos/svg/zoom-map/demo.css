@@ -1,0 +1,113 @@
+/* Survey-sheet zoom map — copied from design/techniques/svg.html lines 381–492 (the .sv rules), unchanged. */
+/* ── 3 · THE FRAME, stage ─────────────────────────────────────
+   A TOPOGRAPHIC SURVEY SHEET — cream stock, blue water, a brown
+   shoreline, black plate type and a red locator. Its own product with
+   its own trade dress, like §2's chart recorder and §4's radar, and a
+   third world again so the three stages never look like three panels
+   of the same page.
+
+   It earns the concept the same way the others do: a survey sheet is
+   the object whose entire premise is that the SAME place is published
+   at several scales, each carrying only the detail its scale can hold.
+   That is semantic zoom, named and in print, a century before anyone
+   wrote it in JavaScript. Scoped to .sv. */
+.sv {
+  --sv-water: oklch(0.885 0.048 224);
+  --sv-land:  oklch(0.960 0.022 86);
+  --sv-edge:  oklch(0.52 0.060 58);
+  --sv-grid:  oklch(0.74 0.045 62);
+  --sv-ink:   oklch(0.27 0.022 60);
+  --sv-sub:   oklch(0.50 0.032 64);
+  --sv-red:   oklch(0.50 0.200 28);
+  position: relative; overflow: hidden; border-radius: 3px;
+  background: var(--sv-land); color: var(--sv-ink);
+  box-shadow: var(--recess);
+}
+.sv-sheet { position: relative; width: 960px; height: 540px; transform-origin: 0 0;
+  background: var(--sv-water); overflow: hidden; }
+.sv-sheet svg { position: absolute; inset: 0; width: 960px; height: 540px; z-index: 2; }
+.sv-land { fill: var(--sv-land); stroke: var(--sv-edge); }
+.sv-stipple { fill: url(#sv-stipple); stroke: none; pointer-events: none; }
+/* Bathymetric banding: the pale shelves a chart prints just offshore.
+   Three strokes of the SAME coastline at decreasing width, drawn
+   UNDER the land fill so only the seaward half of each shows. It is a
+   drawing convention rather than depth data — there is no bathymetry
+   in Natural Earth — so it is stroked at fixed screen widths and it
+   is decorative, which is why the one-device-pixel criterion applies
+   to .sv-land's own stroke and not to these. */
+.sv-shelf { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.sv-shelf-1 { stroke: color-mix(in oklch, var(--sv-water) 62%, oklch(0.99 0 0)); stroke-width: 13; }
+.sv-shelf-2 { stroke: color-mix(in oklch, var(--sv-water) 78%, oklch(0.99 0 0)); stroke-width: 7.5; }
+.sv-shelf-3 { stroke: color-mix(in oklch, var(--sv-water) 90%, oklch(0.99 0 0)); stroke-width: 3; }
+/* Interior country borders, from the countries mesh — real data, and
+   meshed so shared arcs appear once and coastlines are excluded, which
+   is what stops every shoreline being drawn twice. */
+/* Divisions deepen with the zoom, the same way the labels do: nations
+   everywhere, states from the regional sheet, counties only once the
+   scale can hold them. The weights are a hierarchy — a county line
+   drawn like a national border would make sheet 3 unreadable.
+
+   The weight stays owned here and the crossfade owns only --fade, so
+   there is still exactly one place that says how dark a county line
+   is. The stage writes --fade per path; unset, it is 1. */
+.sv-border { fill: none; stroke: var(--sv-edge); opacity: calc(0.6 * var(--fade, 1));
+  stroke-dasharray: 7 3 2 3; }
+.sv-state { fill: none; stroke: var(--sv-edge); opacity: calc(0.45 * var(--fade, 1));
+  stroke-dasharray: 5 3; }
+.sv-county { fill: none; stroke: var(--sv-edge); opacity: calc(0.28 * var(--fade, 1)); }
+/* Place names, from the same division data — a boundary you cannot
+   name is decoration. Set apart from the event labels so the two never
+   read as one list: the events are the subject, these are the ground. */
+.sv-place { position: absolute; transform: translate(-50%, -50%);
+  font-family: var(--mono); letter-spacing: 0.12em; white-space: nowrap;
+  color: color-mix(in oklch, var(--sv-ink) 52%, transparent); text-transform: uppercase;
+  text-shadow: 0 0 3px var(--sv-land), 0 0 6px var(--sv-land); }
+.sv-place.r1 { font-size: 10px; letter-spacing: 0.2em; }
+.sv-place.r2 { font-size: 8.5px; color: color-mix(in oklch, var(--sv-ink) 36%, transparent); }
+.sv-grat { stroke: var(--sv-grid); fill: none; opacity: 0.5; }
+
+/* The locator. A survey sheet's index diagram marks where the next
+   sheet in the series sits — this is that mark, and it is what the
+   camera is flying into. */
+.sv-retic { stroke: var(--sv-red); fill: none; }
+.sv-retic-fill { fill: color-mix(in oklch, var(--sv-red) 12%, transparent); stroke: none; }
+.sv-site { fill: var(--sv-ink); }
+
+.sv-labels { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.sv-lab { position: absolute; transform: translate(-50%, -100%);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.02em; white-space: nowrap;
+  color: var(--sv-ink); text-shadow: 0 0 3px var(--sv-land), 0 0 6px var(--sv-land); }
+.sv-lab.is-target { color: var(--sv-red); font-weight: 700; }
+
+/* The cartouche every printed sheet carries: series, scale, projection,
+   datum. It is also, conveniently, exactly the set of facts this
+   section is about — so the furniture and the teaching are the same
+   object rather than one decorating the other. */
+.sv-plate { position: absolute; z-index: 4; background: color-mix(in oklch, var(--sv-land) 92%, transparent);
+  border: 1px solid var(--sv-edge); padding: 10px 13px;
+  font-family: var(--mono); font-size: 10px; line-height: 1.7; letter-spacing: 0.04em;
+  color: var(--sv-sub); }
+.sv-plate b { color: var(--sv-ink); font-weight: 400; }
+.sv-plate .t { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--sv-ink);
+  display: block; margin-bottom: 5px; }
+.sv-scalebar { position: absolute; z-index: 4; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--sv-sub); }
+.sv-scalebar .bar { height: 6px; border: 1px solid var(--sv-ink); display: flex; }
+.sv-scalebar .bar i { display: block; height: 100%; }
+.sv-scalebar .bar i:nth-child(odd) { background: var(--sv-ink); }
+
+/* The record. The zoom outruns the map — Dartmouth is 150km inland, so
+   by the deepest level Natural Earth holds no geometry at all. That is
+   a fact about the subject rather than a gap to paper over: the piece
+   flies out of geography and lands on the document, which is the thing
+   it was looking for the whole time. */
+.sv-record { position: absolute; z-index: 5; inset: 0; display: grid; place-items: center;
+  background: color-mix(in oklch, var(--sv-land) 88%, transparent); }
+.sv-record .card { border: 1px solid var(--sv-edge); background: var(--sv-land);
+  padding: 26px 30px; max-width: 620px; box-shadow: 0 6px 26px oklch(0 0 0 / 0.18); }
+.sv-record .yr { font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900;
+  font-size: 40px; line-height: 1; color: var(--sv-red); font-variant-numeric: tabular-nums; }
+.sv-record .ttl { font-family: var(--sans); font-size: 19px; line-height: 1.3; color: var(--sv-ink);
+  margin: 10px 0 6px; }
+.sv-record .meta { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.05em;
+  color: var(--sv-sub); line-height: 1.7; }

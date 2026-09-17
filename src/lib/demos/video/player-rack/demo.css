@@ -1,0 +1,175 @@
+/* player-rack · CSS copied from design/techniques/video/index.html (lines noted per block).
+   :root → :host. Rules for the dropped 9:16 player (.mplayer, .mp-*, .vcut) are left out. */
+:host { --tint: var(--tint-video); }
+
+/* 29–37 */
+.card-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: calc(var(--u)*3); align-items: start; }
+@media (max-width: 860px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+.scene-card { display: flex; flex-direction: column; gap: 8px; }
+.scene-stage {
+  border-radius: 8px; position: relative; overflow: hidden;
+  background: var(--hz-050); box-shadow: var(--recess);
+}
+.scene-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-600); }
+.scene-note { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em; color: var(--hz-400); line-height: 1.5; }
+
+/* 39–45 */
+/* video's native frame is horizontal — but the same six seconds is
+   also cut 9:16, because "the same asset on a different surface" is
+   the whole point of SCOPE.md slide 13 and it is cheaper to show
+   than to describe */
+.stage-16x9 { aspect-ratio: 16/9; }
+.stage-9x16 { aspect-ratio: 9/16; }
+.scene-stage video, .scene-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 0; object-fit: cover; }
+
+/* 47–55 */
+/* ── players ────────────────────────────────────────────────
+   The 16:9 gets the browser's own controls — scrub, volume, speed,
+   PiP, fullscreen — because that IS the point being made: video
+   arrives with a real element attached. The 9:16 gets a hand-built
+   mobile player instead (tap to toggle, thin progress, mute), which
+   is both the right idiom for a vertical feed and a live demonstration
+   of the same claim from the other direction: everything that UI does,
+   it does by scripting the element. */
+.scene-stage video::-webkit-media-controls-panel { background-image: linear-gradient(transparent, oklch(0 0 0 / 0.55)); }
+
+/* 73–81, 86–200 (82–84 .vcut layout dropped with the vertical player) */
+/* ── the effect rack ────────────────────────────────────────
+   Panel + vertical video together occupy exactly the 16:9 card's
+   width above, so the two cuts read as one comparison rather than two
+   unrelated blocks. The video is pinned to 540×960 — a clean 0.75 of
+   its native 720×1280 — and the panel takes the remainder. */
+/* One height drives both: the rack is pinned to the video's stage
+   height, not to the card, so the label and note hang below the video
+   alone rather than stretching the panel past it. 405×720 is a clean
+   0.5625 of the native 720×1280 and takes ~300px off the row. */
+.fx-panel {
+  flex: 1 1 auto; min-width: 0; height: var(--vh); display: flex; flex-direction: column;
+  border: var(--hair) solid var(--hz-300); border-radius: 8px;
+  background: var(--hz-050); box-shadow: var(--recess); overflow: hidden;
+}
+.fx-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: var(--hair) solid var(--hz-300); background: var(--hz-100); }
+.fx-head-txt { min-width: 0; }
+.fx-title { display: block; font-family: var(--dot); font-variation-settings: 'ROND' 0; font-weight: 900; font-size: 19px; color: var(--hz-900); text-transform: lowercase; }
+.fx-sub { display: block; font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hz-500); margin-top: 3px; }
+/* reset is chrome, not an effect — it is the state you return to, so
+   it sits on the header bar rather than competing for a slot in a
+   grid of things you can switch between */
+.fx-head-acts { flex: none; display: flex; align-items: center; gap: 6px; }
+.fx-reset {
+  flex: none; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--hz-500); background: var(--hz-200);
+  border: var(--hair) solid var(--hz-300); border-radius: 4px; padding: 6px 10px; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+.fx-reset:hover { color: var(--hz-800); background: var(--hz-300); }
+.fx-reset.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-200)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); color: var(--hz-900); }
+
+/* The camera is a MODE, not an action: it stays on until switched off,
+   so it gets switch affordance rather than the reset button's. State
+   lives in aria-checked, which drives both the styling and the
+   semantics instead of a parallel class that could drift out of sync
+   with what assistive tech is told. */
+.fx-toggle {
+  flex: none; display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hz-500); background: var(--hz-200);
+  border: var(--hair) solid var(--hz-300); border-radius: 4px; padding: 5px 7px 5px 10px; cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard),
+              border-color var(--dur-fast) var(--ease-standard);
+}
+.fx-toggle:hover { color: var(--hz-800); background: var(--hz-300); }
+.fx-toggle:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.fx-toggle-track { position: relative; width: 24px; height: 13px; border-radius: 7px; flex: none;
+  background: var(--hz-400); transition: background var(--dur-fast) var(--ease-standard); }
+.fx-toggle-track i { position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--hz-050); transition: transform var(--dur-base) var(--ease-standard); }
+.fx-toggle[aria-checked='true'] { color: var(--hz-900);
+  background: color-mix(in oklch, var(--tint) 26%, var(--hz-200));
+  border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); }
+.fx-toggle[aria-checked='true'] .fx-toggle-track { background: var(--tint); }
+.fx-toggle[aria-checked='true'] .fx-toggle-track i { transform: translateX(11px); }
+.fx-toggle.is-err { border-color: oklch(0.55 0.20 27); color: oklch(0.65 0.19 27); }
+@media (prefers-reduced-motion: reduce) { .fx-toggle-track i { transition: none; } }
+/* effects that need a seekable file cannot mean anything on a live
+   feed — a curve maps loop time onto video time, and echo/difference
+   need a copy of the source delayed against itself */
+.fx-card[disabled] { opacity: 0.32; cursor: not-allowed; }
+.fx-card[disabled]:hover { background: var(--hz-100); }
+.fx-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 14px; scrollbar-width: thin; scrollbar-color: var(--hz-300) transparent; }
+.fx-group { display: flex; flex-direction: column; gap: 7px; }
+.fx-legend { font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--hz-400); }
+.fx-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.fx-card {
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; text-align: left;
+  aspect-ratio: 1; padding: 9px; border-radius: 6px; cursor: pointer; font: inherit;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300); color: var(--hz-600);
+  transition: background var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard);
+}
+.fx-card:hover { background: var(--hz-200); }
+.fx-card:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.fx-card b { font-size: 11.5px; line-height: 1.15; font-weight: 500; color: var(--hz-800); text-transform: lowercase; }
+.fx-card i { font-family: var(--mono); font-size: 8px; line-height: 1.35; font-style: normal; letter-spacing: 0.04em; color: var(--hz-500); }
+.fx-card.is-on { background: color-mix(in oklch, var(--tint) 26%, var(--hz-100)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); }
+.fx-card.is-on b { color: var(--hz-900); }
+.fx-foot { margin: 0; padding: 10px 14px; border-top: var(--hair) solid var(--hz-300); background: var(--hz-100); font-family: var(--mono); font-size: 9px; line-height: 1.6; color: var(--hz-400); max-width: none; }
+
+.fx-cards-1 { grid-template-columns: repeat(4, 1fr); }
+/* collapsed until "drive from curve" is the live effect — an editor
+   for an inactive control is just clutter in a rack this dense */
+/* The toggle and its editor are one control, so they sit on one row:
+   the card on the left at card size, the editor filling the rest and
+   matching its height. Collapsed, the row is just the card. */
+.fx-temporal { display: flex; gap: 6px; align-items: stretch; }
+.fx-temporal .fx-cards { flex: 0 0 132px; }
+.fx-curve { display: none; }
+.fx-curve.is-open {
+  flex: 1; min-width: 0; display: flex; gap: 12px; align-items: stretch; padding: 10px;
+  background: var(--hz-100); border: var(--hair) solid var(--hz-300); border-radius: 6px;
+}
+.cv-side { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+/* a square graph pinned to a fixed side — at 300px it was taller
+   than the rack could spare and clipped its own readout */
+.cv-graph { flex: 0 0 112px; width: 112px; align-self: center; }
+.cv-label { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hz-400); }
+.fx-curve svg { width: 100%; height: auto; display: block; touch-action: none; cursor: crosshair; }
+.cv-bg { fill: var(--hz-050); }
+.cv-grid line { stroke: var(--hz-300); stroke-width: 0.5; }
+.cv-diag { stroke: var(--hz-300); stroke-width: 0.6; stroke-dasharray: 3 3; }
+.cv-arm { stroke: color-mix(in oklch, var(--tint) 55%, var(--hz-400)); stroke-width: 0.9; }
+.cv-path { fill: none; stroke: var(--tint); stroke-width: 2.2; stroke-linecap: round; }
+.cv-head { fill: var(--hz-900); }
+.cv-h { fill: color-mix(in oklch, var(--tint) 70%, var(--hz-100)); stroke: var(--hz-900); stroke-width: 1; cursor: grab; }
+.cv-h:active { cursor: grabbing; }
+.cv-side code { font-family: var(--mono); font-size: 9px; color: var(--hz-600); background: none; border: 0; padding: 0; }
+.cv-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.cv-chip { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hz-500); background: var(--hz-200); border: var(--hair) solid var(--hz-300); border-radius: 4px; padding: 4px 3px; cursor: pointer; text-align: center; }
+.cv-chip.is-on { background: color-mix(in oklch, var(--tint) 32%, var(--hz-200)); border-color: color-mix(in oklch, var(--tint) 55%, var(--hz-300)); color: var(--hz-900); }
+.cv-chip:hover { color: var(--hz-800); background: var(--hz-300); }
+
+.fx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: none; image-rendering: auto; }
+.fx-card i em { font-style: italic; }
+/* The selector has to out-specify `.scene-stage video` (0,1,1), which
+   sets display:block for the real players — a bare `.fx-echo` (0,1,0)
+   loses to it regardless of order, and the overlay then sat visible
+   and paused on frame 0 over the top of a video that was genuinely
+   playing. It only vanished once reset() set display:none INLINE, so
+   the clip looked frozen until you clicked any effect. Keep this at
+   0,2,1 so the default hides and JS inline styles still win. */
+.scene-stage video.fx-echo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; }
+.fx-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ── deck extraction: the rack re-targeted onto the 16:9 player ──
+   On the sheet the panel sat beside the 9:16 player in a .vcut row at
+   a fixed --vh. Here it docks over the right side of the 16:9 stage,
+   above the effect canvas and echo layer, and stops short of the
+   bottom so the native controls bar stays reachable. */
+.pr-stage .fx-panel {
+  position: absolute; top: 12px; right: 12px; bottom: 56px; width: 440px;
+  height: auto; z-index: 2;
+}
+/* At the overlay's narrower width the open curve editor could not fit
+   beside its card (the preset chips ran under the graph), so the row
+   wraps and the editor takes a full line under the card. */
+.pr-stage .fx-temporal { flex-wrap: wrap; }
+.pr-stage .fx-curve.is-open { flex: 1 1 100%; }

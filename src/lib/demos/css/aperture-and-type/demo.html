@@ -1,0 +1,96 @@
+<div class="wrap">
+  <div class="crumb" id="crumb">
+    <a href="../index.html">← WAM-2026</a><span class="sep">/</span>
+    <a href="../index.html#sl-06">Techniques</a>
+  </div>
+
+  <div class="head"><span class="code">SL-06</span><h1>layout / css</h1></div>
+  <p class="dek">
+    Motion the browser runs for you. Two quite different jobs share one engine, and this
+    slide keeps them apart. First <b>CSS for layout</b> — animating a page's own structure,
+    driven by scroll position and by the selectors already describing state. Then <b>CSS as
+    a drawing instrument</b> — the same declarations pointed at elements that aren't
+    structure at all, where what comes out is a picture rather than an interface. You
+    declare the start and the end; the engine works out the frames either way.
+  </p>
+
+  <!-- ═══ CSS AS A DRAWING INSTRUMENT ══════════════════ -->
+  <div class="fmt-section" data-testid="fmt-art">
+    <div class="fmt-head"><span class="fmt-tag">NOT LAYOUT AT ALL</span><h2>css as a drawing instrument</h2></div>
+    <p class="fmt-case">
+      <b>Same engine, opposite job.</b> Nothing here is being laid out. These elements carry no
+      structural meaning — they are circles, rulings, glyphs and gradient stops used as
+      <b>pigment</b>, and what comes out is an image rather than an interface. The drawing is
+      done by filter compositing, pattern interference, gradient geometry, a scroll timeline
+      and the axes inside a variable font: no canvas, no SVG, no WebGL, and <b>no script
+      drawing a single frame</b>.
+      (One exception, stated plainly — the aperture card uses a few lines of JS to
+      <i>move the scrollbar</i>, because CSS has no way to animate scroll position. Every
+      frame it produces is still CSS reading that position.) Worth knowing where this
+      ceiling actually sits, because <b>a surprising amount of what gets reached for later in
+      this deck is reachable here</b> — and the cases that genuinely aren't are what earn
+      Canvas and WebGL their slides.
+    </p>
+
+    <div class="art-grid">
+
+      <div class="scene-card" data-testid="art-depth">
+        <div class="scene-stage">
+          <div class="depth"><div class="ap-rail"></div><div class="ap-pin"><div class="ap-field"><i></i><i></i><i></i><i></i></div><div class="ap-grain"></div><div class="ap-word">Aperture</div><div class="ap-plate"></div><div class="ap-hud"><i></i><i></i><i></i><i></i><b>Aperture</b><u>f/1.4</u><s>Mask · scroll()</s></div><div class="ap-ticks"><em></em></div><div class="ap-hint" id="depthHint">auto · scroll anytime</div></div><div class="ap-spacer"></div></div>
+        </div>
+        <span class="scene-label">aperture · scroll() mask</span>
+        <span class="scene-note">Genuinely scroll-driven — a script eases the scrollbar, standing in for your finger; scroll it yourself and the loop steps aside, then picks up from wherever you left it. Scroll widens a hole in an opaque plate, so the colour field is <b>revealed</b> rather than moved: the mask radius rides a <code>scroll()</code> timeline, and it can interpolate at all only because it is a registered <code>@property</code>. Closed it reads as a titled plate, open it reads as the field — never a blank frame at either end, and the field drifts on its own clock regardless.</span>
+      </div>
+
+      <div class="scene-card vf-card" data-testid="art-variable">
+        <div class="scene-stage">
+          <div class="vf">
+            <div class="vf-reg"><span>Variable font &middot; two axes</span><span>wght 100&ndash;900 &middot; ROND 0&ndash;100</span></div>
+            <div class="vf-rows">
+              <div class="vf-row">
+                <div class="vf-dot"><s>M</s><s>O</s><s>T</s><s>I</s><s>O</s><s>N</s></div>
+                <div class="vf-cap"><b>Doto &middot; wght + ROND</b>square pixel &rarr; round dot<br>advance widths identical &middot; no reflow</div>
+              </div>
+              <hr>
+              <div class="vf-row">
+                <div class="vf-ink"><s>M</s><s>o</s><s>t</s><s>i</s><s>o</s><s>n</s></div>
+                <div class="vf-cap"><b>Inter &middot; wght</b>213px &rarr; 232px as it swells<br>metrics move &middot; layout re-runs</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <span class="scene-label">variable axes &middot; font-variation-settings</span>
+        <span class="scene-note">The only effect here that lives inside the <b>font file</b>. No filter, no gradient, no mask &mdash; <code>font-variation-settings</code> hands the engine two axis values and it interpolates the glyph <b>outlines</b> between them, the one thing on this page that can change the shape of a letterform itself. Doto carries a second axis, <code>ROND</code>: 0 is a square pixel, 100 a round dot. Its advance widths are identical at every setting of both axes, so the matrix never moves and only the dots change shape. Inter's widths <i>do</i> track weight &mdash; these six letters total 213px at <code>wght 120</code> and 232px at 900 &mdash; so each letter shoves its neighbours as it swells and the row re-runs layout every frame. Same declaration, same engine: one is free, the other is the expensive case the diagram at the top of this page prices out.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <h3>SCOPE.md · slide 06</h3>
+    <p>"CSS Transitions/Animations + Render Pipeline — browser-managed motion; introduces
+      Layout → Paint → Composite; visual: animated pipeline diagram + simple live
+      hover/transition demo (generic, not the thread demo — keep this one legible)."</p>
+    <p>Both halves are real. The pipeline diagram is interactive rather than a static
+      graphic: the stage map, the cost readout and the moving specimen are driven from one
+      property table, so the diagram cannot drift out of step with what the specimen is
+      animating. Kept generic per the scope note — no thread demo here.</p>
+    <p>The examples were rebuilt around <b>Timeless</b>, a fictional newsweekly, after the
+      first pass proved that a technique demonstrated on a coloured square teaches nothing
+      about when to reach for it. The masthead, the section tabs and the contents flyout are
+      page fragments; the CSS is the point but the context is what makes it legible. The
+      identity is deliberately its own — the reusable part of the genre is its grammar, not
+      any real title's trade dress.</p>
+    <p><b>Every card runs itself.</b> A demo that has to be poked is a dead demo from the
+      back of a room, so each fragment loops its own technique unprompted. On the three
+      state-driven cards the loop is a default rather than a cage: the moment you click a
+      tab, focus the contents button or open a story, the animation is dropped and the real
+      selector — <code>:checked</code>, <code>:focus-within</code>, <code>:has()</code> —
+      takes over. The two scroll-linked cards run from the clock instead, using the same
+      keyframes you would bind to <code>scroll()</code> or <code>view()</code> in
+      production; only the timeline differs, which is the actual lesson.</p>
+    <p>Two boundaries are held on purpose. <b>SL-07</b> measures what this sheet only
+      models: cost. <b>SL-08</b> owns animating between two arbitrary measured layouts —
+      which is why the expand example stops at <code>0fr → 1fr</code>, the one layout
+      animation CSS manages unaided, rather than reflowing the whole grid.</p>
+  </div>
+</div>
